@@ -1,6 +1,6 @@
 """Contract tests for PayPal models, parsers, and dispute state fingerprint.
 
-Tests all behaviors, edge cases, and invariants defined in Step 05 and contracts.md.
+Tests all behaviors, edge cases, and invariants defined in Step 05 and build-plan/contracts.md.
 """
 
 import json
@@ -87,6 +87,12 @@ def test_fixture_s5_list_disputes_parses():
     assert item.dispute_amount.value == Decimal("10.00")
     assert len(resp.links) == 2
 
+    # Verify alias support for PayPal responses returning 'disputes' instead of 'items'
+    aliased_data = {"disputes": data["items"], "links": data["links"]}
+    aliased_resp = parse_dispute_list(aliased_data)
+    assert len(aliased_resp.items) == 1
+    assert aliased_resp.items[0].dispute_id == "PP-R-MBX-REDACTED"
+
 
 def test_fixture_s7_provide_evidence_response_parses():
     data = load_fixture_json("s7-provide-evidence-response.json")
@@ -114,6 +120,25 @@ def test_fixture_s6_webhook_event_parses():
     assert resp.id == "WH-COC77685HG482312T-72534575W0810174W"
     assert resp.event_type == "CUSTOMER.DISPUTE.CREATED"
     assert resp.resource_type == "dispute"
+    assert isinstance(resp.resource, dict)
+
+    # Test typed extraction helpers
+    dispute_resource = resp.get_resource_dispute()
+    assert isinstance(dispute_resource, Dispute)
+    assert dispute_resource.dispute_id == "PP-R-MBX-REDACTED"
+
+    summary_resource = resp.get_resource_summary()
+    assert isinstance(summary_resource, DisputeSummary)
+    assert summary_resource.dispute_id == "PP-R-MBX-REDACTED"
+
+
+FIXTURE_PARSERS: dict[str, tuple[Any, type]] = {
+    "s5-get-dispute.json": (parse_dispute, Dispute),
+    "s5-list-disputes.json": (parse_dispute_list, DisputeListResponse),
+    "s2-token-response.json": (parse_token_response, TokenResponse),
+    "s6-webhook-event.json": (parse_webhook_event, WebhookEvent),
+    "s7-provide-evidence-response.json": (parse_provide_evidence_response, ProvideEvidenceResponse),
+}
 
 
 def test_every_file_in_fixtures_directory_parses():
@@ -122,26 +147,15 @@ def test_every_file_in_fixtures_directory_parses():
     assert len(files) >= 5, f"Expected at least 5 fixtures, found {len(files)}"
 
     for fpath in files:
+        parser_info = FIXTURE_PARSERS.get(fpath.name)
+        if parser_info is None:
+            pytest.fail(f"Fixture {fpath.name} does not have a designated contract parser mapping")
+
+        parser_fn, expected_type = parser_info
         with open(fpath, encoding="utf-8") as f:
             data = json.load(f)
-
-        if "dispute_id" in data and "dispute_state" in data and "evidences" in data:
-            model = parse_dispute(data)
-            assert isinstance(model, Dispute)
-        elif "items" in data and "links" in data:
-            model = parse_dispute_list(data)
-            assert isinstance(model, DisputeListResponse)
-        elif "access_token" in data:
-            model = parse_token_response(data)
-            assert isinstance(model, TokenResponse)
-        elif "event_type" in data:
-            model = parse_webhook_event(data)
-            assert isinstance(model, WebhookEvent)
-        elif "links" in data and len(data) == 1:
-            model = parse_provide_evidence_response(data)
-            assert isinstance(model, ProvideEvidenceResponse)
-        else:
-            pytest.fail(f"Fixture {fpath.name} not recognized by contract parser test")
+        model = parser_fn(data)
+        assert isinstance(model, expected_type), f"{fpath.name} parsed into {type(model)}, expected {expected_type}"
 
 
 # ---------------------------------------------------------------------------
@@ -149,8 +163,8 @@ def test_every_file_in_fixtures_directory_parses():
 # ---------------------------------------------------------------------------
 
 
-def _collect_all_fixture_keys() -> set[str]:
-    """Collect all JSON keys present across all fixture files."""
+def _collect_fixture_keys(filenames: list[str]) -> set[str]:
+    """Collect JSON keys present across specific fixture files."""
     keys: set[str] = set()
 
     def _walk(obj: Any):
@@ -162,25 +176,52 @@ def _collect_all_fixture_keys() -> set[str]:
             for item in obj:
                 _walk(item)
 
-    for fpath in FIXTURES_DIR.glob("*.json"):
-        with open(fpath, encoding="utf-8") as f:
+    for fname in filenames:
+        with open(FIXTURES_DIR / fname, encoding="utf-8") as f:
             _walk(json.load(f))
     return keys
 
 
+MODEL_FIXTURE_SOURCES: dict[str, list[str]] = {
+    "Dispute": ["s5-get-dispute.json"],
+    "DisputedTransaction": ["s5-get-dispute.json", "s5-list-disputes.json"],
+    "BuyerInfo": ["s5-get-dispute.json", "s5-list-disputes.json"],
+    "SellerInfo": ["s5-get-dispute.json", "s5-list-disputes.json"],
+    "ItemInfo": ["s5-get-dispute.json"],
+    "FundMovement": ["s5-get-dispute.json"],
+    "DisputeMessage": ["s5-get-dispute.json"],
+    "Extensions": ["s5-get-dispute.json"],
+    "Evidence": ["s5-get-dispute.json"],
+    "DisputeOffer": ["s5-get-dispute.json"],
+    "RefundDetails": ["s5-get-dispute.json"],
+    "AcceptClaimOption": ["s5-get-dispute.json"],
+    "MakeOfferOption": ["s5-get-dispute.json"],
+    "AllowedResponseOptions": ["s5-get-dispute.json"],
+    "DisputeSummary": ["s5-list-disputes.json"],
+    "DisputeListResponse": ["s5-list-disputes.json"],
+    "ProvideEvidenceResponse": ["s7-provide-evidence-response.json"],
+    "TokenResponse": ["s2-token-response.json"],
+    "OAuthTokenResponse": ["s2-token-response.json"],
+    "WebhookEvent": ["s6-webhook-event.json"],
+    "Money": ["s5-get-dispute.json", "s5-list-disputes.json"],
+    "Link": ["s5-get-dispute.json", "s5-list-disputes.json", "s7-provide-evidence-response.json"],
+}
+
+
 def test_no_model_field_lacks_fixture_evidence():
-    """Verify that every field defined on our models has direct evidence in fixtures."""
+    """Verify that every field defined on our models has direct evidence in its designated fixtures."""
     import agent.app.paypal.models as pm
 
-    fixture_keys = _collect_all_fixture_keys()
-
-    # Iterate over all Pydantic model classes in models module
     for name, obj in vars(pm).items():
         if isinstance(obj, type) and issubclass(obj, BaseModel) and obj is not BaseModel:
+            fixture_files = MODEL_FIXTURE_SOURCES.get(name)
+            assert fixture_files is not None, f"Model '{name}' missing from MODEL_FIXTURE_SOURCES registry"
+            fixture_keys = _collect_fixture_keys(fixture_files)
+
             for field_name in obj.model_fields:
                 assert (
                     field_name in fixture_keys
-                ), f"Model field '{name}.{field_name}' lacks evidence in PayPal fixtures"
+                ), f"Model field '{name}.{field_name}' lacks evidence in designated fixtures: {fixture_files}"
 
 
 # ---------------------------------------------------------------------------

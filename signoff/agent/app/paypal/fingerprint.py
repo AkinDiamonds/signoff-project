@@ -1,7 +1,7 @@
 """Dispute state fingerprint computation.
 
 Computes a deterministic, stable SHA-256 state fingerprint strictly from the
-inputs defined in contracts.md:
+inputs defined in build-plan/contracts.md:
   Included: status, dispute_state, life-cycle stage, reason, disputed amount,
             due date, evidence types and sources, allowed response option sets,
             offer count, message count.
@@ -26,7 +26,7 @@ class Fingerprint(str):
 def compute_dispute_fingerprint(dispute: Dispute | DisputeSummary) -> Fingerprint:
     """Compute a stable state fingerprint for a dispute.
 
-    Uses exactly the 10 inputs specified in contracts.md.
+    Uses exactly the 10 inputs specified in build-plan/contracts.md.
     Order-independent for links, evidence lists, and allowed options.
     """
     # 1. status
@@ -73,11 +73,20 @@ def compute_dispute_fingerprint(dispute: Dispute | DisputeSummary) -> Fingerprin
         if options.make_offer and options.make_offer.offer_types:
             allowed_opts["make_offer"] = sorted(options.make_offer.offer_types)
 
-    # 9. offer count
+    # 9. offer count per build-plan/contracts.md
+    # PayPal's active dispute model has a single offer object (or None),
+    # but we support list, object, or dict forms defensively so any offer change is captured.
     offer = getattr(dispute, "offer", None)
     offer_count = 0
-    if offer is not None and getattr(offer, "buyer_requested_amount", None) is not None:
-        offer_count = 1
+    if offer is not None:
+        if isinstance(offer, list):
+            offer_count = len(offer)
+        elif getattr(offer, "buyer_requested_amount", None) is not None:
+            offer_count = 1
+        elif isinstance(offer, dict):
+            offer_count = len(offer.get("history", [])) if "history" in offer else (1 if offer else 0)
+        else:
+            offer_count = 1
 
     # 10. message count
     messages = getattr(dispute, "messages", None) or []

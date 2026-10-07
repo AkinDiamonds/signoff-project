@@ -37,4 +37,4 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-07 | Code review: list field alias, WebhookEvent resource union, Money dead branch, fixture parser map, scoped evidence checks | Added disputes alias, parsed helpers on WebhookEvent, cleaned branches, mapped models to fixtures | working tree | R1 |

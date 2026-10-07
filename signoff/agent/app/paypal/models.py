@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Annotated, Any
 
 from pydantic import (
+    AliasChoices,
     BaseModel,
     BeforeValidator,
     ConfigDict,
@@ -25,7 +26,7 @@ from agent.app.domain.enums import DisputeReason, DisputeStatus
 def _parse_utc_datetime(v: Any) -> datetime | None:
     """Parse string/datetime into a timezone-aware UTC datetime.
 
-    Rejects naive datetimes without timezone per contracts.md.
+    Rejects naive datetimes without timezone per build-plan/contracts.md.
     Converts any timezone offset into UTC.
     """
     if v is None:
@@ -52,7 +53,7 @@ OptionalUtcDatetime = Annotated[datetime | None, BeforeValidator(_parse_utc_date
 
 
 class Money(BaseModel):
-    """Monetary amount with ISO currency code per contracts.md.
+    """Monetary amount with ISO currency code per build-plan/contracts.md.
 
     Amounts must arrive as strings and become Decimal. JSON floats are rejected;
     zero or negative amounts are invalid; currency must be three uppercase letters.
@@ -75,8 +76,6 @@ class Money(BaseModel):
     def validate_value(cls, v: Any) -> Decimal:
         if isinstance(v, float):
             raise ValueError("JSON floats are rejected for money values; must be a decimal string")
-        if not isinstance(v, (str, Decimal, int)):
-            raise ValueError(f"Money value must arrive as a string, got {type(v).__name__}")
         if isinstance(v, int):
             dec = Decimal(str(v))
         elif isinstance(v, str):
@@ -84,8 +83,10 @@ class Money(BaseModel):
                 dec = Decimal(v)
             except InvalidOperation as exc:
                 raise ValueError(f"Invalid decimal string: {v!r}") from exc
-        else:
+        elif isinstance(v, Decimal):
             dec = v
+        else:
+            raise ValueError(f"Money value must arrive as a string, got {type(v).__name__}")
 
         if dec <= Decimal("0"):
             raise ValueError(f"Money value must be strictly positive, got {dec}")
@@ -307,9 +308,12 @@ class DisputeSummary(BaseModel):
 class DisputeListResponse(BaseModel):
     """Paginated list response from GET /v1/customer/disputes."""
 
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
-    items: list[DisputeSummary] = Field(default_factory=list)
+    items: list[DisputeSummary] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("items", "disputes"),
+    )
     links: list[Link] = Field(default_factory=list)
 
 
@@ -334,6 +338,7 @@ class TokenResponse(BaseModel):
     nonce: str | None = None
 
 
+# Alias retained for backwards compatibility; TokenResponse is the canonical model.
 OAuthTokenResponse = TokenResponse
 
 
@@ -348,8 +353,20 @@ class WebhookEvent(BaseModel):
     event_type: str
     event_version: str | None = None
     summary: str | None = None
-    resource: Dispute | DisputeSummary | dict[str, Any] | None = None
+    resource: dict[str, Any] | None = None
     links: list[Link] = Field(default_factory=list)
+
+    def get_resource_dispute(self) -> Dispute | None:
+        """Parse resource as a full Dispute model if present."""
+        if not self.resource:
+            return None
+        return Dispute.model_validate(self.resource)
+
+    def get_resource_summary(self) -> DisputeSummary | None:
+        """Parse resource as a DisputeSummary model if present."""
+        if not self.resource:
+            return None
+        return DisputeSummary.model_validate(self.resource)
 
 
 def parse_dispute(data: dict[str, Any] | str | bytes) -> Dispute:
