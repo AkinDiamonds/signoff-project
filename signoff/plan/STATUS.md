@@ -1,6 +1,6 @@
 # STATUS
 
-**Date:** 2026-10-07 · **Phase:** Build plan, step 01 done → step 02 next · **Days to deadline:** 36 (Nov 12, 12:00 PT = 20:00 UTC)
+**Date:** 2026-10-07 · **Phase:** Build plan, step 02 done → step 03 next · **Days to deadline:** 36 (Nov 12, 12:00 PT = 20:00 UTC)
 
 ## Done
 - Handoff read. Planning scaffold created. Doc claims checked (see `07-verify-register.md`).
@@ -9,11 +9,12 @@
 - ADR-008 & ADR-016 Accepted: LLM provider confirmed reachable, configured via generic env vars.
 - Open-source license added (MIT, ADR-011 Accepted).
 - Step 01 complete: repo layout (`shop/`, `packages/api-client/`, `packages/ui/`), `.gitignore`, `.gitattributes`, `.python-version`, `.nvmrc`, `Makefile`, `.pre-commit-config.yaml`, CI workflow (`.github/workflows/ci.yml`), `AGENTS.md` updated with make targets.
+- Step 02 complete: FastAPI app factory (`main.py`), settings module with startup validations (`settings.py`), structured JSON logging with correlation id propagation (`logging.py`), standard error envelope and handlers (`errors.py`), deterministic OpenAPI export (`export_openapi.py`), 28 tests passing.
 
 ## Next 3 actions
-1. **Step 02:** Agent service skeleton (FastAPI, settings, error envelope, healthz, OpenAPI export).
-2. **Step 03:** Database setup (Postgres, migrations, dispute tables).
-3. **Step 04:** Web workspaces and types (React/Vite setup, OpenAPI type sync).
+1. **Step 03:** Database setup (Postgres schema, migrations, dispute tables).
+2. **Step 04:** Web workspaces and types (React/Vite setup, OpenAPI type sync).
+3. **Step 05:** PayPal models and fixture contract tests.
 
 ## Blockers
 - None blocking Step 01 or Step 02.

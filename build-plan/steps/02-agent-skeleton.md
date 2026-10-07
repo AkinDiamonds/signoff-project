@@ -1,7 +1,7 @@
 # Step 02: Agent service skeleton
 
 Phase: P0 Foundation · Depends on: 01 · Estimate: 2h with an agent · Commit: `feat(agent): app factory, settings, health and error envelope`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 A running FastAPI service with validated settings, structured logs and one error format.
