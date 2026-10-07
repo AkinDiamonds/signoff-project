@@ -109,9 +109,22 @@ export class SignoffApiClient {
       }
     }
 
+    let signal: AbortSignal = controller.signal;
+    if (options.signal) {
+      if (typeof AbortSignal.any === 'function') {
+        signal = AbortSignal.any([options.signal, controller.signal]);
+      } else if (options.signal.aborted) {
+        controller.abort(options.signal.reason);
+      } else {
+        options.signal.addEventListener('abort', () => controller.abort(options.signal?.reason), {
+          once: true,
+        });
+      }
+    }
+
     const reqInit: RequestInit = {
       headers,
-      signal: options.signal ?? controller.signal,
+      signal,
     };
     if (options.method !== undefined) {
       reqInit.method = options.method;
@@ -140,8 +153,8 @@ export class SignoffApiClient {
       clearTimeout(timeoutId);
     }
 
-    // 204 No Content or empty responses
-    if (res.status === 204 || res.headers.get('content-length') === '0') {
+    // 204 No Content or empty successful responses
+    if (res.status === 204 || (res.ok && res.headers.get('content-length') === '0')) {
       return {
         success: true,
         status: res.status,

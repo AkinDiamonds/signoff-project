@@ -39,7 +39,13 @@ export type SessionId = string & { readonly [SessionIdBrand]: true };
 
 // --- Rule IDs ---
 
-export type RuleId = `G${number}-${string}` | 'A-01' | 'EXEC-STALE' | 'EXEC-FAILED';
+// Format: G<step>-<nn> (e.g. G1-01, G12-15) per CONVENTIONS.md §12.
+// Two-digit suffix is intentional — matches Zod ruleIdSchema and gate spec rule IDs.
+export type RuleId =
+  | `G${number}-${number}${number}`
+  | 'A-01'
+  | 'EXEC-STALE'
+  | 'EXEC-FAILED';
 
 // --- Request / Response Shapes ---
 

@@ -104,9 +104,10 @@ def check_parity() -> bool:
     schemas = openapi_spec.get("components", {}).get("schemas", {})
     for schema_name, schema_body in schemas.items():
         if "enum" in schema_body:
-            # Check if this matches a python enum
+            clean_schema = re.sub(r"[^a-z0-9]", "", schema_name.lower())
             for py_name, py_enum_cls in ALL_DOMAIN_ENUMS.items():
-                if schema_name.lower() == py_name.replace("_", ""):
+                clean_py = re.sub(r"[^a-z0-9]", "", py_name.lower())
+                if clean_schema == clean_py:
                     py_values = [e.value for e in py_enum_cls]
                     spec_values = schema_body["enum"]
                     if set(py_values) != set(spec_values):

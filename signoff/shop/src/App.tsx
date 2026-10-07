@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createApiClient } from '@signoff/api-client';
 import { Button, Card, StatusBadge } from '@signoff/ui';
 import { getApiBaseUrl } from './config';
@@ -8,11 +8,12 @@ export const App: React.FC = () => {
   const [data, setData] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStatus = async () => {
+  const client = useMemo(() => createApiClient({ baseUrl: getApiBaseUrl() }), []);
+
+  const fetchStatus = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const client = createApiClient({ baseUrl: getApiBaseUrl() });
       const res = await client.getStatus();
       if (res.success && res.data) {
         setData(res.data);
@@ -26,11 +27,11 @@ export const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [client]);
 
   useEffect(() => {
     void fetchStatus();
-  }, []);
+  }, [fetchStatus]);
 
   return (
     <main style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px' }}>

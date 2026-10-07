@@ -14,7 +14,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ verdict, className, te
 
   return (
     <span
-      data-testid={testId ?? `status-badge-${verdict.toLowerCase().replace('_', '-')}`}
+      data-testid={testId ?? `status-badge-${verdict.toLowerCase().replace(/_/g, '-')}`}
       className={className}
       style={{
         display: 'inline-flex',

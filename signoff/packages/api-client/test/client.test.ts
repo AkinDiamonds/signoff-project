@@ -164,4 +164,50 @@ describe('SignoffApiClient', () => {
     expect(res.status).toBe(0);
     expect(res.error?.kind).toBe('network');
   });
+
+  it('classifies 404 response with content-length 0 as non_json error, not success', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response('', {
+        status: 404,
+        statusText: 'Not Found',
+        headers: { 'Content-Length': '0' },
+      })
+    );
+
+    const client = createApiClient({
+      baseUrl: 'http://localhost:8000',
+      fetch: mockFetch,
+    });
+
+    const res = await client.request('/api/missing');
+    expect(res.success).toBe(false);
+    expect(res.status).toBe(404);
+    expect(res.error?.kind).toBe('non_json');
+  });
+
+  it('still enforces timeout when caller provides custom signal', async () => {
+    const callerController = new AbortController();
+    const mockFetch = vi.fn().mockImplementation(
+      (_url: string, init: RequestInit) =>
+        new Promise((_, reject) => {
+          if (init.signal) {
+            init.signal.addEventListener('abort', () => {
+              reject(new Error('Operation aborted'));
+            });
+          }
+        })
+    );
+
+    const client = createApiClient({
+      baseUrl: 'http://localhost:8000',
+      defaultTimeoutMs: 30,
+      fetch: mockFetch,
+    });
+
+    const res = await client.request('/api/slow', {
+      signal: callerController.signal,
+    });
+    expect(res.success).toBe(false);
+    expect(res.error?.kind).toBe('network');
+  });
 });
