@@ -262,18 +262,23 @@
     },
     "/readyz": {
       "get": {
-        "description": "Readiness check (database check stubbed until Step 03).",
+        "description": "Readiness check verifying database connectivity.",
         "operationId": "readyz_readyz_get",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Readyz Readyz Get",
-                  "type": "object"
+                  "anyOf": [
+                    {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "type": "object"
+                    },
+                    {}
+                  ],
+                  "title": "Response Readyz Readyz Get"
                 }
               }
             },

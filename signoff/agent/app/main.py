@@ -9,6 +9,7 @@ from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from agent.app.db.session import check_database_health
 from agent.app.errors import (
     ErrorEnvelope,
     create_error_response,
@@ -38,11 +39,7 @@ class RequestIdMiddleware:
         incoming_raw = headers.get(b"x-request-id") or headers.get(b"x-correlation-id") or b""
         incoming_id = incoming_raw.decode("latin1", errors="ignore").strip()
 
-        correlation_id = (
-            incoming_id
-            if incoming_id and CORRELATION_ID_REGEX.match(incoming_id)
-            else str(uuid.uuid4())
-        )
+        correlation_id = incoming_id if incoming_id and CORRELATION_ID_REGEX.match(incoming_id) else str(uuid.uuid4())
 
         set_correlation_id(correlation_id)
 
@@ -138,12 +135,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         }
 
     @app.get("/readyz", tags=["System"])
-    async def readyz() -> dict[str, str]:
-        """Readiness check (database check stubbed until Step 03)."""
-        # TODO(step-03): Replace stub with actual database ping once database connection pool is implemented.
+    async def readyz() -> dict[str, str] | Any:
+        """Readiness check verifying database connectivity."""
+        db_healthy = check_database_health()
+        if not db_healthy:
+            return create_error_response(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                code="UPSTREAM_UNAVAILABLE",
+                message="Database connection is unavailable or failing health check",
+            )
         return {
             "status": "ready",
-            "database": "stubbed",
+            "database": "connected",
         }
 
     @app.get("/api/status", tags=["System"])

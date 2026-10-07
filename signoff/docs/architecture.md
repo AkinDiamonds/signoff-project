@@ -48,6 +48,8 @@ One datastore on Render, transactional enqueue with the webhook dedupe insert, n
 | `executions` | `decision_id` UNIQUE; status INTENDED/SENT/CONFIRMED/FAILED; request hash; debug id |
 | `approvals` | decision_id, token hash, payload hash, expires_at, resolution, edited payload |
 | `orders`, `tracking_events`, `evidence_files` | mock store and uploaded evidence |
+| `ledger_events` | **append-only** (trigger); dispute_id, sequence_number, event_kind, payload jsonb |
+| `demo_sessions` | id PK, created_at, expires_at, metadata_json, is_active |
 A hash chain over `decisions` is optional; only claim "tamper-evident" if it is implemented and tested.
 
 ## Tech choices

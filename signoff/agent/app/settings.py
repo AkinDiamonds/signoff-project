@@ -72,9 +72,7 @@ class Settings(BaseSettings):
             return ALLOWED_PAYPAL_URL
         parsed = urlparse(v)
         if parsed.scheme != "https":
-            raise ValueError(
-                f"PayPal base URL must use HTTPS scheme, got '{parsed.scheme or 'none'}'"
-            )
+            raise ValueError(f"PayPal base URL must use HTTPS scheme, got '{parsed.scheme or 'none'}'")
         hostname = parsed.netloc or parsed.path
         if hostname != SANDBOX_PAYPAL_HOST:
             raise ValueError(

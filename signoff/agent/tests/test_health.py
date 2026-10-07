@@ -26,7 +26,20 @@ def test_readyz_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ready"
-    assert data["database"] == "stubbed"
+    assert data["database"] == "connected"
+
+
+def test_readyz_endpoint_database_down(monkeypatch):
+    from agent.app import main
+
+    monkeypatch.setattr(main, "check_database_health", lambda: False)
+    app = create_app()
+    client = TestClient(app)
+
+    response = client.get("/readyz")
+    assert response.status_code == 503
+    data = response.json()
+    assert data["error"]["code"] == "UPSTREAM_UNAVAILABLE"
 
 
 def test_api_status_endpoint():

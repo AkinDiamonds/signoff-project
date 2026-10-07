@@ -1,7 +1,7 @@
 # Step 03: Database schema and migrations
 
 Phase: P0 Foundation · Depends on: 02 · Estimate: 2h with an agent · Commit: `feat(db): schema, constraints and append-only triggers`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 The full schema from `docs/architecture.md` with constraints that make the safety rules true at the database level.
