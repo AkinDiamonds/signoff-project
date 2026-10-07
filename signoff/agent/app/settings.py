@@ -73,7 +73,9 @@ class Settings(BaseSettings):
         parsed = urlparse(v)
         if parsed.scheme != "https":
             raise ValueError(f"PayPal base URL must use HTTPS scheme, got '{parsed.scheme or 'none'}'")
-        hostname = parsed.netloc or parsed.path
+        # Use parsed.hostname (strips port and userinfo) instead of netloc to prevent
+        # SSRF via payloads like "https://api-m.sandbox.paypal.com@evil.com"
+        hostname = parsed.hostname or ""
         if hostname != SANDBOX_PAYPAL_HOST:
             raise ValueError(
                 f"Live PayPal endpoints are strictly prohibited. Host must be {SANDBOX_PAYPAL_HOST}, got '{hostname}'"

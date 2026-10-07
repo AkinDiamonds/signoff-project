@@ -178,6 +178,21 @@ def test_ledger_events_trigger_rejects_raw_sql_update_and_delete(db_session: Ses
     assert stored.event_kind == TimelineEventKind.WEBHOOK_RECEIVED.value
 
 
+def test_ledger_event_sequence_number_positive_constraint(db_session: Session) -> None:
+    """Ledger event sequence_number must be strictly >= 1."""
+    event = LedgerEvent(
+        id=uuid.uuid4(),
+        dispute_id=f"PP-D-{uuid.uuid4().hex[:8]}",
+        sequence_number=0,
+        event_kind=TimelineEventKind.WEBHOOK_RECEIVED.value,
+        payload={"test": 1},
+    )
+    db_session.add(event)
+    with pytest.raises(exc.IntegrityError):
+        db_session.commit()
+    db_session.rollback()
+
+
 def test_concurrent_webhook_duplicate_race(engine: Engine) -> None:
     """Two concurrent sessions inserting the same event id at once: exactly one succeeds."""
     event_id = f"WH-RACE-{uuid.uuid4().hex[:10]}"
@@ -353,6 +368,63 @@ def test_money_fixed_precision_and_decimals_rule(db_session: Session) -> None:
             currency="USD",
             snapshot={"id": "test"},
         )
+
+    # None is rejected with a clear ValueError, not an InvalidOperation from Decimal
+    with pytest.raises(ValueError, match="cannot be None"):
+        Dispute(
+            id=f"PP-D-{uuid.uuid4().hex[:8]}",
+            state_fingerprint="fp4",
+            status=DisputeStatus.UNDER_REVIEW.value,
+            reason=DisputeReason.MERCHANDISE_OR_SERVICE_NOT_RECEIVED.value,
+            amount=None,  # type: ignore
+            currency="USD",
+            snapshot={"id": "test"},
+        )
+
+    # Non-numeric strings are rejected with a clear ValueError
+    with pytest.raises(ValueError, match="Invalid decimal value"):
+        Dispute(
+            id=f"PP-D-{uuid.uuid4().hex[:8]}",
+            state_fingerprint="fp5",
+            status=DisputeStatus.UNDER_REVIEW.value,
+            reason=DisputeReason.MERCHANDISE_OR_SERVICE_NOT_RECEIVED.value,
+            amount="not-a-number",  # type: ignore
+            currency="USD",
+            snapshot={"id": "test"},
+        )
+
+    # Non-finite decimals (Infinity, NaN) are rejected with a clear ValueError
+    with pytest.raises(ValueError, match="Non-finite decimal values"):
+        Dispute(
+            id=f"PP-D-{uuid.uuid4().hex[:8]}",
+            state_fingerprint="fp6",
+            status=DisputeStatus.UNDER_REVIEW.value,
+            reason=DisputeReason.MERCHANDISE_OR_SERVICE_NOT_RECEIVED.value,
+            amount=Decimal("NaN"),
+            currency="USD",
+            snapshot={"id": "test"},
+        )
+
+    with pytest.raises(ValueError, match="Non-finite decimal values"):
+        Dispute(
+            id=f"PP-D-{uuid.uuid4().hex[:8]}",
+            state_fingerprint="fp7",
+            status=DisputeStatus.UNDER_REVIEW.value,
+            reason=DisputeReason.MERCHANDISE_OR_SERVICE_NOT_RECEIVED.value,
+            amount=Decimal("Infinity"),
+            currency="USD",
+            snapshot={"id": "test"},
+        )
+
+    with pytest.raises(ValueError, match="Non-finite decimal values"):
+        Order(
+            id=uuid.uuid4(),
+            merchant_id="merchant_1",
+            amount=Decimal("NaN"),
+            currency="USD",
+            status=OrderStatus.SHIPPED.value,
+        )
+
 
 
 def test_all_datetime_columns_are_timezone_aware() -> None:

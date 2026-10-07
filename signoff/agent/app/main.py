@@ -12,6 +12,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from agent.app.db.session import check_database_health
 from agent.app.errors import (
     ErrorEnvelope,
+    UpstreamUnavailableError,
     create_error_response,
     register_error_handlers,
 )
@@ -135,15 +136,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         }
 
     @app.get("/readyz", tags=["System"])
-    async def readyz() -> dict[str, str] | Any:
+    async def readyz() -> dict[str, str]:
         """Readiness check verifying database connectivity."""
         db_healthy = check_database_health()
         if not db_healthy:
-            return create_error_response(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                code="UPSTREAM_UNAVAILABLE",
-                message="Database connection is unavailable or failing health check",
-            )
+            raise UpstreamUnavailableError("Database connection is unavailable or failing health check")
         return {
             "status": "ready",
             "database": "connected",

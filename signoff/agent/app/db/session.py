@@ -31,6 +31,11 @@ def get_engine(database_url: str | None = None) -> Engine:
     return create_engine(url, **engine_kwargs)
 
 
+def reset_engine() -> None:
+    """Clear cached engine for tests and reconfiguration."""
+    get_engine.cache_clear()
+
+
 def get_session_factory(engine: Engine | None = None) -> sessionmaker[Session]:
     """Create session factory bound to given or default engine."""
     eng = engine or get_engine()

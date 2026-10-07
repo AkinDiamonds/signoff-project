@@ -7,7 +7,11 @@ Note: A database owner or superuser could disable or drop these triggers;
 this is accepted for demo environments per step 03 specification.
 """
 
+import logging
+
 from sqlalchemy import Connection, Engine, text
+
+logger = logging.getLogger(__name__)
 
 POSTGRES_TRIGGER_FUNCTION_SQL = """
 CREATE OR REPLACE FUNCTION reject_append_only_mutation()
@@ -74,6 +78,11 @@ def install_append_only_triggers(target: Engine | Connection) -> None:
         elif dialect == "sqlite":
             for trigger_sql in SQLITE_TRIGGERS_SQL:
                 conn.execute(text(trigger_sql))
+        else:
+            logger.warning(
+                "Append-only triggers are not supported on dialect '%s'; skipping installation.",
+                dialect,
+            )
 
     if isinstance(target, Engine):
         with target.begin() as conn:

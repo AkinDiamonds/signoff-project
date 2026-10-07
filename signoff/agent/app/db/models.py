@@ -141,13 +141,24 @@ class Dispute(Base):
 
     @validates("amount")
     def validate_amount(self, key: str, value: Any) -> Decimal:
-        """Reject float values and decimals with more than 2 decimal places."""
+        """Reject float values, None, non-finite values, and decimals with more than 2 decimal places."""
+        if value is None:
+            raise ValueError(f"{key} cannot be None.")
         if isinstance(value, float):
             raise TypeError(f"Floating point values are strictly forbidden for {key}; use Decimal.")
-        d = Decimal(str(value))
-        if d.as_tuple().exponent < -2:
+        try:
+            d = Decimal(str(value))
+        except Exception as exc:
+            raise ValueError(f"Invalid decimal value for {key}: {value}") from exc
+        if not d.is_finite():
+            raise ValueError(f"Non-finite decimal values (Infinity, NaN) are not allowed for {key}: {value}")
+        exponent = d.as_tuple().exponent
+        if not isinstance(exponent, int):
+            raise ValueError(f"Invalid decimal exponent for {key}: {value}")
+        if exponent < -2:
             raise ValueError(f"Values with more than two decimals are rejected for {key}: {value}")
         return d
+
 
     __table_args__ = (
         generate_enum_check_constraint("status", DisputeStatus),
@@ -333,13 +344,24 @@ class Order(Base):
 
     @validates("amount")
     def validate_amount(self, key: str, value: Any) -> Decimal:
-        """Reject float values and decimals with more than 2 decimal places."""
+        """Reject float values, None, non-finite values, and decimals with more than 2 decimal places."""
+        if value is None:
+            raise ValueError(f"{key} cannot be None.")
         if isinstance(value, float):
             raise TypeError(f"Floating point values are strictly forbidden for {key}; use Decimal.")
-        d = Decimal(str(value))
-        if d.as_tuple().exponent < -2:
+        try:
+            d = Decimal(str(value))
+        except Exception as exc:
+            raise ValueError(f"Invalid decimal value for {key}: {value}") from exc
+        if not d.is_finite():
+            raise ValueError(f"Non-finite decimal values (Infinity, NaN) are not allowed for {key}: {value}")
+        exponent = d.as_tuple().exponent
+        if not isinstance(exponent, int):
+            raise ValueError(f"Invalid decimal exponent for {key}: {value}")
+        if exponent < -2:
             raise ValueError(f"Values with more than two decimals are rejected for {key}: {value}")
         return d
+
 
     tracking_events: Mapped[list["TrackingEvent"]] = relationship(back_populates="order")
 
@@ -419,6 +441,7 @@ class LedgerEvent(Base):
     __table_args__ = (
         generate_enum_check_constraint("event_kind", TimelineEventKind),
         UniqueConstraint("dispute_id", "sequence_number", name="uq_ledger_events_dispute_seq"),
+        CheckConstraint("sequence_number >= 1", name="ck_ledger_events_seq_positive"),
     )
 
 

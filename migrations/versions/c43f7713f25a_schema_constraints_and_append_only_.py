@@ -74,10 +74,10 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
             "action_type IN ('PROVIDE_EVIDENCE', 'SEND_MESSAGE', 'MAKE_OFFER', 'ACCEPT_CLAIM', 'ESCALATE', 'APPEAL')",
-            name=op.f("ck_decisions_`ck_action_type_actiontype`"),
+            name=op.f("ck_decisions_ck_action_type_actiontype"),
         ),
         sa.CheckConstraint(
-            "verdict IN ('ALLOW', 'NEEDS_APPROVAL', 'DENY')", name=op.f("ck_decisions_`ck_verdict_verdict`")
+            "verdict IN ('ALLOW', 'NEEDS_APPROVAL', 'DENY')", name=op.f("ck_decisions_ck_verdict_verdict")
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_decisions")),
     )
@@ -112,14 +112,14 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
             "reason IN ('MERCHANDISE_OR_SERVICE_NOT_RECEIVED', 'MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED', 'UNAUTHORISED', 'CREDIT_NOT_PROCESSED', 'DUPLICATE_TRANSACTION', 'INCORRECT_AMOUNT', 'PAYMENT_BY_OTHER_MEANS', 'CANCELED_RECURRING_BILLING', 'PROBLEM_WITH_REMITTANCE', 'OTHER')",  # noqa: E501
-            name=op.f("ck_disputes_`ck_reason_disputereason`"),
+            name=op.f("ck_disputes_ck_reason_disputereason"),
         ),
         sa.CheckConstraint(
             "status IN ('WAITING_FOR_SELLER_RESPONSE', 'WAITING_FOR_BUYER_RESPONSE', 'UNDER_REVIEW', 'RESOLVED', 'OPEN', 'OTHER')",  # noqa: E501
-            name=op.f("ck_disputes_`ck_status_disputestatus`"),
+            name=op.f("ck_disputes_ck_status_disputestatus"),
         ),
         sa.CheckConstraint(
-            "amount = round(amount, 2) AND amount >= 0", name=op.f("ck_disputes_`ck_disputes_amount_two_decimals`")
+            "amount = round(amount, 2) AND amount >= 0", name=op.f("ck_disputes_ck_disputes_amount_two_decimals")
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_disputes")),
     )
@@ -156,11 +156,11 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
             "kind IN ('sync_dispute', 'run_agent', 'execute_decision', 'reconcile', 'expire_approvals')",
-            name=op.f("ck_jobs_`ck_kind_jobkind`"),
+            name=op.f("ck_jobs_ck_kind_jobkind"),
         ),
         sa.CheckConstraint(
             "status IN ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'DEAD_LETTER')",
-            name=op.f("ck_jobs_`ck_status_jobstatus`"),
+            name=op.f("ck_jobs_ck_status_jobstatus"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_jobs")),
     )
@@ -184,7 +184,11 @@ def upgrade() -> None:
         sa.Column("recorded_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
             "event_kind IN ('WEBHOOK_RECEIVED', 'DISPUTE_SYNCED', 'RUN_STARTED', 'EVIDENCE_BUILT', 'PLAN_PROPOSED', 'GATE_DECIDED', 'APPROVAL_REQUESTED', 'APPROVAL_RESOLVED', 'EXECUTION_INTENDED', 'EXECUTION_SENT', 'EXECUTION_CONFIRMED', 'EXECUTION_FAILED', 'INJECTION_FLAGGED', 'NO_ACTION', 'RUN_FAILED')",  # noqa: E501
-            name=op.f("ck_ledger_events_`ck_event_kind_timelineeventkind`"),
+            name=op.f("ck_ledger_events_ck_event_kind_timelineeventkind"),
+        ),
+        sa.CheckConstraint(
+            "sequence_number >= 1",
+            name=op.f("ck_ledger_events_ck_ledger_events_seq_positive"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_ledger_events")),
         sa.UniqueConstraint("dispute_id", "sequence_number", name="uq_ledger_events_dispute_seq"),
@@ -208,10 +212,10 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
             "status IN ('PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'DISPUTED')",
-            name=op.f("ck_orders_`ck_status_orderstatus`"),
+            name=op.f("ck_orders_ck_status_orderstatus"),
         ),
         sa.CheckConstraint(
-            "amount = round(amount, 2) AND amount >= 0", name=op.f("ck_orders_`ck_orders_amount_two_decimals`")
+            "amount = round(amount, 2) AND amount >= 0", name=op.f("ck_orders_ck_orders_amount_two_decimals")
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_orders")),
     )
@@ -254,7 +258,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
             "resolution IN ('PENDING', 'APPROVE', 'DENY', 'EDIT', 'EXPIRED')",
-            name=op.f("ck_approvals_`ck_resolution_approvalresolution`"),
+            name=op.f("ck_approvals_ck_resolution_approvalresolution"),
         ),
         sa.ForeignKeyConstraint(["decision_id"], ["decisions.id"], name=op.f("fk_approvals_decision_id_decisions")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_approvals")),
@@ -281,7 +285,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
             "status IN ('INTENDED', 'SENT', 'CONFIRMED', 'FAILED')",
-            name=op.f("ck_executions_`ck_status_executionstatus`"),
+            name=op.f("ck_executions_ck_status_executionstatus"),
         ),
         sa.ForeignKeyConstraint(["decision_id"], ["decisions.id"], name=op.f("fk_executions_decision_id_decisions")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_executions")),
@@ -302,7 +306,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
             "status IN ('PRE_TRANSIT', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED', 'RETURNED', 'EXCEPTION')",
-            name=op.f("ck_tracking_events_`ck_status_trackingstatus`"),
+            name=op.f("ck_tracking_events_ck_status_trackingstatus"),
         ),
         sa.ForeignKeyConstraint(["order_id"], ["orders.id"], name=op.f("fk_tracking_events_order_id_orders")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_tracking_events")),
@@ -324,12 +328,14 @@ def upgrade() -> None:
             $$ LANGUAGE plpgsql;
         """)
         op.execute("""
+            DROP TRIGGER IF EXISTS reject_decisions_mutation ON decisions;
             CREATE TRIGGER reject_decisions_mutation
             BEFORE UPDATE OR DELETE ON decisions
             FOR EACH ROW
             EXECUTE FUNCTION reject_append_only_mutation();
         """)
         op.execute("""
+            DROP TRIGGER IF EXISTS reject_ledger_events_mutation ON ledger_events;
             CREATE TRIGGER reject_ledger_events_mutation
             BEFORE UPDATE OR DELETE ON ledger_events
             FOR EACH ROW
