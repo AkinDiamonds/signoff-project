@@ -1,0 +1,8 @@
+{
+  "scope": "https://uri.paypal.com/services/disputes/read https://uri.paypal.com/services/disputes/update",
+  "access_token": "ACCESS-TOKEN-REDACTED",
+  "token_type": "Bearer",
+  "app_id": "APP-80W284485P513434W",
+  "expires_in": 32400,
+  "nonce": "2026-10-05T16:00:00Z-REDACTED-NONCE"
+}

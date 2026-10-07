@@ -1,7 +1,7 @@
 # Step 05: PayPal models and fixture contract tests
 
 Phase: P1 Ingestion · Depends on: 03 · Estimate: 2h with an agent · Commit: `feat(paypal): models, parsers and dispute fingerprint`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 Parse real PayPal shapes safely and compute a stable state fingerprint.
