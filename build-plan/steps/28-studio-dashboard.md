@@ -7,18 +7,17 @@ Status: [ ] not started
 The AG Studio dashboard with live data and a natural-language assistant that can only read.
 
 ## Do (in order)
-1. Install the pinned AG Studio packages (versions from the spike); read the Data Setup, Async Data and licence pages first (VERIFY items in the register).
+1. Install the pinned AG Studio packages (versions from the spike). **No licence key needed** (ADR-015: watermark and console error are expected and accepted).
 2. Build the typed data adapter mapping `/api/kpis` and `/api/disputes` into Studio data; apply the theme from the tokens.
 3. Add `POST /api/llm` in the agent as the assistant's proxy: model allowlist, size cap, rate limit, budget, no tools beyond Studio's data tools.
 4. Configure custom agent instructions: dashboard questions only, no actions; show sample questions.
-5. Licence key from the web environment; define behavior with no key.
 
 ## Files (touch only these)
 `web/src/features/dashboard/*`, `agent/app/api/llm_proxy.py`, tests.
 
 ## Edge cases: behavior
 - Studio fails to load: the page shows a link to the plain dispute list.
-- Trial licence lapse: watermark only; app still works.
+- Watermark and console error from AG Studio are **expected** (ADR-015); do not try to suppress them.
 - API error: widget error state, not blank.
 - Asked to approve a dispute or edit the charter: refuses, and the tool list has no such tool.
 - Proxy ignores client-supplied model overrides; oversize body rejected; budget exhausted gives a friendly message.

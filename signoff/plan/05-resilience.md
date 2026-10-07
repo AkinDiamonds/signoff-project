@@ -20,7 +20,7 @@ Goal: no outcome where money moves without an ALLOW, and no outcome where a sing
 | Prompt injection in buyer message | screener + schema + gate | No mutating action; `G5-02` / schema rejection logged | injection suite |
 | Hosted instance sleeping / cold start | PayPal webhook retry, health checks | Always-on instance for the demo window; poller as backup | rehearsal checks |
 | Demo abuse / cost blowup | per-IP and daily quotas | 429 with message; `DEMO_FROZEN` kill switch | quota tests |
-| Studio licence trial lapses | watermark/console warnings (VERIFY behavior) | Ask AG Grid; keep plain-React detail pages independent | manual check |
+| AG Studio watermark | Watermark and console error appear without a licence key (expected, ADR-015) | Keep plain-React detail pages independent of Studio; the approval page never depends on it |
 
 ## Executor write-ahead protocol
 1. Receive `GateDecision(ALLOW)`; verify it is the gate's type and `action_hash` matches.

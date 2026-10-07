@@ -1,7 +1,7 @@
 # Step 01: Repo, license and CI skeleton
 
 Phase: P0 Foundation · Depends on: 00 · Estimate: 2h with an agent · Commit: `chore(repo): layout, license, CI and make targets`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 A public repo with a visible license and CI that blocks bad commits before any feature exists.

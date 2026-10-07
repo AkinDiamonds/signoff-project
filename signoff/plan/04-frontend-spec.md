@@ -41,7 +41,7 @@ Shared enums (`Verdict`, `DisputeReason`, `ActionType`) come from the spec; no h
 - AI: `createAiHarness(api, { adapter })` gives five default agents (Lead, Planning, Data, Page, Widget). Custom agents via the adapter's `agents` field (spread `agStudioDefaultAgents` to keep the defaults); custom tools; and a **Toolkit** mode exposing Studio actions without the chat panel.
 - Quick start targets the OpenAI Responses API via an `executeTurn`-style adapter; a different provider likely means writing an adapter (VERIFY, register V-07, and it affects ADR-008).
 - Doc pages exist for Data Setup, Async Data, Building Widgets, Custom Widgets. Read those before the dashboard week.
-- Licence keys are tied to release dates: pin the version before requesting a key.
+- Licence: no key required for the hackathon (ADR-015 Accepted). A watermark and a console error will appear; this is expected and will not be penalised during judging. Keep `package.json` version pinned for stability.
 
 ## Custom widgets (build order)
 1. **Decision Timeline** (in the video): vertical timeline of events per dispute: webhook → evidence gathered → plan → verdict (with rule_id chip) → execution → confirmed state.
@@ -58,3 +58,17 @@ Neutral surface + ink; one calm accent (teal or ink blue); **ALLOW** green, **NE
 3. Build in video order: dispute detail + Timeline → approval card → dashboard → demo panel → Studio assistant.
 4. One Playwright smoke test: open `/demo`, run scenario B, see a verdict row appear.
 5. Test the approval page on an actual phone viewport early.
+
+## Buyer-facing surfaces (ADR-012; `shop/` package)
+| Route | Surface | Purpose |
+|---|---|---|
+| `/` | Shop landing | Fictional candle shop, product listing |
+| `/product/:sku` | Product page | Add to cart |
+| `/cart` | Cart | Review and proceed |
+| `/checkout` | Checkout | PayPal buttons (V-23: method TBD) |
+| `/confirmation/:code` | Order confirmation | Order code + tracking link |
+| `/orders` | Order list | Buyer’s orders |
+| `/orders/:code` | Order detail | Status, tracking, dispute button |
+| `/orders/:code/dispute` | File a dispute | Buyer starts a dispute against the order |
+
+Both apps share `packages/ui` with separate themes (signoff teal, shop neutral). A "use a demo order" shortcut on the `/demo` panel lets judges skip checkout. The judge guide at `/guide` has a switcher for Buyer view and Merchant view. See `build-plan/contracts.md` for all routes.

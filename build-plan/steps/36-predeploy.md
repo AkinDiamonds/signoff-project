@@ -12,7 +12,7 @@ A fresh clone works, everything claimed is proven, and the deploy plan has exact
 2. Follow the README from a fresh clone in a clean environment; fix every gap.
 3. Create `docs/env-matrix.md`: every variable by service and host (names only).
 4. Review `docs/claims-ledger.md` and `plan/07-verify-register.md`: no blocking open items.
-5. Write `docs/deploy-handoff.md`: hosts, services, webhook subscription and return URL updates, CORS origins, licence key activation timing, always-on setting, pool refill before recording, backup recording.
+5. Write `docs/deploy-handoff.md`: hosts, services, webhook subscription and return URL updates, CORS origins, always-on setting, pool refill before recording, backup recording. **No licence key activation step** (ADR-015 Accepted; watermark is expected).
 6. Scan built artifacts for secrets; confirm the stub cannot start in production configuration.
 
 ## Files (touch only these)
@@ -20,7 +20,7 @@ A fresh clone works, everything claimed is proven, and the deploy plan has exact
 
 ## Edge cases: behavior
 - Webhook and checkout return URLs must change after deployment; record them as explicit tasks.
-- Licence trial date versus judging window (V-09).
+- AG Studio watermark and console error will appear on the hosted site; this is expected (ADR-015) and does not block judging.
 - Time zones when scheduling the recording.
 
 ## Edge cases: types

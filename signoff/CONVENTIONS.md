@@ -49,7 +49,7 @@ Rules for everyone who touches this repo: me and any AI coding assistant. Where 
 - TanStack Query for server state. Every data view implements **loading, empty, error** states.
 - Vitest + Testing Library for components; Playwright for one smoke test of the demo path.
 - Verdict colors always paired with an icon and label (color is never the only signal).
-- Pin AG Studio to the exact version in `package.json`; do not upgrade after a licence key is issued (keys are tied to release dates).
+- Pin AG Studio to the exact version in `package.json`; do not upgrade mid-build. A watermark and console error will appear without a licence key; this is accepted per ADR-015 and will not be penalised during judging.
 
 ## 7. PayPal integration
 - Sandbox only. `PAYPAL_ENV=sandbox` is asserted at startup; the live base URL is not present in code.

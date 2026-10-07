@@ -27,9 +27,9 @@ Built for the PayPal AI Hackathon. **Sandbox only. Fictional data only.**
 
 | Piece | Real or simulated |
 |---|---|
-| PayPal disputes, webhooks, evidence, offers | _fill in after spike_ |
-| Storefront orders and carrier tracking | Simulated (mock store) |
-| Agent reasoning | _real LLM / labeled cache — fill in_ |
+| PayPal disputes, webhooks, evidence, offers | **Real** — sandbox only (REST API, verified webhook events, provide-evidence calls). Dispute data from fixtures in `fixtures/paypal/`. |
+| Storefront orders and carrier tracking | **Simulated** (mock store) — fictional products; no real carrier API. |
+| Agent reasoning | **Real LLM** (provider TBD, ADR-016) with labeled scenario cache for demo cost control. Cache hits are marked "cached reasoning" everywhere they appear. |
 
 ## Run it / try it
 
@@ -47,8 +47,11 @@ _Maintained as tools are adopted. One line each: what it is, what it does here._
 
 ## Known limits
 
-_Honest list, maintained as discovered._
+- **Sandbox only.** No production PayPal environment; all credentials are sandbox.
+- **AG Studio watermark.** AG Grid / AG Studio displays a watermark and console error without a licence key. This is expected and accepted per ADR-015; the hackathon judging will not penalise it.
+- **Buyer-assertion API.** The test-dispute generator creates disputes via sandbox UI rather than the `POST /v1/customer/disputes` buyer-assertion API (S4 partial). Labeled clearly in the demo script.
+- **Scenario cache.** LLM calls for demo scenarios A–E may be served from a pre-populated cache to control cost. All cache hits are labeled in the UI and README.
 
 ## License
 
-_MIT or Apache-2.0 — decision in `docs/decisions.md` (ADR-011)._
+MIT — see `LICENSE`. Decision: `docs/decisions.md` ADR-011.

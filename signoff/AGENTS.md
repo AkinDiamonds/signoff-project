@@ -14,7 +14,7 @@ Read in this order before touching anything: `plan/STATUS.md` → `CONVENTIONS.m
 ## Rules of engagement
 - Do not invent PayPal fields or endpoints. Use `fixtures/paypal/` or the OpenAPI schema.
 - No new dependency without an ADR line.
-- Small diffs. One concern per PR.
+- Small diffs. One concern per commit.
 - Write the test first for gate rules and parsers.
 - If a task is ambiguous or touches the gate/executor semantics, stop and write the question in `plan/STATUS.md` under Blockers.
 
@@ -22,4 +22,14 @@ Read in this order before touching anything: `plan/STATUS.md` → `CONVENTIONS.m
 Run and paste the output of: lint, type-check, tests, import-linter (agent); lint, tsc, vitest (web). State what you did **not** verify.
 
 ## Commands
-_Filled in after the Day-1 spike._
+Run these via `make`:
+- `make check` — run verification checks across the project
+- `make test-agent` — run agent service unit and integration tests (pytest, ruff, mypy)
+- `make test-web` — run web frontend tests and lints (tsc, eslint, vitest)
+- `make test-types` — verify TypeScript and Python type consistency
+- `make api-types` — regenerate or verify API client types against OpenAPI
+- `make e2e` — run full Playwright end-to-end suite
+- `make e2e-smoke` — run quick smoke E2E tests
+- `make rehearse` — run live sandbox rehearsal verification
+- `make dev` — start local development environment
+

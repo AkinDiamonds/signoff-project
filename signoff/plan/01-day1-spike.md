@@ -36,19 +36,21 @@
 
 | Step | Result (PASS/FAIL/PARTIAL) | Evidence | Time spent | Notes / surprises |
 |---|---|---|---|---|
-| S1 | | | | |
-| S2 | | | | |
-| S3 | | | | |
-| S4 | | | | |
-| S5 | | | | |
-| S6 | | | | |
-| S7 | | | | |
-| S8 | | | | |
-| S9 | | | | |
-| S10 | | | | |
-| S11 | | | | |
-| S12 | | | | |
-| S13 | | | | |
-| S14 | | | | |
+| S1 | PASS | Sandbox business + personal accounts created | — | — |
+| S2 | PASS | Sandbox REST app created, Disputes feature enabled, `client_credentials` token obtained | — | — |
+| S3 | PASS | Test transaction created; seller_transaction_id and buyer_transaction_id captured from dispute fixture | — | — |
+| S4 | PARTIAL | Dispute created through sandbox UI (personal account), not via API with buyer-assertion JWT. Buyer consent flow (Log in with PayPal scope) not exercised | — | Dispute creation via API still unverified; test-dispute generator (step 23) and buyer portal (step 32) must use sandbox UI or prove the API path. See S4/S5 note below. |
+| S5 | PASS (UI) | Dispute PP-R-MBX-REDACTED created; GET response saved to `fixtures/paypal/s5-get-dispute.json`; all six HATEOAS links present; `allowed_response_options` confirmed; due date 20 days after creation | — | `fixtures/paypal/s5-list-disputes.json` also saved. Dispute state REQUIRED_ACTION, stage INQUIRY, status WAITING_FOR_SELLER_RESPONSE. |
+| S6 | PARTIAL | Webhook event received at webhook.site test endpoint; body matches expected dispute event shape | — | Signature verification not exercised (webhook.site captures headers but PayPal verify-webhook-signature was not called). Dedupe not tested. V-12 still open. |
+| S7 | PASS | `POST .../provide-evidence` called; response is links-only (`fixtures/paypal/s7-provide-evidence-response.json`). Confirmation requires re-fetch (GET) — confirmed agent re-fetch pattern. | — | Evidence response contains only a `detail` link. State change confirmed by re-fetching, not from the provide-evidence response. |
+| S8 | — | Pending step 00 assumptions table | — | — |
+| S9 | — | Pending | — | — |
+| S10 | — | Pending | — | — |
+| S11 | — | Pending | — | — |
+| S12 | — | Pending | — | — |
+| S13 | — | Pending | — | — |
+| S14 | — | Pending | — | — |
 
-**Decision:** _GO / GO with fallback / NO-GO — date — one paragraph._
+**S4/S5 note (for step 23 and step 32):** The dispute was created via the PayPal sandbox web UI by a personal test account, not via `POST /v1/customer/disputes` with a buyer-assertion JWT. The API creation path (buyer consent scope, JWT construction) has not been exercised. The test-dispute generator must either (a) prove the API path in S12 and close V-02, or (b) use sandbox simulation / manual UI creation and label it clearly.
+
+**Decision:** GO with partial fallback — 2026-10-06 — S1-S3 and S5 pass cleanly. S4 (buyer-assertion API) and S6 (signature verification) are partial; both have concrete fallback paths (UI creation for S4; webhook.site-captured headers + PayPal verify-signature API call to close V-12). S7 confirms the evidence response shape and re-fetch pattern. Proceeding to Week 2 with these items tracked in the assumptions table and verify register.

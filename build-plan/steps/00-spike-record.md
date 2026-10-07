@@ -1,7 +1,7 @@
 # Step 00: Record spike results and lock decisions
 
 Phase: P0 Foundation · Depends on: - · Estimate: 1h with an agent · Commit: `docs(adr): record spike answers and decisions`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 Turn spike outcomes into ADRs and fixtures. Docs only, no code.

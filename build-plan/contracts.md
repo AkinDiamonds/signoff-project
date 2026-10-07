@@ -4,7 +4,7 @@ If a step needs something not defined here, add it here first, then use it.
 
 ## Data formats
 - JSON field names: snake_case everywhere (matches PayPal). Enum values: UPPER_SNAKE.
-- Money: object with `value` (decimal string, two places for USD, never a number) and `currency` (three uppercase letters). Only USD is supported; other currencies are excluded from sums.
+- Money: object with `value` (decimal string, two places for USD, never a number) and `currency_code` (three uppercase letters, matching PayPal's own shape). Only USD is supported; other currencies are excluded from sums.
 - Time: ISO 8601 in UTC with `Z`. Naive times are rejected. Deadlines are inclusive: an action at exactly the due time is allowed.
 - Ids: PayPal ids are opaque strings. Our ids are UUIDs. Approval tokens are at least 32 random bytes, URL-safe, stored hashed. Order codes are 10 random characters.
 - Pagination: `limit` and `cursor` in, `items` and `next_cursor` out.
@@ -25,7 +25,7 @@ Codes and HTTP status: VALIDATION_FAILED 422, NOT_FOUND 404, CONFLICT_STALE 409,
 - Evidence strength label: low, medium, high (never "probability" or "win").
 
 ## Dispute fingerprint inputs
-Included: status, life-cycle stage, reason, disputed amount, due date, evidence types and sources, allowed response option sets, offer count, message count. Excluded: link URLs, create and update timestamps, ordering of lists.
+Included: status, dispute_state, life-cycle stage, reason, disputed amount, due date, evidence types and sources, allowed response option sets, offer count, message count. Excluded: link URLs, create and update timestamps, ordering of lists.
 
 ## Environment and hosts
 Host variables: `PUBLIC_SIGNOFF_URL`, `PUBLIC_SHOP_URL`, `PUBLIC_API_URL`. Other names come from `.env.example`; add new names there and in `docs/env-matrix.md` in the same commit.
