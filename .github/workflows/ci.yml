@@ -73,6 +73,10 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
+      - name: Install dependencies
+        run: |
+          npm ci
+
       - name: Lint and Test Web
         run: |
           make test-web
@@ -83,6 +87,26 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[dev]
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install Node dependencies
+        run: |
+          npm ci
 
       - name: Check Types
         run: |
@@ -95,6 +119,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[dev]
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install Node dependencies
+        run: |
+          npm ci
+
       - name: Verify API Types Freshness
         run: |
           make api-types
+          git diff --exit-code signoff/packages/api-client/src/generated/schema.ts

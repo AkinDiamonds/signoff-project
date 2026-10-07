@@ -1,7 +1,7 @@
 # Step 04: Web workspaces, generated client, type-test harness
 
 Phase: P0 Foundation · Depends on: 02 · Estimate: 3h with an agent · Commit: `feat(web): workspaces, typed api client, type tests`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 Both frontends and a shared typed client exist, and the type-test harness fails when types get looser.
@@ -38,4 +38,4 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-07 | Step 04 verification: workspaces, strict base tsconfig, openapi typegen, fetch client (3 error kinds, timeouts, 204 & 502 handling), Zod boundary schemas, compile-time baseline type tests (*.test-d.ts), ESLint rules (forbid any, !, as outside api-client), enum parity script, freshness check, production build enforcement. | Implemented and verified with make check passing | feat(web): workspaces, typed api client, type tests | R1 |

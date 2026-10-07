@@ -6,7 +6,7 @@ else
 VENV_PY := .venv/bin/python
 endif
 
-check: test-agent
+check: test-agent test-web test-types
 	@echo Checking license and repository integrity...
 	@$(VENV_PY) -c "import os; assert os.path.exists('LICENSE'), 'LICENSE missing'"
 	@echo check: all checks passed.
@@ -17,10 +17,15 @@ test-agent:
 	@$(VENV_PY) -m pytest
 
 test-web:
-	@echo test-web: not yet implemented
+	@echo Running frontend and UI unit tests...
+	@npx eslint .
+	@npx vitest run --exclude "**/*.test-d.ts"
 
 test-types:
-	@echo test-types: not yet implemented
+	@echo Running compile-time type tests and enum parity checks...
+	@npx vitest run signoff/packages/api-client/test/baseline.test-d.ts
+	@$(VENV_PY) signoff/scripts/check_enum_parity.py
+	@node scripts/check-client-fresh.mjs
 
 e2e:
 	@echo e2e: not yet implemented
@@ -32,8 +37,9 @@ rehearse:
 	@echo rehearse: not yet implemented
 
 api-types:
-	@echo Exporting OpenAPI schema...
+	@echo Exporting OpenAPI schema and generating client...
 	@$(VENV_PY) signoff/scripts/export_openapi.py
+	@node signoff/packages/api-client/scripts/generate.mjs
 
 dev:
 	@echo Starting agent development server...
