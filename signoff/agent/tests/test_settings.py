@@ -1,8 +1,9 @@
 """Tests for Settings validation and edge cases."""
 
 import pytest
-from agent.app.settings import AppEnv, PayPalEnv, Settings
 from pydantic import ValidationError
+
+from agent.app.settings import AppEnv, PayPalEnv, Settings
 
 
 def test_valid_settings_local_and_sandbox():
@@ -45,6 +46,17 @@ def test_live_paypal_base_url_refused():
     assert "Live PayPal endpoints are strictly prohibited" in str(exc_info.value)
 
 
+def test_paypal_base_url_requires_https():
+    """Startup validation: non-HTTPS or scheme-less PayPal URL is refused."""
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(paypal_base_url="http://api-m.sandbox.paypal.com")
+    assert "PayPal base URL must use HTTPS scheme" in str(exc_info.value)
+
+    with pytest.raises(ValidationError) as exc_info2:
+        Settings(paypal_base_url="api-m.sandbox.paypal.com")
+    assert "PayPal base URL must use HTTPS scheme" in str(exc_info2.value)
+
+
 def test_prod_missing_required_variables_lists_names_only():
     """Missing required variables in prod: fail at startup listing names only, never values."""
     with pytest.raises(ValidationError) as exc_info:
@@ -61,10 +73,23 @@ def test_prod_missing_required_variables_lists_names_only():
     assert "APPROVAL_TOKEN_SECRET" in error_msg
 
 
+def test_prod_short_approval_token_secret_refused():
+    """Startup validation: approval token secret in prod must be at least 32 characters."""
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(
+            app_env=AppEnv.prod,
+            paypal_env=PayPalEnv.sandbox,
+            paypal_client_id="cid",
+            paypal_client_secret="csecret",
+            approval_token_secret="too_short_secret",
+        )
+    assert "APPROVAL_TOKEN_SECRET must be at least 32 characters" in str(exc_info.value)
+
+
 def test_settings_is_frozen():
     """Settings object is frozen."""
     settings = Settings()
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="Instance is frozen"):
         settings.app_env = AppEnv.prod
 
 

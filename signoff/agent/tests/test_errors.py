@@ -1,6 +1,9 @@
 """Tests for standard error envelope and exception handlers."""
 
 import pytest
+from fastapi.testclient import TestClient
+from pydantic import BaseModel
+
 from agent.app.errors import (
     ConflictStaleError,
     ConflictVersionError,
@@ -11,8 +14,6 @@ from agent.app.errors import (
     UpstreamUnavailableError,
 )
 from agent.app.main import create_app
-from fastapi.testclient import TestClient
-from pydantic import BaseModel
 
 
 def test_404_not_found_envelope_shape():

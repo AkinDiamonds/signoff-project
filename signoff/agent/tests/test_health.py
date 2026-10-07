@@ -1,8 +1,9 @@
 """Tests for system health and readiness endpoints."""
 
+from fastapi.testclient import TestClient
+
 from agent.app.main import create_app
 from agent.app.settings import AppEnv, PayPalEnv, Settings
-from fastapi.testclient import TestClient
 
 
 def test_healthz_endpoint():

@@ -5,6 +5,10 @@ import re
 import uuid
 from typing import Any
 
+from fastapi import FastAPI, status
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
+
 from agent.app.errors import (
     ErrorEnvelope,
     create_error_response,
@@ -12,9 +16,6 @@ from agent.app.errors import (
 )
 from agent.app.logging import set_correlation_id, setup_logging
 from agent.app.settings import Settings
-from fastapi import FastAPI, status
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.types import ASGIApp, Receive, Scope, Send
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ class RequestIdMiddleware:
 
         response_started = False
 
-        async def send_wrapper(message: dict[str, Any]) -> None:
+        async def send_wrapper(message: Message) -> None:
             nonlocal response_started
             if message["type"] == "http.response.start":
                 response_started = True
@@ -139,6 +140,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/readyz", tags=["System"])
     async def readyz() -> dict[str, str]:
         """Readiness check (database check stubbed until Step 03)."""
+        # TODO(step-03): Replace stub with actual database ping once database connection pool is implemented.
         return {
             "status": "ready",
             "database": "stubbed",

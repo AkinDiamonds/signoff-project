@@ -35,7 +35,6 @@ jobs:
         with:
           python-version-file: ".python-version"
           cache: "pip"
-        continue-on-error: true
 
       - name: Lint and Test Agent
         run: |
@@ -52,7 +51,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-        continue-on-error: true
 
       - name: Lint and Test Web
         run: |

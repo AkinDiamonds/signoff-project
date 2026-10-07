@@ -67,10 +67,14 @@ class Settings(BaseSettings):
     @field_validator("paypal_base_url")
     @classmethod
     def validate_paypal_base_url(cls, v: str) -> str:
-        """Reject any PayPal host that is not sandbox."""
+        """Reject any PayPal host that is not sandbox and require HTTPS."""
         if not v:
             return ALLOWED_PAYPAL_URL
         parsed = urlparse(v)
+        if parsed.scheme != "https":
+            raise ValueError(
+                f"PayPal base URL must use HTTPS scheme, got '{parsed.scheme or 'none'}'"
+            )
         hostname = parsed.netloc or parsed.path
         if hostname != SANDBOX_PAYPAL_HOST:
             raise ValueError(
@@ -99,6 +103,8 @@ class Settings(BaseSettings):
                 raise ValueError(
                     f"Production startup failed. Missing required environment variables: {', '.join(missing)}"
                 )
+            if len(self.approval_token_secret) < 32:
+                raise ValueError("APPROVAL_TOKEN_SECRET must be at least 32 characters long in production")
 
         return self
 

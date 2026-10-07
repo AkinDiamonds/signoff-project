@@ -4,9 +4,10 @@ import json
 import logging
 import uuid
 
+from fastapi.testclient import TestClient
+
 from agent.app.logging import JSONFormatter
 from agent.app.main import create_app
-from fastapi.testclient import TestClient
 
 
 def test_valid_request_id_preserved():

@@ -27,7 +27,16 @@ asyncio_mode = "strict"
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+src = ["signoff"]
+
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["E402"]
+
+[tool.pyrefly]
+search_path = ["signoff"]
+
+[tool.pyright]
+extraPaths = ["signoff"]
+

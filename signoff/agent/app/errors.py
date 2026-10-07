@@ -2,12 +2,13 @@
 
 import logging
 
-from agent.app.logging import get_correlation_id
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from agent.app.logging import get_correlation_id
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +84,8 @@ class FrozenError(AppError):
 
 
 class TokenInvalidError(AppError):
+    """Approval token invalid or expired. Uses 404 per build-plan/contracts.md to avoid leaking token existence."""
+
     def __init__(self, message: str = "The approval token is invalid or has expired"):
         super().__init__(code="TOKEN_INVALID", message=message, status_code=status.HTTP_404_NOT_FOUND)
 
