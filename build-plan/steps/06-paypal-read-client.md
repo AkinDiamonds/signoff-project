@@ -1,7 +1,7 @@
 # Step 06: PayPal read client and token cache
 
 Phase: P1 Ingestion · Depends on: 05 · Estimate: 2h with an agent · Commit: `feat(paypal): read-only client with token cache and retries`
-Status: [ ] not started
+Status: [x] done
 Assumes (step 00 table): S12 toolkit auth. If the answer changed, edit this file first and log it below.
 
 ## Goal
@@ -40,4 +40,5 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-08 | Implement read client, token cache, frozen allowlist, edge-case tests | Built PayPalAuth, PayPalReadClient, agent tools allowlist, and 17 unit tests | working tree | R1 |
+

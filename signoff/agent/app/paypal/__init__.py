@@ -1,5 +1,6 @@
 """PayPal API models, contract parsers, and dispute fingerprinting."""
 
+from agent.app.paypal.auth import PayPalAuth, get_paypal_debug_id
 from agent.app.paypal.fingerprint import Fingerprint, compute_dispute_fingerprint
 from agent.app.paypal.models import (
     AcceptClaimOption,
@@ -31,6 +32,7 @@ from agent.app.paypal.models import (
     parse_token_response,
     parse_webhook_event,
 )
+from agent.app.paypal.read_client import PayPalReadClient
 
 __all__ = [
     "AcceptClaimOption",
@@ -51,12 +53,15 @@ __all__ = [
     "MakeOfferOption",
     "Money",
     "OAuthTokenResponse",
+    "PayPalAuth",
+    "PayPalReadClient",
     "ProvideEvidenceResponse",
     "RefundDetails",
     "SellerInfo",
     "TokenResponse",
     "WebhookEvent",
     "compute_dispute_fingerprint",
+    "get_paypal_debug_id",
     "parse_dispute",
     "parse_dispute_list",
     "parse_dispute_summary",

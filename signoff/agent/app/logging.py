@@ -29,6 +29,8 @@ def _correlation_record_factory(*args: Any, **kwargs: Any) -> logging.LogRecord:
     return record
 
 
+# Applied eagerly at import time so any logger (including third-party)
+# created before setup_logging() is called still receives correlation_id.
 logging.setLogRecordFactory(_correlation_record_factory)
 
 
@@ -56,6 +58,10 @@ def setup_logging(level: int = logging.INFO) -> None:
     """Configure root logger with structured JSON output."""
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
+
+    # Ensure correlation factory is active
+    if logging.getLogRecordFactory() is not _correlation_record_factory:
+        logging.setLogRecordFactory(_correlation_record_factory)
 
     # Avoid duplicate JSONStreamHandler
     for h in root_logger.handlers:
