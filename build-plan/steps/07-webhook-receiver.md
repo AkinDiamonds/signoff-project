@@ -1,7 +1,7 @@
 # Step 07: Webhook receiver
 
 Phase: P1 Ingestion · Depends on: 03,05,06 · Estimate: 3h with an agent · Commit: `feat(webhook): verified, deduplicated receiver`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 Accept PayPal events safely and enqueue work without losing or duplicating any.
@@ -39,4 +39,4 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-08 | Implement webhook receiver and signature verifier | Built VerifiedWebhook, discriminated union envelopes, PayPal & stub verifiers, POST /webhooks/paypal endpoint, 512KB cap, and 12 unit/integration tests | working tree | R1 |

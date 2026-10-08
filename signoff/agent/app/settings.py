@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     paypal_client_id: str = Field(default="", validation_alias="PAYPAL_CLIENT_ID")
     paypal_client_secret: str = Field(default="", validation_alias="PAYPAL_CLIENT_SECRET")
     paypal_webhook_id: str = Field(default="", validation_alias="PAYPAL_WEBHOOK_ID")
+    paypal_merchant_id: str = Field(default="", validation_alias="PAYPAL_MERCHANT_ID")
     paypal_buyer_payer_id: str = Field(default="", validation_alias="PAYPAL_BUYER_PAYER_ID")
     paypal_base_url: str = Field(default=ALLOWED_PAYPAL_URL, validation_alias="PAYPAL_BASE_URL")
 

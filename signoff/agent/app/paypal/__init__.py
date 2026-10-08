@@ -33,6 +33,13 @@ from agent.app.paypal.models import (
     parse_webhook_event,
 )
 from agent.app.paypal.read_client import PayPalReadClient
+from agent.app.paypal.webhook_verify import (
+    PayPalWebhookVerifier,
+    StubWebhookVerifier,
+    VerifiedWebhook,
+    WebhookVerifier,
+    get_webhook_verifier,
+)
 
 __all__ = [
     "AcceptClaimOption",
@@ -55,13 +62,18 @@ __all__ = [
     "OAuthTokenResponse",
     "PayPalAuth",
     "PayPalReadClient",
+    "PayPalWebhookVerifier",
     "ProvideEvidenceResponse",
     "RefundDetails",
     "SellerInfo",
+    "StubWebhookVerifier",
     "TokenResponse",
+    "VerifiedWebhook",
     "WebhookEvent",
+    "WebhookVerifier",
     "compute_dispute_fingerprint",
     "get_paypal_debug_id",
+    "get_webhook_verifier",
     "parse_dispute",
     "parse_dispute_list",
     "parse_dispute_summary",

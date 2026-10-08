@@ -18,6 +18,7 @@ from agent.app.errors import (
 )
 from agent.app.logging import set_correlation_id, setup_logging
 from agent.app.settings import Settings
+from agent.app.webhooks import router as webhooks_router
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +127,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # Register uniform error handlers
     register_error_handlers(app)
+
+    # Register routers
+    app.include_router(webhooks_router)
 
     @app.get("/healthz", tags=["System"])
     async def healthz() -> dict[str, str]:

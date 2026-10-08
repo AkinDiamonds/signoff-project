@@ -14,11 +14,12 @@
 - Step 04 complete: npm workspaces (`@signoff/api-client`, `@signoff/ui`, `@signoff/web`, `@signoff/shop`), strict `tsconfig.base.json`, OpenAPI type generation with freshness CI check, typed fetch client with 3 error kinds (network, api_envelope, non_json), Zod boundary schemas, compile-time baseline type tests (`*.test-d.ts`) that fail when types loosen, ESLint forbidding any, non-null assertions and `as` casts outside api-client, enum parity script across Python/TS/OpenAPI, build failure on missing API URL, 45 frontend & type tests passing.
 - Step 05 complete: Pydantic boundary models for PayPal disputes, summaries, evidence, options, money, tokens, and webhook events (`models.py`); stable 10-input dispute state fingerprint per contracts.md (`fingerprint.py`); strict fail-closed parsing and unknown field tolerance; 30 fixture contract and invariant tests passing (72 agent tests passing overall).
 - Step 06 complete: Strict GET-only PayPal read client (`read_client.py`), OAuth2 token cache with in-flight concurrency lock & proactive expiry margin (`auth.py`), frozen `READ_TOOL_NAMES` allowlist & tool schemas (`agent/tools.py`), and 17 edge-case tests passing (89 agent tests passing overall).
+- Step 07 complete: PayPal webhook receiver and verifier (`webhooks.py`, `webhook_verify.py`), verified token type `VerifiedWebhook`, discriminated union event envelopes, transactional deduplication & sync job enqueueing, 512KB payload capping, external merchant filtering, and 12 unit/integration edge-case tests.
 
 ## Next 3 actions
-1. **Step 07:** Webhook receiver.
-2. **Step 08:** Job queue.
-3. **Step 09:** Dispute sync and reconciliation poller.
+1. **Step 08:** Job queue.
+2. **Step 09:** Dispute sync and reconciliation poller.
+3. **Step 10:** Authority Charter models and parser.
 
 ## Blockers
 - None blocking Step 01 or Step 02.
