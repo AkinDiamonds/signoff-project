@@ -33,10 +33,10 @@ def compute_dispute_fingerprint(dispute: Dispute | DisputeSummary) -> Fingerprin
     status_str = dispute.status.value if hasattr(dispute.status, "value") else str(dispute.status)
 
     # 2. dispute_state
-    dispute_state_str = str(dispute.dispute_state)
+    dispute_state_str = dispute.dispute_state
 
     # 3. life-cycle stage
-    stage_str = str(dispute.dispute_life_cycle_stage)
+    stage_str = dispute.dispute_life_cycle_stage
 
     # 4. reason
     reason_str = dispute.reason.value if hasattr(dispute.reason, "value") else str(dispute.reason)
