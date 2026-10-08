@@ -9,7 +9,7 @@ Append-only. Format: **ID · Date · Status** — Context — Decision — Conse
 
 **ADR-003 · 2026-10-06 · Accepted** — Thin custom tool loop with schema-validated output, no heavy agent framework (per handoff). Consequence: more code we own; deterministic and easy to explain.
 
-**ADR-004 · 2026-10-06 · Proposed** — Postgres-backed job queue (SKIP LOCKED). See `docs/architecture.md`.
+**ADR-004 · 2026-10-08 · Accepted** — Postgres-backed job queue (`SKIP LOCKED`). Consequence: no Redis or extra infrastructure needed; database transactions cleanly bridge webhook ingestion, dispute synchronization, and audit ledger events; leases evaluated using database server time prevent clock drift issues across workers.
 
 **ADR-005 · 2026-10-06 · Open** — Web framework. Finding: the official boilerplate is a **Next.js** app (PayPal TS Server SDK, simple tables), not a Vite SPA, and does not touch disputes. Options: (a) fork the boilerplate and use Next as a thin client of the FastAPI API; (b) Vite + React SPA as a Render static site, taking only the AG Studio setup. Leaning (b) for fewer moving parts (no Node server), pending spike S11 (does AG Studio setup depend on Next?).
 

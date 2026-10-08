@@ -3,13 +3,14 @@
 import logging
 import re
 import uuid
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import FastAPI, status
+from fastapi import Depends, FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from agent.app.db.session import check_database_health
+from agent.app.db.session import check_database_health, get_db_session
 from agent.app.errors import (
     ErrorEnvelope,
     UpstreamUnavailableError,
@@ -17,6 +18,7 @@ from agent.app.errors import (
     register_error_handlers,
 )
 from agent.app.logging import set_correlation_id, setup_logging
+from agent.app.queue import get_queue_stats
 from agent.app.settings import Settings
 from agent.app.webhooks import router as webhooks_router
 
@@ -151,13 +153,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         }
 
     @app.get("/api/status", tags=["System"])
-    async def api_status() -> dict[str, Any]:
-        """Service status and operating environment flags."""
+    async def api_status(
+        db_session: Annotated[Session, Depends(get_db_session)],
+    ) -> dict[str, Any]:
+        """Service status, queue metrics, and operating environment flags."""
+        stats = get_queue_stats(db_session)
         return {
             "status": "ok",
             "env": app_settings.app_env.value,
             "paypal_env": app_settings.paypal_env.value,
             "demo_frozen": app_settings.demo_frozen,
+            "queue_depth": stats["queue_depth"],
+            "dead_letter_count": stats["dead_letter_count"],
         }
 
     return app

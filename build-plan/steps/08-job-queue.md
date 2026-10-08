@@ -1,7 +1,7 @@
 # Step 08: Job queue and worker
 
 Phase: P1 Ingestion · Depends on: 07 · Estimate: 2h with an agent · Commit: `feat(worker): leased job queue with retries and dead letters`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 Reliable background execution with crash recovery.
@@ -38,4 +38,6 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-08 | Leased job queue, worker, typed payloads, retries, dead letters | Implemented skip-locked leasing, database time comparisons, backoff with jitter, worker heartbeat, graceful shutdown, handler registry, /api/status metrics, and 14 tests | working tree | R1 |
+| 2026-10-08 | `fail_job` called on tainted post-exception session caused intermittent PENDING instead of DEAD_LETTER on max_attempts | Rollback handler session then open fresh `fail_session` for `fail_job`; regenerated stale API client | working tree | R1 |
+

@@ -15,11 +15,12 @@
 - Step 05 complete: Pydantic boundary models for PayPal disputes, summaries, evidence, options, money, tokens, and webhook events (`models.py`); stable 10-input dispute state fingerprint per contracts.md (`fingerprint.py`); strict fail-closed parsing and unknown field tolerance; 30 fixture contract and invariant tests passing (72 agent tests passing overall).
 - Step 06 complete: Strict GET-only PayPal read client (`read_client.py`), OAuth2 token cache with in-flight concurrency lock & proactive expiry margin (`auth.py`), frozen `READ_TOOL_NAMES` allowlist & tool schemas (`agent/tools.py`), and 17 edge-case tests passing (89 agent tests passing overall).
 - Step 07 complete: PayPal webhook receiver and verifier (`webhooks.py`, `webhook_verify.py`), verified token type `VerifiedWebhook`, discriminated union event envelopes, transactional deduplication & sync job enqueueing, 512KB payload capping, external merchant filtering, and 12 unit/integration edge-case tests.
+- Step 08 complete: Leased Postgres job queue (`agent/app/queue/*`) with row-level `SKIP LOCKED` claiming, database time lease management, heartbeats, exponential backoff with bounded jitter, dead-letter routing for poison jobs and invalid payloads, graceful shutdown with clean lease release, exhaustive handler registry keyed by domain `JobKind`, queue depth & dead-letter counts surfaced in `/api/status`, and 14 tests passing.
 
 ## Next 3 actions
-1. **Step 08:** Job queue.
-2. **Step 09:** Dispute sync and reconciliation poller.
-3. **Step 10:** Authority Charter models and parser.
+1. **Step 09:** Dispute sync and reconciliation poller.
+2. **Step 10:** Authority Charter models and parser.
+3. **Step 11:** Gate rules engine.
 
 ## Blockers
 - None blocking Step 01 or Step 02.
