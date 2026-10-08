@@ -8,7 +8,7 @@ export interface paths {
         };
         /**
          * Api Status
-         * @description Service status and operating environment flags.
+         * @description Service status, queue metrics, and operating environment flags.
          */
         get: operations["api_status_api_status_get"];
         put?: never;

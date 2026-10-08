@@ -72,7 +72,7 @@
   "paths": {
     "/api/status": {
       "get": {
-        "description": "Service status and operating environment flags.",
+        "description": "Service status, queue metrics, and operating environment flags.",
         "operationId": "api_status_api_status_get",
         "responses": {
           "200": {
