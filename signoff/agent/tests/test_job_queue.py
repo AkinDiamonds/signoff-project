@@ -15,6 +15,7 @@ Validates all requirements and edge cases from build-plan/steps/08-job-queue.md:
 
 import threading
 import uuid
+from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime, timedelta
 
@@ -58,7 +59,7 @@ def session_factory(engine):
 
 
 @pytest.fixture
-def db_session(session_factory) -> Session:
+def db_session(session_factory) -> Generator[Session, None, None]:
     session = session_factory()
     yield session
     session.rollback()
@@ -179,6 +180,7 @@ def test_claim_job_uses_database_time(db_session: Session):
     )
 
     db_now_before = db_session.scalar(select(func.now()))
+    assert db_now_before is not None
     claimed = claim_job(db_session, worker_id="worker-clock-test", lease_seconds=45.0)
     assert claimed is not None
     assert claimed.id == job.id
@@ -187,8 +189,9 @@ def test_claim_job_uses_database_time(db_session: Session):
     assert claimed.attempts == 1
 
     # Lease locked_until must reflect DB time + 45s
-    assert claimed.locked_until is not None
-    diff = (claimed.locked_until - db_now_before).total_seconds()
+    locked_until = claimed.locked_until
+    assert locked_until is not None  # narrowed for type-checker
+    diff = (locked_until - db_now_before).total_seconds()
     assert 43.0 <= diff <= 47.0
 
 
@@ -303,7 +306,7 @@ def test_worker_killed_mid_job_lease_expires_and_reclaimed(session_factory):
 
     did_run = worker2.run_once()
     assert did_run is True
-    assert completed_by_w2 is True
+    assert completed_by_w2
 
     with session_factory() as session:
         final_job = session.get(Job, job_id)
@@ -471,13 +474,16 @@ def test_heartbeat_extends_lease(db_session: Session):
     claimed = claim_job(db_session, worker_id="worker-hb", lease_seconds=10.0)
     assert claimed is not None
     first_lock_until = claimed.locked_until
+    assert first_lock_until is not None  # narrowed for type-checker
 
     # Fast forward time in heartbeat
     extended = heartbeat_job(db_session, job_id=job.id, worker_id="worker-hb", lease_seconds=60.0)
     assert extended is True
 
     db_session.refresh(claimed)
-    assert claimed.locked_until > first_lock_until
+    new_lock_until = claimed.locked_until
+    assert new_lock_until is not None  # narrowed for type-checker
+    assert new_lock_until > first_lock_until
 
     # Heartbeat with wrong worker id fails
     wrong_hb = heartbeat_job(db_session, job_id=job.id, worker_id="other-worker", lease_seconds=60.0)
