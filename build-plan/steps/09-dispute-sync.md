@@ -1,7 +1,7 @@
 # Step 09: Dispute sync and reconciliation poller
 
 Phase: P1 Ingestion · Depends on: 06,08 · Estimate: 2h with an agent · Commit: `feat(sync): dispute sync, fingerprinting and reconcile`
-Status: [ ] not started
+Status: [x] complete
 
 ## Goal
 Local dispute state always converges to PayPal's, even when webhooks are lost or reordered.
