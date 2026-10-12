@@ -276,6 +276,27 @@ export class SignoffApiClient {
       paths['/readyz']['get']['responses']['200']['content']['application/json']
     >('/readyz', { method: 'GET' });
   }
+
+  async getCharter(version?: number): Promise<
+    ClientResponse<paths['/api/charter']['get']['responses']['200']['content']['application/json']>
+  > {
+    return this.request<
+      paths['/api/charter']['get']['responses']['200']['content']['application/json']
+    >('/api/charter', {
+      method: 'GET',
+      params: { query: { version } },
+    });
+  }
+
+  async updateCharter(
+    body: paths['/api/charter']['put']['requestBody']['content']['application/json']
+  ): Promise<
+    ClientResponse<paths['/api/charter']['put']['responses']['200']['content']['application/json']>
+  > {
+    return this.request<
+      paths['/api/charter']['put']['responses']['200']['content']['application/json']
+    >('/api/charter', { method: 'PUT', body });
+  }
 }
 
 export function createApiClient(options: ClientOptions): SignoffApiClient {

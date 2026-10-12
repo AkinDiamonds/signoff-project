@@ -16,16 +16,17 @@
 - Step 06 complete: Strict GET-only PayPal read client (`read_client.py`), OAuth2 token cache with in-flight concurrency lock & proactive expiry margin (`auth.py`), frozen `READ_TOOL_NAMES` allowlist & tool schemas (`agent/tools.py`), and 17 edge-case tests passing (89 agent tests passing overall).
 - Step 07 complete: PayPal webhook receiver and verifier (`webhooks.py`, `webhook_verify.py`), verified token type `VerifiedWebhook`, discriminated union event envelopes, transactional deduplication & sync job enqueueing, 512KB payload capping, external merchant filtering, and 12 unit/integration edge-case tests.
 - Step 08 complete: Leased Postgres job queue (`agent/app/queue/*`) with row-level `SKIP LOCKED` claiming, database time lease management, heartbeats, exponential backoff with bounded jitter, dead-letter routing for poison jobs and invalid payloads, graceful shutdown with clean lease release, exhaustive handler registry keyed by domain `JobKind`, queue depth & dead-letter counts surfaced in `/api/status`, and 14 tests passing.
+- Step 10 complete: Versioned Authority Charter models and parser (`policy/charter.py`), optimistic concurrency control via `base_version` (`api/charter.py`), seed default v1, complete audit history (`/api/charter/history`), 422 error envelope with field paths for limits/currencies/enums, ADR-007 Accepted, OpenAPI snapshot updated and client regenerated with compile-time type tests.
 
 ## Next 3 actions
 1. **Step 09:** Dispute sync and reconciliation poller.
-2. **Step 10:** Authority Charter models and parser.
-3. **Step 11:** Gate rules engine.
+2. **Step 11:** Gate rules engine.
+3. **Step 12:** Gate REST API and decisions.
 
 ## Blockers
-- None blocking Step 01 or Step 02.
+- None.
 - S8-S14 spike answers can be validated incrementally during steps 21, 23, 34.
 
 ## Open decisions (see docs/decisions.md)
-ADR-005 web framework · ADR-007 charter semantics · ADR-014 demo session · checkout approach for shop (V-23)
+ADR-005 web framework · ADR-014 demo session · checkout approach for shop (V-23)
 

@@ -233,4 +233,45 @@ describe('Type Testing Catalog (types-testing.md)', () => {
     // @ts-expect-error - Invalid rule id format fails
     const _invalidRule: RuleId = 'RULE-123';
   });
+
+  it('14. Charter request and response types conform to generated schema', () => {
+    type CharterResponse =
+      paths['/api/charter']['get']['responses']['200']['content']['application/json'];
+    type UpdateCharterRequest =
+      paths['/api/charter']['put']['requestBody']['content']['application/json'];
+
+    const validResponse: CharterResponse = {
+      version: 1,
+      auto_offer_max: { currency_code: 'USD', value: '25.00' },
+      auto_accept_max: { currency_code: 'USD', value: '25.00' },
+      auto_act_max_dispute_amount: { currency_code: 'USD', value: '100.00' },
+      never_auto_reasons: ['UNAUTHORISED'],
+      never_auto_actions: ['ESCALATE'],
+      repeat_disputer_threshold: 2,
+      auto_provide_evidence: true,
+      auto_send_message: true,
+      created_at: '2026-10-12T00:00:00Z',
+    };
+    assertType<CharterResponse>(validResponse);
+
+    const validRequest: UpdateCharterRequest = {
+      base_version: 1,
+      auto_offer_max: { currency_code: 'USD', value: '35.00' },
+      auto_accept_max: { currency_code: 'USD', value: '15.00' },
+      auto_act_max_dispute_amount: { currency_code: 'USD', value: '150.00' },
+      never_auto_reasons: [],
+      never_auto_actions: [],
+      repeat_disputer_threshold: 3,
+      auto_provide_evidence: false,
+      auto_send_message: true,
+    };
+    assertType<UpdateCharterRequest>(validRequest);
+
+    // @ts-expect-error - base_version is required on update
+    const _invalidReq: UpdateCharterRequest = {
+      auto_offer_max: { currency_code: 'USD', value: '35.00' },
+      auto_accept_max: { currency_code: 'USD', value: '15.00' },
+      auto_act_max_dispute_amount: { currency_code: 'USD', value: '150.00' },
+    };
+  });
 });

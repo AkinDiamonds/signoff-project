@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from agent.app.api.charter import router as charter_router
 from agent.app.db.session import check_database_health, get_db_session
 from agent.app.errors import (
     ErrorEnvelope,
@@ -132,6 +133,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # Register routers
     app.include_router(webhooks_router)
+    app.include_router(charter_router)
 
     @app.get("/healthz", tags=["System"])
     async def healthz() -> dict[str, str]:

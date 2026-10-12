@@ -1,7 +1,7 @@
 # Step 10: Authority Charter model, versions and API
 
 Phase: P2 Policy · Depends on: 03 · Estimate: 2h with an agent · Commit: `feat(policy): versioned charter and api`
-Status: [ ] not started
+Status: [x] completed
 
 ## Goal
 The merchant's limits as validated, versioned data.

@@ -15,7 +15,7 @@ Append-only. Format: **ID · Date · Status** — Context — Decision — Conse
 
 **ADR-006 · 2026-10-06 · Proposed** — Two separate agents: dispute agent (backend, plan-only) and Studio assistant (browser, read-only data tools, LLM via backend proxy). Neither can reach mutating PayPal calls other than through the gate.
 
-**ADR-007 · 2026-10-06 · Open** — Charter semantics. `auto_offer_max` and `approval_required_above` are redundant; scenario C's "above the limit" is about dispute size. Proposal in `plan/03-gate-spec.md`. Decide before implementing G3.
+**ADR-007 · 2026-10-06 · Accepted** — Charter semantics. Separate limits for money conceded (`auto_offer_max`, `auto_accept_max`) and maximum dispute size handled autonomously (`auto_act_max_dispute_amount`). Redundant `approval_required_above` dropped. Standing flags (`auto_provide_evidence`, `auto_send_message`), restricted lists (`never_auto_reasons`, `never_auto_actions`), and `repeat_disputer_threshold` complete the versioned model. Changes are append-only with optimistic concurrency control (`base_version`).
 
 **ADR-008 · 2026-10-07 · Accepted** — LLM provider: Proceed with Glimmer via an OpenAI-compatible interface per ADR-016. Thin client interface isolates provider details so fallback to standard OpenAI/Anthropic is seamless if needed.
 

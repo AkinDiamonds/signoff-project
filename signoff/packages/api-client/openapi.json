@@ -1,6 +1,99 @@
 {
   "components": {
     "schemas": {
+      "ActionType": {
+        "description": "Proposed action type for PayPal disputes.",
+        "enum": [
+          "PROVIDE_EVIDENCE",
+          "SEND_MESSAGE",
+          "MAKE_OFFER",
+          "ACCEPT_CLAIM",
+          "ESCALATE",
+          "APPEAL"
+        ],
+        "title": "ActionType",
+        "type": "string"
+      },
+      "CharterResponse": {
+        "additionalProperties": false,
+        "description": "Full versioned charter response shape.",
+        "properties": {
+          "auto_accept_max": {
+            "$ref": "#/components/schemas/MoneyLimit-Output"
+          },
+          "auto_act_max_dispute_amount": {
+            "$ref": "#/components/schemas/MoneyLimit-Output"
+          },
+          "auto_offer_max": {
+            "$ref": "#/components/schemas/MoneyLimit-Output"
+          },
+          "auto_provide_evidence": {
+            "default": true,
+            "title": "Auto Provide Evidence",
+            "type": "boolean"
+          },
+          "auto_send_message": {
+            "default": true,
+            "title": "Auto Send Message",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "never_auto_actions": {
+            "items": {
+              "$ref": "#/components/schemas/ActionType"
+            },
+            "title": "Never Auto Actions",
+            "type": "array"
+          },
+          "never_auto_reasons": {
+            "items": {
+              "$ref": "#/components/schemas/DisputeReason"
+            },
+            "title": "Never Auto Reasons",
+            "type": "array"
+          },
+          "repeat_disputer_threshold": {
+            "default": 2,
+            "minimum": 0.0,
+            "title": "Repeat Disputer Threshold",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "auto_offer_max",
+          "auto_accept_max",
+          "auto_act_max_dispute_amount",
+          "version",
+          "created_at"
+        ],
+        "title": "CharterResponse",
+        "type": "object"
+      },
+      "DisputeReason": {
+        "description": "PayPal dispute reason categories.",
+        "enum": [
+          "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
+          "MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED",
+          "UNAUTHORISED",
+          "CREDIT_NOT_PROCESSED",
+          "DUPLICATE_TRANSACTION",
+          "INCORRECT_AMOUNT",
+          "PAYMENT_BY_OTHER_MEANS",
+          "CANCELED_RECURRING_BILLING",
+          "PROBLEM_WITH_REMITTANCE",
+          "OTHER"
+        ],
+        "title": "DisputeReason",
+        "type": "string"
+      },
       "ErrorDetail": {
         "properties": {
           "code": {
@@ -60,6 +153,112 @@
         ],
         "title": "FieldError",
         "type": "object"
+      },
+      "MoneyLimit-Input": {
+        "additionalProperties": false,
+        "description": "Monetary limit enforcing fixed-precision Decimal and merchant currency.",
+        "properties": {
+          "currency_code": {
+            "default": "USD",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "title": "MoneyLimit",
+        "type": "object"
+      },
+      "MoneyLimit-Output": {
+        "additionalProperties": false,
+        "description": "Monetary limit enforcing fixed-precision Decimal and merchant currency.",
+        "properties": {
+          "currency_code": {
+            "default": "USD",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "title": "MoneyLimit",
+        "type": "object"
+      },
+      "UpdateCharterRequest": {
+        "additionalProperties": false,
+        "description": "Charter update request requiring the base version for optimistic concurrency.",
+        "properties": {
+          "auto_accept_max": {
+            "$ref": "#/components/schemas/MoneyLimit-Input"
+          },
+          "auto_act_max_dispute_amount": {
+            "$ref": "#/components/schemas/MoneyLimit-Input"
+          },
+          "auto_offer_max": {
+            "$ref": "#/components/schemas/MoneyLimit-Input"
+          },
+          "auto_provide_evidence": {
+            "default": true,
+            "title": "Auto Provide Evidence",
+            "type": "boolean"
+          },
+          "auto_send_message": {
+            "default": true,
+            "title": "Auto Send Message",
+            "type": "boolean"
+          },
+          "base_version": {
+            "description": "The charter version this update is based on",
+            "title": "Base Version",
+            "type": "integer"
+          },
+          "never_auto_actions": {
+            "items": {
+              "$ref": "#/components/schemas/ActionType"
+            },
+            "title": "Never Auto Actions",
+            "type": "array"
+          },
+          "never_auto_reasons": {
+            "items": {
+              "$ref": "#/components/schemas/DisputeReason"
+            },
+            "title": "Never Auto Reasons",
+            "type": "array"
+          },
+          "repeat_disputer_threshold": {
+            "default": 2,
+            "minimum": 0.0,
+            "title": "Repeat Disputer Threshold",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "auto_offer_max",
+          "auto_accept_max",
+          "auto_act_max_dispute_amount",
+          "base_version"
+        ],
+        "title": "UpdateCharterRequest",
+        "type": "object"
       }
     }
   },
@@ -70,6 +269,315 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/charter": {
+      "get": {
+        "description": "Retrieves the active authority charter, seeds default v1 if uninitialized, or returns a specific version.",
+        "operationId": "get_charter_api_charter_get",
+        "parameters": [
+          {
+            "description": "Specific charter version to retrieve",
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Specific charter version to retrieve",
+              "title": "Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharterResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get active or historical charter",
+        "tags": [
+          "Charter"
+        ]
+      },
+      "put": {
+        "description": "Creates a new immutable charter version based on base_version. Returns 409 conflict if base_version is stale.",
+        "operationId": "put_charter_api_charter_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCharterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharterResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Update charter with optimistic concurrency control",
+        "tags": [
+          "Charter"
+        ]
+      }
+    },
+    "/api/charter/history": {
+      "get": {
+        "description": "Returns all charter versions ordered newest first.",
+        "operationId": "list_charter_history_api_charter_history_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CharterResponse"
+                  },
+                  "title": "Response List Charter History Api Charter History Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get complete charter version history",
+        "tags": [
+          "Charter"
+        ]
+      }
+    },
     "/api/status": {
       "get": {
         "description": "Service status, queue metrics, and operating environment flags.",
