@@ -15,6 +15,7 @@ Per plan/05-resilience.md and Step 13:
 
 import logging
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -140,7 +141,7 @@ async def execute_decision(
     read_client: PayPalReadClient,
     mutating_client: PayPalMutatingClient,
     decision_id: uuid.UUID | None = None,
-    evidence_files: list[tuple[str, bytes, str | None]] | None = None,
+    evidence_files: Sequence[tuple[str, bytes, str | None]] | None = None,
 ) -> ExecutionResult:
     """Execute a GateDecision(ALLOW) following the strict write-ahead protocol.
 

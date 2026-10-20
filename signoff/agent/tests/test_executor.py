@@ -15,6 +15,7 @@ Validates Step 13 requirements:
 
 import time
 import uuid
+from collections.abc import Generator
 from typing import Any
 
 import httpx
@@ -106,7 +107,7 @@ def make_sample_paypal_dispute(
 
 
 @pytest.fixture
-def db_session() -> Session:
+def db_session() -> Generator[Session, None, None]:
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
     session_factory = sessionmaker(bind=engine, autoflush=False, autocommit=False)
@@ -139,7 +140,7 @@ def make_gate_allow_decision(action: Any, dispute: PayPalDisputeModel) -> GateDe
 @pytest.mark.asyncio
 async def test_executor_rejects_raw_action(db_session: Session):
     action = SendMessage(message="Hello")
-    dummy_client = None  # type: ignore
+    dummy_client: Any = None
 
     with pytest.raises(ExecutionRejectedError, match="Executor rejects raw actions"):
         await execute_decision(
@@ -159,7 +160,7 @@ async def test_executor_rejects_action_hash_mismatch(db_session: Session):
     sample_dispute = make_sample_paypal_dispute()
     decision = make_gate_allow_decision(action1, sample_dispute)
 
-    dummy_client = None  # type: ignore
+    dummy_client: Any = None
 
     with pytest.raises(ExecutionRejectedError, match="Action hash mismatch"):
         await execute_decision(

@@ -14,6 +14,7 @@ import json
 import logging
 import mimetypes
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
@@ -155,7 +156,7 @@ def format_two_decimal_amount(amount: Decimal | Money | float | int | str) -> st
     elif isinstance(amount, float):
         raise TypeError("Floating point values are strictly forbidden for money; use Decimal or Money.")
     else:
-        dec = Decimal(str(amount))
+        dec = Decimal(amount)
 
     if not dec.is_finite():
         raise ValueError(f"Non-finite decimal value: {dec}")
@@ -192,7 +193,7 @@ class PayPalMutatingClient:
             read_timeout=read_timeout,
             http_client=http_client,
         )
-        self.base_url = (base_url or str(settings.paypal_base_url)).rstrip("/")
+        self.base_url = (base_url or settings.paypal_base_url).rstrip("/")
 
         parsed = urlparse(self.base_url)
         if parsed.scheme != "https" or parsed.hostname != SANDBOX_PAYPAL_HOST:
@@ -310,7 +311,7 @@ class PayPalMutatingClient:
         *,
         evidence_type: str | None = None,
         notes: str | None = None,
-        files: list[tuple[str, bytes, str | None]] | None = None,
+        files: Sequence[tuple[str, bytes, str | None]] | None = None,
         tracking_info: list[dict[str, Any]] | None = None,
     ) -> MutatingResult:
         """Submit evidence to PayPal via multipart/form-data."""
@@ -437,7 +438,7 @@ class PayPalMutatingClient:
         *,
         note: str | None = None,
         evidence_type: str | None = None,
-        files: list[tuple[str, bytes, str | None]] | None = None,
+        files: Sequence[tuple[str, bytes, str | None]] | None = None,
     ) -> MutatingResult:
         """Appeal a resolved dispute decision."""
         clean_dispute_id = dispute_id.strip()
@@ -472,7 +473,7 @@ class PayPalMutatingClient:
         self,
         dispute_id: str,
         action: ProposedAction,
-        evidence_files: list[tuple[str, bytes, str | None]] | None = None,
+        evidence_files: Sequence[tuple[str, bytes, str | None]] | None = None,
     ) -> MutatingResult:
         """Dispatch proposed action to corresponding mutating method."""
         if isinstance(action, ProvideEvidence):
