@@ -65,6 +65,25 @@ class ConflictVersionError(AppError):
         )
 
 
+class ConflictResolvedError(AppError):
+    def __init__(self, message: str = "This approval has already been resolved"):
+        super().__init__(
+            code="CONFLICT_RESOLVED",
+            message=message,
+            status_code=status.HTTP_409_CONFLICT,
+        )
+
+
+class EditValidationError(AppError):
+    def __init__(self, message: str, fields: list[FieldError] | None = None):
+        super().__init__(
+            code="VALIDATION_FAILED",
+            message=message,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            fields=fields,
+        )
+
+
 class RateLimitedError(AppError):
     def __init__(self, message: str = "Too many requests. Please try again later."):
         super().__init__(
