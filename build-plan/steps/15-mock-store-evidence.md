@@ -37,4 +37,4 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-20 | `test_seed_is_idempotent` expected 5 tracking events; scenario C has 2 shipments → correct count is 6 | Fixed assertion to 6 in `test_store_mock.py` | 44f217e | R1 |

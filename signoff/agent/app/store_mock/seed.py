@@ -75,7 +75,7 @@ def main() -> None:
     with get_session_factory()() as session:
         result = seed_scenarios(session)
         session.commit()
-    print(f"Seeded mock store: {result.orders_added} orders, {result.tracking_events_added} tracking events.")
+        print(f"Seeded mock store: {result.orders_added} orders, {result.tracking_events_added} tracking events.")
 
 
 if __name__ == "__main__":

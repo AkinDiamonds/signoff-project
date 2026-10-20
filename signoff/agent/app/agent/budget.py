@@ -52,10 +52,13 @@ class DailyBudget:
 
     @property
     def spent_usd(self) -> Decimal:
+        # Lock-free: acceptable for observability (e.g. /api/status).
+        # Reservation decisions are always made atomically inside reserve().
         self._roll_over_if_needed()
         return self._spent
 
     @property
     def remaining_usd(self) -> Decimal:
+        # Lock-free: same rationale as spent_usd.
         self._roll_over_if_needed()
         return self._cap - self._spent
