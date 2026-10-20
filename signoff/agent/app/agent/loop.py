@@ -19,20 +19,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from agent.app.agent.evidence import NOT_RECEIVED_REASON, build_evidence
-from agent.app.agent.llm import FakeProvider, LLMFailure, LLMFailureKind, LLMPlanResult, LLMService
+from agent.app.agent.llm import LLMFailure, LLMFailureKind, LLMService
 from agent.app.agent.prompts import PROMPT_VERSION, build_agent_prompt
-from agent.app.agent.schemas import AgentActionSchema, AgentPlan
-from agent.app.agent.tools import (
-    READ_TOOL_NAMES,
-    get_dispute_tool,
-)
-from agent.app.db.models import AgentRun, Decision, Dispute as DBDispute, Execution
-from agent.app.domain.actions import (
-    BaseProposedAction,
-    ProvideEvidence,
-    SendMessage,
-    compute_action_hash,
-)
+from agent.app.agent.schemas import AgentPlan
+from agent.app.agent.tools import READ_TOOL_NAMES, get_dispute_tool
+from agent.app.db.models import AgentRun, Decision, Execution
+from agent.app.db.models import Dispute as DBDispute
+from agent.app.domain.actions import BaseProposedAction, compute_action_hash
 from agent.app.domain.enums import ActionType, ExecutionStatus, JobKind, TimelineEventKind, Verdict
 from agent.app.ledger.service import record_decision, record_ledger_event
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
@@ -78,12 +71,12 @@ def is_action_applicable_to_reason(action_type: ActionType | str, dispute_reason
     s_str = dispute_status.value if hasattr(dispute_status, "value") else str(dispute_status)
 
     # Appeal is only applicable to resolved disputes
-    if atype == ActionType.APPEAL.value and s_str != "RESOLVED":
-        return False
+    if atype == ActionType.APPEAL.value:
+        return s_str == "RESOLVED"
 
     # Evidence submission is only applicable for not-received disputes in this phase
-    if atype == ActionType.PROVIDE_EVIDENCE.value and r_str != NOT_RECEIVED_REASON:
-        return False
+    if atype == ActionType.PROVIDE_EVIDENCE.value:
+        return r_str == NOT_RECEIVED_REASON
 
     return True
 
@@ -202,7 +195,8 @@ async def run_agent_loop(
     # Build evidence if order context is present
     evidence = None
     if order_context is not None:
-        reason_val = paypal_dispute.reason.value if hasattr(paypal_dispute.reason, "value") else str(paypal_dispute.reason)
+        reason_attr = paypal_dispute.reason
+        reason_val = reason_attr.value if hasattr(reason_attr, "value") else str(reason_attr)
         evidence = build_evidence(order_context, reason=reason_val, transaction_id=tx_id)
         if evidence.buildable:
             record_ledger_event(
@@ -325,8 +319,6 @@ async def run_agent_loop(
     dispute_status = paypal_dispute.status
 
     for action_schema in validated_plan.actions:
-        action_type_name = str(getattr(action_schema, "action_type", ""))
-
         # Check: model names a mutating tool (e.g. refund, cancel, accept_dispute_claim)
         raw_type = (
             action_schema.action_type.value
@@ -360,7 +352,10 @@ async def run_agent_loop(
             session,
             dispute_id,
             TimelineEventKind.NO_ACTION,
-            {"reason": "all_actions_rejected", "message": "All proposed actions were rejected as inapplicable or mutating"},
+            {
+                "reason": "all_actions_rejected",
+                "message": "All proposed actions were rejected as inapplicable or mutating",
+            },
         )
         session.commit()
         return AgentLoopResult(
@@ -434,7 +429,8 @@ async def run_agent_loop(
         if too_many_actions and decision.verdict == Verdict.ALLOW:
             verdict_to_record = Verdict.NEEDS_APPROVAL
             rule_id_to_record = "G0-00"
-            reason_to_record = f"Action routed to approval: plan contains {len(ordered_actions)} actions (max {MAX_ACTIONS_PER_PLAN})"
+            n, mx = len(ordered_actions), MAX_ACTIONS_PER_PLAN
+            reason_to_record = f"Action routed to approval: plan contains {n} actions (max {mx})"
         else:
             verdict_to_record = decision.verdict
             rule_id_to_record = decision.rule_id

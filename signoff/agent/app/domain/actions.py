@@ -20,6 +20,7 @@ class BaseProposedAction(BaseModel):
     """Base model for all proposed actions with strict validation."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
+    action_type: ActionType
 
 
 class ProvideEvidence(BaseProposedAction):

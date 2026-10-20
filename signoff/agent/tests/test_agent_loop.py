@@ -17,7 +17,6 @@ Per build-plan/steps/17-agent-loop.md:
 
 import ast
 import json
-import uuid
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -30,38 +29,27 @@ from sqlalchemy.pool import StaticPool
 
 from agent.app.agent.budget import DailyBudget
 from agent.app.agent.cache import ScenarioCache
-from agent.app.agent.llm import FakeProvider, LLMFailureKind, LLMService, ProviderResponse
+from agent.app.agent.llm import FakeProvider, LLMService, ProviderResponse
 from agent.app.agent.loop import (
-    MAX_ACTIONS_PER_PLAN,
     is_action_applicable_to_reason,
     normalize_and_order_actions,
     run_agent_loop,
 )
 from agent.app.agent.prompts import (
     NON_ENGLISH_MARKER,
-    PROMPT_VERSION,
     TRUNCATION_MARKER,
     build_agent_prompt,
-    extract_buyer_text,
     is_likely_non_english,
     sanitize_buyer_text_for_prompt,
 )
 from agent.app.agent.schemas import (
-    ActionMoneySchema,
-    AgentActionSchema,
     AgentPlan,
     MakeOfferActionSchema,
-    ProvideEvidenceActionSchema,
-    SendMessageActionSchema,
-)
-from agent.app.agent.tools import (
-    FORBIDDEN_MUTATION_TOOL_NAMES,
-    READ_TOOL_NAMES,
 )
 from agent.app.db.base import Base
-from agent.app.db.models import AgentRun, Decision, Job, LedgerEvent
+from agent.app.db.models import AgentRun, Decision, Job
 from agent.app.db.triggers import install_append_only_triggers
-from agent.app.domain.actions import ProvideEvidence, SendMessage, compute_action_hash
+from agent.app.domain.actions import ProvideEvidence, SendMessage
 from agent.app.domain.enums import (
     ActionType,
     DisputeReason,
@@ -70,9 +58,8 @@ from agent.app.domain.enums import (
     TimelineEventKind,
     Verdict,
 )
-from agent.app.ledger.service import get_timeline_events
-from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.domain.money import Money
+from agent.app.ledger.service import get_timeline_events
 from agent.app.paypal.models import (
     AllowedResponseOptions,
     Dispute,
@@ -82,8 +69,6 @@ from agent.app.paypal.models import (
     Link,
     MakeOfferOption,
 )
-from agent.app.policy.charter import DEFAULT_CHARTER_DATA, CharterResponse
-from agent.app.store_mock.scenarios import OrderRecord, ShipmentRecord
 from agent.app.store_mock.seed import seed_scenarios
 
 
@@ -116,8 +101,16 @@ def make_dispute(
 ) -> Dispute:
     """Helper to build a valid PayPal Dispute model."""
     default_links = [
-        Link(href=f"https://api.sandbox.paypal.com/v1/customer/disputes/{dispute_id}/provide-evidence", rel="provide_evidence", method="POST"),
-        Link(href=f"https://api.sandbox.paypal.com/v1/customer/disputes/{dispute_id}/send-message", rel="send_message", method="POST"),
+        Link(
+            href=f"https://api.sandbox.paypal.com/v1/customer/disputes/{dispute_id}/provide-evidence",
+            rel="provide_evidence",
+            method="POST",
+        ),
+        Link(
+            href=f"https://api.sandbox.paypal.com/v1/customer/disputes/{dispute_id}/send-message",
+            rel="send_message",
+            method="POST",
+        ),
     ]
     return Dispute(
         dispute_id=dispute_id,
@@ -438,7 +431,11 @@ async def test_too_many_actions_routed_to_approval(db_session: Session):
 async def test_stale_fingerprint_skipped(db_session: Session):
     dispute = make_dispute()
     fake_provider = FakeProvider([ProviderResponse('{"actions": []}')])
-    service = LLMService(provider=fake_provider, cache=ScenarioCache(enabled=False), budget=DailyBudget(Decimal("10.00")))
+    service = LLMService(
+        provider=fake_provider,
+        cache=ScenarioCache(enabled=False),
+        budget=DailyBudget(Decimal("10.00")),
+    )
 
     result = await run_agent_loop(
         session=db_session,
