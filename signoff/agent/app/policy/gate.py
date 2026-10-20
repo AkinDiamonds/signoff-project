@@ -262,6 +262,34 @@ def evaluate_gate(gate_input: GateInput) -> GateDecision:
     )
 
 
+def reconstruct_decision(
+    *,
+    verdict: Verdict,
+    rule_id: str,
+    reason: str,
+    action_hash: str,
+    dispute_fingerprint: str,
+    charter_version: int,
+    also_triggered: Sequence[str] = (),
+) -> GateDecision:
+    """Reconstruct a GateDecision from stored DB fields.
+
+    Use this in the approval service to rebuild a decision from persisted columns
+    without resorting to __globals__ introspection.  Lives here so the factory key
+    stays inside gate.py.
+    """
+    return GateDecision(
+        verdict=verdict,
+        rule_id=rule_id,
+        reason=reason,
+        action_hash=action_hash,
+        dispute_fingerprint=dispute_fingerprint,
+        charter_version=charter_version,
+        also_triggered=tuple(also_triggered),
+        _factory_key=_GATE_FACTORY_KEY,
+    )
+
+
 def approved_decision(decision: GateDecision, *, merchant_id: str = "default") -> GateDecision:
     """Build the ALLOW / A-01 decision recorded when a merchant approves a proposal.
 

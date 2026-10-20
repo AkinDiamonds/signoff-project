@@ -22,7 +22,9 @@ from agent.app.agent.evidence import NOT_RECEIVED_REASON, build_evidence
 from agent.app.agent.llm import LLMFailure, LLMFailureKind, LLMService
 from agent.app.agent.prompts import PROMPT_VERSION, build_agent_prompt
 from agent.app.agent.schemas import AgentPlan
+from agent.app.agent.screener import screen_dispute_and_context
 from agent.app.agent.tools import READ_TOOL_NAMES, get_dispute_tool
+from agent.app.approvals import create_approval
 from agent.app.db.models import AgentRun, Decision, Execution
 from agent.app.db.models import Dispute as DBDispute
 from agent.app.domain.actions import BaseProposedAction, compute_action_hash
@@ -136,6 +138,7 @@ async def run_agent_loop(
     run_id: uuid.UUID | None = None,
     now: datetime | None = None,
     charter_obj: Any | None = None,
+    screener_enabled: bool = True,
 ) -> AgentLoopResult:
     """Run the plan-only agent loop for a dispute.
 
@@ -191,6 +194,31 @@ async def run_agent_loop(
     order_context = None
     if tx_id:
         order_context = load_order_context(session, tx_id)
+
+    # Screen dispute and context for content injection attempts (Step 18)
+    injection_flag = (
+        screen_dispute_and_context(paypal_dispute, order_context)
+        if screener_enabled
+        else None
+    )
+    is_injection_flagged = bool(injection_flag and injection_flag.is_flagged)
+    if is_injection_flagged and injection_flag:
+        logger.warning(
+            "Dispute %s content-injection flagged: signals=%s. Plan ignored; surfaces as needs human review.",
+            dispute_id,
+            injection_flag.signals,
+        )
+        record_ledger_event(
+            session,
+            dispute_id,
+            TimelineEventKind.INJECTION_FLAGGED,
+            {
+                "rule_id": "G5-02",
+                "signals": [s.value for s in injection_flag.signals],
+                "reasons": list(injection_flag.reasons),
+                "message": "Content-injection flag raised by screener; plan ignored; needs human review",
+            },
+        )
 
     # Build evidence if order context is present
     evidence = None
@@ -396,7 +424,7 @@ async def run_agent_loop(
     # History flags
     history_flags = HistoryFlags(
         buyer_dispute_count_in_window=order_context.buyer_prior_disputes if order_context else 0,
-        injection_flag=False,
+        injection_flag=is_injection_flagged,
     )
 
     # Prior confirmed executions
@@ -464,17 +492,11 @@ async def run_agent_loop(
                 ),
             )
         elif verdict_to_record == Verdict.NEEDS_APPROVAL:
-            record_ledger_event(
-                session,
-                dispute_id,
-                TimelineEventKind.APPROVAL_REQUESTED,
-                {
-                    "decision_id": str(recorded_dec.id),
-                    "action_type": action.action_type.value,
-                    "action_hash": decision.action_hash,
-                    "rule_id": rule_id_to_record,
-                    "reason": reason_to_record,
-                },
+            create_approval(
+                session=session,
+                decision=recorded_dec,
+                dispute=paypal_dispute,
+                now=now_dt,
             )
 
         gate_decisions.append(decision)
