@@ -52,8 +52,8 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   timeoutMs?: number;
   params?: {
-    query?: Record<string, string | number | boolean | undefined>;
-    path?: Record<string, string | number>;
+    query?: Record<string, string | number | boolean | null | undefined> | undefined;
+    path?: Record<string, string | number> | undefined;
   };
 }
 
@@ -86,7 +86,7 @@ export class SignoffApiClient {
     if (options.params?.query) {
       const searchParams = new URLSearchParams();
       for (const [key, val] of Object.entries(options.params.query)) {
-        if (val !== undefined) {
+        if (val !== undefined && val !== null) {
           searchParams.append(key, String(val));
         }
       }
@@ -296,6 +296,34 @@ export class SignoffApiClient {
     return this.request<
       paths['/api/charter']['put']['responses']['200']['content']['application/json']
     >('/api/charter', { method: 'PUT', body });
+  }
+
+  async getDisputeTimeline(
+    id: string,
+    query?: paths['/api/disputes/{id}/timeline']['get']['parameters']['query']
+  ): Promise<
+    ClientResponse<paths['/api/disputes/{id}/timeline']['get']['responses']['200']['content']['application/json']>
+  > {
+    return this.request<
+      paths['/api/disputes/{id}/timeline']['get']['responses']['200']['content']['application/json']
+    >('/api/disputes/{id}/timeline', {
+      method: 'GET',
+      params: { path: { id }, query },
+    });
+  }
+
+  async getDisputeDecisions(
+    id: string,
+    query?: paths['/api/disputes/{id}/decisions']['get']['parameters']['query']
+  ): Promise<
+    ClientResponse<paths['/api/disputes/{id}/decisions']['get']['responses']['200']['content']['application/json']>
+  > {
+    return this.request<
+      paths['/api/disputes/{id}/decisions']['get']['responses']['200']['content']['application/json']
+    >('/api/disputes/{id}/decisions', {
+      method: 'GET',
+      params: { path: { id }, query },
+    });
   }
 }
 

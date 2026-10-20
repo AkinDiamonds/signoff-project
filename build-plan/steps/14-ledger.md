@@ -1,7 +1,7 @@
 # Step 14: Decision ledger and timeline API
 
 Phase: P2 Policy · Depends on: 13 · Estimate: 2h with an agent · Commit: `feat(ledger): ledger service, timeline api and replay`
-Status: [ ] not started
+Status: [x] done (2026-10-20)
 
 ## Goal
 Everything that happens to a dispute is recorded once, in order, and replayable.
@@ -36,4 +36,7 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-20 | Sequence number race in `record_ledger_event` (FOR UPDATE missing) | Added `.with_for_update()` to MAX query | — | R1 |
+| 2026-10-20 | `Field(discriminator=None)` disables Pydantic smart union on TimelineEvent | Changed to `Field()` | — | R1 |
+| 2026-10-20 | Inline `from datetime import UTC` inside hot path | Hoisted to module level | — | — |
+| 2026-10-20 | Timeline cursor description leaked "sequence number" impl detail | Changed to "Opaque pagination cursor" | — | — |

@@ -14,6 +14,94 @@
         "title": "ActionType",
         "type": "string"
       },
+      "ApprovalRequestedTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "APPROVAL_REQUESTED",
+            "default": "APPROVAL_REQUESTED",
+            "title": "Kind",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          },
+          "token_hash": {
+            "title": "Token Hash",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "token_hash"
+        ],
+        "title": "ApprovalRequestedTimelineEvent",
+        "type": "object"
+      },
+      "ApprovalResolvedTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "APPROVAL_RESOLVED",
+            "default": "APPROVAL_RESOLVED",
+            "title": "Kind",
+            "type": "string"
+          },
+          "resolution": {
+            "title": "Resolution",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "resolution"
+        ],
+        "title": "ApprovalResolvedTimelineEvent",
+        "type": "object"
+      },
       "CharterResponse": {
         "additionalProperties": false,
         "description": "Full versioned charter response shape.",
@@ -77,6 +165,115 @@
         "title": "CharterResponse",
         "type": "object"
       },
+      "DecisionItem": {
+        "properties": {
+          "action_hash": {
+            "title": "Action Hash",
+            "type": "string"
+          },
+          "action_payload": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Payload"
+          },
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "also_triggered": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Also Triggered",
+            "type": "array"
+          },
+          "charter_version": {
+            "title": "Charter Version",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_fingerprint": {
+            "title": "Dispute Fingerprint",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "verdict": {
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "action_type",
+          "verdict",
+          "rule_id",
+          "reason",
+          "action_hash",
+          "dispute_fingerprint",
+          "charter_version",
+          "created_at"
+        ],
+        "title": "DecisionItem",
+        "type": "object"
+      },
+      "DecisionsResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "DecisionsResponse",
+        "type": "object"
+      },
       "DisputeReason": {
         "description": "PayPal dispute reason categories.",
         "enum": [
@@ -93,6 +290,50 @@
         ],
         "title": "DisputeReason",
         "type": "string"
+      },
+      "DisputeSyncedTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "DISPUTE_SYNCED",
+            "default": "DISPUTE_SYNCED",
+            "title": "Kind",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "status"
+        ],
+        "title": "DisputeSyncedTimelineEvent",
+        "type": "object"
       },
       "ErrorDetail": {
         "properties": {
@@ -136,6 +377,226 @@
         "title": "ErrorEnvelope",
         "type": "object"
       },
+      "EvidenceBuiltTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "evidence_strength": {
+            "title": "Evidence Strength",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "EVIDENCE_BUILT",
+            "default": "EVIDENCE_BUILT",
+            "title": "Kind",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "evidence_strength"
+        ],
+        "title": "EvidenceBuiltTimelineEvent",
+        "type": "object"
+      },
+      "ExecutionConfirmedTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "external_id": {
+            "title": "External Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "EXECUTION_CONFIRMED",
+            "default": "EXECUTION_CONFIRMED",
+            "title": "Kind",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "external_id"
+        ],
+        "title": "ExecutionConfirmedTimelineEvent",
+        "type": "object"
+      },
+      "ExecutionFailedTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "error_message": {
+            "title": "Error Message",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "EXECUTION_FAILED",
+            "default": "EXECUTION_FAILED",
+            "title": "Kind",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "error_message"
+        ],
+        "title": "ExecutionFailedTimelineEvent",
+        "type": "object"
+      },
+      "ExecutionIntendedTimelineEvent": {
+        "properties": {
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "EXECUTION_INTENDED",
+            "default": "EXECUTION_INTENDED",
+            "title": "Kind",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "action_type"
+        ],
+        "title": "ExecutionIntendedTimelineEvent",
+        "type": "object"
+      },
+      "ExecutionSentTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "EXECUTION_SENT",
+            "default": "EXECUTION_SENT",
+            "title": "Kind",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at"
+        ],
+        "title": "ExecutionSentTimelineEvent",
+        "type": "object"
+      },
       "FieldError": {
         "properties": {
           "message": {
@@ -152,6 +613,99 @@
           "message"
         ],
         "title": "FieldError",
+        "type": "object"
+      },
+      "GateDecidedTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "GATE_DECIDED",
+            "default": "GATE_DECIDED",
+            "title": "Kind",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          },
+          "verdict": {
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "verdict",
+          "rule_id"
+        ],
+        "title": "GateDecidedTimelineEvent",
+        "type": "object"
+      },
+      "InjectionFlaggedTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "INJECTION_FLAGGED",
+            "default": "INJECTION_FLAGGED",
+            "title": "Kind",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "rule_id"
+        ],
+        "title": "InjectionFlaggedTimelineEvent",
         "type": "object"
       },
       "MoneyLimit-Input": {
@@ -199,6 +753,301 @@
           "value"
         ],
         "title": "MoneyLimit",
+        "type": "object"
+      },
+      "NoActionTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "NO_ACTION",
+            "default": "NO_ACTION",
+            "title": "Kind",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "reason"
+        ],
+        "title": "NoActionTimelineEvent",
+        "type": "object"
+      },
+      "PlanProposedTimelineEvent": {
+        "properties": {
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "PLAN_PROPOSED",
+            "default": "PLAN_PROPOSED",
+            "title": "Kind",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "action_type"
+        ],
+        "title": "PlanProposedTimelineEvent",
+        "type": "object"
+      },
+      "RunFailedTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "RUN_FAILED",
+            "default": "RUN_FAILED",
+            "title": "Kind",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "error"
+        ],
+        "title": "RunFailedTimelineEvent",
+        "type": "object"
+      },
+      "RunStartedTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "RUN_STARTED",
+            "default": "RUN_STARTED",
+            "title": "Kind",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "run_id"
+        ],
+        "title": "RunStartedTimelineEvent",
+        "type": "object"
+      },
+      "TimelineResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/WebhookReceivedTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/DisputeSyncedTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/RunStartedTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/EvidenceBuiltTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/PlanProposedTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/GateDecidedTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/ApprovalRequestedTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/ApprovalResolvedTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/ExecutionIntendedTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/ExecutionSentTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/ExecutionConfirmedTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/ExecutionFailedTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/InjectionFlaggedTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/NoActionTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/RunFailedTimelineEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/UnknownTimelineEvent"
+                }
+              ]
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TimelineResponse",
+        "type": "object"
+      },
+      "UnknownTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at",
+          "kind"
+        ],
+        "title": "UnknownTimelineEvent",
         "type": "object"
       },
       "UpdateCharterRequest": {
@@ -257,6 +1106,50 @@
           "base_version"
         ],
         "title": "UpdateCharterRequest",
+        "type": "object"
+      },
+      "WebhookReceivedTimelineEvent": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "WEBHOOK_RECEIVED",
+            "default": "WEBHOOK_RECEIVED",
+            "title": "Kind",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "sequence_number": {
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "dispute_id",
+          "sequence_number",
+          "created_at"
+        ],
+        "title": "WebhookReceivedTimelineEvent",
         "type": "object"
       }
     }
@@ -574,6 +1467,276 @@
         "summary": "Get complete charter version history",
         "tags": [
           "Charter"
+        ]
+      }
+    },
+    "/api/disputes/{id}/decisions": {
+      "get": {
+        "description": "Returns decisions recorded for a dispute with cursor pagination.",
+        "operationId": "get_dispute_decisions_api_disputes__id__decisions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page limit",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "description": "Page limit",
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor opaque string",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cursor opaque string",
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get dispute gate decisions",
+        "tags": [
+          "Timeline & Decisions"
+        ]
+      }
+    },
+    "/api/disputes/{id}/timeline": {
+      "get": {
+        "description": "Returns strictly ordered timeline events by sequence number with cursor pagination.",
+        "operationId": "get_dispute_timeline_api_disputes__id__timeline_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page limit",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "description": "Page limit",
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor sequence number",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cursor sequence number",
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimelineResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get dispute timeline events",
+        "tags": [
+          "Timeline & Decisions"
         ]
       }
     },

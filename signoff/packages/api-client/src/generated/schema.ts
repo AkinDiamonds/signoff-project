@@ -8,12 +8,12 @@ export interface paths {
         };
         /**
          * Get active or historical charter
-         * @description Retrieves the active authority charter, seeds default v1 if uninitialized, or returns a specific version.
+         * @description Retrieves active charter, seeds default v1 if uninitialized, or returns a specific version.
          */
         get: operations["get_charter_api_charter_get"];
         /**
          * Update charter with optimistic concurrency control
-         * @description Creates a new immutable charter version based on base_version. Returns 409 conflict if base_version is stale.
+         * @description Creates a new immutable version based on base_version. Returns 409 conflict if stale.
          */
         put: operations["put_charter_api_charter_put"];
         post?: never;
@@ -35,6 +35,46 @@ export interface paths {
          * @description Returns all charter versions ordered newest first.
          */
         get: operations["list_charter_history_api_charter_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/disputes/{id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get dispute gate decisions
+         * @description Returns decisions recorded for a dispute with cursor pagination.
+         */
+        get: operations["get_dispute_decisions_api_disputes__id__decisions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/disputes/{id}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get dispute timeline events
+         * @description Returns strictly ordered timeline events by sequence number with cursor pagination.
+         */
+        get: operations["get_dispute_timeline_api_disputes__id__timeline_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -133,6 +173,54 @@ export interface components {
          * @enum {string}
          */
         ActionType: "PROVIDE_EVIDENCE" | "SEND_MESSAGE" | "MAKE_OFFER" | "ACCEPT_CLAIM" | "ESCALATE" | "APPEAL";
+        /** ApprovalRequestedTimelineEvent */
+        ApprovalRequestedTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default APPROVAL_REQUESTED
+             * @constant
+             */
+            kind: "APPROVAL_REQUESTED";
+            /** Sequence Number */
+            sequence_number: number;
+            /** Token Hash */
+            token_hash: string;
+        };
+        /** ApprovalResolvedTimelineEvent */
+        ApprovalResolvedTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default APPROVAL_RESOLVED
+             * @constant
+             */
+            kind: "APPROVAL_RESOLVED";
+            /** Resolution */
+            resolution: string;
+            /** Sequence Number */
+            sequence_number: number;
+        };
         /**
          * CharterResponse
          * @description Full versioned charter response shape.
@@ -168,12 +256,77 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** DecisionItem */
+        DecisionItem: {
+            /** Action Hash */
+            action_hash: string;
+            /** Action Payload */
+            action_payload?: {
+                [key: string]: unknown;
+            } | null;
+            /** Action Type */
+            action_type: string;
+            /** Also Triggered */
+            also_triggered?: string[];
+            /** Charter Version */
+            charter_version: number;
+            /** Created At */
+            created_at: string;
+            /** Dispute Fingerprint */
+            dispute_fingerprint: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /** Reason */
+            reason: string;
+            /** Rule Id */
+            rule_id: string;
+            /** Verdict */
+            verdict: string;
+        };
+        /** DecisionsResponse */
+        DecisionsResponse: {
+            /** Items */
+            items: components["schemas"]["DecisionItem"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
         /**
          * DisputeReason
          * @description PayPal dispute reason categories.
          * @enum {string}
          */
         DisputeReason: "MERCHANDISE_OR_SERVICE_NOT_RECEIVED" | "MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED" | "UNAUTHORISED" | "CREDIT_NOT_PROCESSED" | "DUPLICATE_TRANSACTION" | "INCORRECT_AMOUNT" | "PAYMENT_BY_OTHER_MEANS" | "CANCELED_RECURRING_BILLING" | "PROBLEM_WITH_REMITTANCE" | "OTHER";
+        /** DisputeSyncedTimelineEvent */
+        DisputeSyncedTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default DISPUTE_SYNCED
+             * @constant
+             */
+            kind: "DISPUTE_SYNCED";
+            /** Sequence Number */
+            sequence_number: number;
+            /** Status */
+            status: string;
+        };
         /** ErrorDetail */
         ErrorDetail: {
             /** Code */
@@ -189,6 +342,128 @@ export interface components {
         ErrorEnvelope: {
             error: components["schemas"]["ErrorDetail"];
         };
+        /** EvidenceBuiltTimelineEvent */
+        EvidenceBuiltTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Evidence Strength */
+            evidence_strength: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default EVIDENCE_BUILT
+             * @constant
+             */
+            kind: "EVIDENCE_BUILT";
+            /** Sequence Number */
+            sequence_number: number;
+        };
+        /** ExecutionConfirmedTimelineEvent */
+        ExecutionConfirmedTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** External Id */
+            external_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default EXECUTION_CONFIRMED
+             * @constant
+             */
+            kind: "EXECUTION_CONFIRMED";
+            /** Sequence Number */
+            sequence_number: number;
+        };
+        /** ExecutionFailedTimelineEvent */
+        ExecutionFailedTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Error Message */
+            error_message: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default EXECUTION_FAILED
+             * @constant
+             */
+            kind: "EXECUTION_FAILED";
+            /** Sequence Number */
+            sequence_number: number;
+        };
+        /** ExecutionIntendedTimelineEvent */
+        ExecutionIntendedTimelineEvent: {
+            /** Action Type */
+            action_type: string;
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default EXECUTION_INTENDED
+             * @constant
+             */
+            kind: "EXECUTION_INTENDED";
+            /** Sequence Number */
+            sequence_number: number;
+        };
+        /** ExecutionSentTimelineEvent */
+        ExecutionSentTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default EXECUTION_SENT
+             * @constant
+             */
+            kind: "EXECUTION_SENT";
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
+            /** Sequence Number */
+            sequence_number: number;
+        };
         /** FieldError */
         FieldError: {
             /** Message */
@@ -196,15 +471,62 @@ export interface components {
             /** Path */
             path: string;
         };
+        /** GateDecidedTimelineEvent */
+        GateDecidedTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default GATE_DECIDED
+             * @constant
+             */
+            kind: "GATE_DECIDED";
+            /** Rule Id */
+            rule_id: string;
+            /** Sequence Number */
+            sequence_number: number;
+            /** Verdict */
+            verdict: string;
+        };
+        /** InjectionFlaggedTimelineEvent */
+        InjectionFlaggedTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default INJECTION_FLAGGED
+             * @constant
+             */
+            kind: "INJECTION_FLAGGED";
+            /** Rule Id */
+            rule_id: string;
+            /** Sequence Number */
+            sequence_number: number;
+        };
         /**
          * MoneyLimit
          * @description Monetary limit enforcing fixed-precision Decimal and merchant currency.
          */
         "MoneyLimit-Input": {
-            /**
-             * Currency Code
-             * @default USD
-             */
+            /** Currency Code */
             currency_code: string;
             /** Value */
             value: number | string;
@@ -214,13 +536,135 @@ export interface components {
          * @description Monetary limit enforcing fixed-precision Decimal and merchant currency.
          */
         "MoneyLimit-Output": {
-            /**
-             * Currency Code
-             * @default USD
-             */
+            /** Currency Code */
             currency_code: string;
             /** Value */
             value: string;
+        };
+        /** NoActionTimelineEvent */
+        NoActionTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default NO_ACTION
+             * @constant
+             */
+            kind: "NO_ACTION";
+            /** Reason */
+            reason: string;
+            /** Sequence Number */
+            sequence_number: number;
+        };
+        /** PlanProposedTimelineEvent */
+        PlanProposedTimelineEvent: {
+            /** Action Type */
+            action_type: string;
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default PLAN_PROPOSED
+             * @constant
+             */
+            kind: "PLAN_PROPOSED";
+            /** Sequence Number */
+            sequence_number: number;
+        };
+        /** RunFailedTimelineEvent */
+        RunFailedTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Error */
+            error: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default RUN_FAILED
+             * @constant
+             */
+            kind: "RUN_FAILED";
+            /** Sequence Number */
+            sequence_number: number;
+        };
+        /** RunStartedTimelineEvent */
+        RunStartedTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default RUN_STARTED
+             * @constant
+             */
+            kind: "RUN_STARTED";
+            /** Run Id */
+            run_id: string;
+            /** Sequence Number */
+            sequence_number: number;
+        };
+        /** TimelineResponse */
+        TimelineResponse: {
+            /** Items */
+            items: (components["schemas"]["WebhookReceivedTimelineEvent"] | components["schemas"]["DisputeSyncedTimelineEvent"] | components["schemas"]["RunStartedTimelineEvent"] | components["schemas"]["EvidenceBuiltTimelineEvent"] | components["schemas"]["PlanProposedTimelineEvent"] | components["schemas"]["GateDecidedTimelineEvent"] | components["schemas"]["ApprovalRequestedTimelineEvent"] | components["schemas"]["ApprovalResolvedTimelineEvent"] | components["schemas"]["ExecutionIntendedTimelineEvent"] | components["schemas"]["ExecutionSentTimelineEvent"] | components["schemas"]["ExecutionConfirmedTimelineEvent"] | components["schemas"]["ExecutionFailedTimelineEvent"] | components["schemas"]["InjectionFlaggedTimelineEvent"] | components["schemas"]["NoActionTimelineEvent"] | components["schemas"]["RunFailedTimelineEvent"] | components["schemas"]["UnknownTimelineEvent"])[];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /** UnknownTimelineEvent */
+        UnknownTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /** Kind */
+            kind: string;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
+            /** Sequence Number */
+            sequence_number: number;
         };
         /**
          * UpdateCharterRequest
@@ -254,6 +698,32 @@ export interface components {
              * @default 2
              */
             repeat_disputer_threshold: number;
+        };
+        /** WebhookReceivedTimelineEvent */
+        WebhookReceivedTimelineEvent: {
+            /** Created At */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Id */
+            id: string;
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /**
+             * Kind
+             * @default WEBHOOK_RECEIVED
+             * @constant
+             */
+            kind: "WEBHOOK_RECEIVED";
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
+            /** Sequence Number */
+            sequence_number: number;
         };
     };
     responses: never;
@@ -453,6 +923,186 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CharterResponse"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_dispute_decisions_api_disputes__id__decisions_get: {
+        parameters: {
+            query?: {
+                /** @description Page limit */
+                limit?: number;
+                /** @description Cursor opaque string */
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionsResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_dispute_timeline_api_disputes__id__timeline_get: {
+        parameters: {
+            query?: {
+                /** @description Page limit */
+                limit?: number;
+                /** @description Cursor sequence number */
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineResponse"];
                 };
             };
             /** @description Bad Request */

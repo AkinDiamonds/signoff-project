@@ -1,6 +1,6 @@
 # STATUS
 
-**Date:** 2026-10-16 · **Phase:** Build plan, step 11 done → step 12 next · **Days to deadline:** 27 (Nov 12, 12:00 PT = 20:00 UTC)
+**Date:** 2026-10-20 · **Phase:** Build plan, step 14 done → step 15 next · **Days to deadline:** 23 (Nov 12, 12:00 PT = 20:00 UTC)
 
 ## Done
 - Handoff read. Planning scaffold created. Doc claims checked (see `07-verify-register.md`).
@@ -21,11 +21,12 @@
 - Step 11 complete: Pure gate skeleton (`policy/gate.py`, `policy/rules.py`, `domain/actions.py`). Proposed-action union (ProvideEvidence | SendMessage | MakeOffer | AcceptClaim | Escalate | Appeal) with deterministic SHA-256 action hashing; frozen `GateDecision` that can only be constructed inside `policy/gate.py`; single `RULE_REGISTRY` (never a second source of rule ids); rules G0-00, G1-01, G1-02, G2-01, G2-02; aggregation DENY > NEEDS_APPROVAL > ALLOW with lowest-step rule recorded and every triggered rule in `also_triggered`; timezone-naive `now`/due date rejected; no I/O and no clock. `Money` moved to `domain/money.py` so the domain layer does not import the PayPal package. 20 gate tests passing (allow/deny/boundary per rule, determinism 100x, P1/P3/P5).
 - Step 12 complete: Gate part 2 (policy/rules.py, policy/gate.py, new policy/approval.py). Rules G3-01..G3-04 (offer/accept standing authority, dispute-size ceiling, currency/precision/positivity, offer above disputed amount), G4-01/G4-02 (never-auto reasons and actions), G5-01/G5-02 (repeat-disputer threshold, injection flag), G6-01 (idempotency keyed on dispute fingerprint + action in prior executions). Money handled exclusively through Decimal helpers (a test scans the gate modules for float usage). An injection flag (G5-02) is always recorded as the primary rule when present. waive_with_approval can waive steps 3-5 only; an approval can never override steps 1, 2 or 6, and an approved edit is recorded as ALLOW / A-01 via approved_decision. Golden decisions file agent/tests/golden/gate_decisions.json replayed by agent/tests/golden_decision_test.py. 56 gate tests passing (up from 20), plus properties P1-P5.
 - Step 13 complete: Mutating client, write-ahead executor and architecture guard (`paypal/mutating_client.py`, `executor/executor.py`, `executor/reconciler.py`, `.importlinter`). Pre-validation of evidence files and message text (limits, mime, size, exact 2 decimals). Write-ahead protocol (INTENDED -> SENT -> CONFIRMED/FAILED) with ledger events per transition. Reconciler settles stuck states via GET re-fetch, never re-sending. Architecture guard tests and .importlinter contract assert mutating client is imported exclusively by executor. Negative typing test verifies rejection of raw action. 25 unit and integration tests passing.
+- Step 14 complete: Decision ledger and timeline API (`agent/app/ledger/*`, `agent/app/api/timeline.py`, `scripts/replay_decisions.py`). Append-only decisions and ledger events with per-dispute sequential numbering. Cursor pagination for timeline and decisions. Untrusted text truncation and flagging. Unknown event kind pass-through. Replay script against pure gate with non-fatal missing charter error reporting. OpenAPI schema updated and typed client regenerated. 11 unit and integration tests passing.
 
 ## Next 3 actions
-1. **Step 14:** Decision ledger and timeline API.
-2. **Step 15:** Mock store and evidence builder (HATEOAS evidence submission).
-3. **Step 16:** LLM interface and provider adapter.
+1. **Step 15:** Mock store and evidence builder (HATEOAS evidence submission).
+2. **Step 16:** LLM interface and provider adapter.
+3. **Step 17:** Agent loop and plan schema.
 
 ## Blockers
 - None.
