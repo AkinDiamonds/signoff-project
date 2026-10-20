@@ -37,4 +37,4 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-20 | `remaining_usd`/`spent_usd` read without lock — lock-free is intentional for observability but undocumented; commented to prevent future "fix" that would deadlock | Added comments in `budget.py` | 44f217e | — |
