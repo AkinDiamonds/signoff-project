@@ -1085,7 +1085,7 @@ export interface operations {
             query?: {
                 /** @description Page limit */
                 limit?: number;
-                /** @description Cursor sequence number */
+                /** @description Opaque pagination cursor */
                 cursor?: string | null;
             };
             header?: never;

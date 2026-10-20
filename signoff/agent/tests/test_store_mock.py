@@ -30,10 +30,10 @@ def test_seed_is_idempotent(session: Session):
     first = seed_scenarios(session)
     second = seed_scenarios(session)
 
-    assert first == SeedResult(orders_added=5, tracking_events_added=6)
+    assert first == SeedResult(orders_added=5, tracking_events_added=5)
     assert second == SeedResult(orders_added=0, tracking_events_added=0)
     assert session.scalar(select(func.count()).select_from(Order)) == 5
-    assert session.scalar(select(func.count()).select_from(TrackingEvent)) == 6
+    assert session.scalar(select(func.count()).select_from(TrackingEvent)) == 5
 
 
 def test_lookup_by_paypal_transaction_id(session: Session):

@@ -52,7 +52,7 @@ def db_session(engine) -> Session:
     session.close()
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def clean_charters(db_session: Session):
     """Ensure clean charter state for test runs."""
     db_session.execute(delete(Charter).where(Charter.merchant_id == "test_merchant"))
