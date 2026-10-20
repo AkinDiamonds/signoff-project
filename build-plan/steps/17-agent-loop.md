@@ -1,7 +1,7 @@
 # Step 17: Agent loop and plan schema
 
 Phase: P3 Agent · Depends on: 09,12,13,15,16 · Estimate: 3h with an agent · Commit: `feat(agent): plan-only agent loop wired to the gate`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 The agent reads, proposes and hands everything to the gate; it can never act.
@@ -39,4 +39,5 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-20 | (1) Redundant inline MUTATING_TOOL_NAMES definition inside action loop; (2) Fragile private attribute access for model string; (3) Existing run prompt_version/model not refreshed on retry; (4) Loose assertion bound in buyer text truncation test | Lifted MUTATING_TOOL_NAMES to module scope, made model extraction safe via provider, refreshed metadata on rerun, tightened test bound | pending | R1 |
+
