@@ -33,3 +33,7 @@ Run these via `make`:
 - `make rehearse` — run live sandbox rehearsal verification
 - `make dev` — start local development environment
 
+# IMPORTANT
+Use only .\.venv\Scripts\python.exe to run Python and tests.
+If a command fails twice, STOP and report. Do not search the filesystem,
+do not use other projects' environments.

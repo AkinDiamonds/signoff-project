@@ -14,7 +14,7 @@ Built for the PayPal AI Hackathon. **Sandbox only. Fictional data only.**
 |---|---|
 | Webhook receiver (verify, dedupe, queue) | Planned |
 | PayPal client (read + mutating, separated) | Partial (read-only client complete) |
-| Authority Charter + gate | Planned |
+| Authority Charter + gate | Partial (charter versioned; pure gate complete with rules G0-G7, approval waiver and golden replay; executor next) |
 | Agent: not-received disputes | Planned |
 | Agent: second dispute reason | Planned |
 | Append-only decision log | Planned |

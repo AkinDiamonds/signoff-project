@@ -14,35 +14,31 @@ Fulfills Step 09 requirements and edge cases:
 11. Real sandbox dispute fixture syncs into database cleanly.
 """
 
-from collections.abc import Generator
-from copy import deepcopy
-from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 import inspect
 import json
-from pathlib import Path
 import time
+from collections.abc import Generator
+from copy import deepcopy
+from datetime import datetime
+from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
-import httpx
 import pytest
-from sqlalchemy import create_engine, func, select
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from agent.app.db.models import Base, Dispute, Job, LedgerEvent
 from agent.app.domain.enums import DisputeReason, DisputeStatus, JobKind, JobStatus, TimelineEventKind
 from agent.app.errors import NotFoundError
 from agent.app.paypal.auth import PayPalAuth
-from agent.app.paypal.fingerprint import compute_dispute_fingerprint
-from agent.app.paypal.models import Dispute as PayPalDisputeModel, parse_dispute, parse_dispute_list
+from agent.app.paypal.models import Dispute as PayPalDisputeModel
+from agent.app.paypal.models import parse_dispute, parse_dispute_list
 from agent.app.paypal.read_client import PayPalReadClient
 from agent.app.queue import HandlerRegistry
 from agent.app.sync import (
     DisputeState,
     ReconcileResult,
-    SyncResult,
-    handle_reconcile_job,
-    handle_sync_dispute_job,
     is_dispute_resolved,
     map_dispute_state_to_db_status,
     map_paypal_reason,

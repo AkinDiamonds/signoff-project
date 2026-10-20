@@ -1,7 +1,7 @@
 # Step 12: Gate part 2: amount, reason, history, idempotency, approval
 
 Phase: P2 Policy · Depends on: 11 · Estimate: 3h with an agent · Commit: `feat(gate): rules G3-G7 and approval waiver`
-Status: [ ] not started
+Status: [x] done (2026-10-16)
 
 ## Goal
 Complete the gate and prove its properties.

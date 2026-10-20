@@ -5,9 +5,7 @@ closed on missing required fields and ignore unknown fields. Floats are forbidde
 and monetary values are validated strictly as Decimals.
 """
 
-import re
 from datetime import UTC, datetime
-from decimal import Decimal, InvalidOperation
 from typing import Annotated, Any
 
 from pydantic import (
@@ -16,11 +14,11 @@ from pydantic import (
     BeforeValidator,
     ConfigDict,
     Field,
-    field_serializer,
     field_validator,
 )
 
 from agent.app.domain.enums import DisputeReason, DisputeStatus
+from agent.app.domain.money import Money
 
 
 def _parse_utc_datetime(v: Any) -> datetime | None:
@@ -50,51 +48,6 @@ def _parse_utc_datetime(v: Any) -> datetime | None:
 
 UtcDatetime = Annotated[datetime, BeforeValidator(_parse_utc_datetime)]
 OptionalUtcDatetime = Annotated[datetime | None, BeforeValidator(_parse_utc_datetime)]
-
-
-class Money(BaseModel):
-    """Monetary amount with ISO currency code per build-plan/contracts.md.
-
-    Amounts must arrive as strings and become Decimal. JSON floats are rejected;
-    zero or negative amounts are invalid; currency must be three uppercase letters.
-    """
-
-    model_config = ConfigDict(extra="ignore")
-
-    currency_code: str
-    value: Decimal
-
-    @field_validator("currency_code")
-    @classmethod
-    def validate_currency_code(cls, v: str) -> str:
-        if not re.match(r"^[A-Z]{3}$", v):
-            raise ValueError(f"Currency code must be exactly three uppercase letters, got {v!r}")
-        return v
-
-    @field_validator("value", mode="before")
-    @classmethod
-    def validate_value(cls, v: Any) -> Decimal:
-        if isinstance(v, float):
-            raise ValueError("JSON floats are rejected for money values; must be a decimal string")
-        if isinstance(v, int):
-            dec = Decimal(str(v))
-        elif isinstance(v, str):
-            try:
-                dec = Decimal(v)
-            except InvalidOperation as exc:
-                raise ValueError(f"Invalid decimal string: {v!r}") from exc
-        elif isinstance(v, Decimal):
-            dec = v
-        else:
-            raise ValueError(f"Money value must arrive as a string, got {type(v).__name__}")
-
-        if dec <= Decimal("0"):
-            raise ValueError(f"Money value must be strictly positive, got {dec}")
-        return dec
-
-    @field_serializer("value", when_used="json")
-    def serialize_value(self, v: Decimal) -> str:
-        return f"{v:.2f}"
 
 
 class Link(BaseModel):

@@ -1,6 +1,6 @@
 # STATUS
 
-**Date:** 2026-10-07 · **Phase:** Build plan, step 04 done → step 05 next · **Days to deadline:** 36 (Nov 12, 12:00 PT = 20:00 UTC)
+**Date:** 2026-10-16 · **Phase:** Build plan, step 11 done → step 12 next · **Days to deadline:** 27 (Nov 12, 12:00 PT = 20:00 UTC)
 
 ## Done
 - Handoff read. Planning scaffold created. Doc claims checked (see `07-verify-register.md`).
@@ -17,16 +17,25 @@
 - Step 07 complete: PayPal webhook receiver and verifier (`webhooks.py`, `webhook_verify.py`), verified token type `VerifiedWebhook`, discriminated union event envelopes, transactional deduplication & sync job enqueueing, 512KB payload capping, external merchant filtering, and 12 unit/integration edge-case tests.
 - Step 08 complete: Leased Postgres job queue (`agent/app/queue/*`) with row-level `SKIP LOCKED` claiming, database time lease management, heartbeats, exponential backoff with bounded jitter, dead-letter routing for poison jobs and invalid payloads, graceful shutdown with clean lease release, exhaustive handler registry keyed by domain `JobKind`, queue depth & dead-letter counts surfaced in `/api/status`, and 14 tests passing.
 - Step 10 complete: Versioned Authority Charter models and parser (`policy/charter.py`), optimistic concurrency control via `base_version` (`api/charter.py`), seed default v1, complete audit history (`/api/charter/history`), 422 error envelope with field paths for limits/currencies/enums, ADR-007 Accepted, OpenAPI snapshot updated and client regenerated with compile-time type tests.
+- Step 09 complete: Dispute sync and reconciliation poller (`agent/app/sync/*`), 10-input dispute fingerprint storage, local mirror of PayPal dispute state, ledger events on fingerprint change, cancellation of pending agent runs, and reconciliation backfill (`reconciler.py`).
+- Step 11 complete: Pure gate skeleton (`policy/gate.py`, `policy/rules.py`, `domain/actions.py`). Proposed-action union (ProvideEvidence | SendMessage | MakeOffer | AcceptClaim | Escalate | Appeal) with deterministic SHA-256 action hashing; frozen `GateDecision` that can only be constructed inside `policy/gate.py`; single `RULE_REGISTRY` (never a second source of rule ids); rules G0-00, G1-01, G1-02, G2-01, G2-02; aggregation DENY > NEEDS_APPROVAL > ALLOW with lowest-step rule recorded and every triggered rule in `also_triggered`; timezone-naive `now`/due date rejected; no I/O and no clock. `Money` moved to `domain/money.py` so the domain layer does not import the PayPal package. 20 gate tests passing (allow/deny/boundary per rule, determinism 100x, P1/P3/P5).
+- Step 12 complete: Gate part 2 (policy/rules.py, policy/gate.py, new policy/approval.py). Rules G3-01..G3-04 (offer/accept standing authority, dispute-size ceiling, currency/precision/positivity, offer above disputed amount), G4-01/G4-02 (never-auto reasons and actions), G5-01/G5-02 (repeat-disputer threshold, injection flag), G6-01 (idempotency keyed on dispute fingerprint + action in prior executions). Money handled exclusively through Decimal helpers (a test scans the gate modules for float usage). An injection flag (G5-02) is always recorded as the primary rule when present. waive_with_approval can waive steps 3-5 only; an approval can never override steps 1, 2 or 6, and an approved edit is recorded as ALLOW / A-01 via approved_decision. Golden decisions file agent/tests/golden/gate_decisions.json replayed by agent/tests/golden_decision_test.py. 56 gate tests passing (up from 20), plus properties P1-P5.
 
 ## Next 3 actions
-1. **Step 09:** Dispute sync and reconciliation poller.
-2. **Step 11:** Gate rules engine.
-3. **Step 12:** Gate REST API and decisions.
+1. **Step 13:** Mutating client, executor and architecture guard.
+2. **Step 14:** Decision ledger and timeline API.
+3. **Step 15:** Mock store and evidence builder (HATEOAS evidence submission).
 
 ## Blockers
 - None.
 - S8-S14 spike answers can be validated incrementally during steps 21, 23, 34.
 
+## Environment notes
+- Step 11 verification ran against the DB-free suites (gate, PayPal models/read client, agent tools, settings, errors, logging, openapi, dispute sync): 118 tests green, `ruff check signoff/agent signoff/scripts` clean.
+- Step 12 verification (delegated agent, gate suites only per the root .agents/rules/AGENTS.md command policy): pytest signoff/agent/tests/test_gate.py signoff/agent/tests/test_gate_rules.py signoff/agent/tests/golden_decision_test.py -q -> 56 passed; ruff check signoff/agent/app/policy plus the step-12 test files -> clean; pytest signoff/agent/tests --collect-only -q -> 226 tests collected, no import errors.
+- Step 12 NOT verified here: the full pytest run, branch coverage, and the Postgres-backed suites. Neither pytest-cov, coverage, nor mypy is installed in .venv and the sandbox has no network to add them, so the step-12 '100% branch coverage on the gate package' item stays unproven until a coverage-enabled run confirms it.
+- The Postgres-backed suites (`test_database`, `test_charter`, `test_job_queue`, `test_webhooks`, `/readyz`) need `docker compose up -d db` first; they were not run in this session.
+- `vitest` / `npx eslint .` cannot run inside the restricted sandbox (denied reads above the workspace and of `.pytest_cache`). `npx eslint signoff` is clean.
+
 ## Open decisions (see docs/decisions.md)
 ADR-005 web framework · ADR-014 demo session · checkout approach for shop (V-23)
-

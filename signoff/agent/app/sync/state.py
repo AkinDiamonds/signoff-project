@@ -8,7 +8,6 @@ Fulfills Step 09 requirements:
 """
 
 from enum import StrEnum
-from typing import Any
 
 from agent.app.domain.enums import DisputeReason, DisputeStatus
 

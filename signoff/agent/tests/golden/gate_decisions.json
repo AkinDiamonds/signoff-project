@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "description": "Golden gate decisions. Each case pins a fully-specified gate input to its expected verdict and rule id. Replaying these must reproduce the recorded verdicts exactly; this is the same artifact later used to replay ledger rows.",
+  "base_charter": {
+    "version": 1,
+    "auto_offer_max": {"currency_code": "USD", "value": "25.00"},
+    "auto_accept_max": {"currency_code": "USD", "value": "25.00"},
+    "auto_act_max_dispute_amount": {"currency_code": "USD", "value": "100.00"},
+    "never_auto_reasons": [],
+    "never_auto_actions": ["ESCALATE", "APPEAL"],
+    "repeat_disputer_threshold": 2,
+    "auto_provide_evidence": true,
+    "auto_send_message": true
+  },
+  "cases": [
+    {
+      "case_id": "evidence-allow",
+      "description": "Providing evidence on a small dispute within limits is auto-approved.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "40.00"}, "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED"},
+      "action": {"type": "PROVIDE_EVIDENCE", "evidence_type": "PROOF_OF_DELIVERY", "notes": "Signed delivery receipt"},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "ALLOW", "rule_id": "G7-01"}
+    },
+    {
+      "case_id": "offer-at-limit-allow",
+      "description": "An offer exactly at auto_offer_max is within standing authority (boundary, allowed).",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "40.00"}},
+      "action": {"type": "MAKE_OFFER", "amount": {"currency_code": "USD", "value": "25.00"}, "offer_type": "REFUND"},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "ALLOW", "rule_id": "G7-01"}
+    },
+    {
+      "case_id": "offer-over-limit-needs-approval",
+      "description": "One cent above auto_offer_max requires merchant approval.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "40.00"}},
+      "action": {"type": "MAKE_OFFER", "amount": {"currency_code": "USD", "value": "25.01"}, "offer_type": "REFUND"},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "NEEDS_APPROVAL", "rule_id": "G3-01"}
+    },
+    {
+      "case_id": "large-dispute-needs-approval",
+      "description": "Scenario C: a $180 dispute exceeds auto_act_max_dispute_amount, so conceding money needs approval.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "180.00"}},
+      "action": {"type": "MAKE_OFFER", "amount": {"currency_code": "USD", "value": "20.00"}, "offer_type": "REFUND"},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "NEEDS_APPROVAL", "rule_id": "G3-01"}
+    },
+    {
+      "case_id": "accept-over-limit-needs-approval",
+      "description": "Accepting above auto_accept_max requires approval.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "80.00"}},
+      "action": {"type": "ACCEPT_CLAIM", "amount": {"currency_code": "USD", "value": "25.01"}, "accept_claim_type": "REFUND"},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "NEEDS_APPROVAL", "rule_id": "G3-02"}
+    },
+    {
+      "case_id": "offer-above-disputed-amount-deny",
+      "description": "An offer above the disputed amount is impossible and denied.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "30.00"}},
+      "action": {"type": "MAKE_OFFER", "amount": {"currency_code": "USD", "value": "30.01"}, "offer_type": "REFUND"},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "DENY", "rule_id": "G3-04"}
+    },
+    {
+      "case_id": "offer-currency-mismatch-deny",
+      "description": "A currency mismatch is denied before any limit comparison.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "40.00"}},
+      "action": {"type": "MAKE_OFFER", "amount": {"currency_code": "EUR", "value": "10.00"}, "offer_type": "REFUND"},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "DENY", "rule_id": "G3-03"}
+    },
+    {
+      "case_id": "reason-on-never-auto-list-needs-approval",
+      "description": "A reason on the never-auto list escalates to the merchant.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "40.00"}, "reason": "UNAUTHORISED"},
+      "charter_overrides": {"never_auto_reasons": ["UNAUTHORISED"]},
+      "action": {"type": "PROVIDE_EVIDENCE", "evidence_type": "PROOF_OF_DELIVERY"},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "NEEDS_APPROVAL", "rule_id": "G4-01"}
+    },
+    {
+      "case_id": "action-on-never-auto-list-needs-approval",
+      "description": "Escalation is on the never-auto list, so the merchant decides.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "40.00"}},
+      "action": {"type": "ESCALATE", "note": "Buyer is unresponsive"},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "NEEDS_APPROVAL", "rule_id": "G4-02"}
+    },
+    {
+      "case_id": "repeat-disputer-needs-approval",
+      "description": "A buyer at the repeat-disputer threshold requires approval.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "40.00"}},
+      "action": {"type": "PROVIDE_EVIDENCE", "evidence_type": "PROOF_OF_DELIVERY"},
+      "history_flags": {"buyer_dispute_count_in_window": 2},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "NEEDS_APPROVAL", "rule_id": "G5-01"}
+    },
+    {
+      "case_id": "injection-flag-deny",
+      "description": "An injection flag denies the plan outright even with other triggers present.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "180.00"}},
+      "action": {"type": "MAKE_OFFER", "amount": {"currency_code": "USD", "value": "50.00"}, "offer_type": "REFUND"},
+      "history_flags": {"injection_flag": true},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "DENY", "rule_id": "G5-02", "also_triggered": ["G3-01"]}
+    },
+    {
+      "case_id": "deadline-passed-deny",
+      "description": "An approval can never waive a passed deadline; the gate denies.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "40.00"}},
+      "action": {"type": "PROVIDE_EVIDENCE", "evidence_type": "PROOF_OF_DELIVERY"},
+      "now_offset_days_from_due": 1,
+      "expected": {"verdict": "DENY", "rule_id": "G2-02"}
+    },
+    {
+      "case_id": "action-not-offered-deny",
+      "description": "PayPal does not offer appeal on this dispute, so the action is denied at step 1.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "40.00"}},
+      "action": {"type": "APPEAL", "note": "Appealing a resolved case"},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "DENY", "rule_id": "G1-01"}
+    },
+    {
+      "case_id": "wrong-dispute-status-deny",
+      "description": "A dispute that is no longer waiting for the seller cannot be acted on.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {
+        "dispute_amount": {"currency_code": "USD", "value": "40.00"},
+        "status": "RESOLVED"
+      },
+      "action": {"type": "PROVIDE_EVIDENCE", "evidence_type": "PROOF_OF_DELIVERY"},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "DENY", "rule_id": "G2-01"}
+    },
+    {
+      "case_id": "injection-flag-primary-deny",
+      "description": "With no other trigger in play, the injection flag itself is the denying rule.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "40.00"}},
+      "action": {"type": "PROVIDE_EVIDENCE", "evidence_type": "PROOF_OF_DELIVERY"},
+      "history_flags": {"injection_flag": true},
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "DENY", "rule_id": "G5-02"}
+    },
+    {
+      "case_id": "repeat-action-deny",
+      "description": "Re-proposing the same action on the same fingerprint is idempotently denied.",
+      "fixture": "s5-get-dispute.json",
+      "dispute_overrides": {"dispute_amount": {"currency_code": "USD", "value": "40.00"}},
+      "action_same_as": "evidence-allow",
+      "prior_action_same_as": "evidence-allow",
+      "now_offset_days_from_due": -2,
+      "expected": {"verdict": "DENY", "rule_id": "G6-01"}
+    }
+  ]
+}

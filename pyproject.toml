@@ -43,3 +43,5 @@ search_path = ["signoff"]
 [tool.pyright]
 extraPaths = ["signoff"]
 
+[tool.setuptools.packages.find]
+include = ["signoff*"]

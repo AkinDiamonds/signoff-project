@@ -1,7 +1,7 @@
 # Step 11: Gate part 1: types, aggregation, PayPal and time rules
 
 Phase: P2 Policy · Depends on: 05,10 · Estimate: 3h with an agent · Commit: `feat(gate): decision types and rules G1 G2 G0`
-Status: [ ] not started
+Status: [x] done (2026-10-16)
 
 ## Goal
 The pure gate skeleton with the first rule families, built test-first.

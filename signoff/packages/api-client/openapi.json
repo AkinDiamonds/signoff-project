@@ -159,7 +159,6 @@
         "description": "Monetary limit enforcing fixed-precision Decimal and merchant currency.",
         "properties": {
           "currency_code": {
-            "default": "USD",
             "title": "Currency Code",
             "type": "string"
           },
@@ -169,7 +168,6 @@
                 "type": "number"
               },
               {
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
                 "type": "string"
               }
             ],
@@ -177,6 +175,7 @@
           }
         },
         "required": [
+          "currency_code",
           "value"
         ],
         "title": "MoneyLimit",
@@ -187,7 +186,6 @@
         "description": "Monetary limit enforcing fixed-precision Decimal and merchant currency.",
         "properties": {
           "currency_code": {
-            "default": "USD",
             "title": "Currency Code",
             "type": "string"
           },
@@ -197,6 +195,7 @@
           }
         },
         "required": [
+          "currency_code",
           "value"
         ],
         "title": "MoneyLimit",
@@ -271,7 +270,7 @@
   "paths": {
     "/api/charter": {
       "get": {
-        "description": "Retrieves the active authority charter, seeds default v1 if uninitialized, or returns a specific version.",
+        "description": "Retrieves active charter, seeds default v1 if uninitialized, or returns a specific version.",
         "operationId": "get_charter_api_charter_get",
         "parameters": [
           {
@@ -382,7 +381,7 @@
         ]
       },
       "put": {
-        "description": "Creates a new immutable charter version based on base_version. Returns 409 conflict if base_version is stale.",
+        "description": "Creates a new immutable version based on base_version. Returns 409 conflict if stale.",
         "operationId": "put_charter_api_charter_put",
         "requestBody": {
           "content": {

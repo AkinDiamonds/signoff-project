@@ -13,7 +13,6 @@ Fulfills Step 09 requirements:
 
 import logging
 from dataclasses import dataclass
-from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -24,7 +23,6 @@ from agent.app.errors import NotFoundError
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.paypal.read_client import PayPalReadClient
 from agent.app.sync.state import (
-    DisputeState,
     is_dispute_resolved,
     map_dispute_state_to_db_status,
     map_paypal_reason,
@@ -71,9 +69,10 @@ async def sync_dispute(
         # Handle 404: mark unavailable if known, retain audit history
         existing = session.get(Dispute, clean_id)
         if existing:
-            was_unavailable = existing.snapshot.get("unavailable") is True if isinstance(existing.snapshot, dict) else False
+            snapshot = existing.snapshot if isinstance(existing.snapshot, dict) else {}
+            was_unavailable = snapshot.get("unavailable") is True
             existing.snapshot = {
-                **(existing.snapshot if isinstance(existing.snapshot, dict) else {}),
+                **snapshot,
                 "unavailable": True,
                 "not_found_reason": "Upstream 404 Not Found",
             }
