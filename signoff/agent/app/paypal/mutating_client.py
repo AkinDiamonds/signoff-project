@@ -482,6 +482,7 @@ class PayPalMutatingClient:
                 evidence_type=action.evidence_type,
                 notes=action.notes,
                 files=evidence_files,
+                tracking_info=[dict(item) for item in action.tracking_info] or None,
             )
         if isinstance(action, MakeOffer):
             return await self.make_offer(

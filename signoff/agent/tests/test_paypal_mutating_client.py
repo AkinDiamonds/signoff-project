@@ -17,6 +17,7 @@ from decimal import Decimal
 import httpx
 import pytest
 
+from agent.app.domain.actions import ProvideEvidence
 from agent.app.domain.money import Money
 from agent.app.paypal.auth import PayPalAuth
 from agent.app.paypal.mutating_client import (
@@ -214,6 +215,31 @@ async def test_provide_evidence_multipart_success():
         )
         assert result.status_code == 200
         assert result.debug_id == "dbg-ev-999"
+
+
+@pytest.mark.asyncio
+async def test_execute_action_forwards_tracking_info():
+    captured: dict[str, bytes] = {}
+
+    async def mock_handler(request: httpx.Request) -> httpx.Response:
+        captured["content"] = request.content
+        return httpx.Response(200, json={"links": []}, headers={"Paypal-Debug-Id": "dbg-ev-track"})
+
+    transport = httpx.MockTransport(mock_handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        auth = make_test_auth(client)
+        mutating_client = PayPalMutatingClient(auth=auth, http_client=client)
+
+        action = ProvideEvidence(
+            evidence_type="PROOF_OF_FULFILLMENT",
+            notes="Delivered to the buyer.",
+            tracking_info=({"carrier": "UPS", "tracking_number": "1Z999AA10123456784"},),
+        )
+        await mutating_client.execute_action("PP-D-123", action)
+
+    assert b"tracking_info" in captured["content"]
+    assert b"1Z999AA10123456784" in captured["content"]
+    assert b"UPS" in captured["content"]
 
 
 @pytest.mark.asyncio
