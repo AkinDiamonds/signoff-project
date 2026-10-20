@@ -1,7 +1,7 @@
 # Step 13: Mutating client, executor and architecture guard
 
 Phase: P2 Policy · Depends on: 12 · Estimate: 4h with an agent · Commit: `feat(executor): write-ahead executor and import guard`
-Status: [ ] not started
+Status: [x] done (2026-10-20)
 
 ## Goal
 The only door to mutating dispute calls, with crash safety.

@@ -1,0 +1,21 @@
+[importlinter]
+root_packages =
+    agent.app
+
+[importlinter:contract:mutating-client-only-in-executor]
+name = Only app.executor may import mutating_client
+type = forbidden
+source_modules =
+    agent.app.agent
+    agent.app.api
+    agent.app.db
+    agent.app.domain
+    agent.app.policy
+    agent.app.queue
+    agent.app.settings
+    agent.app.sync
+    agent.app.worker
+    agent.app.webhooks
+    agent.app.main
+forbidden_modules =
+    agent.app.paypal.mutating_client
