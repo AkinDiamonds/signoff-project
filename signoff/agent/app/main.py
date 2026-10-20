@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from agent.app.agent.llm import build_llm_service
 from agent.app.api.charter import router as charter_router
 from agent.app.api.timeline import router as timeline_router
 from agent.app.db.session import check_database_health, get_db_session
@@ -117,6 +118,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     app.state.settings = app_settings
+    app.state.llm_service = build_llm_service(app_settings)
 
     # Middleware registration: RequestId outer, CORS inner
     allowed_origins = app_settings.parsed_allowed_origins
@@ -166,6 +168,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "status": "ok",
             "env": app_settings.app_env.value,
             "paypal_env": app_settings.paypal_env.value,
+            "llm_mode": app.state.llm_service.mode.value,
             "demo_frozen": app_settings.demo_frozen,
             "queue_depth": stats["queue_depth"],
             "dead_letter_count": stats["dead_letter_count"],
