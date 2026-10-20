@@ -1634,7 +1634,7 @@
             }
           },
           {
-            "description": "Cursor sequence number",
+            "description": "Opaque pagination cursor",
             "in": "query",
             "name": "cursor",
             "required": false,
@@ -1647,7 +1647,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Cursor sequence number",
+              "description": "Opaque pagination cursor",
               "title": "Cursor"
             }
           }
