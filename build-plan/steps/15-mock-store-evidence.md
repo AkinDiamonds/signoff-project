@@ -1,7 +1,7 @@
 # Step 15: Mock store, evidence builder, evidence strength
 
 Phase: P3 Agent · Depends on: 14 · Estimate: 2h with an agent · Commit: `feat(evidence): mock store, builder and strength score`
-Status: [ ] not started
+Status: [x] done (2026-10-20)
 
 ## Goal
 Realistic order and tracking data and an honest evidence score.

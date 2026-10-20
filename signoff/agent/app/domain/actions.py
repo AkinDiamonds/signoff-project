@@ -29,6 +29,7 @@ class ProvideEvidence(BaseProposedAction):
     evidence_type: str | None = None
     notes: str | None = None
     documents: tuple[dict[str, Any], ...] = Field(default_factory=tuple)
+    tracking_info: tuple[dict[str, Any], ...] = Field(default_factory=tuple)
 
 
 class SendMessage(BaseProposedAction):

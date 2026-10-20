@@ -10,7 +10,7 @@ Per Step 14 and contracts.md:
 import base64
 import uuid
 from collections.abc import Sequence
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import func, select
