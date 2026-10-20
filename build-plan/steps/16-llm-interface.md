@@ -1,7 +1,7 @@
 # Step 16: LLM interface, cache and budget
 
 Phase: P3 Agent · Depends on: 02 · Estimate: 2h with an agent · Commit: `feat(llm): provider interface, scenario cache, budget cap`
-Status: [ ] not started
+Status: [x] done (2026-10-20)
 
 ## Goal
 Controlled, testable access to the model with a safe failure story.

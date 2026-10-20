@@ -29,7 +29,7 @@ Built for the PayPal AI Hackathon. **Sandbox only. Fictional data only.**
 |---|---|
 | PayPal disputes, webhooks, evidence, offers | **Real** — sandbox only (REST API, verified webhook events, provide-evidence calls). Dispute data from fixtures in `fixtures/paypal/`. |
 | Storefront orders and carrier tracking | **Simulated** (mock store) — fictional products; no real carrier API. |
-| Agent reasoning | **Real LLM** (provider TBD, ADR-016) with labeled scenario cache for demo cost control. Cache hits are marked "cached reasoning" everywhere they appear. |
+| Agent reasoning | **Real LLM** behind an OpenAI-compatible interface (ADR-008/ADR-016), with a labeled scenario cache and a daily budget cap. Cache hits are marked "cached reasoning" everywhere they appear. No provider key is configured locally yet, so the app reports cache-only mode until `LLM_API_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` are set. |
 
 ## Run it / try it
 
