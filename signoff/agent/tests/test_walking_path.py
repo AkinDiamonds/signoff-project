@@ -27,7 +27,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from agent.app.db.base import Base
-from agent.app.db.models import Approval, Decision, Dispute, Execution
+from agent.app.db.models import Approval, Decision, Dispute
 from agent.app.db.session import get_db_session
 from agent.app.db.triggers import install_append_only_triggers
 from agent.app.domain.enums import (
@@ -39,7 +39,6 @@ from agent.app.domain.enums import (
     TimelineEventKind,
     Verdict,
 )
-from agent.app.domain.money import Money
 from agent.app.main import create_app
 from agent.app.policy.charter import get_or_seed_charter
 from agent.app.settings import AppEnv, PayPalEnv, Settings
@@ -102,6 +101,9 @@ async def test_scenario_a_end_to_end_walking_path(db_session: Session):
         TimelineEventKind.RUN_STARTED.value,
         TimelineEventKind.EVIDENCE_BUILT.value,
         TimelineEventKind.PLAN_PROPOSED.value,
+        # The scenario plan proposes evidence + message; the runner executes the
+        # evidence action, so two gate decisions are recorded.
+        TimelineEventKind.GATE_DECIDED.value,
         TimelineEventKind.GATE_DECIDED.value,
         TimelineEventKind.EXECUTION_INTENDED.value,
         TimelineEventKind.EXECUTION_SENT.value,

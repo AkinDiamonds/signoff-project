@@ -1,7 +1,7 @@
 # Step 21: End-to-end backend path for scenarios A and B, KPIs
 
 Phase: P4 Simulation · Depends on: 14,17,18,19,20 · Estimate: 3h with an agent · Commit: `feat(api): scenarios A B end to end and kpi endpoints`
-Status: [ ] not started
+Status: [x] complete — commit `feat(api): scenarios A B end to end and kpi endpoints`
 Assumes (step 00 table): S8 sandbox resolution. If the answer changed, edit this file first and log it below.
 
 ## Goal

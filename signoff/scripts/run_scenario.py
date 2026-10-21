@@ -8,9 +8,7 @@ import argparse
 import asyncio
 import json
 import logging
-import os
 import sys
-import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -35,10 +33,10 @@ from agent.app.agent.cache import ScenarioCache
 from agent.app.agent.llm import FakeProvider, LLMService, ProviderResponse
 from agent.app.agent.loop import run_agent_loop
 from agent.app.db.base import Base
-from agent.app.db.models import Decision, Dispute, Execution, WebhookEvent
-from agent.app.db.session import get_db_session, get_session_factory
+from agent.app.db.models import Decision, Dispute, WebhookEvent
+from agent.app.db.session import get_db_session
 from agent.app.db.triggers import install_append_only_triggers
-from agent.app.domain.enums import ExecutionStatus, JobKind, TimelineEventKind, Verdict
+from agent.app.domain.enums import ExecutionStatus, TimelineEventKind, Verdict
 from agent.app.executor.executor import execute_decision
 from agent.app.ledger.service import get_timeline_events
 from agent.app.main import create_app
@@ -141,7 +139,7 @@ def seed_stub_dispute(stub_app: Any, config: dict[str, Any]) -> dict[str, Any]:
         "disputed_transactions": [
             {
                 "buyer_transaction_id": config["transaction_id"],
-                "seller_transaction_id": f"TX-SELLER-{config['dispute_id']}",
+                "seller_transaction_id": config["transaction_id"],
                 "transaction_status": "COMPLETED",
                 "gross_amount": {"currency_code": "USD", "value": config["amount"]},
                 "buyer": {
@@ -254,8 +252,9 @@ async def run_scenario(
     auth._access_token = "mock_stub_token"
     auth._expires_at = 9999999999.0
 
-    read_client = PayPalReadClient(auth=auth, base_url="https://api-m.sandbox.paypal.com", http_client=stub_http)
-    mutating_client = PayPalMutatingClient(auth=auth, base_url="https://api-m.sandbox.paypal.com", http_client=stub_http)
+    base = "https://api-m.sandbox.paypal.com"
+    read_client = PayPalReadClient(auth=auth, base_url=base, http_client=stub_http)
+    mutating_client = PayPalMutatingClient(auth=auth, base_url=base, http_client=stub_http)
 
     from agent.app.sync.handler import sync_dispute
 

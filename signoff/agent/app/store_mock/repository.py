@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from agent.app.db.models import Order, TrackingEvent
 from agent.app.domain.enums import OrderStatus, TrackingStatus
 from agent.app.store_mock.scenarios import (
+    SCENARIOS,
     SCENARIOS_BY_TRANSACTION_ID,
     OrderRecord,
     ShipmentRecord,
@@ -27,8 +28,19 @@ def find_order_by_paypal_transaction_id(session: Session, transaction_id: str | 
     return session.scalar(select(Order).where(Order.paypal_transaction_id == transaction_id.strip()))
 
 
-def _to_record(order: Order, events: list[TrackingEvent], buyer_prior_disputes: int | None) -> OrderRecord:
+def _scenario_for_order(order: Order) -> OrderRecord | None:
+    """Match a seeded scenario by transaction id, or by pooled order-code prefix."""
     scenario = SCENARIOS_BY_TRANSACTION_ID.get(order.paypal_transaction_id or "")
+    if scenario is not None:
+        return scenario
+    return next(
+        (item for item in SCENARIOS if order.order_code.startswith(f"SIG-{item.scenario_id}-")),
+        None,
+    )
+
+
+def _to_record(order: Order, events: list[TrackingEvent], buyer_prior_disputes: int | None) -> OrderRecord:
+    scenario = _scenario_for_order(order)
     prior = buyer_prior_disputes
     if prior is None:
         prior = scenario.buyer_prior_disputes if scenario is not None else 0

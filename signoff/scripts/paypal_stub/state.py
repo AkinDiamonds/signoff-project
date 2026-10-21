@@ -105,6 +105,7 @@ class StubState:
             for dispute in (
                 load_fixture("s5-get-dispute.json"),
                 load_fixture("scenario-d-dispute.json"),
+                load_fixture("scenario-e-dispute.json"),
             )
         }
         self.orders = {}
@@ -226,6 +227,17 @@ class StubState:
         transactions = payload.get("disputed_transactions")
         if isinstance(transactions, list) and transactions:
             dispute["disputed_transactions"] = transactions
+        messages = payload.get("messages")
+        if isinstance(messages, list) and messages:
+            dispute["messages"] = [
+                {
+                    "posted_by": "BUYER",
+                    "time_posted": now,
+                    "content": str(message.get("content", "")),
+                }
+                for message in messages
+                if isinstance(message, dict) and message.get("content")
+            ]
         dispute["links"] = [self.link(dispute["dispute_id"], "self")]
         self.disputes[dispute["dispute_id"]] = dispute
         return dispute

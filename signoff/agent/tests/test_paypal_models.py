@@ -139,6 +139,7 @@ FIXTURE_PARSERS: dict[str, tuple[Any, type]] = {
     "s6-webhook-event.json": (parse_webhook_event, WebhookEvent),
     "s7-provide-evidence-response.json": (parse_provide_evidence_response, ProvideEvidenceResponse),
     "scenario-d-dispute.json": (parse_dispute, Dispute),
+    "scenario-e-dispute.json": (parse_dispute, Dispute),
 }
 
 

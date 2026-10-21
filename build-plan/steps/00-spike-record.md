@@ -35,9 +35,9 @@ Turn spike outcomes into ADRs and fixtures. Docs only, no code.
 |---|---|---|---|
 | S8 | Can a dispute be driven to resolved in sandbox (adjudicate, settle)? Can seller-wins be forced? | | 21, 34 |
 | S9 | Offer acceptance by buyer in sandbox: possible? how? | | 19, 32, 34 |
-| S10 | Transaction reuse; pool size needed | | 23, 32 |
+| S10 | Transaction reuse; pool size needed | One dispute per transaction; a pool of 3 copies per scenario (15 transactions total) is enough for a demo day. | 23, 32 |
 | S12 | Toolkit Python auth works? | | 06 |
-| S13 | Second reason chosen and its evidence type | | 22 |
+| S13 | Second reason chosen and its evidence type | `MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED`, built from the order record as `RECEIPT` evidence (item description, order date, amount); no tracking required. Missing item details stop the run for human review. | 22 |
 | S14 | Render plan and cold-start behavior | | 36 |
 | Checkout | PayPal buttons (JS SDK) or redirect approval for the shop | | 30, 31 |
 

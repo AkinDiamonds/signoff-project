@@ -18,9 +18,15 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from agent.app.agent.evidence import NOT_RECEIVED_REASON, build_evidence
 from agent.app.agent.llm import LLMFailure, LLMFailureKind, LLMService
 from agent.app.agent.prompts import PROMPT_VERSION, build_agent_prompt
+from agent.app.agent.reasons import (
+    SupportedReason,
+    build_evidence_for,
+    get_support,
+    is_supported,
+)
+from agent.app.agent.reasons.history import count_buyer_disputes
 from agent.app.agent.schemas import AgentPlan
 from agent.app.agent.screener import screen_dispute_and_context
 from agent.app.agent.tools import READ_TOOL_NAMES, get_dispute_tool
@@ -64,6 +70,7 @@ class AgentLoopResult:
     actions_count: int = 0
     decisions: tuple[GateDecision, ...] = ()
     error: str | None = None
+    human_needed: bool = False
 
 
 def is_action_applicable_to_reason(action_type: ActionType | str, dispute_reason: str, dispute_status: str) -> bool:
@@ -76,9 +83,9 @@ def is_action_applicable_to_reason(action_type: ActionType | str, dispute_reason
     if atype == ActionType.APPEAL.value:
         return s_str == "RESOLVED"
 
-    # Evidence submission is only applicable for not-received disputes in this phase
+    # Evidence submission is only applicable for reasons the registry supports
     if atype == ActionType.PROVIDE_EVIDENCE.value:
-        return r_str == NOT_RECEIVED_REASON
+        return is_supported(r_str)
 
     return True
 
@@ -185,6 +192,30 @@ async def run_agent_loop(
         f"run:{dispute_id}:{current_fingerprint}:{PROMPT_VERSION}",
     )
 
+    reason_attr = paypal_dispute.reason
+    reason_val = reason_attr.value if hasattr(reason_attr, "value") else str(reason_attr)
+    support = get_support(reason_val)
+
+    # Unsupported reason: the agent never guesses. Stop before planning.
+    if not isinstance(support, SupportedReason):
+        record_ledger_event(
+            session,
+            dispute_id,
+            TimelineEventKind.NO_ACTION,
+            {
+                "reason": "unsupported_reason",
+                "message": f"Reason '{reason_val}' is not supported; human review is required.",
+            },
+        )
+        session.commit()
+        return AgentLoopResult(
+            status="no_action",
+            run_id=effective_run_id,
+            dispute_id=dispute_id,
+            fingerprint=current_fingerprint,
+            human_needed=True,
+        )
+
     # Context gathering: load mock store order context if transaction available
     tx_id: str | None = None
     transactions = getattr(paypal_dispute, "disputed_transactions", None) or []
@@ -223,21 +254,30 @@ async def run_agent_loop(
     # Build evidence if order context is present
     evidence = None
     if order_context is not None:
-        reason_attr = paypal_dispute.reason
-        reason_val = reason_attr.value if hasattr(reason_attr, "value") else str(reason_attr)
-        evidence = build_evidence(order_context, reason=reason_val, transaction_id=tx_id)
-        if evidence.buildable:
-            record_ledger_event(
-                session,
-                dispute_id,
-                TimelineEventKind.EVIDENCE_BUILT,
-                {
-                    "evidence_type": evidence.evidence_type,
-                    "tracking_count": len(evidence.tracking_info),
-                    "strength_score": evidence.strength.score,
-                    "strength_label": evidence.strength.label.value,
-                },
-            )
+        evidence = build_evidence_for(reason_val, order_context, transaction_id=tx_id)
+
+    # Supported reason whose required evidence is missing: no submission, human needed.
+    if support.requires_buildable_evidence and (evidence is None or not evidence.buildable):
+        record_ledger_event(
+            session,
+            dispute_id,
+            TimelineEventKind.NO_ACTION,
+            {
+                "reason": "evidence_missing",
+                "message": (
+                    f"Required evidence for reason '{reason_val}' could not be built; "
+                    "nothing was submitted and human review is required."
+                ),
+            },
+        )
+        session.commit()
+        return AgentLoopResult(
+            status="no_action",
+            run_id=effective_run_id,
+            dispute_id=dispute_id,
+            fingerprint=current_fingerprint,
+            human_needed=True,
+        )
 
     # Build prompt with fixed rules and quoted/sanitized buyer text
     prompt_text, input_hash = build_agent_prompt(
@@ -273,6 +313,19 @@ async def run_agent_loop(
         TimelineEventKind.RUN_STARTED,
         {"run_id": str(effective_run_id), "prompt_version": PROMPT_VERSION, "input_hash": input_hash},
     )
+
+    if evidence is not None and evidence.buildable:
+        record_ledger_event(
+            session,
+            dispute_id,
+            TimelineEventKind.EVIDENCE_BUILT,
+            {
+                "evidence_type": evidence.evidence_type,
+                "tracking_count": len(evidence.tracking_info),
+                "strength_score": evidence.strength.score,
+                "strength_label": evidence.strength.label.value,
+            },
+        )
 
     # Call LLM
     if llm_service is None:
@@ -422,8 +475,14 @@ async def run_agent_loop(
         charter_entity = to_charter_response(db_charter)
 
     # History flags
+    buyer_history = count_buyer_disputes(
+        session,
+        paypal_dispute,
+        now=now_dt,
+        fallback_count=order_context.buyer_prior_disputes if order_context else 0,
+    )
     history_flags = HistoryFlags(
-        buyer_dispute_count_in_window=order_context.buyer_prior_disputes if order_context else 0,
+        buyer_dispute_count_in_window=buyer_history.prior_disputes,
         injection_flag=is_injection_flagged,
     )
 

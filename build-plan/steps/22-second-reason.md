@@ -1,7 +1,7 @@
 # Step 22: Second dispute reason and repeat-disputer flag
 
 Phase: P4 Simulation · Depends on: 21 · Estimate: 2h with an agent · Commit: `feat(agent): second reason and repeat disputer`
-Status: [ ] not started
+Status: [x] complete — commit `feat(agent): second reason and repeat disputer`
 Assumes (step 00 table): S13 second reason. If the answer changed, edit this file first and log it below.
 
 ## Goal
