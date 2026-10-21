@@ -1,7 +1,7 @@
 # Step 25: Dispute list, detail and Decision Timeline
 
 Phase: P5 Merchant UI · Depends on: 24,14,21 · Estimate: 3h with an agent · Commit: `feat(web): dispute list, detail and timeline`
-Status: [ ] not started
+Status: [x] done — commit `feat(web): dispute list, detail and timeline`
 
 ## Goal
 See what the agent did and why, for any dispute.
@@ -37,4 +37,5 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-21 | amountParser zero-amount not rejected | Added `numeric === 0` guard in `amountParser.ts`; returns "Amount must be greater than zero" | 3324946 | R0 |
+| 2026-10-21 | Dead `includes('409')` branch in ApprovalPage error handler | Removed dead branch — api_envelope messages never contain the HTTP status code | 3324946 | R0 |

@@ -1,6 +1,6 @@
 # STATUS
 
-**Date:** 2026-10-21 · **Phase:** Build plan, steps 21–23 done → step 24 next · **Days to deadline:** 22 (Nov 12, 12:00 PT = 20:00 UTC)
+**Date:** 2026-10-21 · **Phase:** Build plan, steps 21–26 done → step 27 next · **Days to deadline:** 22 (Nov 12, 12:00 PT = 20:00 UTC)
 
 ## Done
 - Handoff read. Planning scaffold created. Doc claims checked (see `07-verify-register.md`).
@@ -33,11 +33,13 @@
 - Step 23 complete: buyer-assertion dispute client (`paypal/buyer_client.py`), demo simulator (`agent/app/simulator/`), `POST /api/demo/scenarios/{id}`, `GET /api/demo/pool`, `POST /api/demo/reset`, idempotency keys, per-session/IP daily quotas, frozen kill switch, and `scripts/seed_sandbox.py`. Pool claims use a conditional UPDATE so two requests cannot win the same transaction. Import contract extended so only the simulator may import the buyer client. 12 endpoint tests in `test_demo_generator.py` plus 2 buyer-client tests in `test_buyer_client.py` (one drives the full endpoint → assertion client → stub path for scenario A).
 
 - Step 24 complete: design system in `packages/ui` (VerdictChip with Unknown fallback, Money from exact string, Deadline, EmptyState, ErrorState with correlation id and retry, Skeleton, Banner for sandbox/frozen/cached, TruncatedText), typed fixtures in `fixtures/ui/`, route table from `contracts.md` with TanStack Query, error boundary, skip link and landmarks, `VITE_MOCK_API` switch for the mock fetch. Component/state tests, ui type tests, Playwright `@smoke` suite (boot, 404, skip link, axe).
+- Step 25 complete: disputes list page with URL-persisted filters (status, reason, scope, cursor/pagination), detail page with evidence panel, evidence strength, untrusted buyer-message rendering, agent-in-progress banner, stale polling indicator ignoring older responses, and decision timeline. Unknown timeline event kinds render generically. Code review (2026-10-21): no blocking findings; zero-amount rejection added to amountParser and dead `includes('409')` branch removed from ApprovalPage error handler.
+- Step 26 complete: mobile-first approval page at `/approve/:token`. Shows summary, evidence, proposed action, gate reason and time remaining. Edit form with amount parser (commas, spaces, currency symbol, >2 decimals, negatives, huge values), confirmation step for money-moving actions. Distinct outcome screens: approved, denied, expired, stale, already resolved, invalid link. Double-tap and back-navigation protection via `isSubmittingRef` and `sessionStorage`. No-referrer meta policy applied. 320px viewport tested in Playwright. Code review (2026-10-21): same two fixes as step 25.
 
 ## Next 3 actions
-1. **Step 25:** Disputes UI.
-2. **Step 26:** Approval UI.
-3. **Step 27:** Charter and demo UI.
+1. **Step 27:** Charter and demo UI.
+2. **Step 28:** Dashboard and KPI cards.
+3. **Step 29:** (next in sequence).
 
 ## Blockers
 - None.
