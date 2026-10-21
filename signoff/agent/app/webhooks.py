@@ -23,7 +23,8 @@ from sqlalchemy.orm import Session
 
 from agent.app.db.models import Job, WebhookEvent
 from agent.app.db.session import get_db_session
-from agent.app.domain.enums import JobKind, JobStatus
+from agent.app.domain.enums import JobKind, JobStatus, TimelineEventKind
+from agent.app.ledger.service import record_ledger_event
 from agent.app.paypal.webhook_verify import (
     PayloadTooLargeError,
     WebhookVerifier,
@@ -169,6 +170,17 @@ async def paypal_webhook_receiver(
 
     dispute_id = verified.dispute_id
     if dispute_id:
+        # Emit WEBHOOK_RECEIVED ledger event as the first event in the audit chain
+        record_ledger_event(
+            session=db_session,
+            dispute_id=dispute_id,
+            event_kind=TimelineEventKind.WEBHOOK_RECEIVED,
+            payload={
+                "event_id": verified.event_id,
+                "event_type": verified.event_type,
+            },
+        )
+
         existing_job = db_session.execute(
             select(Job).where(
                 Job.dispute_id == dispute_id,

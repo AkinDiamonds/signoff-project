@@ -13,6 +13,8 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from agent.app.agent.llm import build_llm_service
 from agent.app.api.approvals import router as approvals_router
 from agent.app.api.charter import router as charter_router
+from agent.app.api.disputes import router as disputes_router
+from agent.app.api.kpis import router as kpis_router
 from agent.app.api.timeline import router as timeline_router
 from agent.app.db.session import check_database_health, get_db_session
 from agent.app.errors import (
@@ -138,7 +140,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Register routers
     app.include_router(webhooks_router)
     app.include_router(charter_router)
+    app.include_router(kpis_router)
     app.include_router(timeline_router)
+    app.include_router(disputes_router)
     app.include_router(approvals_router)
 
     @app.get("/healthz", tags=["System"])
