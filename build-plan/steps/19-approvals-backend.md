@@ -1,7 +1,7 @@
 # Step 19: Approvals backend
 
 Phase: P3 Agent · Depends on: 12,13,17 · Estimate: 3h with an agent · Commit: `feat(approvals): tokens, resolve and edit re-gate`
-Status: [ ] not started
+Status: [x] complete — commit `feat(approvals): tokens, resolve and edit re-gate`
 Assumes (step 00 table): S9 offer acceptance. If the answer changed, edit this file first and log it below.
 
 ## Goal

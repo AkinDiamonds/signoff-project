@@ -287,4 +287,7 @@ def _signature_headers(event: dict[str, Any]) -> dict[str, str]:
     }
 
 
-app = create_stub_app()
+# NOTE: Do not instantiate a module-level `app` here.
+# Use `create_stub_app()` directly (e.g. from main.py or tests).
+# A module-level call would run the prod-guard and load fixtures at import
+# time, before any environment variable patching by tests or deployment.

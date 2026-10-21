@@ -1,7 +1,7 @@
 # Step 18: Injection screening and adversarial suite
 
 Phase: P3 Agent · Depends on: 17 · Estimate: 2h with an agent · Commit: `feat(agent): injection screener and suite`
-Status: [ ] not started
+Status: [x] complete — commit `feat(agent): injection screener and suite`
 
 ## Goal
 Prove that hostile text cannot cause an action, and log the attempt.

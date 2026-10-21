@@ -18,6 +18,10 @@ EVENT_SUMMARIES = {
     "CUSTOMER.DISPUTE.RESOLVED": "Dispute resolved",
 }
 
+# Links point at the sandbox host recorded in fixtures; the stub never calls them.
+STUB_BASE_URL = "https://api-m.sandbox.paypal.com"
+
+
 # Functions allowed once a dispute is resolved; everything else is an illegal transition.
 ALLOWED_AFTER_RESOLUTION = frozenset({"appeal"})
 
@@ -282,10 +286,6 @@ class StubState:
                 }
             ],
         }
-
-
-# Links point at the sandbox host recorded in fixtures; the stub never calls them.
-STUB_BASE_URL = "https://api-m.sandbox.paypal.com"
 
 
 def _order_amount(payload: dict[str, Any]) -> dict[str, str]:
