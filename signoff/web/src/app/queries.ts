@@ -1,14 +1,32 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ApiClientError, ClientResponse } from '@signoff/api-client';
+import type { components } from '@signoff/api-client/generated';
 import { apiClient } from './api';
+
+export interface ApiFieldError {
+  path: string;
+  message: string;
+}
 
 export class ApiQueryError extends Error {
   readonly correlationId: string | null;
+  readonly status: number;
+  readonly code: string | null;
+  readonly fields: readonly ApiFieldError[];
 
-  constructor(message: string, correlationId: string | null) {
+  constructor(
+    message: string,
+    correlationId: string | null,
+    status = 0,
+    code: string | null = null,
+    fields: readonly ApiFieldError[] = []
+  ) {
     super(message);
     this.name = 'ApiQueryError';
     this.correlationId = correlationId;
+    this.status = status;
+    this.code = code;
+    this.fields = fields;
   }
 }
 
@@ -18,15 +36,21 @@ function describeError(error: ApiClientError | null): ApiQueryError {
   }
   switch (error.kind) {
     case 'network':
-      return new ApiQueryError('Could not reach the server. Check your connection and try again.', null);
+      return new ApiQueryError('Could not reach the server. Check your connection and try again.', null, 0, 'NETWORK');
     case 'api_envelope':
-      return new ApiQueryError(error.error.message, error.error.correlation_id);
+      return new ApiQueryError(
+        error.error.message,
+        error.error.correlation_id,
+        error.status,
+        error.error.code,
+        error.error.fields ?? []
+      );
     case 'non_json':
-      return new ApiQueryError('The server sent an unexpected response.', null);
+      return new ApiQueryError('The server sent an unexpected response.', null, error.status, 'NON_JSON');
   }
 }
 
-async function unwrap<T>(call: Promise<ClientResponse<T>>): Promise<T> {
+export async function unwrap<T>(call: Promise<ClientResponse<T>>): Promise<T> {
   const res = await call;
   if (res.success && res.data !== null) {
     return res.data;
@@ -57,7 +81,6 @@ export function useStatus() {
   });
 }
 
-import type { components } from '@signoff/api-client/generated';
 
 export type DisputesResponse = components['schemas']['DisputesResponse'];
 export type DisputeDetailResponse = components['schemas']['DisputeDetailResponse'];

@@ -18,8 +18,11 @@ Built for the PayPal AI Hackathon. **Sandbox only. Fictional data only.**
 | Agent: not-received disputes | Working (scenarios A and B end to end; evidence, gate, execute, ledger) |
 | Agent: second dispute reason | Working (`MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED` receipt evidence; unknown reasons stop for human review) |
 | Append-only decision log | Planned |
-| Approval page (mobile) | Planned |
-| Dashboard (AG Studio) | Planned |
+| Approval page (mobile) | Working (mobile-first approve/deny/edit with distinct outcomes) |
+| Charter editor | Working (versioned limits, field validation, conflict screen, history) |
+| Demo panel | Working (scenarios A-E, pool status, session reset, frozen/quota/cached labels) |
+| Dashboard (AG Studio) | Working (live KPIs, dispute table, lazy AG Studio workspace, read-only assistant via server proxy) |
+| Custom dashboard widgets | Working (Decision Timeline, Deadline Radar, Authority Meter; empty/single/many states; accessible text labels) |
 | Prompt-injection test suite | Planned |
 | Test-dispute generator for judges | Working (pool, scenarios A-E, session scoping, quotas, reset) |
 | Deterministic PayPal stub (tests/local) | Working (fixture replay, fault injection, reset) |
@@ -38,7 +41,10 @@ _Written after the Day-1 spike. Target: under 10 steps. Test credentials and "Ge
 
 ## Tools used and how
 
-_Maintained as tools are adopted. One line each: what it is, what it does here._
+- **AG Studio 3.0.0** (`ag-studio`, `ag-studio-react`): merchant dashboard workspace over live KPI and dispute data. No licence key; the expected watermark/console warning is documented in Known limits (ADR-015).
+- **FastAPI + SQLAlchemy + Alembic**: agent API, PostgreSQL models and forward-only migrations.
+- **PayPal REST APIs (sandbox)**: disputes, evidence, offers and webhooks; all mutating calls go through the executor.
+- **OpenAI-compatible LLM provider**: dispute planning and the read-only dashboard assistant, both behind server-side proxies.
 
 ## Documentation
 

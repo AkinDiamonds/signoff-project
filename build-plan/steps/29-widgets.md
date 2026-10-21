@@ -1,7 +1,7 @@
 # Step 29: Custom widgets
 
 Phase: P5 Merchant UI · Depends on: 28 · Estimate: 3h with an agent · Commit: `feat(web): decision timeline, deadline radar, authority meter`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 Polished custom widgets. Cut list: keep the timeline and one more; plain components are acceptable if the Studio widget API blocks.
@@ -33,4 +33,4 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-21 | `AuthorityMeter` over-limit conveyed by color only (red bar) violating spec requirement | Added `!!!` text inside fill bar as non-color indicator | — | R1 |

@@ -1,7 +1,7 @@
 # Step 28: AG Studio dashboard and read-only assistant
 
 Phase: P5 Merchant UI · Depends on: 25,21,16 · Estimate: 4h with an agent · Commit: `feat(web): ag studio dashboard and assistant proxy`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 The AG Studio dashboard with live data and a natural-language assistant that can only read.
@@ -38,4 +38,4 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-21 | `import type { components }` placed mid-file in `queries.ts` after all function defs (lint `import/first` violation) | Moved to top of file | — | R1 |

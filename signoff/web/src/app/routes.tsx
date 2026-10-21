@@ -3,6 +3,9 @@ import { Layout } from './Layout';
 import { HomePage, NotFoundPage, PlaceholderPage } from './pages';
 import { DisputeListPage, DisputeDetailPage } from '../features/disputes';
 import { ApprovalPage } from '../features/approval';
+import { CharterPage } from '../features/charter';
+import { DemoPanel } from '../features/demo';
+import { DashboardPage } from '../features/dashboard';
 
 export const routes: RouteObject[] = [
   {
@@ -10,11 +13,11 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <HomePage /> },
       { path: 'guide', element: <PlaceholderPage title="Judge guide" step="33" /> },
-      { path: 'app', element: <PlaceholderPage title="Dashboard" step="28" /> },
+      { path: 'app', element: <DashboardPage /> },
       { path: 'app/disputes', element: <DisputeListPage /> },
       { path: 'app/disputes/:id', element: <DisputeDetailPage /> },
-      { path: 'app/charter', element: <PlaceholderPage title="Authority Charter" step="27" /> },
-      { path: 'app/demo', element: <PlaceholderPage title="Demo scenarios" step="27" /> },
+      { path: 'app/charter', element: <CharterPage /> },
+      { path: 'app/demo', element: <DemoPanel /> },
       { path: 'approve/:token', element: <ApprovalPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

@@ -89,10 +89,10 @@ describe('web shell', () => {
     expect(screen.getByRole('navigation', { name: 'Main' })).toBeTruthy();
   });
 
-  it('mock fetch serves fixtures and rejects writes', async () => {
+  it('mock fetch serves fixtures and rejects unknown writes', async () => {
     const ok = await mockFetch('http://mock.invalid/api/kpis');
     expect(ok.status).toBe(200);
-    const write = await mockFetch('http://mock.invalid/api/charter', { method: 'PUT' });
+    const write = await mockFetch('http://mock.invalid/api/charter', { method: 'DELETE' });
     expect(write.status).toBe(404);
   });
 });

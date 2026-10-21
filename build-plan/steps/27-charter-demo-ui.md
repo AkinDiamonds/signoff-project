@@ -1,7 +1,7 @@
 # Step 27: Charter page and demo panel
 
 Phase: P5 Merchant UI · Depends on: 24,10,23 · Estimate: 2h with an agent · Commit: `feat(web): charter editor and demo panel`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 Change limits and generate scenarios from the UI.
@@ -34,4 +34,4 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-21 | `handleSave` used stale `charterQuery.data` for `base_version` on rapid consecutive saves | Re-fetch latest charter inside handler before building update | — | R1 |

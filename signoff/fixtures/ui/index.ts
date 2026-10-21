@@ -219,3 +219,34 @@ export const statusFixture = {
   queue_depth: 0,
   dead_letter_count: 0,
 };
+
+type Charter = components['schemas']['CharterResponse'];
+type DemoPool = components['schemas']['PoolResponse'];
+
+export const charterFixture = {
+  version: 1,
+  created_at: '2026-10-20T09:00:00Z',
+  auto_offer_max: { currency_code: 'USD', value: '25.00' },
+  auto_accept_max: { currency_code: 'USD', value: '25.00' },
+  auto_act_max_dispute_amount: { currency_code: 'USD', value: '100.00' },
+  never_auto_reasons: [],
+  never_auto_actions: ['ESCALATE', 'APPEAL'],
+  repeat_disputer_threshold: 2,
+  auto_provide_evidence: true,
+  auto_send_message: true,
+} satisfies Charter;
+
+export const charterHistoryFixture = [charterFixture] satisfies Charter[];
+
+export const demoPoolFixture = {
+  total: 15,
+  available: 15,
+  claimed: 0,
+  by_scenario: {
+    A: { total: 3, available: 3, claimed: 0 },
+    B: { total: 3, available: 3, claimed: 0 },
+    C: { total: 3, available: 3, claimed: 0 },
+    D: { total: 3, available: 3, claimed: 0 },
+    E: { total: 3, available: 3, claimed: 0 },
+  },
+} satisfies DemoPool;

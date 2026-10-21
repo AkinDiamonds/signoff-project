@@ -12,6 +12,8 @@
     "@signoff/api-client": "*",
     "@signoff/ui": "*",
     "@tanstack/react-query": "^5.104.5",
+    "ag-studio": "3.0.0",
+    "ag-studio-react": "3.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router": "^7.18.4"

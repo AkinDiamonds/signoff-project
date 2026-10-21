@@ -1,6 +1,6 @@
 # STATUS
 
-**Date:** 2026-10-21 · **Phase:** Build plan, steps 21–26 done → step 27 next · **Days to deadline:** 22 (Nov 12, 12:00 PT = 20:00 UTC)
+**Date:** 2026-10-21 · **Phase:** Build plan, steps 21–27 done → step 28 next · **Days to deadline:** 22 (Nov 12, 12:00 PT = 20:00 UTC)
 
 ## Done
 - Handoff read. Planning scaffold created. Doc claims checked (see `07-verify-register.md`).
@@ -35,11 +35,14 @@
 - Step 24 complete: design system in `packages/ui` (VerdictChip with Unknown fallback, Money from exact string, Deadline, EmptyState, ErrorState with correlation id and retry, Skeleton, Banner for sandbox/frozen/cached, TruncatedText), typed fixtures in `fixtures/ui/`, route table from `contracts.md` with TanStack Query, error boundary, skip link and landmarks, `VITE_MOCK_API` switch for the mock fetch. Component/state tests, ui type tests, Playwright `@smoke` suite (boot, 404, skip link, axe).
 - Step 25 complete: disputes list page with URL-persisted filters (status, reason, scope, cursor/pagination), detail page with evidence panel, evidence strength, untrusted buyer-message rendering, agent-in-progress banner, stale polling indicator ignoring older responses, and decision timeline. Unknown timeline event kinds render generically. Code review (2026-10-21): no blocking findings; zero-amount rejection added to amountParser and dead `includes('409')` branch removed from ApprovalPage error handler.
 - Step 26 complete: mobile-first approval page at `/approve/:token`. Shows summary, evidence, proposed action, gate reason and time remaining. Edit form with amount parser (commas, spaces, currency symbol, >2 decimals, negatives, huge values), confirmation step for money-moving actions. Distinct outcome screens: approved, denied, expired, stale, already resolved, invalid link. Double-tap and back-navigation protection via `isSubmittingRef` and `sessionStorage`. No-referrer meta policy applied. 320px viewport tested in Playwright. Code review (2026-10-21): same two fixes as step 25.
+- Step 27 complete: charter editor with field-level money validation, optimistic-concurrency conflict screen showing the newer version, and append-only version history (`web/src/features/charter/`). Demo panel with typed A-E scenario buttons and expected outcomes (`SCENARIO_BUTTONS satisfies readonly ScenarioButton[]`), pool status, per-session reset, frozen and cached-reasoning banners, idempotency-key reuse across navigation, and polling until a created dispute is readable (`web/src/features/demo/`). Mock API now serves charter versions, pool, scenario creation and reset. Targeted tests: 4 charter + 8 demo component tests, 2 type tests, 6 Playwright checks (desktop and mobile, including quota 429).
+- Step 28 complete: AG Studio dashboard (`ag-studio` and `ag-studio-react` pinned at 3.0.0, no licence key per ADR-015), typed KPI/dispute adapter in `web/src/features/dashboard/types.ts`, Studio theme from the design tokens, lazy Studio chunk with a plain-dispute-list fallback, and KPI cards that state the 20-minute assumption. Read-only assistant panel with sample questions calls `POST /api/llm`; the proxy fixes the model from configuration, ignores client overrides, caps the body at 16 KB, rate-limits per IP, uses the daily budget, rejects every tool name outside `query_disputes|get_dispute_details|get_kpis|get_charter`, and injects read-only instructions. 4 dashboard component tests, 2 type tests, 11 proxy tests, 8 Playwright checks (desktop and mobile, including Studio load). Production build scan: with `LLM_API_KEY=signoff-canary-never-ship-123`, no key or key name appears in `web/dist`; Studio is a separate 5.5 MB lazy chunk.
+- Step 29 complete: three plain React custom widgets in `web/src/features/widgets/` � Decision Timeline (ordered audit trail), Deadline Radar (overdue / due within 48 h / scheduled / no deadline, 200-item cap with a showing-N-of-M label, overlapping and past-due handling) and Authority Meter (limit vs usage with an explicit "Over limit (N%)" label, `role="meter"` values, and resolved disputes excluded). Each has empty, single and many states, focusable rows and a text label for every colour cue. `STUDIO_WIDGET_DESCRIPTIONS` records the Studio id, assistant description and data shape for each; plain components are used because the Studio custom-widget API requires field/config plumbing (allowed by the step's cut list). Widgets render on the dashboard. 11 component tests, 3 type tests, 8 Playwright checks including per-project screenshot baselines with 5% tolerance and an axe scan with no serious/critical violations.
 
 ## Next 3 actions
-1. **Step 27:** Charter and demo UI.
-2. **Step 28:** Dashboard and KPI cards.
-3. **Step 29:** (next in sequence).
+1. **Step 30:** storefront backend (catalog, orders, checkout).
+2. **Step 31:** storefront frontend.
+3. **Step 34:** full e2e suite (after P6 surfaces).
 
 ## Blockers
 - None.
