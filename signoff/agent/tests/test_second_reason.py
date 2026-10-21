@@ -209,7 +209,12 @@ async def test_second_reason_repeat_disputer_needs_approval(db_session: Session)
 # --- Buyer history ---
 
 
-def _history_dispute(dispute_id: str, payer_id: str, created_at: datetime) -> DBDispute:
+def _history_dispute(
+    dispute_id: str,
+    payer_id: str,
+    created_at: datetime,
+    demo_session_id: str | None = None,
+) -> DBDispute:
     return DBDispute(
         id=dispute_id,
         state_fingerprint=dispute_id,
@@ -220,6 +225,7 @@ def _history_dispute(dispute_id: str, payer_id: str, created_at: datetime) -> DB
         snapshot={
             "disputed_transactions": [{"buyer": {"payer_id": payer_id}}],
         },
+        demo_session_id=demo_session_id,
         created_at=created_at,
     )
 
@@ -232,6 +238,7 @@ def test_history_counts_only_same_buyer_inside_window(db_session: Session):
             _history_dispute("PP-H2", "BUYER-1", now - timedelta(days=20)),
             _history_dispute("PP-H3", "BUYER-1", now - timedelta(days=400)),
             _history_dispute("PP-H4", "BUYER-2", now - timedelta(days=5)),
+            _history_dispute("PP-H5", "BUYER-1", now - timedelta(days=2), demo_session_id="demo-x"),
         ]
     )
     db_session.commit()

@@ -102,10 +102,16 @@ def count_buyer_disputes(
         return BuyerHistory(buyer_id=None, prior_disputes=0, known=False, window_days=window_days)
 
     cutoff = now - timedelta(days=window_days)
-    rows = session.execute(select(Dispute.id, Dispute.snapshot, Dispute.created_at)).all()
+    rows = session.execute(
+        select(Dispute.id, Dispute.snapshot, Dispute.created_at, Dispute.demo_session_id)
+    ).all()
     count = 0
     for row in rows:
         if row.id == getattr(dispute, "dispute_id", None):
+            continue
+        # Demo disputes are synthetic. Exclude them so one sandbox buyer identity
+        # cannot make every generated scenario look like a repeat disputer.
+        if row.demo_session_id is not None:
             continue
         if _as_utc(row.created_at) < cutoff:
             continue
