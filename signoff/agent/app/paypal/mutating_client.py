@@ -18,7 +18,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
-from urllib.parse import urlparse
 
 import httpx
 
@@ -34,7 +33,7 @@ from agent.app.domain.actions import (
 from agent.app.domain.money import Money
 from agent.app.errors import AppError, TokenInvalidError
 from agent.app.paypal.auth import PayPalAuth, get_paypal_debug_id
-from agent.app.settings import SANDBOX_PAYPAL_HOST, Settings
+from agent.app.settings import SANDBOX_PAYPAL_HOST, Settings, is_allowed_paypal_url
 
 logger = logging.getLogger(__name__)
 
@@ -195,8 +194,7 @@ class PayPalMutatingClient:
         )
         self.base_url = (base_url or settings.paypal_base_url).rstrip("/")
 
-        parsed = urlparse(self.base_url)
-        if parsed.scheme != "https" or parsed.hostname != SANDBOX_PAYPAL_HOST:
+        if not is_allowed_paypal_url(self.base_url, settings.paypal_env):
             raise ValueError(
                 f"PayPal base URL must be HTTPS on {SANDBOX_PAYPAL_HOST}, got '{self.base_url}'"
             )

@@ -5,13 +5,12 @@ import logging
 import time
 from collections.abc import Callable
 from typing import Any
-from urllib.parse import urlparse
 
 import httpx
 
 from agent.app.errors import TokenInvalidError, UpstreamUnavailableError
 from agent.app.paypal.models import TokenResponse, parse_token_response
-from agent.app.settings import SANDBOX_PAYPAL_HOST, Settings
+from agent.app.settings import SANDBOX_PAYPAL_HOST, Settings, is_allowed_paypal_url
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +56,8 @@ class PayPalAuth:
         self._expires_at: float = 0.0
         self._lock = asyncio.Lock()
 
-        # Validate host safety
-        parsed = urlparse(self.base_url)
-        if parsed.scheme != "https" or parsed.hostname != SANDBOX_PAYPAL_HOST:
+        # Validate host safety (stub mode permits a localhost base URL)
+        if not is_allowed_paypal_url(self.base_url, settings.paypal_env):
             raise ValueError(
                 f"PayPal base URL must be HTTPS on {SANDBOX_PAYPAL_HOST}, got '{self.base_url}'"
             )

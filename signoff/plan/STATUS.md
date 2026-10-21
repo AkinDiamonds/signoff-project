@@ -1,6 +1,6 @@
 # STATUS
 
-**Date:** 2026-10-20 · **Phase:** Build plan, steps 15-16 done → step 17 next · **Days to deadline:** 23 (Nov 12, 12:00 PT = 20:00 UTC)
+**Date:** 2026-10-21 · **Phase:** Build plan, step 20 done → step 21 next · **Days to deadline:** 22 (Nov 12, 12:00 PT = 20:00 UTC)
 
 ## Done
 - Handoff read. Planning scaffold created. Doc claims checked (see `07-verify-register.md`).
@@ -24,11 +24,12 @@
 - Step 14 complete: Decision ledger and timeline API (`agent/app/ledger/*`, `agent/app/api/timeline.py`, `scripts/replay_decisions.py`). Append-only decisions and ledger events with per-dispute sequential numbering. Cursor pagination for timeline and decisions. Untrusted text truncation and flagging. Unknown event kind pass-through. Replay script against pure gate with non-fatal missing charter error reporting. OpenAPI schema updated and typed client regenerated. 11 unit and integration tests passing.
 - Step 16 complete: LLM interface, OpenAI-compatible provider, deterministic fake, scenario cache and daily budget (`agent/app/agent/llm.py`, `cache.py`, `budget.py`). Typed failures for timeout, 429, 5xx, invalid JSON/schema, extra fields, empty plan, refusal, empty response, budget exhaustion and missing provider. One repair attempt for invalid output; only validated plans enter the cache; prompt-version/input-hash keys. Budget reservations are atomic under an asyncio lock. `/api/status` exposes `llm_mode` (LIVE/CACHED/UNAVAILABLE). 27 tests passing. Budget accounting uses a conservative fixed $0.01 per provider attempt because token pricing is not configured.
 - Step 15 complete: Mock store seed and lookup (`agent/app/store_mock/*`) for fictional scenarios A-E in the existing `orders`/`tracking_events` tables; pure evidence builder and strength score (`agent/app/agent/evidence.py`). Strength components delivered (40), tracking (25), buyer history (15), completeness (20); labels LOW 0-39, MEDIUM 40-69, HIGH 70-100. Unknown carriers and malformed/overlong tracking numbers fail closed; delivery before the order is not counted; multiple shipments are preserved; buyer notes are never echoed. Extended `ProvideEvidence` with `tracking_info` and forwarded it through `execute_action` (outside the step's original file list, per the approved structured-tracking path). 37 new tests passing.
+- Step 20 complete: Fixture-driven PayPal stub (`scripts/paypal_stub/*`). Replays token, list/get dispute, provide-evidence, make-offer, accept-claim, send-message, escalate, appeal, buyer-side dispute creation and order create/capture with deterministic ids and timestamps. Mutating calls apply state transitions; actions after resolution return PayPal's `UNPROCESSABLE_ENTITY` error shape. Webhook emitter uses a stub-only signature and supports duplicate, out-of-order, delayed, fail-next-N and latency switches; `POST /__stub__/reset` restores fixtures and faults. The stub refuses to start when `APP_ENV=prod`. The app accepts a localhost base URL only in `PAYPAL_ENV=stub`, and `make dev PAYPAL_ENV=stub` runs both processes. 11 stub tests pass (model drift, transitions, faults, client integration, prod guard).
 
 ## Next 3 actions
-1. **Step 17:** Agent loop and plan schema (depends on 15 and 16; both are done).
-2. **Step 18:** Injection screening and adversarial suite.
-3. **Step 19:** Approvals backend.
+1. **Step 21:** End-to-end backend path for scenarios A and B, KPIs.
+2. **Step 22:** Second dispute reason and repeat-disputer flag.
+3. **Step 23:** Test-dispute generator, pool and quotas.
 
 ## Blockers
 - None.
@@ -41,6 +42,7 @@
 - Step 12 NOT verified here: the full pytest run, branch coverage, and the Postgres-backed suites. Neither pytest-cov, coverage, nor mypy is installed in .venv and the sandbox has no network to add them, so the step-12 '100% branch coverage on the gate package' item stays unproven until a coverage-enabled run confirms it.
 - Step 16 verification: `pytest signoff/agent/tests/test_llm.py -q` -> 27 passed; `ruff check` on the changed files -> clean. The full suite was not run (root AGENTS command policy). No `.env` or live LLM key is configured locally, so the app reports `llm_mode: CACHED` and real calls will fall back to cached reasoning or approval until `LLM_API_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` are set.
 - Step 15 verification: `pytest signoff/agent/tests/test_evidence.py signoff/agent/tests/test_store_mock.py -q` -> 37 passed (SQLite in-memory, no Postgres needed); `pytest signoff/agent/tests/test_paypal_mutating_client.py -q` -> 13 passed; gate + golden + executor regression -> 66 passed; `ruff check` on the changed files -> clean. Seed with `python -m agent.app.store_mock.seed` against the configured database; seeding is not run automatically at app startup.
+- Step 20 verification: `pytest signoff/agent/tests/test_paypal_stub.py` -> 11 passed; PayPal-related regression (`test_settings`, `test_paypal_models`, read/mutating clients, stub) -> 86 passed; `ruff check` on the changed files -> clean. Full pytest -> 375 passed, 4 failed in `test_approvals.py` (pre-existing SQLite/String UUID issue and a test that constructs an invalid negative Money; unrelated to the stub). Full `ruff check signoff/agent signoff/scripts` also reports pre-existing issues in `test_approvals.py`. `make dev PAYPAL_ENV=stub` was not launched in this session, but the same ASGI app is exercised end to end by the client-integration test.
 - The Postgres-backed suites (`test_database`, `test_charter`, `test_job_queue`, `test_webhooks`, `/readyz`) need `docker compose up -d db` first; they were not run in this session.
 - `vitest` / `npx eslint .` cannot run inside the restricted sandbox (denied reads above the workspace and of `.pytest_cache`). `npx eslint signoff` is clean.
 

@@ -22,6 +22,7 @@ Built for the PayPal AI Hackathon. **Sandbox only. Fictional data only.**
 | Dashboard (AG Studio) | Planned |
 | Prompt-injection test suite | Planned |
 | Test-dispute generator for judges | Planned |
+| Deterministic PayPal stub (tests/local) | Working (fixture replay, fault injection, reset) |
 
 ## What is real vs simulated
 

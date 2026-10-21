@@ -13,3 +13,4 @@ Every claim in the README, Devpost text or video needs a row with proof. Review 
 | Evidence strength is a heuristic, not a model | README | `docs/architecture.md`, UI label | Planned |
 | Estimated hours saved assumes N minutes/dispute | dashboard | KPI footnote | Planned |
 | Statistics (chargebacks, friendly fraud) | video, Devpost | primary source URL per number; card vs PayPal wording | Planned |
+| The PayPal stub runs offline with deterministic ids, times and fault injection | README status table, demo rehearsal | `agent/tests/test_paypal_stub.py` | Verified |

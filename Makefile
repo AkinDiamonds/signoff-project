@@ -1,10 +1,14 @@
-.PHONY: check test-agent test-web test-types e2e e2e-smoke rehearse api-types dev
+.PHONY: check test-agent test-web test-types e2e e2e-smoke rehearse api-types dev stub
 
 ifeq ($(OS),Windows_NT)
 VENV_PY := .venv\Scripts\python.exe
+PY_PATH := signoff;signoff/agent
 else
 VENV_PY := .venv/bin/python
+PY_PATH := signoff:signoff/agent
 endif
+
+STUB_URL ?= http://localhost:4010
 
 check: test-agent test-web test-types
 	@echo Checking license and repository integrity...
@@ -41,6 +45,16 @@ api-types:
 	@$(VENV_PY) signoff/scripts/export_openapi.py
 	@node signoff/packages/api-client/scripts/generate.mjs
 
+stub:
+	@echo Starting PayPal stub on $(STUB_URL)...
+	@PYTHONPATH="$(PY_PATH)" $(VENV_PY) -m scripts.paypal_stub.main
+
 dev:
+ifeq ($(PAYPAL_ENV),stub)
+	@echo Starting PayPal stub and agent development server...
+	@PYTHONPATH="$(PY_PATH)" STUB_PORT=4010 $(VENV_PY) -m scripts.paypal_stub.main &
+	@PYTHONPATH="$(PY_PATH)" PAYPAL_ENV=stub PAYPAL_BASE_URL=$(STUB_URL) $(VENV_PY) -m uvicorn agent.app.main:app --reload --port 8000
+else
 	@echo Starting agent development server...
-	@$(VENV_PY) -m uvicorn agent.app.main:app --reload --port 8000
+	@PYTHONPATH="$(PY_PATH)" $(VENV_PY) -m uvicorn agent.app.main:app --reload --port 8000
+endif

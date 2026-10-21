@@ -21,7 +21,7 @@ from agent.app.paypal.models import (
     parse_dispute,
     parse_dispute_list,
 )
-from agent.app.settings import SANDBOX_PAYPAL_HOST, Settings
+from agent.app.settings import SANDBOX_PAYPAL_HOST, Settings, is_allowed_paypal_url
 
 logger = logging.getLogger(__name__)
 
@@ -88,9 +88,9 @@ class PayPalReadClient:
             http_client=http_client,
         )
         self.base_url = (base_url or str(settings.paypal_base_url)).rstrip("/")
+        self.paypal_env = settings.paypal_env
 
-        parsed = urlparse(self.base_url)
-        if parsed.scheme != "https" or parsed.hostname != SANDBOX_PAYPAL_HOST:
+        if not is_allowed_paypal_url(self.base_url, self.paypal_env):
             raise ValueError(
                 f"PayPal base URL must be HTTPS on {SANDBOX_PAYPAL_HOST}, got '{self.base_url}'"
             )
@@ -115,7 +115,7 @@ class PayPalReadClient:
         if url.startswith("/"):
             return f"{self.base_url}{url}"
         parsed = urlparse(url)
-        if parsed.scheme != "https" or parsed.hostname != SANDBOX_PAYPAL_HOST:
+        if not is_allowed_paypal_url(url, self.paypal_env):
             raise ValueError(
                 f"Disallowed target host: '{parsed.hostname or 'unknown'}'. "
                 f"Must be HTTPS on {SANDBOX_PAYPAL_HOST}"

@@ -21,6 +21,15 @@ class PayPalEnv(StrEnum):
 
 SANDBOX_PAYPAL_HOST = "api-m.sandbox.paypal.com"
 ALLOWED_PAYPAL_URL = f"https://{SANDBOX_PAYPAL_HOST}"
+STUB_PAYPAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+
+
+def is_allowed_paypal_url(url: str, paypal_env: "PayPalEnv") -> bool:
+    """Sandbox HTTPS in every environment; plain HTTP only to a stub host in stub mode."""
+    parsed = urlparse(url)
+    if paypal_env == PayPalEnv.stub and parsed.hostname in STUB_PAYPAL_HOSTS:
+        return parsed.scheme in ("http", "https")
+    return parsed.scheme == "https" and parsed.hostname == SANDBOX_PAYPAL_HOST
 
 
 class Settings(BaseSettings):
@@ -67,28 +76,26 @@ class Settings(BaseSettings):
 
     @field_validator("paypal_base_url")
     @classmethod
-    def validate_paypal_base_url(cls, v: str) -> str:
-        """Reject any PayPal host that is not sandbox and require HTTPS."""
-        if not v:
-            return ALLOWED_PAYPAL_URL
-        parsed = urlparse(v)
-        if parsed.scheme != "https":
-            raise ValueError(f"PayPal base URL must use HTTPS scheme, got '{parsed.scheme or 'none'}'")
-        # Use parsed.hostname (strips port and userinfo) instead of netloc to prevent
-        # SSRF via payloads like "https://api-m.sandbox.paypal.com@evil.com"
-        hostname = parsed.hostname or ""
-        if hostname != SANDBOX_PAYPAL_HOST:
-            raise ValueError(
-                f"Live PayPal endpoints are strictly prohibited. Host must be {SANDBOX_PAYPAL_HOST}, got '{hostname}'"
-            )
-        return v
+    def default_empty_base_url(cls, v: str) -> str:
+        """An unset base URL means the recorded sandbox endpoint."""
+        return v or ALLOWED_PAYPAL_URL
 
     @model_validator(mode="after")
     def validate_env_combinations(self) -> "Settings":
         """Startup invariants:
+        - The PayPal base URL is sandbox HTTPS, or a localhost stub URL in stub mode.
         - Stub PayPal is forbidden in production.
         - In prod, ensure critical config is present without revealing values.
         """
+        parsed = urlparse(self.paypal_base_url)
+        if not is_allowed_paypal_url(self.paypal_base_url, self.paypal_env):
+            if parsed.scheme != "https":
+                raise ValueError(f"PayPal base URL must use HTTPS scheme, got '{parsed.scheme or 'none'}'")
+            raise ValueError(
+                f"Live PayPal endpoints are strictly prohibited. Host must be {SANDBOX_PAYPAL_HOST}, "
+                f"got '{parsed.hostname or ''}'"
+            )
+
         if self.app_env == AppEnv.prod and self.paypal_env == PayPalEnv.stub:
             raise ValueError("PAYPAL_ENV=stub is strictly forbidden when APP_ENV=prod")
 

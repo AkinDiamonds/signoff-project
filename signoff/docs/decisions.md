@@ -28,7 +28,7 @@ Append-only. Format: **ID · Date · Status** — Context — Decision — Conse
 ---
 **ADR-012 · 2026-10-06 · Proposed** — Add a buyer-facing storefront and buyer portal (`shop/`) plus a product site and judge guide, so both sides of every scenario can be tested in a browser. Three hosts under one registrable domain (signoff, shop, api) so cookies stay same-site. Consequence: about 22 more hours; the cut list protects the core.
 
-**ADR-013 · 2026-10-06 · Proposed** — A fixture-driven PayPal stub exists for tests and local development only. It is selectable only when the environment is local or test and the application refuses to start with it in production. Real-sandbox runs remain the `@live` rehearsal.
+**ADR-013 · 2026-10-06 · Accepted** — A fixture-driven PayPal stub exists for tests and local development only. It is selectable only when the environment is local or test and the application refuses to start with it in production. Real-sandbox runs remain the `@live` rehearsal. Implemented in `scripts/paypal_stub/` (2026-10-21): fixture replay, deterministic ids/time, mutating state transitions, webhook emitter with duplicate/out-of-order/delay/failure/latency faults, and a test-only reset endpoint. `make dev PAYPAL_ENV=stub` starts the stub and agent together.
 
 **ADR-014 · 2026-10-06 · Proposed** — Demo data is scoped by a demo session id so concurrent judges do not trample each other. This is not multi-tenancy: there is one merchant and one charter; reset hides a session's disputes and never deletes ledger rows.
 

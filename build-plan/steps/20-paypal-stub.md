@@ -1,7 +1,7 @@
 # Step 20: PayPal stub server for deterministic tests
 
 Phase: P4 Simulation · Depends on: 05,07,13 · Estimate: 3h with an agent · Commit: `feat(stub): fixture-driven PayPal stub with fault injection`
-Status: [ ] not started
+Status: [x] done (2026-10-21)
 
 ## Goal
 Run the whole system offline and deterministically in CI and Playwright.
