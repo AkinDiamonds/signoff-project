@@ -12,14 +12,14 @@ Per Step 19:
 - Raw notes stored and escaped on output.
 """
 
-from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 import hashlib
 import html
 import logging
 import secrets
-from typing import Any
 import uuid
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -54,7 +54,7 @@ from agent.app.ledger.service import record_decision, record_ledger_event
 from agent.app.paypal.models import parse_dispute
 from agent.app.policy.approval import is_waivable, waive_with_approval
 from agent.app.policy.charter import get_or_seed_charter, to_charter_response
-from agent.app.policy.gate import GateDecision, GateInput, HistoryFlags, evaluate_gate, reconstruct_decision
+from agent.app.policy.gate import GateInput, HistoryFlags, evaluate_gate, reconstruct_decision
 from agent.app.queue.payloads import ExecuteDecisionPayload, RunAgentPayload
 from agent.app.queue.queue import enqueue_job
 
@@ -84,10 +84,7 @@ def compute_approval_expiry(
     if seller_due_date is None:
         return default_expiry
 
-    if seller_due_date.tzinfo is None:
-        due_utc = seller_due_date.replace(tzinfo=UTC)
-    else:
-        due_utc = seller_due_date.astimezone(UTC)
+    due_utc = seller_due_date.replace(tzinfo=UTC) if seller_due_date.tzinfo is None else seller_due_date.astimezone(UTC)
 
     if due_utc <= now:
         # If due date already passed or right now, expire immediately
@@ -198,7 +195,11 @@ def build_approval_card_response(
     dispute_status = db_dispute.status if db_dispute else "UNKNOWN"
     dispute_amount_val = str(db_dispute.amount) if db_dispute else "0.00"
     dispute_currency = db_dispute.currency if db_dispute else "USD"
-    seller_due = db_dispute.seller_response_due_date.isoformat() if (db_dispute and db_dispute.seller_response_due_date) else None
+    seller_due = (
+        db_dispute.seller_response_due_date.isoformat()
+        if (db_dispute and db_dispute.seller_response_due_date)
+        else None
+    )
 
     buyer_msg: str | None = None
     if db_dispute and db_dispute.snapshot:
@@ -267,7 +268,11 @@ def resolve_approval(
         raise TokenInvalidError()
 
     if approval.resolution != ApprovalResolution.PENDING.value:
-        logger.warning("Approval resolve conflict: already resolved (id=%s, resolution=%s)", approval.id, approval.resolution)
+        logger.warning(
+            "Approval resolve conflict: already resolved (id=%s, resolution=%s)",
+            approval.id,
+            approval.resolution,
+        )
         raise ConflictResolvedError("Approval has already been resolved")
 
     # 2. Fetch original decision and local dispute
@@ -293,7 +298,9 @@ def resolve_approval(
                 fingerprint=db_dispute.state_fingerprint,
             ),
         )
-        raise ConflictStaleError("Dispute state has changed since this approval card was created. Re-planning enqueued.")
+        raise ConflictStaleError(
+            "Dispute state has changed since this approval card was created. Re-planning enqueued."
+        )
 
     raw_notes = getattr(request, "notes", None) or getattr(request, "reason", None)
 
@@ -350,7 +357,9 @@ def resolve_approval(
         )
 
         if not is_waivable(gate_dec):
-            raise EditValidationError("This decision cannot be waived by merchant approval (non-waivable rule triggered)")
+            raise EditValidationError(
+                "This decision cannot be waived by merchant approval (non-waivable rule triggered)"
+            )
 
         waived_dec = waive_with_approval(gate_dec)
         if waived_dec is None:

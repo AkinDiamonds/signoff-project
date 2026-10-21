@@ -11,11 +11,12 @@ Per Step 19:
 - Expiry job settles overdue approvals.
 """
 
-from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 import html
 import json
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
+
 import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
@@ -30,7 +31,6 @@ from agent.app.approvals import (
     create_approval,
     expire_overdue_approvals,
     get_approval_by_token,
-    handle_expire_approvals_job,
     hash_token,
     register_approval_handlers,
     resolve_approval,
@@ -39,13 +39,12 @@ from agent.app.approvals.schemas import ActionMoneySchema
 from agent.app.db.base import Base
 from agent.app.db.models import Approval, Decision
 from agent.app.db.models import Dispute as DBDispute
-from agent.app.db.models import Job, LedgerEvent
+from agent.app.db.models import Job
 from agent.app.domain.actions import MakeOffer
 from agent.app.domain.enums import (
     ActionType,
     ApprovalResolution,
     JobKind,
-    TimelineEventKind,
     Verdict,
 )
 from agent.app.domain.money import Money
@@ -57,8 +56,7 @@ from agent.app.errors import (
 )
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.paypal.models import Dispute, parse_dispute
-from agent.app.policy.charter import get_or_seed_charter, to_charter_response
-from agent.app.policy.gate import GateDecision, GateInput, HistoryFlags, evaluate_gate
+from agent.app.policy.gate import evaluate_gate
 from agent.app.queue.payloads import ExpireApprovalsPayload
 from agent.app.queue.registry import HandlerRegistry
 from agent.app.store_mock.scenarios import SCENARIOS

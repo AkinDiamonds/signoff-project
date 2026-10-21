@@ -7,6 +7,7 @@ Per Step 19 and types-testing catalog:
 """
 
 from typing import Annotated, Any, Literal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from agent.app.agent.schemas import ActionMoneySchema

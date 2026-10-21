@@ -1,9 +1,9 @@
 """Merchant approval endpoints: token-based card retrieval and resolution."""
 
-from collections import defaultdict
-from datetime import UTC, datetime
 import logging
 import time
+from collections import defaultdict
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Request, status
@@ -50,7 +50,10 @@ def check_rate_limit(request: Request) -> None:
     "/{token}",
     response_model=ApprovalCardResponse,
     summary="Get merchant approval card",
-    description="Retrieves approval card data for a valid, unexpired, and unresolved token. Returns uniform 404 otherwise.",
+    description=(
+        "Retrieves approval card data for a valid, unexpired, and unresolved token."
+        " Returns uniform 404 otherwise."
+    ),
 )
 async def get_approval_card(
     token: Annotated[str, Path(description="Random approval token from merchant notification", min_length=16)],
@@ -68,7 +71,10 @@ async def get_approval_card(
     response_model=ResolveResponse,
     status_code=status.HTTP_200_OK,
     summary="Resolve merchant approval",
-    description="Resolves an approval card with approve, deny, or edit. Atomic and enforces waiver rules and dispute freshness.",
+    description=(
+        "Resolves an approval card with approve, deny, or edit."
+        " Atomic and enforces waiver rules and dispute freshness."
+    ),
 )
 async def post_resolve_approval(
     token: Annotated[str, Path(description="Random approval token from merchant notification", min_length=16)],
