@@ -1,7 +1,7 @@
 # Step 30: Storefront backend: catalog, orders, checkout
 
 Phase: P6 Client-facing · Depends on: 21,23 · Estimate: 3h with an agent · Commit: `feat(shop): catalog, order create and capture`
-Status: [ ] not started
+Status: [x] completed
 Assumes (step 00 table): checkout approach. If the answer changed, edit this file first and log it below.
 
 ## Goal

@@ -120,7 +120,7 @@ def test_import_guard_only_simulator_may_import_buyer_client():
     violations: list[str] = []
 
     for py_file in app_dir.rglob("*.py"):
-        if py_file.parent == allowed_dir or py_file.name == "buyer_client.py":
+        if allowed_dir in py_file.parents or py_file.name == "buyer_client.py":
             continue
         found = find_module_imports(py_file.read_text(encoding="utf-8"), "buyer_client")
         if found:
@@ -128,6 +128,25 @@ def test_import_guard_only_simulator_may_import_buyer_client():
 
     assert not violations, (
         "Architecture violation! Only app/simulator may import buyer_client. "
+        f"Found illegal imports in: {violations}"
+    )
+
+
+def test_import_guard_only_shop_may_import_orders_client():
+    """Safety invariant: orders_client may only be imported by agent.app.shop."""
+    app_dir = Path(__file__).resolve().parents[1] / "app"
+    allowed_dir = app_dir / "shop"
+    violations: list[str] = []
+
+    for py_file in app_dir.rglob("*.py"):
+        if py_file.parent == allowed_dir or py_file.name == "orders_client.py":
+            continue
+        found = find_module_imports(py_file.read_text(encoding="utf-8"), "orders_client")
+        if found:
+            violations.append(f"{py_file.name}: {found}")
+
+    assert not violations, (
+        "Architecture violation! Only app/shop may import orders_client. "
         f"Found illegal imports in: {violations}"
     )
 
@@ -144,3 +163,4 @@ def test_executor_negative_typing_rejects_raw_action():
     # Runtime check: raw action passed as decision raises ExecutionRejectedError
     raw_action = SendMessage(message="Hello")
     assert not isinstance(raw_action, GateDecision)
+

@@ -263,6 +263,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/shop/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Catalog
+         * @description List all available products in the storefront catalog.
+         */
+        get: operations["list_catalog_api_shop_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shop/catalog/{sku}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Product Detail
+         * @description Retrieve details for a single catalog item.
+         */
+        get: operations["get_product_detail_api_shop_catalog__sku__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shop/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Order
+         * @description Create a new storefront order, computing total on the server.
+         */
+        post: operations["create_order_api_shop_orders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shop/orders/{order_code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Order By Code
+         * @description Retrieve order details for buyers, requiring order code and email.
+         */
+        get: operations["get_order_by_code_api_shop_orders__order_code__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shop/orders/{order_code}/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture Order
+         * @description Capture payment for an order and schedule mock tracking.
+         */
+        post: operations["capture_order_api_shop_orders__order_code__capture_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shop/orders/{order_code}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reconcile
+         * @description Reconcile an order found at PayPal but missing local capture status.
+         */
+        post: operations["reconcile_api_shop_orders__order_code__reconcile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -515,6 +635,30 @@ export interface components {
             name: string;
         };
         /**
+         * CaptureOrderRequest
+         * @description Optional payload for order capture.
+         */
+        CaptureOrderRequest: {
+            /** Paypal Order Id */
+            paypal_order_id?: string | null;
+        };
+        /**
+         * CaptureOrderResponse
+         * @description Result of order capture.
+         */
+        CaptureOrderResponse: {
+            /** Carrier */
+            carrier?: string | null;
+            /** Order Code */
+            order_code: string;
+            /** Paypal Transaction Id */
+            paypal_transaction_id: string;
+            /** Status */
+            status: string;
+            /** Tracking Number */
+            tracking_number?: string | null;
+        };
+        /**
          * CharterResponse
          * @description Full versioned charter response shape.
          */
@@ -548,6 +692,31 @@ export interface components {
             repeat_disputer_threshold: number;
             /** Version */
             version: number;
+        };
+        /**
+         * CreateOrderRequest
+         * @description Buyer order creation request.
+         */
+        CreateOrderRequest: {
+            /** Customer Email */
+            customer_email: string;
+            /** Demo Session Id */
+            demo_session_id?: string | null;
+            /** Items */
+            items: components["schemas"]["OrderItemRequest"][];
+        };
+        /**
+         * CreateOrderResponse
+         * @description Result of order creation.
+         */
+        CreateOrderResponse: {
+            amount: components["schemas"]["Money"];
+            /** Order Code */
+            order_code: string;
+            /** Paypal Order Id */
+            paypal_order_id: string;
+            /** Status */
+            status: string;
         };
         /** DecisionItem */
         DecisionItem: {
@@ -1079,6 +1248,55 @@ export interface components {
             /** Sequence Number */
             sequence_number: number;
         };
+        /**
+         * OrderDetailResponse
+         * @description Order status and tracking view for buyers.
+         */
+        OrderDetailResponse: {
+            amount: components["schemas"]["Money"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Customer Email */
+            customer_email: string;
+            /** Items */
+            items: components["schemas"]["OrderItemResponse"][];
+            /** Order Code */
+            order_code: string;
+            /** Status */
+            status: string;
+            /** Tracking Events */
+            tracking_events: components["schemas"]["TrackingEventResponse"][];
+        };
+        /**
+         * OrderItemRequest
+         * @description Item specification in an order creation request.
+         *
+         *     Price field is intentionally excluded: the server computes prices from the catalog.
+         *     Quantity is strictly bounded between 1 and 5.
+         */
+        OrderItemRequest: {
+            /** Quantity */
+            quantity: number;
+            /** Sku */
+            sku: string;
+        };
+        /**
+         * OrderItemResponse
+         * @description Line item in an order.
+         */
+        OrderItemResponse: {
+            /** Name */
+            name: string;
+            /** Quantity */
+            quantity: number;
+            /** Sku */
+            sku: string;
+            /** Unit Price */
+            unit_price: string;
+        };
         /** PlanProposedTimelineEvent */
         PlanProposedTimelineEvent: {
             /** Action Type */
@@ -1127,6 +1345,19 @@ export interface components {
             claimed: number;
             /** Total */
             total: number;
+        };
+        /**
+         * ProductItem
+         * @description Catalog product returned to the client.
+         */
+        ProductItem: {
+            /** Description */
+            description: string;
+            /** Name */
+            name: string;
+            price: components["schemas"]["Money"];
+            /** Sku */
+            sku: string;
         };
         /**
          * ResetResponse
@@ -1235,6 +1466,23 @@ export interface components {
             items: (components["schemas"]["WebhookReceivedTimelineEvent"] | components["schemas"]["DisputeSyncedTimelineEvent"] | components["schemas"]["RunStartedTimelineEvent"] | components["schemas"]["EvidenceBuiltTimelineEvent"] | components["schemas"]["PlanProposedTimelineEvent"] | components["schemas"]["GateDecidedTimelineEvent"] | components["schemas"]["ApprovalRequestedTimelineEvent"] | components["schemas"]["ApprovalResolvedTimelineEvent"] | components["schemas"]["ExecutionIntendedTimelineEvent"] | components["schemas"]["ExecutionSentTimelineEvent"] | components["schemas"]["ExecutionConfirmedTimelineEvent"] | components["schemas"]["ExecutionFailedTimelineEvent"] | components["schemas"]["InjectionFlaggedTimelineEvent"] | components["schemas"]["NoActionTimelineEvent"] | components["schemas"]["RunFailedTimelineEvent"] | components["schemas"]["UnknownTimelineEvent"])[];
             /** Next Cursor */
             next_cursor?: string | null;
+        };
+        /**
+         * TrackingEventResponse
+         * @description Tracking milestone for an order.
+         */
+        TrackingEventResponse: {
+            /** Carrier */
+            carrier: string;
+            /**
+             * Event Time
+             * Format: date-time
+             */
+            event_time: string;
+            /** Status */
+            status: string;
+            /** Tracking Number */
+            tracking_number: string;
         };
         /** UnknownTimelineEvent */
         UnknownTimelineEvent: {
@@ -2486,6 +2734,526 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AssistantResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    list_catalog_api_shop_catalog_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductItem"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_product_detail_api_shop_catalog__sku__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sku: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductItem"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    create_order_api_shop_orders_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateOrderResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_order_by_code_api_shop_orders__order_code__get: {
+        parameters: {
+            query: {
+                /** @description Customer email for verification */
+                email: string;
+            };
+            header?: never;
+            path: {
+                order_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetailResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    capture_order_api_shop_orders__order_code__capture_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CaptureOrderRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaptureOrderResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    reconcile_api_shop_orders__order_code__reconcile_post: {
+        parameters: {
+            query: {
+                /** @description Customer email for verification */
+                email: string;
+            };
+            header?: never;
+            path: {
+                order_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetailResponse"];
                 };
             };
             /** @description Bad Request */

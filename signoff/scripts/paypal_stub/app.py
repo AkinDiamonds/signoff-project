@@ -187,6 +187,14 @@ def create_stub_app() -> FastAPI:
             return _error(404, "RESOURCE_NOT_FOUND", "INVALID_RESOURCE_ID", "The specified order does not exist")
         return order
 
+    @app.get("/v2/checkout/orders/{order_id}")
+    async def get_order(order_id: str) -> Any:
+        order = state.orders.get(order_id)
+        if order is None:
+            return _error(404, "RESOURCE_NOT_FOUND", "INVALID_RESOURCE_ID", "The specified order does not exist")
+        return order
+
+
     # --- Test-only controls ---
 
     @app.get("/health")

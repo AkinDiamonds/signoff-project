@@ -42,3 +42,29 @@ source_modules =
     agent.app.paypal.read_client
 forbidden_modules =
     agent.app.paypal.buyer_client
+
+[importlinter:contract:orders-client-only-in-shop]
+name = Only app.shop may import orders_client
+type = forbidden
+source_modules =
+    agent.app.agent
+    agent.app.api
+    agent.app.approvals
+    agent.app.db
+    agent.app.domain
+    agent.app.executor
+    agent.app.ledger
+    agent.app.policy
+    agent.app.queue
+    agent.app.simulator
+    agent.app.store_mock
+    agent.app.sync
+    agent.app.worker
+    agent.app.webhooks
+    agent.app.main
+    agent.app.paypal.mutating_client
+    agent.app.paypal.read_client
+    agent.app.paypal.buyer_client
+forbidden_modules =
+    agent.app.paypal.orders_client
+

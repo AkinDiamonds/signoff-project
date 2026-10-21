@@ -27,6 +27,7 @@ from agent.app.errors import (
 from agent.app.logging import set_correlation_id, setup_logging
 from agent.app.queue import get_queue_stats
 from agent.app.settings import Settings
+from agent.app.shop.router import router as shop_router
 from agent.app.simulator import DemoQuotas
 from agent.app.simulator.router import router as demo_router
 from agent.app.webhooks import router as webhooks_router
@@ -154,6 +155,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(approvals_router)
     app.include_router(demo_router)
     app.include_router(llm_proxy_router)
+    app.include_router(shop_router)
 
     @app.get("/healthz", tags=["System"])
     async def healthz() -> dict[str, str]:
