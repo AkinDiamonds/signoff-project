@@ -32,10 +32,12 @@
 - Step 22 complete: exhaustive reason registry (`agent/app/agent/reasons/`). Supported: not-received and not-as-described (spike S13); anything else is an explicit unsupported result and stops before planning with `human_needed`. Not-as-described builds `RECEIPT` evidence from the order record and stops for human review when item details are missing. Buyer history counts prior disputes per buyer inside a 180-day window with seeded fallback; G5-01 consumes the count. Added scenario E fixture (`PP-E-5001`). 10 tests in `test_second_reason.py`.
 - Step 23 complete: buyer-assertion dispute client (`paypal/buyer_client.py`), demo simulator (`agent/app/simulator/`), `POST /api/demo/scenarios/{id}`, `GET /api/demo/pool`, `POST /api/demo/reset`, idempotency keys, per-session/IP daily quotas, frozen kill switch, and `scripts/seed_sandbox.py`. Pool claims use a conditional UPDATE so two requests cannot win the same transaction. Import contract extended so only the simulator may import the buyer client. 12 endpoint tests in `test_demo_generator.py` plus 2 buyer-client tests in `test_buyer_client.py` (one drives the full endpoint → assertion client → stub path for scenario A).
 
+- Step 24 complete: design system in `packages/ui` (VerdictChip with Unknown fallback, Money from exact string, Deadline, EmptyState, ErrorState with correlation id and retry, Skeleton, Banner for sandbox/frozen/cached, TruncatedText), typed fixtures in `fixtures/ui/`, route table from `contracts.md` with TanStack Query, error boundary, skip link and landmarks, `VITE_MOCK_API` switch for the mock fetch. Component/state tests, ui type tests, Playwright `@smoke` suite (boot, 404, skip link, axe).
+
 ## Next 3 actions
-1. **Step 24:** Web shell.
-2. **Step 25:** Disputes UI.
-3. **Step 26:** Approval UI.
+1. **Step 25:** Disputes UI.
+2. **Step 26:** Approval UI.
+3. **Step 27:** Charter and demo UI.
 
 ## Blockers
 - None.
@@ -51,6 +53,7 @@
 - Step 20 verification: `pytest signoff/agent/tests/test_paypal_stub.py` -> 11 passed; PayPal-related regression (`test_settings`, `test_paypal_models`, read/mutating clients, stub) -> 86 passed; `ruff check` on the changed files -> clean. Full pytest -> 375 passed, 4 failed in `test_approvals.py` (pre-existing SQLite/String UUID issue and a test that constructs an invalid negative Money; unrelated to the stub). Full `ruff check signoff/agent signoff/scripts` also reports pre-existing issues in `test_approvals.py`. `make dev PAYPAL_ENV=stub` was not launched in this session, but the same ASGI app is exercised end to end by the client-integration test.
 - Step 22/23 verification: targeted regression (steps 15–23 suites plus walking path, agent loop, stub, models, architecture guard) -> 126 passed; `ruff check` on every touched file -> clean; OpenAPI snapshot and generated client regenerated. The stub end-to-end test covers "scenario A created from the endpoint" without live credentials; a live sandbox run remains for the rehearsal because no PayPal keys are configured locally. Full pytest still reports the pre-existing `test_approvals` failures plus Postgres-only failures (`ledger_events ... FOR UPDATE` with an aggregate is rejected by Postgres; not touched here).
 - The Postgres-backed suites (`test_database`, `test_charter`, `test_job_queue`, `test_webhooks`, `/readyz`) need `docker compose up -d db` first; they were not run in this session.
+- Step 24 verification: `make test-web` -> 57 passed, `make test-types` -> 16 type tests passed plus enum parity and client freshness OK, `make e2e-smoke` -> 4 passed. `make check` was not run in full: its `test-agent` stage already fails on 7 pre-existing ruff errors in `signoff/agent/tests/test_approvals.py` (untouched by this step).
 - `vitest` / `npx eslint .` cannot run inside the restricted sandbox (denied reads above the workspace and of `.pytest_cache`). `npx eslint signoff` is clean.
 
 ## Open decisions (see docs/decisions.md)

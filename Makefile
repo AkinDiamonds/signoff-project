@@ -27,7 +27,7 @@ test-web:
 
 test-types:
 	@echo Running compile-time type tests and enum parity checks...
-	@npx vitest run signoff/packages/api-client/test/baseline.test-d.ts
+	@npx vitest run signoff/packages/api-client/test/baseline.test-d.ts signoff/packages/ui/test/ui-types.test-d.ts
 	@$(VENV_PY) signoff/scripts/check_enum_parity.py
 	@node scripts/check-client-fresh.mjs
 
@@ -35,7 +35,8 @@ e2e:
 	@echo e2e: not yet implemented
 
 e2e-smoke:
-	@echo e2e-smoke: not yet implemented
+	@echo Running Playwright smoke tests...
+	@npx playwright test --config signoff/e2e/playwright.config.ts --grep @smoke
 
 rehearse:
 	@echo rehearse: not yet implemented

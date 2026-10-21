@@ -3,7 +3,7 @@ import { colors, spacing } from '../tokens';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger';
-  testId?: string;
+  testId?: string | undefined;
 }
 
 export const Button: React.FC<ButtonProps> = ({

@@ -1,7 +1,7 @@
 # Step 24: Signoff web shell, design system, state components
 
 Phase: P5 Merchant UI · Depends on: 04,21 · Estimate: 3h with an agent · Commit: `feat(web): shell, tokens, state components, mock server`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 Every screen can be built on one set of consistent, accessible parts.
@@ -36,4 +36,4 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-21 | Step 24 verification: design system, route shell, query layer, mock switch, smoke and a11y | Implemented; make test-web, make test-types and make e2e-smoke green. make check blocked by pre-existing ruff errors in agent tests | feat(web): shell, tokens, state components, mock server | R2 |
