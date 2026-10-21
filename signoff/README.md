@@ -15,13 +15,13 @@ Built for the PayPal AI Hackathon. **Sandbox only. Fictional data only.**
 | Webhook receiver (verify, dedupe, queue) | Planned |
 | PayPal client (read + mutating, separated) | Partial (read-only client complete) |
 | Authority Charter + gate | Partial (charter versioned; pure gate complete with rules G0-G7, approval waiver and golden replay; executor next) |
-| Agent: not-received disputes | Planned |
-| Agent: second dispute reason | Planned |
+| Agent: not-received disputes | Working (scenarios A and B end to end; evidence, gate, execute, ledger) |
+| Agent: second dispute reason | Working (`MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED` receipt evidence; unknown reasons stop for human review) |
 | Append-only decision log | Planned |
 | Approval page (mobile) | Planned |
 | Dashboard (AG Studio) | Planned |
 | Prompt-injection test suite | Planned |
-| Test-dispute generator for judges | Planned |
+| Test-dispute generator for judges | Working (pool, scenarios A-E, session scoping, quotas, reset) |
 | Deterministic PayPal stub (tests/local) | Working (fixture replay, fault injection, reset) |
 
 ## What is real vs simulated
@@ -50,7 +50,7 @@ _Maintained as tools are adopted. One line each: what it is, what it does here._
 
 - **Sandbox only.** No production PayPal environment; all credentials are sandbox.
 - **AG Studio watermark.** AG Grid / AG Studio displays a watermark and console error without a licence key. This is expected and accepted per ADR-015; the hackathon judging will not penalise it.
-- **Buyer-assertion API.** The test-dispute generator creates disputes via sandbox UI rather than the `POST /v1/customer/disputes` buyer-assertion API (S4 partial). Labeled clearly in the demo script.
+- **Buyer-assertion API.** The test-dispute generator uses the `POST /v1/customer/disputes` buyer-assertion client. Sandbox availability of the buyer assertion is still partial (S4), so the live rehearsal verifies it before recording; if PayPal rejects the assertion in a given sandbox, create the dispute from the sandbox UI and label it in the demo.
 - **Scenario cache.** LLM calls for demo scenarios A–E may be served from a pre-populated cache to control cost. All cache hits are labeled in the UI and README.
 
 ## License

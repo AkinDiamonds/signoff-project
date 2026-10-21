@@ -74,6 +74,16 @@ class Settings(BaseSettings):
     approval_token_secret: str = Field(default="", validation_alias="APPROVAL_TOKEN_SECRET")
     demo_frozen: bool = Field(default=False, validation_alias="DEMO_FROZEN")
 
+    # Demo scenario generator
+    demo_pool_size_per_scenario: int = Field(default=3, ge=1, validation_alias="DEMO_POOL_SIZE_PER_SCENARIO")
+    demo_scenarios_per_session_per_day: int = Field(
+        default=30, ge=1, validation_alias="DEMO_SCENARIOS_PER_SESSION_PER_DAY"
+    )
+    demo_scenarios_per_ip_per_day: int = Field(
+        default=60, ge=1, validation_alias="DEMO_SCENARIOS_PER_IP_PER_DAY"
+    )
+    demo_session_ttl_hours: int = Field(default=24, ge=1, validation_alias="DEMO_SESSION_TTL_HOURS")
+
     @field_validator("paypal_base_url")
     @classmethod
     def default_empty_base_url(cls, v: str) -> str:

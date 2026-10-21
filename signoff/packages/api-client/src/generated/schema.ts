@@ -1,4 +1,44 @@
 export interface paths {
+    "/api/approvals/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get merchant approval card
+         * @description Retrieves approval card data for a valid, unexpired, and unresolved token. Returns uniform 404 otherwise.
+         */
+        get: operations["get_approval_card_api_approvals__token__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/approvals/{token}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve merchant approval
+         * @description Resolves an approval card with approve, deny, or edit. Atomic and enforces waiver rules and dispute freshness.
+         */
+        post: operations["post_resolve_approval_api_approvals__token__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/charter": {
         parameters: {
             query?: never;
@@ -43,6 +83,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/demo/pool": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Pool
+         * @description Return global pool availability and per-scenario counts.
+         */
+        get: operations["get_pool_api_demo_pool_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/demo/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset
+         * @description Hide this session's disputes and issue a fresh session.
+         */
+        post: operations["reset_api_demo_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/demo/scenarios/{scenario_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Scenario
+         * @description Claim a pooled transaction, create the dispute, and tag it to the session.
+         */
+        post: operations["create_scenario_api_demo_scenarios__scenario_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/disputes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List and filter disputes
+         * @description Returns a paginated list of disputes filtered by status, reason, or due-date. Due-date sorting puts nulls last.
+         */
+        get: operations["list_disputes_api_disputes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/disputes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get dispute details
+         * @description Returns full dispute details, snapshot payload, latest verdict, and linked order code.
+         */
+        get: operations["get_dispute_by_id_api_disputes__id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/disputes/{id}/decisions": {
         parameters: {
             query?: never;
@@ -75,6 +215,26 @@ export interface paths {
          * @description Returns strictly ordered timeline events by sequence number with cursor pagination.
          */
         get: operations["get_dispute_timeline_api_disputes__id__timeline_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kpis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get aggregated dispute operations KPIs
+         * @description Returns metrics for open disputes, dollars at risk, recovered, conceded, auto-resolution share, and estimated hours saved with explicit assumption values.
+         */
+        get: operations["get_kpis_api_kpis_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -168,11 +328,64 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * ActionMoneySchema
+         * @description Monetary amount schema for LLM outputs requiring decimal string values.
+         */
+        ActionMoneySchema: {
+            /**
+             * Currency Code
+             * @description 3-letter ISO currency code
+             * @default USD
+             */
+            currency_code: string;
+            /**
+             * Value
+             * @description Decimal string representation of the amount, e.g. '25.00'
+             */
+            value: string;
+        };
+        /**
          * ActionType
          * @description Proposed action type for PayPal disputes.
          * @enum {string}
          */
         ActionType: "PROVIDE_EVIDENCE" | "SEND_MESSAGE" | "MAKE_OFFER" | "ACCEPT_CLAIM" | "ESCALATE" | "APPEAL";
+        /**
+         * ApprovalCardResponse
+         * @description Merchant approval card details returned by GET /api/approvals/{token}.
+         */
+        ApprovalCardResponse: {
+            /** Action Payload */
+            action_payload: {
+                [key: string]: unknown;
+            };
+            action_type: components["schemas"]["ActionType"];
+            /** Created At */
+            created_at: string;
+            /** Decision Id */
+            decision_id: string;
+            dispute: components["schemas"]["DisputeCardSummary"];
+            /** Dispute Id */
+            dispute_id: string;
+            /** Expires At */
+            expires_at: string;
+            /** Id */
+            id: string;
+            /** Notes */
+            notes?: string | null;
+            /** Payload Hash */
+            payload_hash: string;
+            /** Reason */
+            reason: string;
+            resolution: components["schemas"]["ApprovalResolution"];
+            /** Resolved At */
+            resolved_at?: string | null;
+            /** Rule Id */
+            rule_id: string;
+            /** Token Hash */
+            token_hash: string;
+            verdict: components["schemas"]["Verdict"];
+        };
         /** ApprovalRequestedTimelineEvent */
         ApprovalRequestedTimelineEvent: {
             /** Created At */
@@ -197,6 +410,12 @@ export interface components {
             /** Token Hash */
             token_hash: string;
         };
+        /**
+         * ApprovalResolution
+         * @description Approval card resolution status.
+         * @enum {string}
+         */
+        ApprovalResolution: "PENDING" | "APPROVE" | "DENY" | "EDIT" | "EXPIRED";
         /** ApprovalResolvedTimelineEvent */
         ApprovalResolvedTimelineEvent: {
             /** Created At */
@@ -220,6 +439,22 @@ export interface components {
             resolution: string;
             /** Sequence Number */
             sequence_number: number;
+        };
+        /**
+         * ApproveResolveRequest
+         * @description Approve the proposed action through executor waiver rules.
+         */
+        ApproveResolveRequest: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            action: "APPROVE";
+            /**
+             * Notes
+             * @description Optional merchant audit notes
+             */
+            notes?: string | null;
         };
         /**
          * CharterResponse
@@ -298,11 +533,119 @@ export interface components {
             next_cursor?: string | null;
         };
         /**
+         * DenyResolveRequest
+         * @description Deny the proposed action, recording decision and taking no further action.
+         */
+        DenyResolveRequest: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            action: "DENY";
+            /**
+             * Notes
+             * @description Optional merchant audit notes
+             */
+            notes?: string | null;
+            /**
+             * Reason
+             * @description Merchant reason for denial
+             */
+            reason?: string | null;
+        };
+        /**
+         * DisputeCardSummary
+         * @description Dispute context snapshot for human review card.
+         */
+        DisputeCardSummary: {
+            amount: components["schemas"]["ActionMoneySchema"];
+            /** Buyer Message */
+            buyer_message?: string | null;
+            /** Id */
+            id: string;
+            /** Reason */
+            reason: string;
+            /** Seller Response Due Date */
+            seller_response_due_date?: string | null;
+            /** Status */
+            status: string;
+        };
+        /**
+         * DisputeDetailResponse
+         * @description Complete dispute details including raw snapshot.
+         */
+        DisputeDetailResponse: {
+            amount: components["schemas"]["Money"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Latest Rule Id */
+            latest_rule_id?: string | null;
+            latest_verdict?: components["schemas"]["Verdict"] | null;
+            /** Order Code */
+            order_code?: string | null;
+            reason: components["schemas"]["DisputeReason"];
+            /** Seller Response Due Date */
+            seller_response_due_date?: string | null;
+            /** Snapshot */
+            snapshot: {
+                [key: string]: unknown;
+            };
+            /** State Fingerprint */
+            state_fingerprint: string;
+            status: components["schemas"]["DisputeStatus"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * DisputeListItem
+         * @description Dispute item for dashboard list and grids.
+         */
+        DisputeListItem: {
+            amount: components["schemas"]["Money"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Latest Rule Id */
+            latest_rule_id?: string | null;
+            latest_verdict?: components["schemas"]["Verdict"] | null;
+            /** Order Code */
+            order_code?: string | null;
+            reason: components["schemas"]["DisputeReason"];
+            /** Seller Response Due Date */
+            seller_response_due_date?: string | null;
+            /** State Fingerprint */
+            state_fingerprint: string;
+            status: components["schemas"]["DisputeStatus"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
          * DisputeReason
          * @description PayPal dispute reason categories.
          * @enum {string}
          */
         DisputeReason: "MERCHANDISE_OR_SERVICE_NOT_RECEIVED" | "MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED" | "UNAUTHORISED" | "CREDIT_NOT_PROCESSED" | "DUPLICATE_TRANSACTION" | "INCORRECT_AMOUNT" | "PAYMENT_BY_OTHER_MEANS" | "CANCELED_RECURRING_BILLING" | "PROBLEM_WITH_REMITTANCE" | "OTHER";
+        /**
+         * DisputeStatus
+         * @description Denormalized PayPal dispute status.
+         * @enum {string}
+         */
+        DisputeStatus: "WAITING_FOR_SELLER_RESPONSE" | "WAITING_FOR_BUYER_RESPONSE" | "UNDER_REVIEW" | "RESOLVED" | "OPEN" | "OTHER";
         /** DisputeSyncedTimelineEvent */
         DisputeSyncedTimelineEvent: {
             /** Created At */
@@ -326,6 +669,41 @@ export interface components {
             sequence_number: number;
             /** Status */
             status: string;
+        };
+        /**
+         * DisputesResponse
+         * @description Paginated dispute list response.
+         */
+        DisputesResponse: {
+            /** Items */
+            items: components["schemas"]["DisputeListItem"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Total Count */
+            total_count?: number | null;
+        };
+        /**
+         * EditResolveRequest
+         * @description Edit amount and/or message and re-run gate evaluation.
+         */
+        EditResolveRequest: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            action: "EDIT";
+            /** @description Edited monetary amount */
+            amount?: components["schemas"]["ActionMoneySchema"] | null;
+            /**
+             * Message
+             * @description Edited message content
+             */
+            message?: string | null;
+            /**
+             * Notes
+             * @description Optional merchant audit notes
+             */
+            notes?: string | null;
         };
         /** ErrorDetail */
         ErrorDetail: {
@@ -522,6 +900,84 @@ export interface components {
             sequence_number: number;
         };
         /**
+         * KpiResponse
+         * @description Aggregated operational metrics for dispute management.
+         */
+        KpiResponse: {
+            /**
+             * Assumed Minutes Per Dispute
+             * @description Assumption value of minutes saved per dispute
+             * @default 20
+             */
+            assumed_minutes_per_dispute: number;
+            /**
+             * Auto Resolved Disputes
+             * @description Count of closed disputes resolved without human approval
+             */
+            auto_resolved_disputes: number;
+            /**
+             * Closed Disputes
+             * @description Total count of closed disputes
+             */
+            closed_disputes: number;
+            /**
+             * Conceded
+             * @description Sum of amounts refunded or conceded on USD disputes
+             */
+            conceded: string;
+            /**
+             * Dollars At Risk
+             * @description Sum of amounts on open USD disputes formatted as a decimal string
+             */
+            dollars_at_risk: string;
+            /**
+             * Estimated Hours Saved
+             * @description Estimated operational hours saved (null when closed disputes is 0)
+             */
+            estimated_hours_saved?: number | null;
+            /**
+             * Non Usd Open Disputes
+             * @description Total count of open disputes in non-USD currencies
+             * @default 0
+             */
+            non_usd_open_disputes: number;
+            /**
+             * Open Disputes
+             * @description Count of open disputes (waiting for seller response or pending human approval)
+             */
+            open_disputes: number;
+            /**
+             * Other Currency Open Disputes
+             * @description Breakdown of open disputes in non-USD currencies
+             */
+            other_currency_open_disputes?: {
+                [key: string]: number;
+            };
+            /**
+             * Recovered
+             * @description Sum of amounts on USD disputes resolved in merchant's favor
+             */
+            recovered: string;
+            /**
+             * Share Auto Resolved
+             * @description Proportion of closed disputes auto-resolved (null when closed disputes is 0)
+             */
+            share_auto_resolved?: number | null;
+        };
+        /**
+         * Money
+         * @description Monetary amount with ISO currency code per build-plan/contracts.md.
+         *
+         *     Amounts must arrive as strings and become Decimal. JSON floats are rejected;
+         *     zero or negative amounts are invalid; currency must be three uppercase letters.
+         */
+        Money: {
+            /** Currency Code */
+            currency_code: string;
+            /** Value */
+            value: string;
+        };
+        /**
          * MoneyLimit
          * @description Monetary limit enforcing fixed-precision Decimal and merchant currency.
          */
@@ -589,6 +1045,65 @@ export interface components {
             /** Sequence Number */
             sequence_number: number;
         };
+        /**
+         * PoolResponse
+         * @description Pool availability, globally and per scenario.
+         */
+        PoolResponse: {
+            /** Available */
+            available: number;
+            /** By Scenario */
+            by_scenario?: {
+                [key: string]: components["schemas"]["PoolScenario"];
+            };
+            /** Claimed */
+            claimed: number;
+            /** Total */
+            total: number;
+        };
+        /** PoolScenario */
+        PoolScenario: {
+            /** Available */
+            available: number;
+            /** Claimed */
+            claimed: number;
+            /** Total */
+            total: number;
+        };
+        /**
+         * ResetResponse
+         * @description New session issued after hiding the previous session's disputes.
+         */
+        ResetResponse: {
+            /** Hidden Disputes */
+            hidden_disputes: number;
+            /** Session Id */
+            session_id: string;
+        };
+        /**
+         * ResolveResponse
+         * @description Outcome of resolving an approval card.
+         */
+        ResolveResponse: {
+            /** Approval Id */
+            approval_id: string;
+            /** Decision Id */
+            decision_id?: string | null;
+            /** Dispute Id */
+            dispute_id: string;
+            /**
+             * Executed
+             * @default false
+             */
+            executed: boolean;
+            /** Resolution */
+            resolution: string;
+            /**
+             * Status
+             * @default resolved
+             */
+            status: string;
+        };
         /** RunFailedTimelineEvent */
         RunFailedTimelineEvent: {
             /** Created At */
@@ -636,6 +1151,25 @@ export interface components {
             run_id: string;
             /** Sequence Number */
             sequence_number: number;
+        };
+        /**
+         * ScenarioCreated
+         * @description A scenario dispute created from a pooled transaction.
+         */
+        ScenarioCreated: {
+            /** Dispute Id */
+            dispute_id: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Scenario Id
+             * @enum {string}
+             */
+            scenario_id: "A" | "B" | "C" | "D" | "E";
+            /** Session Id */
+            session_id: string;
+            /** Transaction Id */
+            transaction_id: string;
         };
         /** TimelineResponse */
         TimelineResponse: {
@@ -699,6 +1233,12 @@ export interface components {
              */
             repeat_disputer_threshold: number;
         };
+        /**
+         * Verdict
+         * @description Gate decision verdict.
+         * @enum {string}
+         */
+        Verdict: "ALLOW" | "NEEDS_APPROVAL" | "DENY";
         /** WebhookReceivedTimelineEvent */
         WebhookReceivedTimelineEvent: {
             /** Created At */
@@ -734,6 +1274,182 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    get_approval_card_api_approvals__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Random approval token from merchant notification */
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalCardResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    post_resolve_approval_api_approvals__token__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Random approval token from merchant notification */
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveResolveRequest"] | components["schemas"]["DenyResolveRequest"] | components["schemas"]["EditResolveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResolveResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     get_charter_api_charter_get: {
         parameters: {
             query?: {
@@ -990,6 +1706,445 @@ export interface operations {
             };
         };
     };
+    get_pool_api_demo_pool_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoolResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    reset_api_demo_reset_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-Session"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResetResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    create_scenario_api_demo_scenarios__scenario_id__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-Session"?: string | null;
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                scenario_id: "A" | "B" | "C" | "D" | "E";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenarioCreated"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    list_disputes_api_disputes_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by status */
+                status?: components["schemas"]["DisputeStatus"] | null;
+                /** @description Filter by reason */
+                reason?: components["schemas"]["DisputeReason"] | null;
+                /** @description Filter disputes due before this timestamp */
+                "due-before"?: string | null;
+                /** @description Page size limit */
+                limit?: number;
+                /** @description Pagination cursor */
+                cursor?: string | null;
+                /** @description Field to sort by */
+                sort_by?: string;
+                /** @description Sort direction (asc or desc) */
+                sort_direction?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisputesResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_dispute_by_id_api_disputes__id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisputeDetailResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     get_dispute_decisions_api_disputes__id__decisions_get: {
         parameters: {
             query?: {
@@ -1103,6 +2258,89 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TimelineResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_kpis_api_kpis_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KpiResponse"];
                 };
             };
             /** @description Bad Request */

@@ -1,6 +1,28 @@
 {
   "components": {
     "schemas": {
+      "ActionMoneySchema": {
+        "additionalProperties": false,
+        "description": "Monetary amount schema for LLM outputs requiring decimal string values.",
+        "properties": {
+          "currency_code": {
+            "default": "USD",
+            "description": "3-letter ISO currency code",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "value": {
+            "description": "Decimal string representation of the amount, e.g. '25.00'",
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "title": "ActionMoneySchema",
+        "type": "object"
+      },
       "ActionType": {
         "description": "Proposed action type for PayPal disputes.",
         "enum": [
@@ -13,6 +35,104 @@
         ],
         "title": "ActionType",
         "type": "string"
+      },
+      "ApprovalCardResponse": {
+        "description": "Merchant approval card details returned by GET /api/approvals/{token}.",
+        "properties": {
+          "action_payload": {
+            "additionalProperties": true,
+            "title": "Action Payload",
+            "type": "object"
+          },
+          "action_type": {
+            "$ref": "#/components/schemas/ActionType"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision_id": {
+            "title": "Decision Id",
+            "type": "string"
+          },
+          "dispute": {
+            "$ref": "#/components/schemas/DisputeCardSummary"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "payload_hash": {
+            "title": "Payload Hash",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "resolution": {
+            "$ref": "#/components/schemas/ApprovalResolution"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "token_hash": {
+            "title": "Token Hash",
+            "type": "string"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          }
+        },
+        "required": [
+          "id",
+          "decision_id",
+          "dispute_id",
+          "token_hash",
+          "payload_hash",
+          "action_type",
+          "action_payload",
+          "verdict",
+          "rule_id",
+          "reason",
+          "expires_at",
+          "resolution",
+          "dispute",
+          "created_at"
+        ],
+        "title": "ApprovalCardResponse",
+        "type": "object"
       },
       "ApprovalRequestedTimelineEvent": {
         "properties": {
@@ -58,6 +178,18 @@
         "title": "ApprovalRequestedTimelineEvent",
         "type": "object"
       },
+      "ApprovalResolution": {
+        "description": "Approval card resolution status.",
+        "enum": [
+          "PENDING",
+          "APPROVE",
+          "DENY",
+          "EDIT",
+          "EXPIRED"
+        ],
+        "title": "ApprovalResolution",
+        "type": "string"
+      },
       "ApprovalResolvedTimelineEvent": {
         "properties": {
           "created_at": {
@@ -100,6 +232,32 @@
           "resolution"
         ],
         "title": "ApprovalResolvedTimelineEvent",
+        "type": "object"
+      },
+      "ApproveResolveRequest": {
+        "additionalProperties": false,
+        "description": "Approve the proposed action through executor waiver rules.",
+        "properties": {
+          "action": {
+            "const": "APPROVE",
+            "default": "APPROVE",
+            "title": "Action",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional merchant audit notes",
+            "title": "Notes"
+          }
+        },
+        "title": "ApproveResolveRequest",
         "type": "object"
       },
       "CharterResponse": {
@@ -274,6 +432,274 @@
         "title": "DecisionsResponse",
         "type": "object"
       },
+      "DenyResolveRequest": {
+        "additionalProperties": false,
+        "description": "Deny the proposed action, recording decision and taking no further action.",
+        "properties": {
+          "action": {
+            "const": "DENY",
+            "default": "DENY",
+            "title": "Action",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional merchant audit notes",
+            "title": "Notes"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Merchant reason for denial",
+            "title": "Reason"
+          }
+        },
+        "title": "DenyResolveRequest",
+        "type": "object"
+      },
+      "DisputeCardSummary": {
+        "description": "Dispute context snapshot for human review card.",
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/ActionMoneySchema"
+          },
+          "buyer_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyer Message"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "seller_response_due_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Response Due Date"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "reason",
+          "status"
+        ],
+        "title": "DisputeCardSummary",
+        "type": "object"
+      },
+      "DisputeDetailResponse": {
+        "description": "Complete dispute details including raw snapshot.",
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "latest_rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Rule Id"
+          },
+          "latest_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Verdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "order_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Code"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/DisputeReason"
+          },
+          "seller_response_due_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Response Due Date"
+          },
+          "snapshot": {
+            "additionalProperties": true,
+            "title": "Snapshot",
+            "type": "object"
+          },
+          "state_fingerprint": {
+            "title": "State Fingerprint",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DisputeStatus"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "reason",
+          "amount",
+          "state_fingerprint",
+          "snapshot",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DisputeDetailResponse",
+        "type": "object"
+      },
+      "DisputeListItem": {
+        "description": "Dispute item for dashboard list and grids.",
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "latest_rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Rule Id"
+          },
+          "latest_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Verdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "order_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Code"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/DisputeReason"
+          },
+          "seller_response_due_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Response Due Date"
+          },
+          "state_fingerprint": {
+            "title": "State Fingerprint",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DisputeStatus"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "reason",
+          "amount",
+          "state_fingerprint",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DisputeListItem",
+        "type": "object"
+      },
       "DisputeReason": {
         "description": "PayPal dispute reason categories.",
         "enum": [
@@ -289,6 +715,19 @@
           "OTHER"
         ],
         "title": "DisputeReason",
+        "type": "string"
+      },
+      "DisputeStatus": {
+        "description": "Denormalized PayPal dispute status.",
+        "enum": [
+          "WAITING_FOR_SELLER_RESPONSE",
+          "WAITING_FOR_BUYER_RESPONSE",
+          "UNDER_REVIEW",
+          "RESOLVED",
+          "OPEN",
+          "OTHER"
+        ],
+        "title": "DisputeStatus",
         "type": "string"
       },
       "DisputeSyncedTimelineEvent": {
@@ -333,6 +772,94 @@
           "status"
         ],
         "title": "DisputeSyncedTimelineEvent",
+        "type": "object"
+      },
+      "DisputesResponse": {
+        "description": "Paginated dispute list response.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DisputeListItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "total_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Count"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "DisputesResponse",
+        "type": "object"
+      },
+      "EditResolveRequest": {
+        "additionalProperties": false,
+        "description": "Edit amount and/or message and re-run gate evaluation.",
+        "properties": {
+          "action": {
+            "const": "EDIT",
+            "default": "EDIT",
+            "title": "Action",
+            "type": "string"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActionMoneySchema"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Edited monetary amount"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Edited message content",
+            "title": "Message"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional merchant audit notes",
+            "title": "Notes"
+          }
+        },
+        "title": "EditResolveRequest",
         "type": "object"
       },
       "ErrorDetail": {
@@ -708,6 +1235,114 @@
         "title": "InjectionFlaggedTimelineEvent",
         "type": "object"
       },
+      "KpiResponse": {
+        "description": "Aggregated operational metrics for dispute management.",
+        "properties": {
+          "assumed_minutes_per_dispute": {
+            "default": 20,
+            "description": "Assumption value of minutes saved per dispute",
+            "title": "Assumed Minutes Per Dispute",
+            "type": "integer"
+          },
+          "auto_resolved_disputes": {
+            "description": "Count of closed disputes resolved without human approval",
+            "title": "Auto Resolved Disputes",
+            "type": "integer"
+          },
+          "closed_disputes": {
+            "description": "Total count of closed disputes",
+            "title": "Closed Disputes",
+            "type": "integer"
+          },
+          "conceded": {
+            "description": "Sum of amounts refunded or conceded on USD disputes",
+            "title": "Conceded",
+            "type": "string"
+          },
+          "dollars_at_risk": {
+            "description": "Sum of amounts on open USD disputes formatted as a decimal string",
+            "title": "Dollars At Risk",
+            "type": "string"
+          },
+          "estimated_hours_saved": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Estimated operational hours saved (null when closed disputes is 0)",
+            "title": "Estimated Hours Saved"
+          },
+          "non_usd_open_disputes": {
+            "default": 0,
+            "description": "Total count of open disputes in non-USD currencies",
+            "title": "Non Usd Open Disputes",
+            "type": "integer"
+          },
+          "open_disputes": {
+            "description": "Count of open disputes (waiting for seller response or pending human approval)",
+            "title": "Open Disputes",
+            "type": "integer"
+          },
+          "other_currency_open_disputes": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Breakdown of open disputes in non-USD currencies",
+            "title": "Other Currency Open Disputes",
+            "type": "object"
+          },
+          "recovered": {
+            "description": "Sum of amounts on USD disputes resolved in merchant's favor",
+            "title": "Recovered",
+            "type": "string"
+          },
+          "share_auto_resolved": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Proportion of closed disputes auto-resolved (null when closed disputes is 0)",
+            "title": "Share Auto Resolved"
+          }
+        },
+        "required": [
+          "open_disputes",
+          "dollars_at_risk",
+          "recovered",
+          "conceded",
+          "closed_disputes",
+          "auto_resolved_disputes"
+        ],
+        "title": "KpiResponse",
+        "type": "object"
+      },
+      "Money": {
+        "description": "Monetary amount with ISO currency code per build-plan/contracts.md.\n\nAmounts must arrive as strings and become Decimal. JSON floats are rejected;\nzero or negative amounts are invalid; currency must be three uppercase letters.",
+        "properties": {
+          "currency_code": {
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "currency_code",
+          "value"
+        ],
+        "title": "Money",
+        "type": "object"
+      },
       "MoneyLimit-Input": {
         "additionalProperties": false,
         "description": "Monetary limit enforcing fixed-precision Decimal and merchant currency.",
@@ -843,6 +1478,124 @@
         "title": "PlanProposedTimelineEvent",
         "type": "object"
       },
+      "PoolResponse": {
+        "description": "Pool availability, globally and per scenario.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "integer"
+          },
+          "by_scenario": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PoolScenario"
+            },
+            "title": "By Scenario",
+            "type": "object"
+          },
+          "claimed": {
+            "title": "Claimed",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "available",
+          "claimed"
+        ],
+        "title": "PoolResponse",
+        "type": "object"
+      },
+      "PoolScenario": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "integer"
+          },
+          "claimed": {
+            "title": "Claimed",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "available",
+          "claimed"
+        ],
+        "title": "PoolScenario",
+        "type": "object"
+      },
+      "ResetResponse": {
+        "description": "New session issued after hiding the previous session's disputes.",
+        "properties": {
+          "hidden_disputes": {
+            "title": "Hidden Disputes",
+            "type": "integer"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "hidden_disputes"
+        ],
+        "title": "ResetResponse",
+        "type": "object"
+      },
+      "ResolveResponse": {
+        "description": "Outcome of resolving an approval card.",
+        "properties": {
+          "approval_id": {
+            "title": "Approval Id",
+            "type": "string"
+          },
+          "decision_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Id"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "executed": {
+            "default": false,
+            "title": "Executed",
+            "type": "boolean"
+          },
+          "resolution": {
+            "title": "Resolution",
+            "type": "string"
+          },
+          "status": {
+            "default": "resolved",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resolution",
+          "approval_id",
+          "dispute_id"
+        ],
+        "title": "ResolveResponse",
+        "type": "object"
+      },
       "RunFailedTimelineEvent": {
         "properties": {
           "created_at": {
@@ -929,6 +1682,47 @@
           "run_id"
         ],
         "title": "RunStartedTimelineEvent",
+        "type": "object"
+      },
+      "ScenarioCreated": {
+        "description": "A scenario dispute created from a pooled transaction.",
+        "properties": {
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "scenario_id": {
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D",
+              "E"
+            ],
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "transaction_id": {
+            "title": "Transaction Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario_id",
+          "dispute_id",
+          "session_id",
+          "transaction_id",
+          "reason"
+        ],
+        "title": "ScenarioCreated",
         "type": "object"
       },
       "TimelineResponse": {
@@ -1108,6 +1902,16 @@
         "title": "UpdateCharterRequest",
         "type": "object"
       },
+      "Verdict": {
+        "description": "Gate decision verdict.",
+        "enum": [
+          "ALLOW",
+          "NEEDS_APPROVAL",
+          "DENY"
+        ],
+        "title": "Verdict",
+        "type": "string"
+      },
       "WebhookReceivedTimelineEvent": {
         "properties": {
           "created_at": {
@@ -1161,6 +1965,247 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/approvals/{token}": {
+      "get": {
+        "description": "Retrieves approval card data for a valid, unexpired, and unresolved token. Returns uniform 404 otherwise.",
+        "operationId": "get_approval_card_api_approvals__token__get",
+        "parameters": [
+          {
+            "description": "Random approval token from merchant notification",
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "description": "Random approval token from merchant notification",
+              "minLength": 16,
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalCardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get merchant approval card",
+        "tags": [
+          "Approvals"
+        ]
+      }
+    },
+    "/api/approvals/{token}/resolve": {
+      "post": {
+        "description": "Resolves an approval card with approve, deny, or edit. Atomic and enforces waiver rules and dispute freshness.",
+        "operationId": "post_resolve_approval_api_approvals__token__resolve_post",
+        "parameters": [
+          {
+            "description": "Random approval token from merchant notification",
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "description": "Random approval token from merchant notification",
+              "minLength": 16,
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "discriminator": {
+                  "mapping": {
+                    "APPROVE": "#/components/schemas/ApproveResolveRequest",
+                    "DENY": "#/components/schemas/DenyResolveRequest",
+                    "EDIT": "#/components/schemas/EditResolveRequest"
+                  },
+                  "propertyName": "action"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/ApproveResolveRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/DenyResolveRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/EditResolveRequest"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolveResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Resolve merchant approval",
+        "tags": [
+          "Approvals"
+        ]
+      }
+    },
     "/api/charter": {
       "get": {
         "description": "Retrieves active charter, seeds default v1 if uninitialized, or returns a specific version.",
@@ -1470,6 +2515,659 @@
         ]
       }
     },
+    "/api/demo/pool": {
+      "get": {
+        "description": "Return global pool availability and per-scenario counts.",
+        "operationId": "get_pool_api_demo_pool_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoolResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get Pool",
+        "tags": [
+          "Demo"
+        ]
+      }
+    },
+    "/api/demo/reset": {
+      "post": {
+        "description": "Hide this session's disputes and issue a fresh session.",
+        "operationId": "reset_api_demo_reset_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Demo-Session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Reset",
+        "tags": [
+          "Demo"
+        ]
+      }
+    },
+    "/api/demo/scenarios/{scenario_id}": {
+      "post": {
+        "description": "Claim a pooled transaction, create the dispute, and tag it to the session.",
+        "operationId": "create_scenario_api_demo_scenarios__scenario_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "enum": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "E"
+              ],
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Demo-Session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-Session"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioCreated"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Create Scenario",
+        "tags": [
+          "Demo"
+        ]
+      }
+    },
+    "/api/disputes": {
+      "get": {
+        "description": "Returns a paginated list of disputes filtered by status, reason, or due-date. Due-date sorting puts nulls last.",
+        "operationId": "list_disputes_api_disputes_get",
+        "parameters": [
+          {
+            "description": "Filter by status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DisputeStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status",
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Filter by reason",
+            "in": "query",
+            "name": "reason",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DisputeReason"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by reason",
+              "title": "Reason"
+            }
+          },
+          {
+            "description": "Filter disputes due before this timestamp",
+            "in": "query",
+            "name": "due-before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter disputes due before this timestamp",
+              "title": "Due-Before"
+            }
+          },
+          {
+            "description": "Page size limit",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "description": "Page size limit",
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Pagination cursor",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pagination cursor",
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "Field to sort by",
+            "in": "query",
+            "name": "sort_by",
+            "required": false,
+            "schema": {
+              "default": "due_date",
+              "description": "Field to sort by",
+              "pattern": "^(due_date|created_at|amount)$",
+              "title": "Sort By",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort direction (asc or desc)",
+            "in": "query",
+            "name": "sort_direction",
+            "required": false,
+            "schema": {
+              "default": "asc",
+              "description": "Sort direction (asc or desc)",
+              "pattern": "^(asc|desc)$",
+              "title": "Sort Direction",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "List and filter disputes",
+        "tags": [
+          "Disputes"
+        ]
+      }
+    },
+    "/api/disputes/{id}": {
+      "get": {
+        "description": "Returns full dispute details, snapshot payload, latest verdict, and linked order code.",
+        "operationId": "get_dispute_by_id_api_disputes__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get dispute details",
+        "tags": [
+          "Disputes"
+        ]
+      }
+    },
     "/api/disputes/{id}/decisions": {
       "get": {
         "description": "Returns decisions recorded for a dispute with cursor pagination.",
@@ -1737,6 +3435,98 @@
         "summary": "Get dispute timeline events",
         "tags": [
           "Timeline & Decisions"
+        ]
+      }
+    },
+    "/api/kpis": {
+      "get": {
+        "description": "Returns metrics for open disputes, dollars at risk, recovered, conceded, auto-resolution share, and estimated hours saved with explicit assumption values.",
+        "operationId": "get_kpis_api_kpis_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KpiResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get aggregated dispute operations KPIs",
+        "tags": [
+          "KPIs"
         ]
       }
     },

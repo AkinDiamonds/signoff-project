@@ -94,6 +94,44 @@ def test_agent_tool_registry_contains_no_mutating_names():
     assert "get_dispute" in READ_TOOL_NAMES
 
 
+def find_module_imports(source_code: str, module_name: str) -> list[str]:
+    """Parse Python source and return imports of ``module_name``."""
+    tree = ast.parse(source_code)
+    violations: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if module_name in alias.name:
+                    violations.append(alias.name)
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if module_name in module:
+                violations.append(module)
+            for alias in node.names:
+                if module_name in alias.name:
+                    violations.append(f"{module}.{alias.name}")
+    return violations
+
+
+def test_import_guard_only_simulator_may_import_buyer_client():
+    """The agent, executor and API layers must never create disputes as the buyer."""
+    app_dir = Path(__file__).resolve().parents[1] / "app"
+    allowed_dir = app_dir / "simulator"
+    violations: list[str] = []
+
+    for py_file in app_dir.rglob("*.py"):
+        if py_file.parent == allowed_dir or py_file.name == "buyer_client.py":
+            continue
+        found = find_module_imports(py_file.read_text(encoding="utf-8"), "buyer_client")
+        if found:
+            violations.append(f"{py_file.name}: {found}")
+
+    assert not violations, (
+        "Architecture violation! Only app/simulator may import buyer_client. "
+        f"Found illegal imports in: {violations}"
+    )
+
+
 def test_executor_negative_typing_rejects_raw_action():
     """Negative typing and runtime invariant: execute_decision rejects raw action."""
     # Static signature inspection: parameter 'decision' must be annotated with GateDecision

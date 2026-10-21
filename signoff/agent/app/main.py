@@ -26,6 +26,8 @@ from agent.app.errors import (
 from agent.app.logging import set_correlation_id, setup_logging
 from agent.app.queue import get_queue_stats
 from agent.app.settings import Settings
+from agent.app.simulator import DemoQuotas
+from agent.app.simulator.router import router as demo_router
 from agent.app.webhooks import router as webhooks_router
 
 logger = logging.getLogger(__name__)
@@ -122,6 +124,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.state.settings = app_settings
     app.state.llm_service = build_llm_service(app_settings)
+    app.state.demo_quotas = DemoQuotas(
+        per_session_per_day=app_settings.demo_scenarios_per_session_per_day,
+        per_ip_per_day=app_settings.demo_scenarios_per_ip_per_day,
+    )
+    app.state.demo_idempotency = {}
 
     # Middleware registration: RequestId outer, CORS inner
     allowed_origins = app_settings.parsed_allowed_origins
@@ -144,6 +151,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(timeline_router)
     app.include_router(disputes_router)
     app.include_router(approvals_router)
+    app.include_router(demo_router)
 
     @app.get("/healthz", tags=["System"])
     async def healthz() -> dict[str, str]:

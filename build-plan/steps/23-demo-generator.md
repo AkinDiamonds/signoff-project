@@ -1,7 +1,7 @@
 # Step 23: Test-dispute generator, pool and quotas
 
 Phase: P4 Simulation · Depends on: 20,21 · Estimate: 3h with an agent · Commit: `feat(demo): scenario generator, session scoping, quotas`
-Status: [ ] not started
+Status: [x] complete — commit `feat(demo): scenario generator, session scoping, quotas`
 Assumes (step 00 table): S10 transaction reuse and pool size. If the answer changed, edit this file first and log it below.
 
 ## Goal

@@ -14,3 +14,7 @@ Every claim in the README, Devpost text or video needs a row with proof. Review 
 | Estimated hours saved assumes N minutes/dispute | dashboard | KPI footnote | Planned |
 | Statistics (chargebacks, friendly fraud) | video, Devpost | primary source URL per number; card vs PayPal wording | Planned |
 | The PayPal stub runs offline with deterministic ids, times and fault injection | README status table, demo rehearsal | `agent/tests/test_paypal_stub.py` | Verified |
+| Two dispute reasons are supported; any other reason stops and asks for a human | README status table | `agent/tests/test_second_reason.py::test_registry_is_exhaustive_for_supported_reasons`, `::test_unsupported_reason_stops_with_human_needed` | Verified |
+| Repeat disputers are flagged for approval at the charter threshold | README, demo scenario E | `agent/tests/test_second_reason.py::test_history_counts_only_same_buyer_inside_window`, `::test_second_reason_repeat_disputer_needs_approval` | Verified |
+| Anyone can create scenarios A-E safely and repeatedly | README, video | `agent/tests/test_demo_generator.py` | Verified |
+| Demo sessions are isolated and reset never deletes the ledger | README, video | `agent/tests/test_demo_generator.py::test_reset_hides_disputes_without_deleting_ledger`, `::test_spoofed_session_is_replaced` | Verified |
