@@ -8,10 +8,10 @@ history exists yet.
 
 import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.orm import Session
 
 from agent.app.db.models import Dispute
@@ -71,12 +71,6 @@ def _snapshot_buyer_id(snapshot: Any) -> str | None:
     return None
 
 
-def _as_utc(value: datetime) -> datetime:
-    if value.tzinfo is None:
-        return value.replace(tzinfo=UTC)
-    return value.astimezone(UTC)
-
-
 def count_buyer_disputes(
     session: Session,
     dispute: PayPalDispute,
@@ -102,18 +96,20 @@ def count_buyer_disputes(
         return BuyerHistory(buyer_id=None, prior_disputes=0, known=False, window_days=window_days)
 
     cutoff = now - timedelta(days=window_days)
+    own_id = getattr(dispute, "dispute_id", None)
+    # Push date and demo filters into SQL so the DB can use indexes.
     rows = session.execute(
-        select(Dispute.id, Dispute.snapshot, Dispute.created_at, Dispute.demo_session_id)
+        select(Dispute.id, Dispute.snapshot)
+        .where(
+            and_(
+                Dispute.demo_session_id.is_(None),
+                Dispute.created_at >= cutoff,
+            )
+        )
     ).all()
     count = 0
     for row in rows:
-        if row.id == getattr(dispute, "dispute_id", None):
-            continue
-        # Demo disputes are synthetic. Exclude them so one sandbox buyer identity
-        # cannot make every generated scenario look like a repeat disputer.
-        if row.demo_session_id is not None:
-            continue
-        if _as_utc(row.created_at) < cutoff:
+        if row.id == own_id:
             continue
         if _snapshot_buyer_id(row.snapshot) == identity:
             count += 1

@@ -38,4 +38,4 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-21 | Full-table scan in `count_buyer_disputes` — loaded every dispute row in Python before filtering date/demo | Pushed `demo_session_id IS NULL` and `created_at >= cutoff` into SQL WHERE; removed dead `_as_utc` | history.py edit (no new commit) | R1 history suite |
