@@ -325,6 +325,60 @@ export class SignoffApiClient {
       params: { path: { id }, query },
     });
   }
+
+  async getDisputes(
+    query?: paths['/api/disputes']['get']['parameters']['query']
+  ): Promise<
+    ClientResponse<paths['/api/disputes']['get']['responses']['200']['content']['application/json']>
+  > {
+    return this.request<
+      paths['/api/disputes']['get']['responses']['200']['content']['application/json']
+    >('/api/disputes', {
+      method: 'GET',
+      params: { query },
+    });
+  }
+
+  async getDispute(
+    id: string
+  ): Promise<
+    ClientResponse<paths['/api/disputes/{id}']['get']['responses']['200']['content']['application/json']>
+  > {
+    return this.request<
+      paths['/api/disputes/{id}']['get']['responses']['200']['content']['application/json']
+    >('/api/disputes/{id}', {
+      method: 'GET',
+      params: { path: { id } },
+    });
+  }
+
+  async getApprovalCard(
+    token: string
+  ): Promise<
+    ClientResponse<paths['/api/approvals/{token}']['get']['responses']['200']['content']['application/json']>
+  > {
+    return this.request<
+      paths['/api/approvals/{token}']['get']['responses']['200']['content']['application/json']
+    >('/api/approvals/{token}', {
+      method: 'GET',
+      params: { path: { token } },
+    });
+  }
+
+  async resolveApproval(
+    token: string,
+    body: paths['/api/approvals/{token}/resolve']['post']['requestBody']['content']['application/json']
+  ): Promise<
+    ClientResponse<paths['/api/approvals/{token}/resolve']['post']['responses']['200']['content']['application/json']>
+  > {
+    return this.request<
+      paths['/api/approvals/{token}/resolve']['post']['responses']['200']['content']['application/json']
+    >('/api/approvals/{token}/resolve', {
+      method: 'POST',
+      params: { path: { token } },
+      body,
+    });
+  }
 }
 
 export function createApiClient(options: ClientOptions): SignoffApiClient {

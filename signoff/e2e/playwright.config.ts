@@ -19,6 +19,10 @@ export default defineConfig({
       name: 'merchant-desktop',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'merchant-mobile',
+      use: { ...devices['Pixel 5'] },
+    },
   ],
   webServer: {
     command: 'npm run -w @signoff/web dev -- --port 5173 --strictPort',

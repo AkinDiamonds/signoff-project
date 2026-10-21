@@ -56,3 +56,54 @@ export function useStatus() {
     queryFn: async () => readStatus(await unwrap(apiClient.getStatus())),
   });
 }
+
+import type { components } from '@signoff/api-client/generated';
+
+export type DisputesResponse = components['schemas']['DisputesResponse'];
+export type DisputeDetailResponse = components['schemas']['DisputeDetailResponse'];
+export type TimelineResponse = components['schemas']['TimelineResponse'];
+export type ApprovalCardResponse = components['schemas']['ApprovalCardResponse'];
+
+export type DisputesQuery = NonNullable<
+  Parameters<typeof apiClient.getDisputes>[0]
+>;
+
+export function useDisputes(params?: DisputesQuery) {
+  return useQuery({
+    queryKey: ['disputes', params],
+    queryFn: async (): Promise<DisputesResponse> => unwrap(apiClient.getDisputes(params)),
+  });
+}
+
+export function useDispute(id: string, options?: { refetchInterval?: number }) {
+  return useQuery({
+    queryKey: ['dispute', id],
+    queryFn: async (): Promise<DisputeDetailResponse> => unwrap(apiClient.getDispute(id)),
+    enabled: Boolean(id),
+    ...(options?.refetchInterval !== undefined ? { refetchInterval: options.refetchInterval } : {}),
+  });
+}
+
+export function useDisputeTimeline(id: string, options?: { refetchInterval?: number }) {
+  return useQuery({
+    queryKey: ['dispute-timeline', id],
+    queryFn: async (): Promise<TimelineResponse> => unwrap(apiClient.getDisputeTimeline(id)),
+    enabled: Boolean(id),
+    ...(options?.refetchInterval !== undefined ? { refetchInterval: options.refetchInterval } : {}),
+  });
+}
+
+export function useApprovalCard(token: string) {
+  return useQuery({
+    queryKey: ['approval-card', token],
+    queryFn: async (): Promise<ApprovalCardResponse> => unwrap(apiClient.getApprovalCard(token)),
+    enabled: Boolean(token),
+    retry: false,
+  });
+}
+
+export type ResolveApprovalBody = Parameters<typeof apiClient.resolveApproval>[1];
+
+export async function resolveApprovalCall(token: string, body: ResolveApprovalBody) {
+  return unwrap(apiClient.resolveApproval(token, body));
+}
