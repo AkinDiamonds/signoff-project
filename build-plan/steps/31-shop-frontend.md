@@ -1,7 +1,7 @@
 # Step 31: Storefront frontend
 
 Phase: P6 Client-facing · Depends on: 30,24 · Estimate: 3h with an agent · Commit: `feat(shop): storefront, cart and checkout`
-Status: [ ] not started
+Status: [x] done
 Assumes (step 00 table): checkout approach. If the answer changed, edit this file first and log it below.
 
 ## Goal
@@ -37,4 +37,9 @@ Run `make check` (level R1) and any extra re-run items named under Tests. Update
 ## Code review log
 | Date | Reviewer finding | Change made | Commit | Re-run level |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-21 | Type test syntax truncated in `cart.test-d.ts` | Completed `CreateOrderPayload` type test | — | R1 |
+| 2026-10-21 | `onApprove` stale-closure: `pendingOrderCode` state was `null` on first render; buttons re-mounted mid-flow | Added `pendingOrderCodeRef` ref; `onApprove` reads ref, deps array drops `pendingOrderCode` | — | R1 |
+| 2026-10-21 | `handleSandboxFallbackPay` double-set `capturing=true`; duplicate catch | Removed redundant outer `setCapturing(true)`; single error path | — | — |
+| 2026-10-21 | `VITE_MOCK_API` undeclared in `vite-env.d.ts` | Added env var declaration | — | — |
+| 2026-10-21 | `ShopBanner` port-sniffing fallback brittle in non-local deploys | Removed; rely solely on `PUBLIC_SIGNOFF_URL` env var | — | — |
+

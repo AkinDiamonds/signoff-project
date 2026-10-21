@@ -1,102 +1,191 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { createApiClient } from '@signoff/api-client';
-import { Button, Card, StatusBadge } from '@signoff/ui';
-import { getApiBaseUrl } from './config';
+/**
+ * Storefront Root Application.
+ *
+ * Implements Step 31 storefront requirements:
+ * - Persistent sandbox banner with test buyer credentials and links
+ * - Warm theme using shared UI components
+ * - Catalog, Product detail, Cart, Checkout, Confirmation pages
+ * - Demo order fast-track shortcut
+ */
 
-export const App: React.FC = () => {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [data, setData] = useState<unknown>(null);
-  const [error, setError] = useState<string | null>(null);
+import React from 'react';
+import { DemoOrderShortcut } from './components/DemoOrderShortcut';
+import { ShopBanner } from './components/ShopBanner';
+import { CartProvider, useCart } from './CartContext';
+import { CartPage } from './pages/CartPage';
+import { CheckoutPage } from './pages/CheckoutPage';
+import { ConfirmationPage } from './pages/ConfirmationPage';
+import { HomePage } from './pages/HomePage';
+import { ProductPage } from './pages/ProductPage';
+import { Link, RouterProvider, useRouter } from './router';
+import { warmColors, warmShadows } from './theme';
 
-  const client = useMemo(() => createApiClient({ baseUrl: getApiBaseUrl() }), []);
-
-  const fetchStatus = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await client.getStatus();
-      if (res.success && res.data) {
-        setData(res.data);
-      } else if (res.error) {
-        const msg =
-          res.error.kind === 'api_envelope' ? res.error.error.message : res.error.message;
-        setError(`[${res.error.kind}] ${msg}`);
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  }, [client]);
-
-  useEffect(() => {
-    void fetchStatus();
-  }, [fetchStatus]);
+const ShopHeader: React.FC = () => {
+  const { itemCount } = useCart();
 
   return (
-    <main style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px' }}>
-      <header style={{ marginBottom: '32px' }}>
-        <h1 id="shop-title" style={{ fontSize: '28px', margin: '0 0 8px 0' }}>
-          Luminary Candles
-        </h1>
-        <p style={{ color: '#78716c', margin: 0 }}>
-          Hand-poured artisan soy candles & buyer customer portal.
-        </p>
-      </header>
-
-      <Card title="Storefront Service Status" testId="shop-status-card">
-        {loading && (
-          <div id="shop-status-loading" style={{ padding: '16px', color: '#78716c' }}>
-            Checking /api/status...
-          </div>
-        )}
-
-        {error && (
-          <div
-            id="shop-status-error"
-            style={{
-              padding: '16px',
-              backgroundColor: '#fee2e2',
-              color: '#991b1b',
-              borderRadius: '6px',
-              marginBottom: '16px',
-            }}
-          >
-            <strong>Storefront Offline:</strong> {error}
-            <div style={{ marginTop: '12px' }}>
-              <Button variant="secondary" onClick={() => void fetchStatus()} testId="shop-retry-btn">
-                Retry Connection
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {data !== null && !loading && (
-          <div id="shop-status-success" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span>Backend Availability:</span>
-              <StatusBadge verdict="ALLOW" testId="shop-status-badge" />
-            </div>
-            <pre
-              id="shop-status-payload"
+    <header
+      style={{
+        backgroundColor: warmColors.surface,
+        borderBottom: `1px solid ${warmColors.border}`,
+        boxShadow: warmShadows.sm,
+        position: 'sticky',
+        top: 0,
+        zIndex: 40,
+      }}
+    >
+      <div
+        style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '16px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Link to="/" testId="shop-brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '24px' }}>🕯️</span>
+          <div>
+            <div
               style={{
-                backgroundColor: '#f5f5f4',
-                padding: '12px',
-                borderRadius: '6px',
-                fontSize: '13px',
-                overflowX: 'auto',
+                fontSize: '20px',
+                fontWeight: 700,
+                color: warmColors.ink,
+                letterSpacing: '-0.02em',
               }}
             >
-              {JSON.stringify(data, null, 2)}
-            </pre>
-            <div>
-              <Button variant="primary" onClick={() => void fetchStatus()} testId="shop-refresh-btn">
-                Refresh Status
-              </Button>
+              Luminary Candles
+            </div>
+            <div style={{ fontSize: '11px', color: warmColors.inkMuted }}>
+              Artisan soy candles & buyer portal
             </div>
           </div>
-        )}
-      </Card>
-    </main>
+        </Link>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <Link
+            to="/"
+            testId="shop-nav-catalog-link"
+            style={{
+              fontSize: '14px',
+              fontWeight: 500,
+              color: warmColors.ink,
+              padding: '6px 12px',
+              borderRadius: '6px',
+            }}
+          >
+            Catalog
+          </Link>
+
+          <DemoOrderShortcut
+            variant="secondary"
+            label="⚡ Demo Order"
+            testId="shop-header-demo-order-btn"
+          />
+
+          <Link
+            to="/cart"
+            testId="shop-cart-button"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              backgroundColor: warmColors.primary,
+              color: '#ffffff',
+              fontSize: '14px',
+              fontWeight: 600,
+            }}
+          >
+            <span>Cart</span>
+            <span
+              data-testid="shop-cart-badge"
+              style={{
+                backgroundColor: warmColors.primaryHover,
+                color: '#ffffff',
+                padding: '2px 8px',
+                borderRadius: '9999px',
+                fontSize: '12px',
+                minWidth: '16px',
+                textAlign: 'center',
+              }}
+            >
+              {itemCount}
+            </span>
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+const ShopContent: React.FC = () => {
+  const { path, params } = useRouter();
+
+  let pageContent: React.ReactNode;
+
+  if (path === '/') {
+    pageContent = <HomePage />;
+  } else if (path === '/product/:sku' && params.sku) {
+    pageContent = <ProductPage sku={params.sku} />;
+  } else if (path === '/cart') {
+    pageContent = <CartPage />;
+  } else if (path === '/checkout') {
+    pageContent = <CheckoutPage />;
+  } else if (path === '/confirmation/:code' && params.code) {
+    pageContent = <ConfirmationPage orderCode={params.code} />;
+  } else {
+    pageContent = <HomePage />;
+  }
+
+  return <main style={{ minHeight: 'calc(100vh - 200px)' }}>{pageContent}</main>;
+};
+
+const ShopFooter: React.FC = () => (
+  <footer
+    style={{
+      backgroundColor: warmColors.surfaceMuted,
+      borderTop: `1px solid ${warmColors.border}`,
+      padding: '32px 20px',
+      marginTop: '60px',
+      textAlign: 'center',
+      color: warmColors.inkMuted,
+      fontSize: '13px',
+    }}
+  >
+    <div style={{ maxWidth: '800px', margin: '0 auto', lineHeight: 1.6 }}>
+      <p style={{ margin: '0 0 8px 0', fontWeight: 600, color: warmColors.ink }}>
+        Luminary Candles · Fictional Demonstration Storefront
+      </p>
+      <p style={{ margin: 0 }}>
+        Powered by Signoff dispute resolution demo. Connected exclusively to PayPal Sandbox.
+        No real transactions or real goods are processed.
+      </p>
+    </div>
+  </footer>
+);
+
+export const App: React.FC = () => {
+  return (
+    <RouterProvider>
+      <CartProvider>
+        <div
+          style={{
+            backgroundColor: warmColors.bg,
+            color: warmColors.ink,
+            minHeight: '100vh',
+            fontFamily:
+              "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+          }}
+        >
+          <ShopBanner />
+          <ShopHeader />
+          <ShopContent />
+          <ShopFooter />
+        </div>
+      </CartProvider>
+    </RouterProvider>
   );
 };

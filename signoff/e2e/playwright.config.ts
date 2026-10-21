@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const WEB_URL = process.env.WEB_URL ?? 'http://localhost:5173';
+const SHOP_URL = process.env.SHOP_URL ?? 'http://localhost:5174';
 
 export default defineConfig({
   testDir: './specs',
@@ -24,11 +25,26 @@ export default defineConfig({
       name: 'merchant-mobile',
       use: { ...devices['Pixel 5'] },
     },
+    {
+      name: 'shop-desktop',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: SHOP_URL,
+      },
+    },
   ],
-  webServer: {
-    command: 'npm run -w @signoff/web dev -- --port 5173 --strictPort',
-    url: WEB_URL,
-    reuseExistingServer: !process.env.CI,
-    env: { VITE_MOCK_API: 'true' },
-  },
+  webServer: [
+    {
+      command: 'npm run -w @signoff/web dev -- --port 5173 --strictPort',
+      url: WEB_URL,
+      reuseExistingServer: !process.env.CI,
+      env: { VITE_MOCK_API: 'true' },
+    },
+    {
+      command: 'npm run -w @signoff/shop dev -- --port 5174 --strictPort',
+      url: SHOP_URL,
+      reuseExistingServer: !process.env.CI,
+      env: { VITE_MOCK_API: 'true' },
+    },
+  ],
 });
