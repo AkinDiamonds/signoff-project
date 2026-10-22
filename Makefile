@@ -1,7 +1,24 @@
 .PHONY: check test-agent test-web test-types e2e e2e-stack e2e-smoke e2e-cross-smoke rehearse api-types dev stub
 
 ifeq ($(OS),Windows_NT)
-VENV_PY := .venv\Scripts\python.exe
+# Run every recipe through Git Bash's sh so the commands below mean the same
+# thing in PowerShell, cmd and bash. Git Bash exports SHELL=/bin/bash.exe, which
+# make cannot spawn, so probe with cmd.exe (COMSPEC) first. A normal PowerShell
+# PATH only has <git>\cmd, so fall back to deriving <git>\bin\sh.exe from git.exe.
+SHELL := $(COMSPEC)
+SH_BIN := $(strip $(shell where sh.exe 2>NUL))
+ifeq ($(SH_BIN),)
+# where git.exe reports <git>\cmd\git.exe (or <git>\mingw64\bin\git.exe);
+# sh.exe lives at <git>\bin\sh.exe. Paths contain spaces, so keep them whole.
+GIT_BIN := $(strip $(shell where git.exe 2>NUL))
+SH_BIN := $(patsubst %\cmd\git.exe,%\bin\sh.exe,$(patsubst %\mingw64\bin\git.exe,%\bin\sh.exe,$(patsubst %\usr\bin\git.exe,%\bin\sh.exe,$(GIT_BIN))))
+SH_BIN := $(if $(findstring \bin\sh.exe,$(SH_BIN)),$(SH_BIN))
+endif
+ifeq ($(SH_BIN),)
+$(error Could not find sh.exe. Install Git for Windows and put git.exe on PATH.)
+endif
+SHELL := $(SH_BIN)
+VENV_PY := .venv/Scripts/python.exe
 PY_PATH := signoff;signoff/agent
 else
 VENV_PY := .venv/bin/python
