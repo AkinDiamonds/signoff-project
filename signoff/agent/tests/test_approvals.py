@@ -13,6 +13,7 @@ Per Step 19:
 
 import html
 import json
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -63,7 +64,7 @@ FIXTURES_DIR = Path(__file__).resolve().parents[2] / "fixtures" / "paypal"
 
 
 @pytest.fixture
-def db_session() -> Session:
+def db_session() -> Iterator[Session]:
     """In-memory SQLite database session."""
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
@@ -226,8 +227,9 @@ def test_get_approval_card_and_notes_escaped(db_session, setup_pending_approval)
     assert card.rule_id == "G3-01"
 
     # Notes must be escaped on output
-    assert "<script>" not in card.notes
-    assert card.notes == html.escape('<script>alert("hack")</script>')
+    notes = card.notes or ""
+    assert "<script>" not in notes
+    assert notes == html.escape('<script>alert("hack")</script>')
 
 
 # ---------------------------------------------------------------------------
