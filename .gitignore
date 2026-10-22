@@ -76,3 +76,6 @@ Thumbs.db
 scratch/
 tmp/
 *.tmp
+
+# Local e2e stack runtime artifacts
+.e2e-stack/
