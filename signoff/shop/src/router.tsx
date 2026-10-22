@@ -90,7 +90,7 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const navigate = useCallback((to: string) => {
     if (to !== window.location.pathname) {
       window.history.pushState({}, '', to);
-      setCurrentPath(to);
+      setCurrentPath(window.location.pathname);
       window.scrollTo(0, 0);
     }
   }, []);

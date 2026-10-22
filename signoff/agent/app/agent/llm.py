@@ -378,8 +378,97 @@ class LLMService:
             return LLMPlanResult(plan=outcome, cached=False, attempts=attempts)
 
 
+SCENARIO_PLANS: dict[str, str] = {
+    "A": json.dumps({
+        "actions": [
+            {
+                "action_type": "PROVIDE_EVIDENCE",
+                "notes": "Delivered via UPS tracking 1Z999AA10123456784 to buyer address.",
+            },
+            {
+                "action_type": "SEND_MESSAGE",
+                "message": "Your package was confirmed delivered by UPS.",
+            },
+        ]
+    }),
+    "B": json.dumps({
+        "actions": [
+            {
+                "action_type": "PROVIDE_EVIDENCE",
+                "notes": "Shipped via USPS tracking 9400111899223197428490, in transit.",
+            },
+            {
+                "action_type": "SEND_MESSAGE",
+                "message": "Your order is currently in transit via USPS.",
+            },
+        ]
+    }),
+    "C": json.dumps({
+        "actions": [
+            {
+                "action_type": "MAKE_OFFER",
+                "amount": {"currency_code": "USD", "value": "180.00"},
+                "offer_type": "REFUND",
+                "note": "Settlement offer for high-value dispute.",
+            }
+        ]
+    }),
+    "D": json.dumps({
+        "actions": [
+            {
+                "action_type": "SEND_MESSAGE",
+                "message": "Thank you for reaching out. We are reviewing your inquiry.",
+            }
+        ]
+    }),
+    "E": json.dumps({
+        "actions": [
+            {
+                "action_type": "MAKE_OFFER",
+                "amount": {"currency_code": "USD", "value": "20.00"},
+                "offer_type": "REFUND",
+                "note": "Settlement offer for repeat disputer.",
+            }
+        ]
+    }),
+}
+
+
+class FakeScenarioProvider:
+    """Deterministic scripted provider matching scenario disputes for E2E tests."""
+
+    def __init__(self, fail: bool = False) -> None:
+        self.fail = fail
+
+    async def complete(self, messages: list[dict[str, str]]) -> ProviderResponse:
+        user_content = ""
+        for m in messages:
+            if m.get("role") == "user":
+                user_content = m.get("content", "")
+
+        # Fault switch: explicit env flag or an intentional buyer-message marker.
+        if self.fail or "FAIL_LLM" in user_content:
+            raise ProviderError(LLMFailureKind.provider_error, "Forced fake LLM provider failure.")
+
+        # Stub disputes get PP-STUB ids, so match the scenario by its disputed amount.
+        scenario_amounts = (
+            ("A", "42.00"),
+            ("B", "38.00"),
+            ("C", "180.00"),
+            ("D", "64.00"),
+            ("E", "55.00"),
+        )
+        for scenario, amount in scenario_amounts:
+            if amount in user_content:
+                return ProviderResponse(content=SCENARIO_PLANS[scenario])
+
+        return ProviderResponse(content=SCENARIO_PLANS["A"])
+
+
 def build_provider(settings: Settings) -> LLMProvider | None:
     """Build the configured provider, or None when LLM config is incomplete."""
+    if settings.llm_provider.lower() == "fake":
+        return FakeScenarioProvider(fail=settings.fake_llm_fail)
     if not (settings.llm_api_key and settings.llm_api_base_url and settings.llm_model):
         return None
     return OpenAICompatibleProvider(
@@ -395,3 +484,4 @@ def build_llm_service(settings: Settings) -> LLMService:
         cache=ScenarioCache(enabled=settings.use_scenario_cache),
         budget=DailyBudget(settings.llm_daily_budget_usd),
     )
+

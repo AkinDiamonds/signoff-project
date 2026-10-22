@@ -199,6 +199,11 @@ class PayPalMutatingClient:
                 f"PayPal base URL must be HTTPS on {SANDBOX_PAYPAL_HOST}, got '{self.base_url}'"
             )
 
+    async def close(self) -> None:
+        if self._client is not None and not self._client.is_closed:
+            await self._client.aclose()
+        await self.auth.close()
+
     async def _get_http_client(self) -> httpx.AsyncClient:
         if self._custom_client is not None:
             return self._custom_client

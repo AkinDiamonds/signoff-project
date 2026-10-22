@@ -67,9 +67,11 @@ class Settings(BaseSettings):
     llm_api_base_url: str = Field(default="", validation_alias="LLM_API_BASE_URL")
     llm_daily_budget_usd: Decimal = Field(default=Decimal("3.00"), validation_alias="LLM_DAILY_BUDGET_USD")
     use_scenario_cache: bool = Field(default=True, validation_alias="USE_SCENARIO_CACHE")
+    fake_llm_fail: bool = Field(default=False, validation_alias="FAKE_LLM_FAIL")
 
     # Service endpoints and security
     public_base_url: str = Field(default="http://localhost:8000", validation_alias="PUBLIC_BASE_URL")
+    web_base_url: str = Field(default="http://localhost:5173", validation_alias="WEB_BASE_URL")
     allowed_origins: str = Field(default="http://localhost:5173", validation_alias="ALLOWED_ORIGINS")
     approval_token_secret: str = Field(default="", validation_alias="APPROVAL_TOKEN_SECRET")
     demo_frozen: bool = Field(default=False, validation_alias="DEMO_FROZEN")
@@ -108,6 +110,9 @@ class Settings(BaseSettings):
 
         if self.app_env == AppEnv.prod and self.paypal_env == PayPalEnv.stub:
             raise ValueError("PAYPAL_ENV=stub is strictly forbidden when APP_ENV=prod")
+
+        if self.app_env == AppEnv.prod and self.llm_provider.lower() == "fake":
+            raise ValueError("LLM_PROVIDER=fake is strictly forbidden when APP_ENV=prod")
 
         if self.app_env == AppEnv.prod:
             missing = []

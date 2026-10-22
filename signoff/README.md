@@ -25,6 +25,7 @@ Built for the PayPal AI Hackathon. **Sandbox only. Fictional data only.**
 | Custom dashboard widgets | Working (Decision Timeline, Deadline Radar, Authority Meter; empty/single/many states; accessible text labels) |
 | Storefront & buyer portal | Working (catalog, sandbox cart/checkout, demo orders, tracking, dispute reporting) |
 | Product landing & judge guide | Working (5-minute path, test credentials, real-vs-simulated table, view switcher, claims ledger) |
+| Cross-app end-to-end suite | Working (Playwright scenarios A-E, resilience and security against the live stub stack; `make e2e-stack && make e2e`) |
 | Prompt-injection test suite | Planned |
 | Test-dispute generator for judges | Working (pool, scenarios A-E, session scoping, quotas, reset) |
 | Deterministic PayPal stub (tests/local) | Working (fixture replay, fault injection, reset) |

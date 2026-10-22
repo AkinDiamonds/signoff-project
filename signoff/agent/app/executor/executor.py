@@ -23,6 +23,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from agent.app.db.models import Decision, Execution, LedgerEvent
+from agent.app.db.models import Dispute as DBDispute
 from agent.app.domain.actions import ProposedAction, compute_action_hash
 from agent.app.domain.enums import DisputeStatus, ExecutionStatus, TimelineEventKind, Verdict
 from agent.app.errors import AppError
@@ -358,6 +359,13 @@ async def execute_decision(
 
         execution.status = ExecutionStatus.CONFIRMED.value
         execution.confirmed_snapshot = confirmed_snapshot
+
+        # Keep the local projection in step with the confirmed state so the
+        # reconciler does not treat our own mutation as an external change.
+        db_dispute = session.get(DBDispute, clean_dispute_id)
+        if db_dispute is not None:
+            db_dispute.state_fingerprint = str(compute_dispute_fingerprint(confirmed_dispute))
+            db_dispute.snapshot = confirmed_snapshot
 
         record_execution_ledger_event(
             session=session,

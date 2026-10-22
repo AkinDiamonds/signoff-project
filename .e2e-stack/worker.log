@@ -1,0 +1,650 @@
+2026-10-22 17:33:44,018 [INFO] agent.app.sync.jobs: Registered SYNC_DISPUTE and RECONCILE handlers into registry
+2026-10-22 17:33:44,018 [INFO] agent.app.approvals.jobs: Registered EXPIRE_APPROVALS handler into registry
+2026-10-22 17:33:44,018 [INFO] agent.app.queue.wiring: Registered RUN_AGENT and EXECUTE_DECISION handlers into registry
+2026-10-22 17:33:44,156 [INFO] __main__: Worker worker-fbc472e7 started (poll_interval=0.2s)
+2026-10-22 17:33:44,224 [INFO] agent.app.queue.queue: Enqueued job e3b12f91-5461-4b2b-a651-122ee7211ae1 (kind=reconcile, dispute_id=None)
+2026-10-22 17:33:44,239 [INFO] agent.app.queue.queue: Claimed job e3b12f91-5461-4b2b-a651-122ee7211ae1 (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:17.476645+00:00
+2026-10-22 17:33:44,725 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:33:45,044 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:33:45,045 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:33:45,301 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A33%3A44.246361%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:33:45,302 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:33:45,311 [INFO] agent.app.sync.reconciler: Reconciler enqueued SYNC_DISPUTE for dispute PP-R-MBX-REDACTED (reason=missing)
+2026-10-22 17:33:45,317 [INFO] agent.app.sync.reconciler: Reconciler enqueued SYNC_DISPUTE for dispute PP-D-4001 (reason=missing)
+2026-10-22 17:33:45,322 [INFO] agent.app.sync.reconciler: Reconciler enqueued SYNC_DISPUTE for dispute PP-E-5001 (reason=missing)
+2026-10-22 17:33:45,325 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 3 disputes, enqueued 3 sync jobs
+2026-10-22 17:33:45,336 [INFO] agent.app.queue.queue: Completed job e3b12f91-5461-4b2b-a651-122ee7211ae1 (kind=reconcile)
+2026-10-22 17:33:45,346 [INFO] agent.app.queue.queue: Claimed job 6595df80-ca72-412a-b4da-9d8325a2841d (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:18.476525+00:00
+2026-10-22 17:33:45,777 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:33:46,038 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:33:46,039 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:33:46,305 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED "HTTP/1.1 200 OK"
+2026-10-22 17:33:46,306 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED completed (status=200, debug_id=none)
+2026-10-22 17:33:46,313 [INFO] agent.app.sync.handler: Created local dispute PP-R-MBX-REDACTED (status=WAITING_FOR_SELLER_RESPONSE, fingerprint=93a19a6b)
+2026-10-22 17:33:46,322 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-R-MBX-REDACTED with fingerprint 93a19a6b
+2026-10-22 17:33:46,332 [INFO] agent.app.queue.queue: Completed job 6595df80-ca72-412a-b4da-9d8325a2841d (kind=sync_dispute)
+2026-10-22 17:33:46,341 [INFO] agent.app.queue.queue: Claimed job e3803ffc-0c96-490c-850c-5dc9d2fa569f (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:19.372921+00:00
+2026-10-22 17:33:46,756 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:33:47,019 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:33:47,019 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:33:47,281 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-D-4001 "HTTP/1.1 200 OK"
+2026-10-22 17:33:47,281 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-D-4001 completed (status=200, debug_id=none)
+2026-10-22 17:33:47,286 [INFO] agent.app.sync.handler: Created local dispute PP-D-4001 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint=09b2134d)
+2026-10-22 17:33:47,290 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-D-4001 with fingerprint 09b2134d
+2026-10-22 17:33:47,298 [INFO] agent.app.queue.queue: Completed job e3803ffc-0c96-490c-850c-5dc9d2fa569f (kind=sync_dispute)
+2026-10-22 17:33:47,310 [INFO] agent.app.queue.queue: Claimed job d98e3e69-1351-4530-b015-933f872becc9 (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:20.243458+00:00
+2026-10-22 17:33:47,818 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:33:48,092 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:33:48,093 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:33:48,358 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-E-5001 "HTTP/1.1 200 OK"
+2026-10-22 17:33:48,360 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-E-5001 completed (status=200, debug_id=none)
+2026-10-22 17:33:48,367 [INFO] agent.app.sync.handler: Created local dispute PP-E-5001 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint=a624ba3c)
+2026-10-22 17:33:48,373 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-E-5001 with fingerprint a624ba3c
+2026-10-22 17:33:48,381 [INFO] agent.app.queue.queue: Completed job d98e3e69-1351-4530-b015-933f872becc9 (kind=sync_dispute)
+2026-10-22 17:33:48,389 [INFO] agent.app.queue.queue: Claimed job 17cf7e37-bf22-4608-b20b-74ba4a3883fa (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:21.216609+00:00
+2026-10-22 17:33:48,796 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:33:49,072 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:33:49,073 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:33:49,344 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED "HTTP/1.1 200 OK"
+2026-10-22 17:33:49,346 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED completed (status=200, debug_id=none)
+2026-10-22 17:33:49,388 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=eac39f56da2ef92e6675a87c287739366b8ac7a3622e44f8885c7e228fc66fd3, attempts=1)
+2026-10-22 17:33:49,399 [INFO] agent.app.policy.charter: Default charter seeded
+2026-10-22 17:33:49,426 [INFO] agent.app.queue.queue: Enqueued job 7efa04de-a3f0-45e6-b2c6-9cb32def6dd1 (kind=execute_decision, dispute_id=None)
+2026-10-22 17:33:49,438 [INFO] agent.app.queue.queue: Enqueued job 77caabd8-8e43-46f1-8ce4-dd55ee57a92a (kind=execute_decision, dispute_id=None)
+2026-10-22 17:33:49,438 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-R-MBX-REDACTED (status=completed, decisions=2)
+2026-10-22 17:33:49,445 [INFO] agent.app.queue.queue: Completed job 17cf7e37-bf22-4608-b20b-74ba4a3883fa (kind=run_agent)
+2026-10-22 17:33:49,454 [INFO] agent.app.queue.queue: Enqueued job d1e58b55-2c14-4ac0-b845-f2c10d3f4d70 (kind=reconcile, dispute_id=None)
+2026-10-22 17:33:49,462 [INFO] agent.app.queue.queue: Claimed job dd92648d-8e70-4fdf-a256-43e405a0fb8d (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:22.182701+00:00
+2026-10-22 17:33:49,857 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:33:50,127 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:33:50,128 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:33:50,392 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-D-4001 "HTTP/1.1 200 OK"
+2026-10-22 17:33:50,393 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-D-4001 completed (status=200, debug_id=none)
+2026-10-22 17:33:50,396 [WARNING] agent.app.agent.loop: Dispute PP-D-4001 content-injection flagged: signals=(<InjectionSignal.ASSISTANT_INSTRUCTION: 'assistant_instruction'>,). Plan ignored; surfaces as needs human review.
+2026-10-22 17:33:50,408 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=bdbfdcdce1fc7267a7f55eee2352fde4a5ca6ab69a498738d0dffad3f293580d, attempts=1)
+2026-10-22 17:33:50,431 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-D-4001 (status=completed, decisions=1)
+2026-10-22 17:33:50,440 [INFO] agent.app.queue.queue: Completed job dd92648d-8e70-4fdf-a256-43e405a0fb8d (kind=run_agent)
+2026-10-22 17:33:50,452 [INFO] agent.app.queue.queue: Claimed job 40788530-f50b-45f2-919f-7b9e32c29541 (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:23.070452+00:00
+2026-10-22 17:33:50,917 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:33:51,181 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:33:51,182 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:33:51,448 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-E-5001 "HTTP/1.1 200 OK"
+2026-10-22 17:33:51,449 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-E-5001 completed (status=200, debug_id=none)
+2026-10-22 17:33:51,458 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-E-5001 (status=no_action, decisions=0)
+2026-10-22 17:33:51,464 [INFO] agent.app.queue.queue: Completed job 40788530-f50b-45f2-919f-7b9e32c29541 (kind=run_agent)
+2026-10-22 17:33:51,474 [INFO] agent.app.queue.queue: Claimed job 7efa04de-a3f0-45e6-b2c6-9cb32def6dd1 (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:23.991592+00:00
+2026-10-22 17:33:51,963 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:33:52,235 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:33:52,236 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:33:52,502 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED "HTTP/1.1 200 OK"
+2026-10-22 17:33:52,503 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED completed (status=200, debug_id=none)
+2026-10-22 17:33:53,074 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:33:53,347 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:33:53,348 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:33:53,349 [INFO] agent.app.paypal.mutating_client: Executing PayPal mutating POST to http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED/provide-evidence
+2026-10-22 17:33:53,611 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED/provide-evidence "HTTP/1.1 200 OK"
+2026-10-22 17:33:53,612 [INFO] agent.app.paypal.mutating_client: PayPal mutating POST http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED/provide-evidence finished (status=200, debug_id=none)
+2026-10-22 17:33:53,625 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED "HTTP/1.1 200 OK"
+2026-10-22 17:33:53,626 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED completed (status=200, debug_id=none)
+2026-10-22 17:33:53,642 [INFO] agent.app.executor.job: Execution completed for decision 98b8a5cc-9aad-52fd-a3de-be2d17c0b3f8 (dispute=PP-R-MBX-REDACTED, status=CONFIRMED)
+2026-10-22 17:33:53,654 [INFO] agent.app.queue.queue: Completed job 7efa04de-a3f0-45e6-b2c6-9cb32def6dd1 (kind=execute_decision)
+2026-10-22 17:33:53,669 [INFO] agent.app.queue.queue: Claimed job 77caabd8-8e43-46f1-8ce4-dd55ee57a92a (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:25.963720+00:00
+2026-10-22 17:33:54,232 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:33:54,507 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:33:54,509 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:33:54,776 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED "HTTP/1.1 200 OK"
+2026-10-22 17:33:54,777 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-R-MBX-REDACTED completed (status=200, debug_id=none)
+2026-10-22 17:33:54,777 [WARNING] agent.app.executor.executor: Dispute PP-R-MBX-REDACTED fingerprint mismatch: fresh=6b8b9740c27197051c776bdb943a1aa42922cb0256afff3f8249343c27d1449e, decision=93a19a6b6d3fe71f81664b4d980651293a700325f3d74ca40613a98d40517d18. Aborting with EXEC-STALE.
+2026-10-22 17:33:54,778 [INFO] agent.app.executor.job: Execution completed for decision 0e45b6ff-1ede-5db7-b23d-d46b9d71c756 (dispute=PP-R-MBX-REDACTED, status=FAILED)
+2026-10-22 17:33:54,785 [INFO] agent.app.queue.queue: Completed job 77caabd8-8e43-46f1-8ce4-dd55ee57a92a (kind=execute_decision)
+2026-10-22 17:33:54,803 [INFO] agent.app.queue.queue: Claimed job d1e58b55-2c14-4ac0-b845-f2c10d3f4d70 (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:30.295600+00:00
+2026-10-22 17:33:55,397 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:33:55,648 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:33:55,650 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:33:55,926 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A33%3A54.810415%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:33:55,928 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:33:55,954 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 3 disputes, enqueued 0 sync jobs
+2026-10-22 17:33:55,968 [INFO] agent.app.queue.queue: Completed job d1e58b55-2c14-4ac0-b845-f2c10d3f4d70 (kind=reconcile)
+2026-10-22 17:33:59,464 [INFO] agent.app.queue.queue: Claimed job d54517f9-3bec-423c-b27e-76f9158dfa33 (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:34.489541+00:00
+2026-10-22 17:33:59,880 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:00,136 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:00,137 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:00,396 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0001 "HTTP/1.1 200 OK"
+2026-10-22 17:34:00,397 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0001 completed (status=200, debug_id=none)
+2026-10-22 17:34:00,401 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0001 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint_changed=True)
+2026-10-22 17:34:00,407 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-STUB-0001 with fingerprint fc03596a
+2026-10-22 17:34:00,418 [INFO] agent.app.queue.queue: Completed job d54517f9-3bec-423c-b27e-76f9158dfa33 (kind=sync_dispute)
+2026-10-22 17:34:00,426 [INFO] agent.app.queue.queue: Enqueued job a8b10071-c4ab-46ab-b59e-3f13d7519111 (kind=reconcile, dispute_id=None)
+2026-10-22 17:34:00,435 [INFO] agent.app.queue.queue: Claimed job 42f05e4c-9a5a-4998-b23d-e152699196ac (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:35.368222+00:00
+2026-10-22 17:34:00,832 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:01,094 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:01,094 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:01,365 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0001 "HTTP/1.1 200 OK"
+2026-10-22 17:34:01,366 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0001 completed (status=200, debug_id=none)
+2026-10-22 17:34:01,383 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=057ee21811356b45124c21fcd16cf566593baccfc762fe0546510c5b2f31c509, attempts=1)
+2026-10-22 17:34:01,408 [INFO] agent.app.queue.queue: Enqueued job ca1f0fa4-6570-4e73-b6c2-6b32aabcbb0e (kind=execute_decision, dispute_id=None)
+2026-10-22 17:34:01,420 [INFO] agent.app.queue.queue: Enqueued job 1ec1444d-1851-4218-8d52-2f0053707b6e (kind=execute_decision, dispute_id=None)
+2026-10-22 17:34:01,420 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-STUB-0001 (status=completed, decisions=2)
+2026-10-22 17:34:01,429 [INFO] agent.app.queue.queue: Completed job 42f05e4c-9a5a-4998-b23d-e152699196ac (kind=run_agent)
+2026-10-22 17:34:01,439 [INFO] agent.app.queue.queue: Claimed job a8b10071-c4ab-46ab-b59e-3f13d7519111 (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:36.270290+00:00
+2026-10-22 17:34:01,910 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:02,172 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:02,173 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:02,445 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A34%3A01.444273%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:34:02,446 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:34:02,460 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 4 disputes, enqueued 0 sync jobs
+2026-10-22 17:34:02,466 [INFO] agent.app.queue.queue: Completed job a8b10071-c4ab-46ab-b59e-3f13d7519111 (kind=reconcile)
+2026-10-22 17:34:02,475 [INFO] agent.app.queue.queue: Claimed job ca1f0fa4-6570-4e73-b6c2-6b32aabcbb0e (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:37.203424+00:00
+2026-10-22 17:34:02,905 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:03,168 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:03,169 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:03,439 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0001 "HTTP/1.1 200 OK"
+2026-10-22 17:34:03,439 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0001 completed (status=200, debug_id=none)
+2026-10-22 17:34:03,837 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:04,104 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:04,104 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:04,104 [INFO] agent.app.paypal.mutating_client: Executing PayPal mutating POST to http://localhost:4010/v1/customer/disputes/PP-STUB-0001/provide-evidence
+2026-10-22 17:34:04,375 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/customer/disputes/PP-STUB-0001/provide-evidence "HTTP/1.1 200 OK"
+2026-10-22 17:34:04,376 [INFO] agent.app.paypal.mutating_client: PayPal mutating POST http://localhost:4010/v1/customer/disputes/PP-STUB-0001/provide-evidence finished (status=200, debug_id=none)
+2026-10-22 17:34:04,388 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0001 "HTTP/1.1 200 OK"
+2026-10-22 17:34:04,389 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0001 completed (status=200, debug_id=none)
+2026-10-22 17:34:04,404 [INFO] agent.app.executor.job: Execution completed for decision 8552a1a9-44e3-5bca-becc-e544961c1cde (dispute=PP-STUB-0001, status=CONFIRMED)
+2026-10-22 17:34:04,414 [INFO] agent.app.queue.queue: Completed job ca1f0fa4-6570-4e73-b6c2-6b32aabcbb0e (kind=execute_decision)
+2026-10-22 17:34:04,423 [INFO] agent.app.queue.queue: Claimed job 1ec1444d-1851-4218-8d52-2f0053707b6e (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:38.956500+00:00
+2026-10-22 17:34:04,837 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:05,104 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:05,105 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:05,375 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0001 "HTTP/1.1 200 OK"
+2026-10-22 17:34:05,376 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0001 completed (status=200, debug_id=none)
+2026-10-22 17:34:05,376 [WARNING] agent.app.executor.executor: Dispute PP-STUB-0001 fingerprint mismatch: fresh=425f2993170988030de59eebbd6a83411015f0df36341c4270831e6401ea1ea7, decision=fc03596ae36a96b7ff173e457139a32fb02ec3fa9b014ff1403973eb4a22ef98. Aborting with EXEC-STALE.
+2026-10-22 17:34:05,376 [INFO] agent.app.executor.job: Execution completed for decision c0829266-5a84-52e7-81f3-9d1d53f1b298 (dispute=PP-STUB-0001, status=FAILED)
+2026-10-22 17:34:05,385 [INFO] agent.app.queue.queue: Completed job 1ec1444d-1851-4218-8d52-2f0053707b6e (kind=execute_decision)
+2026-10-22 17:34:05,606 [INFO] agent.app.queue.queue: Enqueued job f0f50185-9955-4475-9452-a19398abeb06 (kind=reconcile, dispute_id=None)
+2026-10-22 17:34:05,621 [INFO] agent.app.queue.queue: Claimed job f0f50185-9955-4475-9452-a19398abeb06 (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:40.031091+00:00
+2026-10-22 17:34:06,232 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:06,497 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:06,498 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:06,766 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A34%3A05.628447%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:34:06,767 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:34:06,780 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 4 disputes, enqueued 0 sync jobs
+2026-10-22 17:34:06,788 [INFO] agent.app.queue.queue: Completed job f0f50185-9955-4475-9452-a19398abeb06 (kind=reconcile)
+2026-10-22 17:34:10,659 [INFO] agent.app.queue.queue: Enqueued job b7b4c80b-00b8-4185-8f98-e9cdd3ca0c95 (kind=reconcile, dispute_id=None)
+2026-10-22 17:34:10,670 [INFO] agent.app.queue.queue: Claimed job b7b4c80b-00b8-4185-8f98-e9cdd3ca0c95 (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:44.577782+00:00
+2026-10-22 17:34:11,230 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:11,487 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:11,488 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:11,752 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A34%3A10.675001%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:34:11,753 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:34:11,771 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 5 disputes, enqueued 0 sync jobs
+2026-10-22 17:34:11,780 [INFO] agent.app.queue.queue: Completed job b7b4c80b-00b8-4185-8f98-e9cdd3ca0c95 (kind=reconcile)
+2026-10-22 17:34:11,791 [INFO] agent.app.queue.queue: Claimed job 6986edd3-51cf-48f8-943b-8d260225b358 (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:45.587111+00:00
+2026-10-22 17:34:12,268 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:12,532 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:12,534 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:12,801 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0002 "HTTP/1.1 200 OK"
+2026-10-22 17:34:12,801 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0002 completed (status=200, debug_id=none)
+2026-10-22 17:34:12,805 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0002 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint_changed=True)
+2026-10-22 17:34:12,810 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-STUB-0002 with fingerprint 74759a7a
+2026-10-22 17:34:12,819 [INFO] agent.app.queue.queue: Completed job 6986edd3-51cf-48f8-943b-8d260225b358 (kind=sync_dispute)
+2026-10-22 17:34:12,828 [INFO] agent.app.queue.queue: Claimed job 196f01da-ddae-4575-8ee7-fac96cbcd917 (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:46.521310+00:00
+2026-10-22 17:34:13,264 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:13,528 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:13,529 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:13,792 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0002 "HTTP/1.1 200 OK"
+2026-10-22 17:34:13,794 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0002 completed (status=200, debug_id=none)
+2026-10-22 17:34:13,808 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=7aa6dc66b2b874c2f4c555d17836dad2e7de0b6e1ad4985f8d084871d52f3ebd, attempts=1)
+2026-10-22 17:34:13,837 [INFO] agent.app.queue.queue: Enqueued job 5239f262-a621-4086-a882-9a0b7f997c0a (kind=execute_decision, dispute_id=None)
+2026-10-22 17:34:13,850 [INFO] agent.app.queue.queue: Enqueued job d4e04ec3-2f8c-48cf-9a6a-bf2aae526822 (kind=execute_decision, dispute_id=None)
+2026-10-22 17:34:13,851 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-STUB-0002 (status=completed, decisions=2)
+2026-10-22 17:34:13,857 [INFO] agent.app.queue.queue: Completed job 196f01da-ddae-4575-8ee7-fac96cbcd917 (kind=run_agent)
+2026-10-22 17:34:13,866 [INFO] agent.app.queue.queue: Claimed job 5239f262-a621-4086-a882-9a0b7f997c0a (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:47.454934+00:00
+2026-10-22 17:34:14,267 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:14,531 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:14,532 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:14,803 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0002 "HTTP/1.1 200 OK"
+2026-10-22 17:34:14,803 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0002 completed (status=200, debug_id=none)
+2026-10-22 17:34:15,328 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:15,595 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:15,595 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:15,596 [INFO] agent.app.paypal.mutating_client: Executing PayPal mutating POST to http://localhost:4010/v1/customer/disputes/PP-STUB-0002/provide-evidence
+2026-10-22 17:34:15,859 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/customer/disputes/PP-STUB-0002/provide-evidence "HTTP/1.1 200 OK"
+2026-10-22 17:34:15,860 [INFO] agent.app.paypal.mutating_client: PayPal mutating POST http://localhost:4010/v1/customer/disputes/PP-STUB-0002/provide-evidence finished (status=200, debug_id=none)
+2026-10-22 17:34:15,873 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0002 "HTTP/1.1 200 OK"
+2026-10-22 17:34:15,874 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0002 completed (status=200, debug_id=none)
+2026-10-22 17:34:15,885 [INFO] agent.app.executor.job: Execution completed for decision 66c5d1e4-09d2-5003-90d2-8ac654a05fc3 (dispute=PP-STUB-0002, status=CONFIRMED)
+2026-10-22 17:34:15,892 [INFO] agent.app.queue.queue: Completed job 5239f262-a621-4086-a882-9a0b7f997c0a (kind=execute_decision)
+2026-10-22 17:34:15,899 [INFO] agent.app.queue.queue: Enqueued job 8cf93e06-be68-4856-b1cc-bf0cd3015b2e (kind=reconcile, dispute_id=None)
+2026-10-22 17:34:15,909 [INFO] agent.app.queue.queue: Claimed job d4e04ec3-2f8c-48cf-9a6a-bf2aae526822 (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:49.293589+00:00
+2026-10-22 17:34:16,308 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:16,572 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:16,573 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:16,840 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0002 "HTTP/1.1 200 OK"
+2026-10-22 17:34:16,841 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0002 completed (status=200, debug_id=none)
+2026-10-22 17:34:16,841 [WARNING] agent.app.executor.executor: Dispute PP-STUB-0002 fingerprint mismatch: fresh=2a15346674f5de028ff96017cc986deef92ed8bc19805644c61becb4d1bda0e4, decision=74759a7aaf23b99dade446b2a0cd0d0e94e3a6a999c30cd7ad6a975e076ae54e. Aborting with EXEC-STALE.
+2026-10-22 17:34:16,842 [INFO] agent.app.executor.job: Execution completed for decision 660be0e2-8870-5682-a9ea-06a6d2e961ea (dispute=PP-STUB-0002, status=FAILED)
+2026-10-22 17:34:16,850 [INFO] agent.app.queue.queue: Completed job d4e04ec3-2f8c-48cf-9a6a-bf2aae526822 (kind=execute_decision)
+2026-10-22 17:34:16,863 [INFO] agent.app.queue.queue: Claimed job 8cf93e06-be68-4856-b1cc-bf0cd3015b2e (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:50.150278+00:00
+2026-10-22 17:34:17,404 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:17,676 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:17,677 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:17,947 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A34%3A16.871923%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:34:17,948 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:34:17,965 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 5 disputes, enqueued 0 sync jobs
+2026-10-22 17:34:17,971 [INFO] agent.app.queue.queue: Completed job 8cf93e06-be68-4856-b1cc-bf0cd3015b2e (kind=reconcile)
+2026-10-22 17:34:18,623 [INFO] agent.app.queue.queue: Claimed job dd32534d-0d1c-4409-9c62-e5180c43c6e8 (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:51.734882+00:00
+2026-10-22 17:34:19,069 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:19,339 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:19,340 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:19,603 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0003 "HTTP/1.1 200 OK"
+2026-10-22 17:34:19,604 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0003 completed (status=200, debug_id=none)
+2026-10-22 17:34:19,609 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0003 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint_changed=True)
+2026-10-22 17:34:19,614 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-STUB-0003 with fingerprint 70e37d1b
+2026-10-22 17:34:19,625 [INFO] agent.app.queue.queue: Completed job dd32534d-0d1c-4409-9c62-e5180c43c6e8 (kind=sync_dispute)
+2026-10-22 17:34:19,636 [INFO] agent.app.queue.queue: Claimed job c93811ad-1482-4743-8eb4-e424ab0e72e0 (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:52.646977+00:00
+2026-10-22 17:34:20,097 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:20,365 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:20,366 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:20,639 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0003 "HTTP/1.1 200 OK"
+2026-10-22 17:34:20,641 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0003 completed (status=200, debug_id=none)
+2026-10-22 17:34:20,659 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=1d5b3f5c590fc307ef0a4a875248e5081b08a91c731540a795ec65e3f659cf5e, attempts=1)
+2026-10-22 17:34:20,683 [INFO] agent.app.queue.queue: Enqueued job 9609309f-b4ed-4dd9-acb9-8101358b876a (kind=execute_decision, dispute_id=None)
+2026-10-22 17:34:20,694 [INFO] agent.app.queue.queue: Enqueued job 7b78914f-88ad-46de-90e3-127b3d6b04e1 (kind=execute_decision, dispute_id=None)
+2026-10-22 17:34:20,695 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-STUB-0003 (status=completed, decisions=2)
+2026-10-22 17:34:20,702 [INFO] agent.app.queue.queue: Completed job c93811ad-1482-4743-8eb4-e424ab0e72e0 (kind=run_agent)
+2026-10-22 17:34:20,710 [INFO] agent.app.queue.queue: Claimed job 9609309f-b4ed-4dd9-acb9-8101358b876a (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:53.615341+00:00
+2026-10-22 17:34:21,100 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:21,368 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:21,369 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:21,625 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0003 "HTTP/1.1 200 OK"
+2026-10-22 17:34:21,626 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0003 completed (status=200, debug_id=none)
+2026-10-22 17:34:22,054 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:22,322 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:22,323 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:22,323 [INFO] agent.app.paypal.mutating_client: Executing PayPal mutating POST to http://localhost:4010/v1/customer/disputes/PP-STUB-0003/provide-evidence
+2026-10-22 17:34:22,582 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/customer/disputes/PP-STUB-0003/provide-evidence "HTTP/1.1 200 OK"
+2026-10-22 17:34:22,583 [INFO] agent.app.paypal.mutating_client: PayPal mutating POST http://localhost:4010/v1/customer/disputes/PP-STUB-0003/provide-evidence finished (status=200, debug_id=none)
+2026-10-22 17:34:22,595 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0003 "HTTP/1.1 200 OK"
+2026-10-22 17:34:22,597 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0003 completed (status=200, debug_id=none)
+2026-10-22 17:34:22,608 [INFO] agent.app.executor.job: Execution completed for decision c5fb9d75-237b-5664-a723-f0c8dac17a26 (dispute=PP-STUB-0003, status=CONFIRMED)
+2026-10-22 17:34:22,617 [INFO] agent.app.queue.queue: Completed job 9609309f-b4ed-4dd9-acb9-8101358b876a (kind=execute_decision)
+2026-10-22 17:34:22,625 [INFO] agent.app.queue.queue: Enqueued job 9ca11a11-8654-4fc4-b703-00e87c6c7b0d (kind=reconcile, dispute_id=None)
+2026-10-22 17:34:22,635 [INFO] agent.app.queue.queue: Claimed job 7b78914f-88ad-46de-90e3-127b3d6b04e1 (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:55.347148+00:00
+2026-10-22 17:34:23,040 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:23,308 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:23,309 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:23,567 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0003 "HTTP/1.1 200 OK"
+2026-10-22 17:34:23,568 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0003 completed (status=200, debug_id=none)
+2026-10-22 17:34:23,568 [WARNING] agent.app.executor.executor: Dispute PP-STUB-0003 fingerprint mismatch: fresh=3896ace1cbdb03cb8e9747ea7ae42bcf4690cb33aa31c77b15e2e5c8cc0c9da8, decision=70e37d1b526ea1205b191c4218e040d709dd25289264dc8ec4c1cdb1955aca3e. Aborting with EXEC-STALE.
+2026-10-22 17:34:23,568 [INFO] agent.app.executor.job: Execution completed for decision bf7ad387-824e-5483-ba3b-fed26f6b4dc2 (dispute=PP-STUB-0003, status=FAILED)
+2026-10-22 17:34:23,575 [INFO] agent.app.queue.queue: Completed job 7b78914f-88ad-46de-90e3-127b3d6b04e1 (kind=execute_decision)
+2026-10-22 17:34:23,588 [INFO] agent.app.queue.queue: Claimed job 9ca11a11-8654-4fc4-b703-00e87c6c7b0d (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:56.202367+00:00
+2026-10-22 17:34:24,153 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:24,418 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:24,419 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:24,678 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A34%3A23.593136%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:34:24,678 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:34:24,697 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 6 disputes, enqueued 0 sync jobs
+2026-10-22 17:34:24,706 [INFO] agent.app.queue.queue: Completed job 9ca11a11-8654-4fc4-b703-00e87c6c7b0d (kind=reconcile)
+2026-10-22 17:34:25,574 [INFO] agent.app.queue.queue: Claimed job b6a8b194-e466-4c36-88f3-d558ed14fdcc (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:57.990180+00:00
+2026-10-22 17:34:26,056 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:26,317 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:26,318 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:26,578 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0004 "HTTP/1.1 200 OK"
+2026-10-22 17:34:26,579 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0004 completed (status=200, debug_id=none)
+2026-10-22 17:34:26,582 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0004 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint_changed=True)
+2026-10-22 17:34:26,587 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-STUB-0004 with fingerprint 86b68b68
+2026-10-22 17:34:26,594 [INFO] agent.app.queue.queue: Completed job b6a8b194-e466-4c36-88f3-d558ed14fdcc (kind=sync_dispute)
+2026-10-22 17:34:26,604 [INFO] agent.app.queue.queue: Claimed job 2c03c6ea-f98a-439f-baec-1a8696aca788 (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:58.919066+00:00
+2026-10-22 17:34:26,998 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:27,257 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:27,258 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:27,521 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0004 "HTTP/1.1 200 OK"
+2026-10-22 17:34:27,522 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0004 completed (status=200, debug_id=none)
+2026-10-22 17:34:27,525 [WARNING] agent.app.agent.loop: Dispute PP-STUB-0004 content-injection flagged: signals=(<InjectionSignal.ASSISTANT_INSTRUCTION: 'assistant_instruction'>,). Plan ignored; surfaces as needs human review.
+2026-10-22 17:34:27,541 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=fa73e906e837daa35c7c373517d674ae6fcf4644ef0f8911dbe21e812516da3a, attempts=1)
+2026-10-22 17:34:27,558 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-STUB-0004 (status=completed, decisions=1)
+2026-10-22 17:34:27,565 [INFO] agent.app.queue.queue: Completed job 2c03c6ea-f98a-439f-baec-1a8696aca788 (kind=run_agent)
+2026-10-22 17:34:27,784 [INFO] agent.app.queue.queue: Enqueued job beaaa571-ce38-432b-bf92-f88741abe91f (kind=reconcile, dispute_id=None)
+2026-10-22 17:34:27,795 [INFO] agent.app.queue.queue: Claimed job beaaa571-ce38-432b-bf92-f88741abe91f (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:34:59.990582+00:00
+2026-10-22 17:34:28,197 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:28,462 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:28,462 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:28,724 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A34%3A27.799830%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:34:28,726 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:34:28,755 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 7 disputes, enqueued 0 sync jobs
+2026-10-22 17:34:28,763 [INFO] agent.app.queue.queue: Completed job beaaa571-ce38-432b-bf92-f88741abe91f (kind=reconcile)
+2026-10-22 17:34:31,145 [INFO] agent.app.queue.queue: Claimed job 8122be7d-9197-4f8a-b798-9854d3656cc4 (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:06.369815+00:00
+2026-10-22 17:34:31,647 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:31,916 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:31,918 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:32,237 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0005 "HTTP/1.1 200 OK"
+2026-10-22 17:34:32,238 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0005 completed (status=200, debug_id=none)
+2026-10-22 17:34:32,241 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0005 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint_changed=True)
+2026-10-22 17:34:32,246 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-STUB-0005 with fingerprint 9ca6efe8
+2026-10-22 17:34:32,257 [INFO] agent.app.queue.queue: Completed job 8122be7d-9197-4f8a-b798-9854d3656cc4 (kind=sync_dispute)
+2026-10-22 17:34:32,268 [INFO] agent.app.queue.queue: Claimed job 1ba10da3-993b-4346-8438-78c47286c9c2 (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:07.380216+00:00
+2026-10-22 17:34:32,728 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:33,002 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:33,003 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:33,272 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0005 "HTTP/1.1 200 OK"
+2026-10-22 17:34:33,273 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0005 completed (status=200, debug_id=none)
+2026-10-22 17:34:33,287 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=44496e64cab53b5fe0081327557ddc2e0cab452caa86fed22aecd30603a50216, attempts=1)
+2026-10-22 17:34:33,349 [INFO] agent.app.approvals.service: APPROVAL_LINK dispute=PP-STUB-0005 url=http://localhost:5173/approve/MbRgUw-qPn3AEfOS_HmShr4YIrS6zZOprBel5wgiH18
+2026-10-22 17:34:33,353 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-STUB-0005 (status=completed, decisions=1)
+2026-10-22 17:34:33,362 [INFO] agent.app.queue.queue: Completed job 1ba10da3-993b-4346-8438-78c47286c9c2 (kind=run_agent)
+2026-10-22 17:34:33,371 [INFO] agent.app.queue.queue: Enqueued job 0c37c9fb-e534-4055-b47d-2f97587944d7 (kind=reconcile, dispute_id=None)
+2026-10-22 17:34:33,383 [INFO] agent.app.queue.queue: Claimed job 9c6fbff2-f53f-43ac-8b81-178fe4d1c4a2 (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:08.384335+00:00
+2026-10-22 17:34:33,876 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:34,141 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:34,142 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:34,406 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0006 "HTTP/1.1 200 OK"
+2026-10-22 17:34:34,407 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0006 completed (status=200, debug_id=none)
+2026-10-22 17:34:34,411 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0006 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint_changed=True)
+2026-10-22 17:34:34,416 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-STUB-0006 with fingerprint 40c9370b
+2026-10-22 17:34:34,424 [INFO] agent.app.queue.queue: Completed job 9c6fbff2-f53f-43ac-8b81-178fe4d1c4a2 (kind=sync_dispute)
+2026-10-22 17:34:34,434 [INFO] agent.app.queue.queue: Claimed job 0c37c9fb-e534-4055-b47d-2f97587944d7 (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:09.330929+00:00
+2026-10-22 17:34:34,823 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:35,086 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:35,087 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:35,349 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A34%3A34.439055%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:34:35,351 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:34:35,398 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 10 disputes, enqueued 0 sync jobs
+2026-10-22 17:34:35,406 [INFO] agent.app.queue.queue: Completed job 0c37c9fb-e534-4055-b47d-2f97587944d7 (kind=reconcile)
+2026-10-22 17:34:35,415 [INFO] agent.app.queue.queue: Claimed job 3977797d-ef98-4906-9fde-4f8be7fa565a (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:10.214977+00:00
+2026-10-22 17:34:35,808 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:36,071 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:36,072 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:36,335 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0006 "HTTP/1.1 200 OK"
+2026-10-22 17:34:36,338 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0006 completed (status=200, debug_id=none)
+2026-10-22 17:34:36,353 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=741eb013aa3f39ce420c54535a939ab6fcd6b903d7225937e46ed10ef64a9941, attempts=1)
+2026-10-22 17:34:36,383 [INFO] agent.app.approvals.service: APPROVAL_LINK dispute=PP-STUB-0006 url=http://localhost:5173/approve/x0rA3hZ3bKU-fUUbQ5v4WlPK20GAtWD4nyBsN8T6-wQ
+2026-10-22 17:34:36,387 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-STUB-0006 (status=completed, decisions=1)
+2026-10-22 17:34:36,396 [INFO] agent.app.queue.queue: Completed job 3977797d-ef98-4906-9fde-4f8be7fa565a (kind=run_agent)
+2026-10-22 17:34:36,404 [INFO] agent.app.queue.queue: Claimed job c47757ce-978f-4f98-8813-b2683a5668f0 (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:11.104775+00:00
+2026-10-22 17:34:36,802 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:37,068 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:37,069 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:37,334 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0007 "HTTP/1.1 200 OK"
+2026-10-22 17:34:37,335 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0007 completed (status=200, debug_id=none)
+2026-10-22 17:34:37,340 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0007 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint_changed=True)
+2026-10-22 17:34:37,345 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-STUB-0007 with fingerprint 18d1a440
+2026-10-22 17:34:37,354 [INFO] agent.app.queue.queue: Completed job c47757ce-978f-4f98-8813-b2683a5668f0 (kind=sync_dispute)
+2026-10-22 17:34:37,365 [INFO] agent.app.queue.queue: Claimed job 711b4641-2adf-4488-964f-4ebdfb392075 (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:11.967971+00:00
+2026-10-22 17:34:37,756 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:38,022 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:38,023 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:38,295 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0007 "HTTP/1.1 200 OK"
+2026-10-22 17:34:38,296 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0007 completed (status=200, debug_id=none)
+2026-10-22 17:34:38,313 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=9fa9ae06f58966eaacf3a414ddfdf15453bc60e0162bac2065886ff6497c4510, attempts=1)
+2026-10-22 17:34:38,341 [INFO] agent.app.approvals.service: APPROVAL_LINK dispute=PP-STUB-0007 url=http://localhost:5173/approve/uRFpPIdLKMhe-awzvB8GD_aSKfV4IcjZf6J8qSEK7Ds
+2026-10-22 17:34:38,345 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-STUB-0007 (status=completed, decisions=1)
+2026-10-22 17:34:38,353 [INFO] agent.app.queue.queue: Completed job 711b4641-2adf-4488-964f-4ebdfb392075 (kind=run_agent)
+2026-10-22 17:34:38,586 [INFO] agent.app.queue.queue: Enqueued job 9c3de8aa-13a8-48db-b19a-bf114a9c366a (kind=reconcile, dispute_id=None)
+2026-10-22 17:34:38,595 [INFO] agent.app.queue.queue: Claimed job 9c3de8aa-13a8-48db-b19a-bf114a9c366a (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:13.076823+00:00
+2026-10-22 17:34:38,998 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:39,263 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:39,265 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:39,531 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A34%3A38.600571%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:34:39,532 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:34:39,562 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 10 disputes, enqueued 0 sync jobs
+2026-10-22 17:34:39,568 [INFO] agent.app.queue.queue: Completed job 9c3de8aa-13a8-48db-b19a-bf114a9c366a (kind=reconcile)
+2026-10-22 17:34:41,079 [INFO] agent.app.queue.queue: Claimed job 6a60cf00-2d80-4fe2-bec5-87f8535b14ba (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:15.310226+00:00
+2026-10-22 17:34:41,553 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:41,815 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:41,816 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:42,081 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0008 "HTTP/1.1 200 OK"
+2026-10-22 17:34:42,082 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0008 completed (status=200, debug_id=none)
+2026-10-22 17:34:42,086 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0008 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint_changed=True)
+2026-10-22 17:34:42,091 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-STUB-0008 with fingerprint 0959fee2
+2026-10-22 17:34:42,099 [INFO] agent.app.queue.queue: Completed job 6a60cf00-2d80-4fe2-bec5-87f8535b14ba (kind=sync_dispute)
+2026-10-22 17:34:42,111 [INFO] agent.app.queue.queue: Claimed job d9d1b64a-1d4c-4d10-aa9c-f18f33eedf80 (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:16.238577+00:00
+2026-10-22 17:34:42,569 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:42,834 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:42,835 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:43,106 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0008 "HTTP/1.1 200 OK"
+2026-10-22 17:34:43,107 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0008 completed (status=200, debug_id=none)
+2026-10-22 17:34:43,123 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=35d09fb3edd72372327576beb78eb9df402f2ce7b4c234a66749cd762fa6679c, attempts=1)
+2026-10-22 17:34:43,146 [INFO] agent.app.queue.queue: Enqueued job c0d05326-9128-430a-9259-2f3444c9d38f (kind=execute_decision, dispute_id=None)
+2026-10-22 17:34:43,158 [INFO] agent.app.queue.queue: Enqueued job 80f20447-c5bd-4507-92e2-4051e08c5abb (kind=execute_decision, dispute_id=None)
+2026-10-22 17:34:43,159 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-STUB-0008 (status=completed, decisions=2)
+2026-10-22 17:34:43,165 [INFO] agent.app.queue.queue: Completed job d9d1b64a-1d4c-4d10-aa9c-f18f33eedf80 (kind=run_agent)
+2026-10-22 17:34:43,173 [INFO] agent.app.queue.queue: Claimed job c0d05326-9128-430a-9259-2f3444c9d38f (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:17.197077+00:00
+2026-10-22 17:34:43,566 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:43,836 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:43,836 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:44,102 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0008 "HTTP/1.1 200 OK"
+2026-10-22 17:34:44,104 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0008 completed (status=200, debug_id=none)
+2026-10-22 17:34:44,522 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:44,785 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:44,786 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:44,786 [INFO] agent.app.paypal.mutating_client: Executing PayPal mutating POST to http://localhost:4010/v1/customer/disputes/PP-STUB-0008/provide-evidence
+2026-10-22 17:34:45,050 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/customer/disputes/PP-STUB-0008/provide-evidence "HTTP/1.1 200 OK"
+2026-10-22 17:34:45,052 [INFO] agent.app.paypal.mutating_client: PayPal mutating POST http://localhost:4010/v1/customer/disputes/PP-STUB-0008/provide-evidence finished (status=200, debug_id=none)
+2026-10-22 17:34:45,066 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0008 "HTTP/1.1 200 OK"
+2026-10-22 17:34:45,067 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0008 completed (status=200, debug_id=none)
+2026-10-22 17:34:45,079 [INFO] agent.app.executor.job: Execution completed for decision 9b87d7fe-0a93-56dc-a163-64e71905a595 (dispute=PP-STUB-0008, status=CONFIRMED)
+2026-10-22 17:34:45,086 [INFO] agent.app.queue.queue: Completed job c0d05326-9128-430a-9259-2f3444c9d38f (kind=execute_decision)
+2026-10-22 17:34:45,093 [INFO] agent.app.queue.queue: Enqueued job 49330d62-789e-45fa-9b2c-0a7bca85a204 (kind=reconcile, dispute_id=None)
+2026-10-22 17:34:45,102 [INFO] agent.app.queue.queue: Claimed job 80f20447-c5bd-4507-92e2-4051e08c5abb (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:18.933073+00:00
+2026-10-22 17:34:45,683 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:45,952 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:45,953 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:46,220 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0008 "HTTP/1.1 200 OK"
+2026-10-22 17:34:46,221 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0008 completed (status=200, debug_id=none)
+2026-10-22 17:34:46,221 [WARNING] agent.app.executor.executor: Dispute PP-STUB-0008 fingerprint mismatch: fresh=ab515e43de1884aad49b6e90aeb942b01d5f81a588ccd7b7a6c53ca0d4e76026, decision=0959fee2ecbfe562c0d2c1fc5079db1310f7967b2b35c50dc09b2853722163bc. Aborting with EXEC-STALE.
+2026-10-22 17:34:46,221 [INFO] agent.app.executor.job: Execution completed for decision 0086caf7-2954-5543-a723-d03cd4bd1eef (dispute=PP-STUB-0008, status=FAILED)
+2026-10-22 17:34:46,228 [INFO] agent.app.queue.queue: Completed job 80f20447-c5bd-4507-92e2-4051e08c5abb (kind=execute_decision)
+2026-10-22 17:34:46,240 [INFO] agent.app.queue.queue: Claimed job 49330d62-789e-45fa-9b2c-0a7bca85a204 (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:19.955101+00:00
+2026-10-22 17:34:46,722 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:46,994 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:46,995 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:47,256 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A34%3A46.246130%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:34:47,257 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:34:47,290 [INFO] agent.app.sync.reconciler: Reconciler enqueued SYNC_DISPUTE for dispute PP-STUB-0009 (reason=fingerprint_mismatch)
+2026-10-22 17:34:47,291 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 12 disputes, enqueued 1 sync jobs
+2026-10-22 17:34:47,297 [INFO] agent.app.queue.queue: Completed job 49330d62-789e-45fa-9b2c-0a7bca85a204 (kind=reconcile)
+2026-10-22 17:34:47,306 [INFO] agent.app.queue.queue: Claimed job 43f96c2b-a35b-48f1-8b75-2d59e7634dfa (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:20.915852+00:00
+2026-10-22 17:34:47,717 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:47,984 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:47,985 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:48,250 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0009 "HTTP/1.1 200 OK"
+2026-10-22 17:34:48,251 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0009 completed (status=200, debug_id=none)
+2026-10-22 17:34:48,256 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0009 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint_changed=True)
+2026-10-22 17:34:48,261 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-STUB-0009 with fingerprint f8fcd50e
+2026-10-22 17:34:48,270 [INFO] agent.app.queue.queue: Completed job 43f96c2b-a35b-48f1-8b75-2d59e7634dfa (kind=sync_dispute)
+2026-10-22 17:34:48,278 [INFO] agent.app.queue.queue: Claimed job 27058544-2c98-4b22-9bd9-ffab2ea3e74a (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:21.791140+00:00
+2026-10-22 17:34:48,685 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:48,947 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:48,947 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:49,206 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0009 "HTTP/1.1 200 OK"
+2026-10-22 17:34:49,206 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0009 completed (status=200, debug_id=none)
+2026-10-22 17:34:49,223 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=8f1af96b9ba84e76502886650fc1425c90e08104cb517c5d1e0b90f59da77778, attempts=1)
+2026-10-22 17:34:49,248 [INFO] agent.app.queue.queue: Enqueued job 495a23be-90f5-470a-8047-d81474549b66 (kind=execute_decision, dispute_id=None)
+2026-10-22 17:34:49,260 [INFO] agent.app.queue.queue: Enqueued job 67b762a9-a0cc-4f83-a68e-9ad4b2434974 (kind=execute_decision, dispute_id=None)
+2026-10-22 17:34:49,261 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-STUB-0009 (status=completed, decisions=2)
+2026-10-22 17:34:49,267 [INFO] agent.app.queue.queue: Completed job 27058544-2c98-4b22-9bd9-ffab2ea3e74a (kind=run_agent)
+2026-10-22 17:34:49,275 [INFO] agent.app.queue.queue: Claimed job 495a23be-90f5-470a-8047-d81474549b66 (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:22.688946+00:00
+2026-10-22 17:34:49,791 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:50,053 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:50,054 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:50,310 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0009 "HTTP/1.1 200 OK"
+2026-10-22 17:34:50,311 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0009 completed (status=200, debug_id=none)
+2026-10-22 17:34:50,877 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:51,149 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:51,149 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:51,149 [INFO] agent.app.paypal.mutating_client: Executing PayPal mutating POST to http://localhost:4010/v1/customer/disputes/PP-STUB-0009/provide-evidence
+2026-10-22 17:34:51,397 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/customer/disputes/PP-STUB-0009/provide-evidence "HTTP/1.1 200 OK"
+2026-10-22 17:34:51,397 [INFO] agent.app.paypal.mutating_client: PayPal mutating POST http://localhost:4010/v1/customer/disputes/PP-STUB-0009/provide-evidence finished (status=200, debug_id=none)
+2026-10-22 17:34:51,410 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0009 "HTTP/1.1 200 OK"
+2026-10-22 17:34:51,411 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0009 completed (status=200, debug_id=none)
+2026-10-22 17:34:51,422 [INFO] agent.app.executor.job: Execution completed for decision 04bfa8b6-b705-53ac-ba5a-1316a3465021 (dispute=PP-STUB-0009, status=CONFIRMED)
+2026-10-22 17:34:51,431 [INFO] agent.app.queue.queue: Completed job 495a23be-90f5-470a-8047-d81474549b66 (kind=execute_decision)
+2026-10-22 17:34:51,439 [INFO] agent.app.queue.queue: Enqueued job 252ebc45-979b-40ed-813f-45debff590fd (kind=reconcile, dispute_id=None)
+2026-10-22 17:34:51,449 [INFO] agent.app.queue.queue: Claimed job 67b762a9-a0cc-4f83-a68e-9ad4b2434974 (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:24.644614+00:00
+2026-10-22 17:34:51,971 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:52,237 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:52,238 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:52,501 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0009 "HTTP/1.1 200 OK"
+2026-10-22 17:34:52,501 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0009 completed (status=200, debug_id=none)
+2026-10-22 17:34:52,501 [WARNING] agent.app.executor.executor: Dispute PP-STUB-0009 fingerprint mismatch: fresh=22f20e4a2d68b02f56e78419f5c9423b6f7f1653535e9b544dfba9ae31fe21cd, decision=f8fcd50e1d59275361e1727605e23d045eb0d7647edd1ac3b5dff7ba86216e43. Aborting with EXEC-STALE.
+2026-10-22 17:34:52,501 [INFO] agent.app.executor.job: Execution completed for decision 807b347b-3f55-5ef7-8868-b6d43661bcf1 (dispute=PP-STUB-0009, status=FAILED)
+2026-10-22 17:34:52,509 [INFO] agent.app.queue.queue: Completed job 67b762a9-a0cc-4f83-a68e-9ad4b2434974 (kind=execute_decision)
+2026-10-22 17:34:52,518 [INFO] agent.app.queue.queue: Claimed job 252ebc45-979b-40ed-813f-45debff590fd (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:25.606602+00:00
+2026-10-22 17:34:52,960 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:53,234 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:53,235 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:53,495 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A34%3A52.524112%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:34:53,497 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:34:53,540 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 13 disputes, enqueued 0 sync jobs
+2026-10-22 17:34:53,548 [INFO] agent.app.queue.queue: Completed job 252ebc45-979b-40ed-813f-45debff590fd (kind=reconcile)
+2026-10-22 17:34:53,556 [INFO] agent.app.queue.queue: Claimed job 04ec9ad6-9ecc-433e-8612-6f72980f22b3 (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:26.541928+00:00
+2026-10-22 17:34:54,216 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:54,482 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:54,484 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:54,752 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0010 "HTTP/1.1 200 OK"
+2026-10-22 17:34:54,754 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0010 completed (status=200, debug_id=none)
+2026-10-22 17:34:54,759 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0010 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint_changed=True)
+2026-10-22 17:34:54,765 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-STUB-0010 with fingerprint 95440f91
+2026-10-22 17:34:54,776 [INFO] agent.app.queue.queue: Completed job 04ec9ad6-9ecc-433e-8612-6f72980f22b3 (kind=sync_dispute)
+2026-10-22 17:34:54,788 [INFO] agent.app.queue.queue: Claimed job 3decd5dc-4a86-40c3-b267-68e46a90fda3 (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:27.647768+00:00
+2026-10-22 17:34:55,412 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:55,684 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:55,686 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:55,950 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0010 "HTTP/1.1 200 OK"
+2026-10-22 17:34:55,952 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0010 completed (status=200, debug_id=none)
+2026-10-22 17:34:56,005 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-STUB-0010 (status=failed, decisions=0)
+2026-10-22 17:34:56,015 [INFO] agent.app.queue.queue: Completed job 3decd5dc-4a86-40c3-b267-68e46a90fda3 (kind=run_agent)
+2026-10-22 17:34:56,469 [INFO] agent.app.queue.queue: Enqueued job 88984086-be65-4c5d-a008-04b4a86154ac (kind=reconcile, dispute_id=None)
+2026-10-22 17:34:56,488 [INFO] agent.app.queue.queue: Claimed job 88984086-be65-4c5d-a008-04b4a86154ac (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:29.172366+00:00
+2026-10-22 17:34:57,567 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:34:57,835 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:34:57,836 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:34:58,106 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A34%3A56.497186%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:34:58,107 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:34:58,163 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 13 disputes, enqueued 0 sync jobs
+2026-10-22 17:34:58,177 [INFO] agent.app.queue.queue: Completed job 88984086-be65-4c5d-a008-04b4a86154ac (kind=reconcile)
+2026-10-22 17:35:01,627 [INFO] agent.app.queue.queue: Enqueued job 6ae60248-0a08-4f04-bffe-711be66be982 (kind=reconcile, dispute_id=None)
+2026-10-22 17:35:01,641 [INFO] agent.app.queue.queue: Claimed job e33e8e80-241c-4dd3-9598-21898dc82d19 (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:37.154146+00:00
+2026-10-22 17:35:02,529 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:02,796 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:02,799 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:03,060 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0011 "HTTP/1.1 200 OK"
+2026-10-22 17:35:03,061 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0011 completed (status=200, debug_id=none)
+2026-10-22 17:35:03,067 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0011 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint_changed=True)
+2026-10-22 17:35:03,073 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-STUB-0011 with fingerprint 29ec8305
+2026-10-22 17:35:03,084 [INFO] agent.app.queue.queue: Completed job e33e8e80-241c-4dd3-9598-21898dc82d19 (kind=sync_dispute)
+2026-10-22 17:35:03,098 [INFO] agent.app.queue.queue: Claimed job 6ae60248-0a08-4f04-bffe-711be66be982 (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:38.465091+00:00
+2026-10-22 17:35:03,939 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:04,207 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:04,208 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:04,471 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A35%3A03.105179%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:35:04,474 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:35:04,516 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 14 disputes, enqueued 0 sync jobs
+2026-10-22 17:35:04,523 [INFO] agent.app.queue.queue: Completed job 6ae60248-0a08-4f04-bffe-711be66be982 (kind=reconcile)
+2026-10-22 17:35:04,533 [INFO] agent.app.queue.queue: Claimed job 9dd7c685-dcf4-4b75-be9d-ea1f6fb20667 (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:39.759180+00:00
+2026-10-22 17:35:05,194 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:05,470 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:05,473 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:05,723 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0011 "HTTP/1.1 200 OK"
+2026-10-22 17:35:05,725 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0011 completed (status=200, debug_id=none)
+2026-10-22 17:35:05,741 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=6a61514918ba9e36305a77dc52abf35f4f08efd0bd8b3b96d655fd3288a611ea, attempts=1)
+2026-10-22 17:35:05,765 [INFO] agent.app.approvals.service: APPROVAL_LINK dispute=PP-STUB-0011 url=http://localhost:5173/approve/5D1qdpJsHMl59B5OKSIcAjGSZJ8U9gFkLf36BOaqpOY
+2026-10-22 17:35:05,768 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-STUB-0011 (status=completed, decisions=1)
+2026-10-22 17:35:05,777 [INFO] agent.app.queue.queue: Completed job 9dd7c685-dcf4-4b75-be9d-ea1f6fb20667 (kind=run_agent)
+2026-10-22 17:35:06,649 [INFO] agent.app.queue.queue: Enqueued job ae624bf6-268b-4645-b4d0-e8b5d3255e30 (kind=reconcile, dispute_id=None)
+2026-10-22 17:35:06,669 [INFO] agent.app.queue.queue: Claimed job ae624bf6-268b-4645-b4d0-e8b5d3255e30 (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:41.674445+00:00
+2026-10-22 17:35:07,653 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:07,925 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:07,928 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:08,201 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A35%3A06.676715%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:35:08,203 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:35:08,257 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 14 disputes, enqueued 0 sync jobs
+2026-10-22 17:35:08,267 [INFO] agent.app.queue.queue: Completed job ae624bf6-268b-4645-b4d0-e8b5d3255e30 (kind=reconcile)
+2026-10-22 17:35:08,276 [INFO] agent.app.queue.queue: Claimed job 47292005-ca45-4eba-a0b9-a927468cdcea (kind=execute_decision, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:43.128418+00:00
+2026-10-22 17:35:08,921 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:09,187 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:09,190 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:09,464 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0011 "HTTP/1.1 200 OK"
+2026-10-22 17:35:09,469 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0011 completed (status=200, debug_id=none)
+2026-10-22 17:35:10,139 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:10,400 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:10,401 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:10,401 [INFO] agent.app.paypal.mutating_client: Executing PayPal mutating POST to http://localhost:4010/v1/customer/disputes/PP-STUB-0011/make-offer
+2026-10-22 17:35:10,668 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/customer/disputes/PP-STUB-0011/make-offer "HTTP/1.1 200 OK"
+2026-10-22 17:35:10,670 [INFO] agent.app.paypal.mutating_client: PayPal mutating POST http://localhost:4010/v1/customer/disputes/PP-STUB-0011/make-offer finished (status=200, debug_id=none)
+2026-10-22 17:35:10,688 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0011 "HTTP/1.1 200 OK"
+2026-10-22 17:35:10,690 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0011 completed (status=200, debug_id=none)
+2026-10-22 17:35:10,705 [INFO] agent.app.executor.job: Execution completed for decision 7fe5c725-1561-575c-9c1d-7da6910f4240 (dispute=PP-STUB-0011, status=CONFIRMED)
+2026-10-22 17:35:10,716 [INFO] agent.app.queue.queue: Completed job 47292005-ca45-4eba-a0b9-a927468cdcea (kind=execute_decision)
+2026-10-22 17:35:11,807 [INFO] agent.app.queue.queue: Enqueued job 6cebd09f-67ad-48dd-be72-4c7ad0c075a3 (kind=reconcile, dispute_id=None)
+2026-10-22 17:35:11,826 [INFO] agent.app.queue.queue: Claimed job 6cebd09f-67ad-48dd-be72-4c7ad0c075a3 (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:46.316421+00:00
+2026-10-22 17:35:12,900 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:13,164 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:13,165 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:13,428 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A35%3A11.840306%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:35:13,430 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:35:13,479 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 14 disputes, enqueued 0 sync jobs
+2026-10-22 17:35:13,491 [INFO] agent.app.queue.queue: Completed job 6cebd09f-67ad-48dd-be72-4c7ad0c075a3 (kind=reconcile)
+2026-10-22 17:35:13,505 [INFO] agent.app.queue.queue: Claimed job ac3f226a-8d05-4784-a2a7-ba37f8e65d43 (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:47.830423+00:00
+2026-10-22 17:35:14,361 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:14,628 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:14,630 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:14,892 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0011 "HTTP/1.1 200 OK"
+2026-10-22 17:35:14,894 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0011 completed (status=200, debug_id=none)
+2026-10-22 17:35:14,901 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0011 (status=WAITING_FOR_BUYER_RESPONSE, fingerprint_changed=False)
+2026-10-22 17:35:14,912 [INFO] agent.app.queue.queue: Completed job ac3f226a-8d05-4784-a2a7-ba37f8e65d43 (kind=sync_dispute)
+2026-10-22 17:35:16,868 [INFO] agent.app.queue.queue: Enqueued job dc948b4b-d2f2-4b90-9186-ef9e3d6904d2 (kind=reconcile, dispute_id=None)
+2026-10-22 17:35:16,879 [INFO] agent.app.queue.queue: Claimed job dc948b4b-d2f2-4b90-9186-ef9e3d6904d2 (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:50.870336+00:00
+2026-10-22 17:35:17,885 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:18,155 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:18,157 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:18,431 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A35%3A16.888292%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:35:18,434 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:35:18,473 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 14 disputes, enqueued 0 sync jobs
+2026-10-22 17:35:18,481 [INFO] agent.app.queue.queue: Completed job dc948b4b-d2f2-4b90-9186-ef9e3d6904d2 (kind=reconcile)
+2026-10-22 17:35:21,963 [INFO] agent.app.queue.queue: Enqueued job a71a2974-ead3-43da-b8a2-0e22d83857da (kind=reconcile, dispute_id=None)
+2026-10-22 17:35:21,980 [INFO] agent.app.queue.queue: Claimed job a71a2974-ead3-43da-b8a2-0e22d83857da (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:55.456350+00:00
+2026-10-22 17:35:22,944 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:23,303 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:23,305 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:23,580 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A35%3A21.993258%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:35:23,581 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:35:23,633 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 15 disputes, enqueued 0 sync jobs
+2026-10-22 17:35:23,638 [INFO] agent.app.queue.queue: Completed job a71a2974-ead3-43da-b8a2-0e22d83857da (kind=reconcile)
+2026-10-22 17:35:23,646 [INFO] agent.app.queue.queue: Claimed job 9bcce4cb-5943-45fc-9af9-401bf8d81e5a (kind=sync_dispute, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:56.962228+00:00
+2026-10-22 17:35:24,331 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:24,602 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:24,604 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:24,882 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0012 "HTTP/1.1 200 OK"
+2026-10-22 17:35:24,885 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0012 completed (status=200, debug_id=none)
+2026-10-22 17:35:24,891 [INFO] agent.app.sync.handler: Updated local dispute PP-STUB-0012 (status=WAITING_FOR_SELLER_RESPONSE, fingerprint_changed=True)
+2026-10-22 17:35:24,898 [INFO] agent.app.sync.handler: Enqueued new RUN_AGENT job for dispute PP-STUB-0012 with fingerprint 9e86aea3
+2026-10-22 17:35:24,908 [INFO] agent.app.queue.queue: Completed job 9bcce4cb-5943-45fc-9af9-401bf8d81e5a (kind=sync_dispute)
+2026-10-22 17:35:24,918 [INFO] agent.app.queue.queue: Claimed job dfb40e7f-ec60-4e45-b716-fce2cedecf79 (kind=run_agent, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:35:58.105463+00:00
+2026-10-22 17:35:25,623 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:25,902 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:25,904 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:26,170 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes/PP-STUB-0012 "HTTP/1.1 200 OK"
+2026-10-22 17:35:26,171 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes/PP-STUB-0012 completed (status=200, debug_id=none)
+2026-10-22 17:35:26,192 [INFO] agent.app.agent.llm: LLM plan accepted (prompt_version=2026-10-20.1, input_hash=ba457a3f09a07dd4ff05ccb023a582a3ba3ffc45b7f1be5644feffbf71b01810, attempts=1)
+2026-10-22 17:35:26,225 [INFO] agent.app.approvals.service: APPROVAL_LINK dispute=PP-STUB-0012 url=http://localhost:5173/approve/BMG66fbwaySRqRz5oHevPzJl4z7FkZpTuCc9nV1KDd8
+2026-10-22 17:35:26,230 [INFO] agent.app.queue.wiring: Agent loop completed for dispute PP-STUB-0012 (status=completed, decisions=1)
+2026-10-22 17:35:26,240 [INFO] agent.app.queue.queue: Completed job dfb40e7f-ec60-4e45-b716-fce2cedecf79 (kind=run_agent)
+2026-10-22 17:35:27,130 [INFO] agent.app.queue.queue: Enqueued job 64b7a874-f9b5-483d-9647-3f5fb552323f (kind=reconcile, dispute_id=None)
+2026-10-22 17:35:27,162 [INFO] agent.app.queue.queue: Claimed job 64b7a874-f9b5-483d-9647-3f5fb552323f (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:36:00.109535+00:00
+2026-10-22 17:35:28,140 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:28,401 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:28,403 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:28,664 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A35%3A27.173645%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:35:28,667 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:35:28,739 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 15 disputes, enqueued 0 sync jobs
+2026-10-22 17:35:28,749 [INFO] agent.app.queue.queue: Completed job 64b7a874-f9b5-483d-9647-3f5fb552323f (kind=reconcile)
+2026-10-22 17:35:32,230 [INFO] agent.app.queue.queue: Enqueued job 50ec3b7f-5d10-4786-8128-688c44a88c88 (kind=reconcile, dispute_id=None)
+2026-10-22 17:35:32,244 [INFO] agent.app.queue.queue: Claimed job 50ec3b7f-5d10-4786-8128-688c44a88c88 (kind=reconcile, attempt=1) by worker worker-fbc472e7 until 2026-10-22 16:36:04.696200+00:00
+2026-10-22 17:35:33,114 [INFO] agent.app.paypal.auth: Requesting PayPal OAuth access token
+2026-10-22 17:35:33,376 [INFO] httpx: HTTP Request: POST http://localhost:4010/v1/oauth2/token "HTTP/1.1 200 OK"
+2026-10-22 17:35:33,376 [INFO] agent.app.paypal.auth: PayPal OAuth response received (status=200, debug_id=none)
+2026-10-22 17:35:33,645 [INFO] httpx: HTTP Request: GET http://localhost:4010/v1/customer/disputes?page_size=20&start_time=2026-09-22T16%3A35%3A32.258266%2B00%3A00 "HTTP/1.1 200 OK"
+2026-10-22 17:35:33,647 [INFO] agent.app.paypal.read_client: PayPal GET http://localhost:4010/v1/customer/disputes completed (status=200, debug_id=none)
+2026-10-22 17:35:33,694 [INFO] agent.app.sync.reconciler: Reconcile cycle finished: checked 15 disputes, enqueued 0 sync jobs
+2026-10-22 17:35:33,703 [INFO] agent.app.queue.queue: Completed job 50ec3b7f-5d10-4786-8128-688c44a88c88 (kind=reconcile)

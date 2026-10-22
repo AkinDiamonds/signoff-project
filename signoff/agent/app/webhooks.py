@@ -166,43 +166,42 @@ async def paypal_webhook_receiver(
         raw_payload=verified.raw_payload,
         verified=True,
     )
-    db_session.add(event_record)
+    try:
+        db_session.add(event_record)
 
-    dispute_id = verified.dispute_id
-    if dispute_id:
-        # Emit WEBHOOK_RECEIVED ledger event as the first event in the audit chain
-        record_ledger_event(
-            session=db_session,
-            dispute_id=dispute_id,
-            event_kind=TimelineEventKind.WEBHOOK_RECEIVED,
-            payload={
-                "event_id": verified.event_id,
-                "event_type": verified.event_type,
-            },
-        )
-
-        existing_job = db_session.execute(
-            select(Job).where(
-                Job.dispute_id == dispute_id,
-                Job.kind == JobKind.SYNC_DISPUTE.value,
-                Job.status.in_([JobStatus.PENDING.value, JobStatus.RUNNING.value]),
-            )
-        ).scalar_one_or_none()
-
-        if not existing_job:
-            sync_job = Job(
-                kind=JobKind.SYNC_DISPUTE.value,
+        dispute_id = verified.dispute_id
+        if dispute_id:
+            # Emit WEBHOOK_RECEIVED ledger event as the first event in the audit chain
+            record_ledger_event(
+                session=db_session,
                 dispute_id=dispute_id,
-                status=JobStatus.PENDING.value,
+                event_kind=TimelineEventKind.WEBHOOK_RECEIVED,
                 payload={
                     "event_id": verified.event_id,
                     "event_type": verified.event_type,
-                    "dispute_id": dispute_id,
                 },
             )
-            db_session.add(sync_job)
 
-    try:
+            existing_job = db_session.execute(
+                select(Job).where(
+                    Job.dispute_id == dispute_id,
+                    Job.kind == JobKind.SYNC_DISPUTE.value,
+                    Job.status.in_([JobStatus.PENDING.value, JobStatus.RUNNING.value]),
+                )
+            ).scalar_one_or_none()
+
+            if not existing_job:
+                sync_job = Job(
+                    kind=JobKind.SYNC_DISPUTE.value,
+                    dispute_id=dispute_id,
+                    status=JobStatus.PENDING.value,
+                    payload={
+                        "event_id": verified.event_id,
+                        "event_type": verified.event_type,
+                        "dispute_id": dispute_id,
+                    },
+                )
+                db_session.add(sync_job)
         db_session.commit()
         logger.info(
             "Webhook processed successfully; sync job enqueued",

@@ -1,6 +1,6 @@
 # STATUS
 
-**Date:** 2026-10-21 · **Phase:** Build plan, steps 21–27 done → step 28 next · **Days to deadline:** 22 (Nov 12, 12:00 PT = 20:00 UTC)
+**Date:** 2026-10-22 · **Phase:** Build plan, steps 21–34 done → step 35 next · **Days to deadline:** 21 (Nov 12, 12:00 PT = 20:00 UTC)
 
 ## Done
 - Handoff read. Planning scaffold created. Doc claims checked (see `07-verify-register.md`).
@@ -44,10 +44,12 @@
 - Step 32 complete: buyer dispute portal (`shop/src/portal/*`, `agent/app/shop/disputes.py`) with order lookup (code and email), mock tracking timeline, 'report a problem' form with supported reasons only and Money amount validation, duplicate dispute blocking, unlinked account protection with demo order alternative, buyer dispute view with status, plain text escaping for messages, buyer reply form (Scenario D), merchant settlement offer response (S9 / Scenario C), and 'view as merchant' deep link to Signoff dashboard. 11 backend tests in `test_shop_disputes.py`, 4 frontend tests in `portal.test.tsx`, 4 type tests in `portal.test-d.ts`, and Playwright E2E in `portal.spec.ts`. Commit `feat(shop): buyer portal and dispute creation`.
 - Step 33 complete: public landing page and 5-minute judge guide (`web/src/features/site/*`). Landing page communicates the problem, signing-limit philosophy, 5-step pipeline, public verified claims with proof, 'Try it' call to action, and embedded system status. Judge guide at `/guide` delivers the 5-step numbered evaluation path, sandbox test credentials, real-vs-simulated comparison table, repo/license/video links, and persistent Buyer/Merchant view switcher. Public claims list is a readonly typed array mapped 1-to-1 to literal IDs in `docs/claims-ledger.md`. 4 claims tests, 1 typecheck test, 3 site component tests passing; 5 shell tests green; Playwright E2E suite prepared. Commit `feat(web): landing page and judge guide`.
 
+- Step 34 complete: cross-app Playwright e2e (`signoff/e2e/cross/`, `playwright.cross.config.ts`, `scripts/e2e_stack.py`, `make e2e-stack|e2e|e2e-cross-smoke|rehearse`, `.github/workflows/e2e.yml`). Live stack: stub 4010, agent 8000, frozen agent 8001 with a second web server on 5175, worker with `--reconcile-interval 5`. Scenarios A-E, resilience (duplicate webhook, poller catch-up, LLM failure, kill switch) and security (order-body tamper, XSS on detail and approval pages). Fixed scenario plan lookup by disputed amount (stub ids are `PP-STUB-NNNN`; D/E previously fell back to A), the executor now refreshes the local dispute projection after confirmation, and the reconciler compares snapshot `update_time` (first-sync aware) so its own mutations do not re-trigger agent runs. Shop router now matches on pathname when navigating with a query string. 12 tests; full suite green three consecutive runs; `@smoke` 33.6 s.
+
 ## Next 3 actions
-1. **Step 34:** full e2e suite (after P6 surfaces).
-2. **Step 35:** hardening and final pass.
-3. **Step 36:** predeploy and hosted-demo checks.
+1. **Step 35:** hardening and final pass.
+2. **Step 36:** predeploy and hosted-demo checks.
+3. Live rehearsal (`make rehearse`) once sandbox credentials are in `.env`.
 
 ## Blockers
 - None.
@@ -55,6 +57,7 @@
 - The evidence builder's carrier allowlist (`UPS`, `USPS`, `FEDEX`, `DHL`) is conservative and fails closed. Confirm the accepted carrier values against the PayPal evidence schema before the live rehearsal; the in-repo fixtures do not include a provide-evidence request body.
 
 ## Environment notes
+- Step 34 verification: `make e2e-stack` then the cross suite -> 12 passed three times in a row (1.3-1.9 min each); `npx playwright test ... --grep @smoke` -> 4 passed in 33.6 s. `make check`: ruff and ESLint clean; pytest still reports only the 7 pre-existing failures (`test_approvals` x4, `test_shop_backend` x3).
 - Step 11 verification ran against the DB-free suites (gate, PayPal models/read client, agent tools, settings, errors, logging, openapi, dispute sync): 118 tests green, `ruff check signoff/agent signoff/scripts` clean.
 - Step 12 verification (delegated agent, gate suites only per the root .agents/rules/AGENTS.md command policy): pytest signoff/agent/tests/test_gate.py signoff/agent/tests/test_gate_rules.py signoff/agent/tests/golden_decision_test.py -q -> 56 passed; ruff check signoff/agent/app/policy plus the step-12 test files -> clean; pytest signoff/agent/tests --collect-only -q -> 226 tests collected, no import errors.
 - Step 12 NOT verified here: the full pytest run, branch coverage, and the Postgres-backed suites. Neither pytest-cov, coverage, nor mypy is installed in .venv and the sandbox has no network to add them, so the step-12 '100% branch coverage on the gate package' item stays unproven until a coverage-enabled run confirms it.

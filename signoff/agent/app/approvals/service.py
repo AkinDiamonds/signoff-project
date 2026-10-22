@@ -105,6 +105,7 @@ def create_approval(
     decision: Decision,
     dispute: Any,
     now: datetime | None = None,
+    settings: Any | None = None,
 ) -> tuple[Approval, str]:
     """Generate a high-entropy random token, store its hash, and persist the approval card."""
     now_dt = now or datetime.now(UTC)
@@ -140,6 +141,21 @@ def create_approval(
             "rule_id": decision.rule_id,
         },
     )
+
+    try:
+        from agent.app.settings import AppEnv, PayPalEnv, Settings
+        app_settings = settings or Settings()
+        if app_settings.paypal_env == PayPalEnv.stub and app_settings.app_env != AppEnv.prod:
+            from agent.app.test_seams import record_test_approval_token
+            record_test_approval_token(decision.dispute_id, raw_token)
+            logger.info(
+                "APPROVAL_LINK dispute=%s url=%s/approve/%s",
+                decision.dispute_id,
+                app_settings.web_base_url.rstrip("/"),
+                raw_token,
+            )
+    except Exception as seam_exc:
+        logger.debug("Test seam recording skipped: %s", seam_exc)
 
     return approval, raw_token
 

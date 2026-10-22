@@ -221,7 +221,7 @@ class StubState:
                 "offer": {"buyer_requested_amount": amount},
                 "messages": [],
                 "evidences": [],
-                "seller_response_due_date": iso(self.now() + timedelta(days=10)),
+                "seller_response_due_date": iso(datetime.now(UTC) + timedelta(days=10)),
             }
         )
         transactions = payload.get("disputed_transactions")
@@ -238,8 +238,23 @@ class StubState:
                 for message in messages
                 if isinstance(message, dict) and message.get("content")
             ]
-        dispute["links"] = [self.link(dispute["dispute_id"], "self")]
-        self.disputes[dispute["dispute_id"]] = dispute
+        dispute_id = dispute["dispute_id"]
+        base = f"{STUB_BASE_URL}/v1/customer/disputes/{dispute_id}"
+        dispute["links"] = [self.link(dispute_id, "self")] + [
+            {"href": f"{base}/{path}", "rel": rel, "method": "POST"}
+            for rel, path in (
+                ("accept_claim", "accept-claim"),
+                ("provide_evidence", "provide-evidence"),
+                ("send_message", "send-message"),
+                ("escalate", "escalate"),
+                ("make_offer", "make-offer"),
+            )
+        ]
+        dispute["allowed_response_options"] = {
+            "accept_claim": {"accept_claim_types": ["REFUND"]},
+            "make_offer": {"offer_types": ["REFUND"]},
+        }
+        self.disputes[dispute_id] = dispute
         return dispute
 
     def create_order(self, payload: dict[str, Any]) -> dict[str, Any]:

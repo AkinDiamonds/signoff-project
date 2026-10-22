@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from sqlalchemy import case, select
 from sqlalchemy.orm import Session
 
@@ -69,7 +69,7 @@ class DisputeDetailResponse(BaseModel):
 
 
 def _encode_cursor(offset: int) -> str:
-    return base64.urlsafe_b64encode(f"offset:{offset}".encode("utf-8")).decode("utf-8")
+    return base64.urlsafe_b64encode(f"offset:{offset}".encode()).decode("utf-8")
 
 
 def _decode_cursor(cursor_str: str) -> int:

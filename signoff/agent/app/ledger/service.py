@@ -33,16 +33,14 @@ def record_ledger_event(
 ) -> LedgerEvent:
     """Append a ledger event with atomic per-dispute sequential numbering.
 
-    Uses SELECT ... FOR UPDATE (via with_for_update()) to prevent a race where
-    two concurrent sessions read the same MAX(sequence_number) and both try to
-    insert the same sequence number.  The UNIQUE constraint is a safety net, but
-    this lock makes the conflict impossible rather than letting it surface as an
-    IntegrityError.
+    Postgres rejects FOR UPDATE with aggregates, and a dispute may have no rows yet, so
+    serialize writers with a per-dispute advisory lock held until the transaction ends.
+    The UNIQUE constraint remains the safety net.
     """
-    stmt = (
-        select(func.coalesce(func.max(LedgerEvent.sequence_number), 0))
-        .where(LedgerEvent.dispute_id == dispute_id)
-        .with_for_update()
+    if session.get_bind().dialect.name == "postgresql":
+        session.execute(select(func.pg_advisory_xact_lock(func.hashtext(dispute_id))))
+    stmt = select(func.coalesce(func.max(LedgerEvent.sequence_number), 0)).where(
+        LedgerEvent.dispute_id == dispute_id
     )
     next_seq = (session.scalar(stmt) or 0) + 1
 

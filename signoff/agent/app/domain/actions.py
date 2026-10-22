@@ -111,3 +111,36 @@ def compute_action_hash(action: Any) -> str:
     payload = _serialize_for_hash(raw_dict)
     canonical_json = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical_json.encode("utf-8")).hexdigest()
+
+
+def parse_action_from_stored(
+    action_type: str,
+    action_payload: dict[str, Any] | None,
+) -> ProposedAction:
+    """Reconstruct domain ProposedAction from stored action_type and payload."""
+    payload = dict(action_payload or {})
+    payload["action_type"] = action_type
+
+    if "amount" in payload and isinstance(payload["amount"], dict):
+        amt_dict = payload["amount"]
+        payload["amount"] = Money(
+            currency_code=amt_dict.get("currency_code", "USD"),
+            value=Decimal(str(amt_dict.get("value", "0.00"))),
+        )
+
+    val = action_type.value if hasattr(action_type, "value") else str(action_type)
+    if val == ActionType.PROVIDE_EVIDENCE.value:
+        return ProvideEvidence.model_validate(payload)
+    if val == ActionType.SEND_MESSAGE.value:
+        return SendMessage.model_validate(payload)
+    if val == ActionType.MAKE_OFFER.value:
+        return MakeOffer.model_validate(payload)
+    if val == ActionType.ACCEPT_CLAIM.value:
+        return AcceptClaim.model_validate(payload)
+    if val == ActionType.ESCALATE.value:
+        return Escalate.model_validate(payload)
+    if val == ActionType.APPEAL.value:
+        return Appeal.model_validate(payload)
+
+    raise ValueError(f"Unknown action type: {action_type}")
+

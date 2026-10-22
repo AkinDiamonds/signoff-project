@@ -67,7 +67,7 @@ test.describe('Buyer Portal E2E (Step 32)', () => {
     expect(href).toMatch(/\/disputes\/PP-/);
 
     // 7. Verify hostile message is escaped safely (plain text data, no execution)
-    const pwned = await page.evaluate(() => (window as any).pwned);
+    const pwned = await page.evaluate(() => (window as unknown as { pwned?: unknown }).pwned);
     expect(pwned).toBeUndefined();
 
     // 8. Reply with hostile follow-up message (Scenario D)
@@ -78,7 +78,7 @@ test.describe('Buyer Portal E2E (Step 32)', () => {
 
       // Check reply is displayed as plain text and pwned2 was not executed
       await expect(page.getByTestId('portal-messages-container')).toContainText('Follow-up hostility:');
-      const pwned2 = await page.evaluate(() => (window as any).pwned2);
+      const pwned2 = await page.evaluate(() => (window as unknown as { pwned2?: unknown }).pwned2);
       expect(pwned2).toBeUndefined();
     }
   });

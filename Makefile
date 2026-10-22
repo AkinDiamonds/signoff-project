@@ -1,4 +1,4 @@
-.PHONY: check test-agent test-web test-types e2e e2e-smoke rehearse api-types dev stub
+.PHONY: check test-agent test-web test-types e2e e2e-stack e2e-smoke e2e-cross-smoke rehearse api-types dev stub
 
 ifeq ($(OS),Windows_NT)
 VENV_PY := .venv\Scripts\python.exe
@@ -31,15 +31,25 @@ test-types:
 	@$(VENV_PY) signoff/scripts/check_enum_parity.py
 	@node scripts/check-client-fresh.mjs
 
-e2e:
-	@echo e2e: not yet implemented
+e2e-stack:
+	@echo Starting cross-app e2e stack...
+	@PYTHONPATH="$(PY_PATH)" $(VENV_PY) -m scripts.e2e_stack start
+
+e2e: e2e-stack
+	@echo Running cross-app Playwright suite...
+	@npx playwright test --config signoff/e2e/playwright.cross.config.ts --grep "@smoke|@full"
 
 e2e-smoke:
 	@echo Running Playwright smoke tests...
 	@npx playwright test --config signoff/e2e/playwright.config.ts --grep @smoke
 
+e2e-cross-smoke:
+	@echo Running cross-app smoke tests...
+	@npx playwright test --config signoff/e2e/playwright.cross.config.ts --grep @smoke
+
 rehearse:
-	@echo rehearse: not yet implemented
+	@if [ ! -f .env ]; then echo "rehearse requires .env with live sandbox credentials"; exit 1; fi
+	@npx playwright test --config signoff/e2e/playwright.cross.config.ts --grep @live
 
 api-types:
 	@echo Exporting OpenAPI schema and generating client...

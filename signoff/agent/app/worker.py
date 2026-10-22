@@ -16,14 +16,16 @@ import inspect
 import logging
 import signal
 import threading
+import time
 import uuid
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from agent.app.db.models import Job
 from agent.app.db.session import get_session_factory
-from agent.app.domain.enums import JobKind
+from agent.app.domain.enums import JobKind, JobStatus
 from agent.app.queue import (
     HandlerRegistry,
     InvalidPayloadError,
@@ -31,11 +33,13 @@ from agent.app.queue import (
     claim_job,
     complete_job,
     create_default_registry,
+    enqueue_job,
     fail_job,
     heartbeat_job,
     parse_job_payload,
     release_job,
 )
+from agent.app.queue.wiring import build_registry
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +57,7 @@ class Worker:
         poll_interval: float = 1.0,
         base_delay: float = 1.0,
         max_delay: float = 60.0,
+        reconcile_interval: float = 0.0,
     ) -> None:
         self.worker_id = worker_id or f"worker-{uuid.uuid4().hex[:8]}"
         self.session_factory = session_factory or get_session_factory()
@@ -62,6 +67,7 @@ class Worker:
         self.poll_interval = poll_interval
         self.base_delay = base_delay
         self.max_delay = max_delay
+        self.reconcile_interval = reconcile_interval
 
         self._stopping = threading.Event()
         self._active_job_id: uuid.UUID | None = None
@@ -186,7 +192,18 @@ class Worker:
                         return True
 
                     if inspect.iscoroutinefunction(handler):
-                        asyncio.run(handler(current_job, session))
+                        try:
+                            loop = asyncio.get_running_loop()
+                        except RuntimeError:
+                            loop = None
+
+                        if loop and loop.is_running():
+                            import concurrent.futures
+
+                            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                                pool.submit(asyncio.run, handler(current_job, session)).result()
+                        else:
+                            asyncio.run(handler(current_job, session))
                     else:
                         handler(current_job, session)
 
@@ -228,6 +245,18 @@ class Worker:
                     logger.warning("Failed to release active job on shutdown: %s", exc)
                 self._active_job_id = None
 
+    def _enqueue_reconcile_if_idle(self) -> None:
+        """Enqueue one RECONCILE job unless one is already waiting or running."""
+        with self.session_factory() as session:
+            open_job = session.scalar(
+                select(Job.id).where(
+                    Job.kind == JobKind.RECONCILE.value,
+                    Job.status.in_([JobStatus.PENDING.value, JobStatus.RUNNING.value]),
+                )
+            )
+            if open_job is None:
+                enqueue_job(session, JobKind.RECONCILE, {})
+
     def run(self, max_jobs: int | None = None) -> int:
         """Run worker loop until stopped or max_jobs processed.
 
@@ -250,7 +279,11 @@ class Worker:
 
         logger.info("Worker %s started (poll_interval=%.1fs)", self.worker_id, self.poll_interval)
         try:
+            next_reconcile = time.monotonic()
             while not self._stopping.is_set():
+                if self.reconcile_interval and time.monotonic() >= next_reconcile:
+                    self._enqueue_reconcile_if_idle()
+                    next_reconcile = time.monotonic() + self.reconcile_interval
                 had_job = self.run_once()
                 if had_job:
                     processed_count += 1
@@ -272,6 +305,9 @@ def main() -> None:
     parser.add_argument("--worker-id", type=str, default=None, help="Unique worker identifier")
     parser.add_argument("--lease-seconds", type=float, default=30.0, help="Lease timeout in seconds")
     parser.add_argument("--poll-interval", type=float, default=1.0, help="Poll interval in seconds")
+    parser.add_argument(
+        "--reconcile-interval", type=float, default=0.0, help="Seconds between RECONCILE polls (0 = off)"
+    )
     parser.add_argument("--max-jobs", type=int, default=None, help="Exit after processing N jobs")
     args = parser.parse_args()
 
@@ -279,8 +315,10 @@ def main() -> None:
 
     worker = Worker(
         worker_id=args.worker_id,
+        registry=build_registry(),
         lease_seconds=args.lease_seconds,
         poll_interval=args.poll_interval,
+        reconcile_interval=args.reconcile_interval,
     )
     worker.run(max_jobs=args.max_jobs)
 

@@ -26,7 +26,7 @@ from agent.app.errors import (
 )
 from agent.app.logging import set_correlation_id, setup_logging
 from agent.app.queue import get_queue_stats
-from agent.app.settings import Settings
+from agent.app.settings import AppEnv, PayPalEnv, Settings
 from agent.app.shop.router import router as shop_router
 from agent.app.simulator import DemoQuotas
 from agent.app.simulator.router import router as demo_router
@@ -156,6 +156,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(demo_router)
     app.include_router(llm_proxy_router)
     app.include_router(shop_router)
+
+    if app_settings.paypal_env == PayPalEnv.stub and app_settings.app_env != AppEnv.prod:
+        from agent.app.test_seams import test_seams_router
+        app.include_router(test_seams_router)
+        logger.info("Test seams router mounted at /__test__ (stub/test mode only)")
 
     @app.get("/healthz", tags=["System"])
     async def healthz() -> dict[str, str]:

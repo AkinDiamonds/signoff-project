@@ -37,9 +37,8 @@ from agent.app.approvals import (
 )
 from agent.app.approvals.schemas import ActionMoneySchema
 from agent.app.db.base import Base
-from agent.app.db.models import Approval, Decision
+from agent.app.db.models import Approval, Decision, Job
 from agent.app.db.models import Dispute as DBDispute
-from agent.app.db.models import Job
 from agent.app.domain.actions import MakeOffer
 from agent.app.domain.enums import (
     ActionType,
@@ -56,8 +55,6 @@ from agent.app.errors import (
 )
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.paypal.models import Dispute, parse_dispute
-from agent.app.policy.gate import evaluate_gate
-from agent.app.queue.payloads import ExpireApprovalsPayload
 from agent.app.queue.registry import HandlerRegistry
 from agent.app.store_mock.scenarios import SCENARIOS
 from agent.app.store_mock.seed import seed_scenarios
@@ -217,7 +214,6 @@ def test_uniform_404_for_unknown_expired_used_tokens(db_session, setup_pending_a
 def test_get_approval_card_and_notes_escaped(db_session, setup_pending_approval):
     """Card data includes dispute summary, and raw notes are escaped on output."""
     approval, raw_token, _, _ = setup_pending_approval
-    now_dt = datetime(2026, 10, 6, 12, 0, tzinfo=UTC)
 
     # Store raw HTML / script in notes
     approval.notes = '<script>alert("hack")</script>'

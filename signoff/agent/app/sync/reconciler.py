@@ -2,7 +2,7 @@
 
 Fulfills Step 09 requirements:
 - Lists open disputes from PayPal via PayPalReadClient.
-- Compares state fingerprints between PayPal and local database.
+- Compares state fingerprints (or snapshot update times when available) between PayPal and the local database.
 - Enqueues SYNC_DISPUTE jobs for missing or changed disputes.
 - Coalesces with existing pending sync jobs.
 - Caps items processed per cycle to handle large dispute volumes smoothly.
@@ -16,12 +16,23 @@ from math import ceil
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from agent.app.db.models import Dispute, Job
-from agent.app.domain.enums import JobKind, JobStatus
+from agent.app.db.models import Dispute, Job, LedgerEvent
+from agent.app.domain.enums import JobKind, JobStatus, TimelineEventKind
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.paypal.read_client import PayPalReadClient
 
 logger = logging.getLogger(__name__)
+
+
+def _snapshot_update_time(dispute: Dispute) -> datetime | None:
+    """Read PayPal's update_time from a stored snapshot, if present and valid."""
+    raw = (dispute.snapshot or {}).get("update_time")
+    if not isinstance(raw, str):
+        return None
+    try:
+        return datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
 
 
 @dataclass
@@ -72,7 +83,27 @@ async def reconcile_disputes(
         summary_fp = str(compute_dispute_fingerprint(summary))
 
         local_dispute = session.get(Dispute, dispute_id)
-        needs_sync = local_dispute is None or local_dispute.state_fingerprint != summary_fp
+        has_synced = session.scalar(
+            select(LedgerEvent.id)
+            .where(
+                LedgerEvent.dispute_id == dispute_id,
+                LedgerEvent.event_kind == TimelineEventKind.DISPUTE_SYNCED.value,
+            )
+            .limit(1)
+        ) is not None
+
+        if local_dispute is None or not has_synced:
+            # Missing locally, or pre-stored by the demo generator and never synced.
+            needs_sync = True
+        else:
+            local_updated = _snapshot_update_time(local_dispute)
+            # Summary fingerprints cover fewer fields than full disputes, so prefer
+            # PayPal's update_time whenever the stored snapshot carries one.
+            needs_sync = (
+                local_updated != summary.update_time
+                if local_updated is not None
+                else local_dispute.state_fingerprint != summary_fp
+            )
 
         if needs_sync:
             # Check if sync job already exists and is pending or running

@@ -383,6 +383,80 @@
         "title": "AssistantTool",
         "type": "object"
       },
+      "BuyerDisputeDetailResponse": {
+        "description": "Complete buyer-facing dispute status and history.",
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/Money-Output"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/DisputeMessageResponse"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "offer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DisputeOfferResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "order_code": {
+            "title": "Order Code",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "seller_response_due_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Response Due Date"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "transaction_id": {
+            "title": "Transaction Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "reason",
+          "amount",
+          "created_at",
+          "messages",
+          "order_code",
+          "transaction_id"
+        ],
+        "title": "BuyerDisputeDetailResponse",
+        "type": "object"
+      },
       "CaptureOrderRequest": {
         "description": "Optional payload for order capture.",
         "properties": {
@@ -510,6 +584,35 @@
         "title": "CharterResponse",
         "type": "object"
       },
+      "CreateDisputeRequest": {
+        "description": "Buyer dispute filing payload.",
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/Money-Input"
+          },
+          "customer_email": {
+            "title": "Customer Email",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/SupportedDisputeReason"
+          }
+        },
+        "required": [
+          "customer_email",
+          "reason",
+          "amount",
+          "message"
+        ],
+        "title": "CreateDisputeRequest",
+        "type": "object"
+      },
       "CreateOrderRequest": {
         "description": "Buyer order creation request.",
         "properties": {
@@ -550,7 +653,7 @@
         "description": "Result of order creation.",
         "properties": {
           "amount": {
-            "$ref": "#/components/schemas/Money"
+            "$ref": "#/components/schemas/Money-Output"
           },
           "order_code": {
             "title": "Order Code",
@@ -775,7 +878,7 @@
         "description": "Complete dispute details including raw snapshot.",
         "properties": {
           "amount": {
-            "$ref": "#/components/schemas/Money"
+            "$ref": "#/components/schemas/Money-Output"
           },
           "created_at": {
             "format": "date-time",
@@ -868,7 +971,7 @@
         "description": "Dispute item for dashboard list and grids.",
         "properties": {
           "amount": {
-            "$ref": "#/components/schemas/Money"
+            "$ref": "#/components/schemas/Money-Output"
           },
           "created_at": {
             "format": "date-time",
@@ -949,6 +1052,71 @@
           "updated_at"
         ],
         "title": "DisputeListItem",
+        "type": "object"
+      },
+      "DisputeMessageResponse": {
+        "description": "Dispute communication message.",
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "posted_by": {
+            "title": "Posted By",
+            "type": "string"
+          },
+          "time_posted": {
+            "format": "date-time",
+            "title": "Time Posted",
+            "type": "string"
+          }
+        },
+        "required": [
+          "posted_by",
+          "time_posted",
+          "content"
+        ],
+        "title": "DisputeMessageResponse",
+        "type": "object"
+      },
+      "DisputeOfferResponse": {
+        "description": "Merchant offer details.",
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/Money-Output"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "offer_type": {
+            "title": "Offer Type",
+            "type": "string"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "required": [
+          "offer_type",
+          "amount"
+        ],
+        "title": "DisputeOfferResponse",
         "type": "object"
       },
       "DisputeReason": {
@@ -1575,7 +1743,33 @@
         "title": "KpiResponse",
         "type": "object"
       },
-      "Money": {
+      "Money-Input": {
+        "description": "Monetary amount with ISO currency code per build-plan/contracts.md.\n\nAmounts must arrive as strings and become Decimal. JSON floats are rejected;\nzero or negative amounts are invalid; currency must be three uppercase letters.",
+        "properties": {
+          "currency_code": {
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "currency_code",
+          "value"
+        ],
+        "title": "Money",
+        "type": "object"
+      },
+      "Money-Output": {
         "description": "Monetary amount with ISO currency code per build-plan/contracts.md.\n\nAmounts must arrive as strings and become Decimal. JSON floats are rejected;\nzero or negative amounts are invalid; currency must be three uppercase letters.",
         "properties": {
           "currency_code": {
@@ -1685,11 +1879,38 @@
         "title": "NoActionTimelineEvent",
         "type": "object"
       },
+      "OfferAction": {
+        "description": "Allowed buyer actions on a merchant offer.",
+        "enum": [
+          "ACCEPT",
+          "DENY"
+        ],
+        "title": "OfferAction",
+        "type": "string"
+      },
+      "OfferResponseRequest": {
+        "description": "Buyer offer acceptance or rejection payload.",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/OfferAction"
+          },
+          "customer_email": {
+            "title": "Customer Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_email",
+          "action"
+        ],
+        "title": "OfferResponseRequest",
+        "type": "object"
+      },
       "OrderDetailResponse": {
         "description": "Order status and tracking view for buyers.",
         "properties": {
           "amount": {
-            "$ref": "#/components/schemas/Money"
+            "$ref": "#/components/schemas/Money-Output"
           },
           "created_at": {
             "format": "date-time",
@@ -1733,6 +1954,51 @@
           "created_at"
         ],
         "title": "OrderDetailResponse",
+        "type": "object"
+      },
+      "OrderDisputeStatusResponse": {
+        "description": "Dispute availability status for a customer order.",
+        "properties": {
+          "dispute": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuyerDisputeDetailResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dispute_eligible": {
+            "title": "Dispute Eligible",
+            "type": "boolean"
+          },
+          "dispute_exists": {
+            "title": "Dispute Exists",
+            "type": "boolean"
+          },
+          "ineligibility_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ineligibility Reason"
+          },
+          "order_code": {
+            "title": "Order Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_code",
+          "dispute_eligible",
+          "dispute_exists"
+        ],
+        "title": "OrderDisputeStatusResponse",
         "type": "object"
       },
       "OrderItemRequest": {
@@ -1897,7 +2163,7 @@
             "type": "string"
           },
           "price": {
-            "$ref": "#/components/schemas/Money"
+            "$ref": "#/components/schemas/Money-Output"
           },
           "sku": {
             "title": "Sku",
@@ -2105,6 +2371,36 @@
         ],
         "title": "ScenarioCreated",
         "type": "object"
+      },
+      "SendBuyerMessageRequest": {
+        "description": "Buyer reply message payload.",
+        "properties": {
+          "customer_email": {
+            "title": "Customer Email",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_email",
+          "message"
+        ],
+        "title": "SendBuyerMessageRequest",
+        "type": "object"
+      },
+      "SupportedDisputeReason": {
+        "description": "Dispute reasons supported by the Signoff dispute agent.",
+        "enum": [
+          "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
+          "MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED"
+        ],
+        "title": "SupportedDisputeReason",
+        "type": "string"
       },
       "TimelineResponse": {
         "properties": {
@@ -4575,6 +4871,461 @@
         "summary": "Capture Order",
         "tags": [
           "Storefront"
+        ]
+      }
+    },
+    "/api/shop/orders/{order_code}/dispute": {
+      "get": {
+        "description": "Check dispute eligibility and retrieve any active dispute for an order.",
+        "operationId": "get_order_dispute_status_api_shop_orders__order_code__dispute_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_code",
+            "required": true,
+            "schema": {
+              "title": "Order Code",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Customer email for verification",
+            "in": "query",
+            "name": "email",
+            "required": true,
+            "schema": {
+              "description": "Customer email for verification",
+              "title": "Email",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDisputeStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get Order Dispute Status",
+        "tags": [
+          "Storefront",
+          "Buyer Portal Disputes"
+        ]
+      },
+      "post": {
+        "description": "Create a new PayPal dispute for a storefront order as the buyer.",
+        "operationId": "create_buyer_dispute_api_shop_orders__order_code__dispute_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_code",
+            "required": true,
+            "schema": {
+              "title": "Order Code",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDisputeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuyerDisputeDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Create Buyer Dispute",
+        "tags": [
+          "Storefront",
+          "Buyer Portal Disputes"
+        ]
+      }
+    },
+    "/api/shop/orders/{order_code}/dispute/messages": {
+      "post": {
+        "description": "Send a buyer reply message on an active dispute (Scenario D).",
+        "operationId": "send_buyer_dispute_message_api_shop_orders__order_code__dispute_messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_code",
+            "required": true,
+            "schema": {
+              "title": "Order Code",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendBuyerMessageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuyerDisputeDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Send Buyer Dispute Message",
+        "tags": [
+          "Storefront",
+          "Buyer Portal Disputes"
+        ]
+      }
+    },
+    "/api/shop/orders/{order_code}/dispute/offer-response": {
+      "post": {
+        "description": "Buyer accepts or declines a merchant settlement offer (Scenario C / S9).",
+        "operationId": "respond_to_merchant_offer_api_shop_orders__order_code__dispute_offer_response_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_code",
+            "required": true,
+            "schema": {
+              "title": "Order Code",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferResponseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuyerDisputeDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Respond To Merchant Offer",
+        "tags": [
+          "Storefront",
+          "Buyer Portal Disputes"
         ]
       }
     },
