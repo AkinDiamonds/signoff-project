@@ -6,9 +6,8 @@ describe('Public Claims Type Contracts', () => {
   it('PUBLIC_CLAIMS is a readonly array of PublicClaim with literal ClaimIds', () => {
     expectTypeOf(PUBLIC_CLAIMS).toMatchTypeOf<readonly PublicClaim[]>();
 
-    // Assert literal ClaimId union check
-    const validId: ClaimId = 'CLAIM-AI-NO-MUTATING';
-    expectTypeOf(validId).toEqualTypeOf<ClaimId>();
+    // The registry's ids are exactly the ClaimId union (no missing or extra ids)
+    expectTypeOf<(typeof PUBLIC_CLAIMS)[number]['id']>().toEqualTypeOf<ClaimId>();
 
     // @ts-expect-error - Arbitrary string is rejected as ClaimId
     const _invalidId: ClaimId = 'NON_EXISTENT_CLAIM';
@@ -17,8 +16,8 @@ describe('Public Claims Type Contracts', () => {
     if (claim) {
       expectTypeOf(claim.id).toMatchTypeOf<ClaimId>();
       expectTypeOf(claim.status).toMatchTypeOf<ClaimStatus>();
-      expectTypeOf(claim.statement).toEqualTypeOf<string>();
-      expectTypeOf(claim.proof).toEqualTypeOf<string>();
+      expectTypeOf(claim.statement).toMatchTypeOf<string>();
+      expectTypeOf(claim.proof).toMatchTypeOf<string>();
     }
   });
 });

@@ -11,10 +11,13 @@ test('E: repeat disputer requires approval on the third dispute @full', async ({
   }
 
   const third = disputes[2];
+  if (third === undefined) {
+    throw new Error('Expected three demo disputes');
+  }
   const items = await waitForTimeline(request, third, (events) => hasKind(events, 'APPROVAL_REQUESTED'));
   const gate = items.find((item) => item.kind === 'GATE_DECIDED');
-  expect(gate?.kind === 'GATE_DECIDED' ? gate.rule_id : '').toBe('G5-01');
-  expect(gate?.kind === 'GATE_DECIDED' ? gate.verdict : '').toBe('NEEDS_APPROVAL');
+  expect(gate && 'rule_id' in gate ? gate.rule_id : '').toBe('G5-01');
+  expect(gate && 'verdict' in gate ? gate.verdict : '').toBe('NEEDS_APPROVAL');
   expect(hasKind(items, 'EXECUTION_SENT') || hasKind(items, 'EXECUTION_CONFIRMED')).toBe(false);
 
   const link = await approvalUrl(request, third);

@@ -1,3 +1,4 @@
+import { moneySchema } from '@signoff/api-client';
 import type { Money } from '@signoff/api-client';
 
 export type ParseAmountResult =
@@ -9,7 +10,7 @@ const MAX_PERMITTED_AMOUNT = 100_000.0;
 /**
  * Parses human amount input into a strongly typed USD Money value.
  * Handles commas, spaces, currency symbols, leading zeros, and decimal normalization.
- * Rejects negatives, >2 decimal places, huge values, and invalid characters.
+ * Rejects zero, negatives, >2 decimal places, huge values, and invalid characters.
  */
 export function parseAmountInput(raw: string): ParseAmountResult {
   if (typeof raw !== 'string') {
@@ -92,10 +93,13 @@ export function parseAmountInput(raw: string): ParseAmountResult {
     };
   }
 
-  const money = {
+  const parsedMoney = moneySchema.safeParse({
     value: normalizedValue,
-    currency_code: 'USD' as const,
-  } as Money;
+    currency_code: 'USD',
+  });
+  if (!parsedMoney.success) {
+    return { ok: false, error: 'Invalid amount value' };
+  }
 
-  return { ok: true, money };
+  return { ok: true, money: parsedMoney.data };
 }

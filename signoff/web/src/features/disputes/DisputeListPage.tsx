@@ -11,11 +11,12 @@ import {
   VerdictChip,
 } from '@signoff/ui';
 import type { DisputeReason, DisputeStatus } from '@signoff/api-client';
-import type { ApiQueryError } from '../../app/queries';
 import { useDisputes } from '../../app/queries';
 import {
   DEFAULT_DISPUTE_FILTERS,
   filtersToSearchParams,
+  isReasonFilter,
+  isStatusFilter,
   parseDisputeFilters,
   VALID_REASONS,
   VALID_STATUSES,
@@ -57,10 +58,10 @@ export const DisputeListPage: React.FC = () => {
       cursor?: string;
     } = { limit: filters.limit };
     if (filters.status !== 'ALL') {
-      q.status = filters.status as DisputeStatus;
+      q.status = filters.status;
     }
     if (filters.reason !== 'ALL') {
-      q.reason = filters.reason as DisputeReason;
+      q.reason = filters.reason;
     }
     if (filters.cursor) {
       q.cursor = filters.cursor;
@@ -166,7 +167,12 @@ export const DisputeListPage: React.FC = () => {
               id="filter-status"
               data-testid="filter-status"
               value={filters.status}
-              onChange={(e) => updateFilter({ status: e.target.value })}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (isStatusFilter(value)) {
+                  updateFilter({ status: value });
+                }
+              }}
               style={{
                 padding: '6px 12px',
                 borderRadius: '6px',
@@ -191,7 +197,12 @@ export const DisputeListPage: React.FC = () => {
               id="filter-reason"
               data-testid="filter-reason"
               value={filters.reason}
-              onChange={(e) => updateFilter({ reason: e.target.value })}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (isReasonFilter(value)) {
+                  updateFilter({ reason: value });
+                }
+              }}
               style={{
                 padding: '6px 12px',
                 borderRadius: '6px',
@@ -286,7 +297,7 @@ export const DisputeListPage: React.FC = () => {
         <ErrorState
           testId="disputes-error"
           message={query.error.message}
-          correlationId={(query.error as ApiQueryError).correlationId}
+          correlationId={query.error.correlationId}
           onRetry={() => void query.refetch()}
         />
       )}

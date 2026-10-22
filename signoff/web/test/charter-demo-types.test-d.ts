@@ -12,8 +12,7 @@ describe('charter and demo type contracts', () => {
     // @ts-expect-error - F is not a scenario id
     const _invalid: ScenarioId = 'F';
 
-    const _valid: ScenarioId = 'C';
-    expectTypeOf(_valid).toEqualTypeOf<ScenarioId>();
+    expectTypeOf<ScenarioId>().toEqualTypeOf<'A' | 'B' | 'C' | 'D' | 'E'>();
   });
 
   it('charter form values and build results stay typed', () => {

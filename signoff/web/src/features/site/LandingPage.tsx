@@ -7,7 +7,6 @@
 import React from 'react';
 import { Link } from 'react-router';
 import { Banner, Card, ErrorState, Skeleton, colors, spacing } from '@signoff/ui';
-import type { ApiQueryError } from '../../app/queries';
 import { useStatus } from '../../app/queries';
 import { PUBLIC_CLAIMS } from './claims';
 
@@ -469,7 +468,7 @@ export const LandingPage: React.FC = () => {
           <ErrorState
             testId="status-error"
             message={status.error.message}
-            correlationId={(status.error as ApiQueryError).correlationId}
+            correlationId={status.error.correlationId}
             onRetry={() => void status.refetch()}
           />
         )}

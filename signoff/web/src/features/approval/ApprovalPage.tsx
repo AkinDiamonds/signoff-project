@@ -10,11 +10,22 @@ import {
   Skeleton,
   VerdictChip,
 } from '@signoff/ui';
-import type { ApiQueryError } from '../../app/queries';
+import type { MoneyAmount } from '@signoff/ui';
 import { resolveApprovalCall, useApprovalCard } from '../../app/queries';
 import { parseAmountInput } from './amountParser';
 import type { ApprovalOutcome, EditRequestPayload } from './types';
 import { buildEditResolveRequest } from './types';
+
+function isMoneyAmount(value: unknown): value is MoneyAmount {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'value' in value &&
+    typeof value.value === 'string' &&
+    'currency_code' in value &&
+    typeof value.currency_code === 'string'
+  );
+}
 
 export const ApprovalPage: React.FC = () => {
   const { token = '' } = useParams<{ token: string }>();
@@ -225,7 +236,7 @@ export const ApprovalPage: React.FC = () => {
 
   // Render Invalid Link / 404
   if (cardQuery.isError) {
-    const error = cardQuery.error as ApiQueryError;
+    const error = cardQuery.error;
     const isInvalid =
       error.message?.toLowerCase().includes('invalid') ||
       error.message?.toLowerCase().includes('not found') ||
@@ -398,29 +409,19 @@ export const ApprovalPage: React.FC = () => {
           <dd style={{ margin: 0, fontWeight: 600, color: '#0f172a' }} data-testid="proposed-action-type">
             {card.action_type.replace(/_/g, ' ')}
           </dd>
-          {Boolean(
-            card.action_payload &&
-              typeof card.action_payload === 'object' &&
-              'amount' in card.action_payload &&
-              card.action_payload.amount
-          ) ? (
+          {isMoneyAmount(card.action_payload.amount) ? (
             <>
               <dt style={{ color: '#64748b' }}>Proposed amount</dt>
               <dd style={{ margin: 0 }} data-testid="proposed-amount">
-                <Money money={card.action_payload.amount as Parameters<typeof Money>[0]['money']} />
+                <Money money={card.action_payload.amount} />
               </dd>
             </>
           ) : null}
-          {Boolean(
-            card.action_payload &&
-              typeof card.action_payload === 'object' &&
-              'message' in card.action_payload &&
-              card.action_payload.message
-          ) ? (
+          {typeof card.action_payload.message === 'string' && card.action_payload.message ? (
             <>
               <dt style={{ color: '#64748b' }}>Message</dt>
               <dd style={{ margin: 0, color: '#334155' }} data-testid="proposed-message">
-                {String(card.action_payload.message)}
+                {card.action_payload.message}
               </dd>
             </>
           ) : null}

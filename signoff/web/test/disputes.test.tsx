@@ -55,8 +55,8 @@ describe('Disputes UI feature (Step 25)', () => {
       expect(screen.getByTestId('filter-status')).toBeTruthy();
     });
 
-    const statusSelect = screen.getByTestId('filter-status') as HTMLSelectElement;
-    const reasonSelect = screen.getByTestId('filter-reason') as HTMLSelectElement;
+    const statusSelect = screen.getByTestId<HTMLSelectElement>('filter-status');
+    const reasonSelect = screen.getByTestId<HTMLSelectElement>('filter-reason');
     expect(statusSelect.value).toBe('ALL');
     expect(reasonSelect.value).toBe('ALL');
   });
@@ -103,8 +103,11 @@ describe('Disputes UI feature (Step 25)', () => {
     // Script markup is rendered as plain text
     const messageEl = screen.getByTestId('buyer-message-content');
     expect(messageEl.textContent).toContain('<script>alert("xss")</script>');
-    // Ensure it was not inserted as an actual HTML script tag
-    expect(document.querySelector('script[src*="xss"], script:not([src])')).not.toContain('alert("xss")');
+    // Ensure no script element was injected with the message payload
+    const injectedScripts = Array.from(document.querySelectorAll('script')).filter((script) =>
+      (script.textContent ?? '').includes('alert("xss")')
+    );
+    expect(injectedScripts).toHaveLength(0);
   });
 
   it('shows in-progress state when agent is still analyzing', async () => {
@@ -169,16 +172,16 @@ describe('Disputes UI feature (Step 25)', () => {
     expect(items.length).toBe(3);
 
     // Sequence 1 should be first
-    expect(items[0]!.getAttribute('data-testid')).toBe('timeline-event-1');
-    expect(items[0]!.textContent).toContain('Webhook received');
+    expect(items[0]?.getAttribute('data-testid')).toBe('timeline-event-1');
+    expect(items[0]?.textContent).toContain('Webhook received');
 
     // Sequence 2 second
-    expect(items[1]!.getAttribute('data-testid')).toBe('timeline-event-2');
-    expect(items[1]!.textContent).toContain('Dispute synced');
+    expect(items[1]?.getAttribute('data-testid')).toBe('timeline-event-2');
+    expect(items[1]?.textContent).toContain('Dispute synced');
 
     // Sequence 99 rendered generically
-    expect(items[2]!.getAttribute('data-testid')).toBe('timeline-event-99');
-    expect(items[2]!.textContent).toContain('FUTURE_CUSTOM_EVENT');
+    expect(items[2]?.getAttribute('data-testid')).toBe('timeline-event-99');
+    expect(items[2]?.textContent).toContain('FUTURE_CUSTOM_EVENT');
   });
 
   it('collapses long buyer message and toggles expand/collapse', async () => {

@@ -1,6 +1,6 @@
 import type { RouteObject } from 'react-router';
 import { Layout } from './Layout';
-import { HomePage, NotFoundPage, PlaceholderPage } from './pages';
+import { HomePage, NotFoundPage } from './pages';
 import { DisputeListPage, DisputeDetailPage } from '../features/disputes';
 import { ApprovalPage } from '../features/approval';
 import { CharterPage } from '../features/charter';

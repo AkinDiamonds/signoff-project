@@ -1,8 +1,39 @@
 import React from 'react';
+import { VERDICTS } from '@signoff/api-client';
+import type { Verdict } from '@signoff/api-client';
 import { VerdictChip } from '@signoff/ui';
-import type { ApiTimelineEvent, TimelineEvent } from './types';
+import type { ApiTimelineEvent } from './types';
 
-export function renderTimelineEventContent(event: TimelineEvent): {
+function isVerdict(value: string): value is Verdict {
+  return VERDICTS.some((verdict) => verdict === value);
+}
+
+const KNOWN_EVENT_KINDS = [
+  'WEBHOOK_RECEIVED',
+  'DISPUTE_SYNCED',
+  'RUN_STARTED',
+  'EVIDENCE_BUILT',
+  'PLAN_PROPOSED',
+  'GATE_DECIDED',
+  'APPROVAL_REQUESTED',
+  'APPROVAL_RESOLVED',
+  'EXECUTION_INTENDED',
+  'EXECUTION_SENT',
+  'EXECUTION_CONFIRMED',
+  'EXECUTION_FAILED',
+  'INJECTION_FLAGGED',
+  'NO_ACTION',
+  'RUN_FAILED',
+] as const;
+
+type KnownEventKind = (typeof KNOWN_EVENT_KINDS)[number];
+type KnownTimelineEvent = Extract<ApiTimelineEvent, { kind: KnownEventKind }>;
+
+function isKnownTimelineEvent(event: ApiTimelineEvent): event is KnownTimelineEvent {
+  return KNOWN_EVENT_KINDS.some((kind) => kind === event.kind);
+}
+
+export function renderTimelineEventContent(event: KnownTimelineEvent): {
   title: string;
   badge?: React.ReactNode;
   details?: React.ReactNode;
@@ -54,7 +85,11 @@ export function renderTimelineEventContent(event: TimelineEvent): {
         title: 'Gate decided',
         badge: (
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <VerdictChip verdict={event.verdict} />
+            {isVerdict(event.verdict) ? (
+              <VerdictChip verdict={event.verdict} />
+            ) : (
+              <span style={{ fontSize: '12px', fontWeight: 600 }}>{event.verdict}</span>
+            )}
             <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>{event.rule_id}</span>
           </div>
         ),
@@ -121,8 +156,9 @@ export function renderTimelineEventContent(event: TimelineEvent): {
       };
     default: {
       const _exhaustiveCheck: never = event;
+      void _exhaustiveCheck;
       return {
-        title: `Unknown event (${(_exhaustiveCheck as { kind?: string }).kind ?? 'unknown'})`,
+        title: 'Unknown event',
         details: 'Generic timeline event record.',
       };
     }
@@ -166,28 +202,8 @@ export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events }) =>
         let content: { title: string; badge?: React.ReactNode; details?: React.ReactNode };
 
         // If known event kind, render through exhaustive switch
-        if (
-          'kind' in item &&
-          typeof item.kind === 'string' &&
-          [
-            'WEBHOOK_RECEIVED',
-            'DISPUTE_SYNCED',
-            'RUN_STARTED',
-            'EVIDENCE_BUILT',
-            'PLAN_PROPOSED',
-            'GATE_DECIDED',
-            'APPROVAL_REQUESTED',
-            'APPROVAL_RESOLVED',
-            'EXECUTION_INTENDED',
-            'EXECUTION_SENT',
-            'EXECUTION_CONFIRMED',
-            'EXECUTION_FAILED',
-            'INJECTION_FLAGGED',
-            'NO_ACTION',
-            'RUN_FAILED',
-          ].includes(item.kind)
-        ) {
-          content = renderTimelineEventContent(item as unknown as TimelineEvent);
+        if (isKnownTimelineEvent(item)) {
+          content = renderTimelineEventContent(item);
         } else {
           // Edge case: unknown timeline event kind renders generically
           content = {

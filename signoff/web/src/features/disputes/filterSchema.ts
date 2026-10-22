@@ -1,6 +1,11 @@
+import type { DisputeReason, DisputeStatus } from '@signoff/api-client';
+
+export type StatusFilter = 'ALL' | DisputeStatus;
+export type ReasonFilter = 'ALL' | DisputeReason;
+
 export interface DisputeFilters {
-  status: string;
-  reason: string;
+  status: StatusFilter;
+  reason: ReasonFilter;
   scope: 'mine' | 'all';
   cursor: string | null;
   limit: number;
@@ -14,40 +19,48 @@ export const DEFAULT_DISPUTE_FILTERS: DisputeFilters = {
   limit: 10,
 };
 
-export const VALID_STATUSES = [
+export const VALID_STATUSES: readonly StatusFilter[] = [
   'ALL',
   'WAITING_FOR_SELLER_RESPONSE',
   'WAITING_FOR_BUYER_RESPONSE',
   'UNDER_REVIEW',
   'RESOLVED',
   'OTHER',
-] as const;
+];
 
-export const VALID_REASONS = [
+export const VALID_REASONS: readonly ReasonFilter[] = [
   'ALL',
   'MERCHANDISE_OR_SERVICE_NOT_RECEIVED',
   'UNAUTHORISED',
-  'INQUIRY',
   'OTHER',
-] as const;
+];
 
 export const VALID_SCOPES = ['mine', 'all'] as const;
 
+export function isStatusFilter(value: string): value is StatusFilter {
+  return VALID_STATUSES.some((status) => status === value);
+}
+
+export function isReasonFilter(value: string): value is ReasonFilter {
+  return VALID_REASONS.some((reason) => reason === value);
+}
+
+function isScope(value: string): value is 'mine' | 'all' {
+  return VALID_SCOPES.some((scope) => scope === value);
+}
+
 export function parseDisputeFilters(searchParams: URLSearchParams): DisputeFilters {
   const rawStatus = searchParams.get('status');
-  const status = VALID_STATUSES.includes(rawStatus as (typeof VALID_STATUSES)[number])
-    ? (rawStatus as string)
-    : DEFAULT_DISPUTE_FILTERS.status;
+  const status: StatusFilter =
+    rawStatus !== null && isStatusFilter(rawStatus) ? rawStatus : DEFAULT_DISPUTE_FILTERS.status;
 
   const rawReason = searchParams.get('reason');
-  const reason = VALID_REASONS.includes(rawReason as (typeof VALID_REASONS)[number])
-    ? (rawReason as string)
-    : DEFAULT_DISPUTE_FILTERS.reason;
+  const reason: ReasonFilter =
+    rawReason !== null && isReasonFilter(rawReason) ? rawReason : DEFAULT_DISPUTE_FILTERS.reason;
 
   const rawScope = searchParams.get('scope');
-  const scope: 'mine' | 'all' = VALID_SCOPES.includes(rawScope as (typeof VALID_SCOPES)[number])
-    ? (rawScope as 'mine' | 'all')
-    : DEFAULT_DISPUTE_FILTERS.scope;
+  const scope: 'mine' | 'all' =
+    rawScope !== null && isScope(rawScope) ? rawScope : DEFAULT_DISPUTE_FILTERS.scope;
 
   const rawCursor = searchParams.get('cursor');
   const cursor = rawCursor && rawCursor.trim() ? rawCursor.trim() : null;

@@ -19,6 +19,7 @@ import type { OrderDetail } from '../types';
 import { createDispute, fetchOrderDisputeStatus } from './portalApi';
 import {
   SUPPORTED_REASON_LABELS,
+  isSupportedDisputeReason,
   type OrderDisputeStatus,
   type SupportedDisputeReason,
 } from './types';
@@ -133,8 +134,8 @@ export const ReportProblemPage: React.FC<{ orderCode: string }> = ({ orderCode }
           order.customer_email
         )}`
       );
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to file dispute. Please try again.');
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to file dispute. Please try again.');
       setSubmitting(false);
     }
   };
@@ -296,7 +297,12 @@ export const ReportProblemPage: React.FC<{ orderCode: string }> = ({ orderCode }
               id="portal-reason-select"
               data-testid="portal-reason-select"
               value={reason}
-              onChange={e => setReason(e.target.value as SupportedDisputeReason)}
+              onChange={e => {
+                const value = e.target.value;
+                if (isSupportedDisputeReason(value)) {
+                  setReason(value);
+                }
+              }}
               style={{
                 width: '100%',
                 padding: '10px 14px',

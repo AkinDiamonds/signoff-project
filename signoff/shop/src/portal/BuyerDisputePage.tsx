@@ -85,8 +85,8 @@ export const BuyerDisputePage: React.FC<{ orderCode: string }> = ({ orderCode })
       });
       setDispute(updated);
       setReplyText('');
-    } catch (err: any) {
-      setReplyError(err.message || 'Failed to send message');
+    } catch (err) {
+      setReplyError(err instanceof Error ? err.message : 'Failed to send message');
     } finally {
       setSendingReply(false);
     }
@@ -106,8 +106,8 @@ export const BuyerDisputePage: React.FC<{ orderCode: string }> = ({ orderCode })
           ? 'You accepted the merchant offer. Dispute is now resolved.'
           : 'You declined the merchant offer. Status returned to merchant response.'
       );
-    } catch (err: any) {
-      setOfferActionMsg(err.message || 'Failed to submit offer response');
+    } catch (err) {
+      setOfferActionMsg(err instanceof Error ? err.message : 'Failed to submit offer response');
     } finally {
       setRespondingOffer(false);
     }

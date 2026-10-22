@@ -100,9 +100,9 @@ async def create_shop_order(
         raise
 
     paypal_order_id = paypal_order.get("id", "")
-    # Record PayPal order ID in items payload for reconciliation
-    order_items_payload[0]["paypal_order_id"] = paypal_order_id
-    order.items = order_items_payload
+    # Record PayPal order ID in items payload for reconciliation. Reassign a new list:
+    # SQLAlchemy does not track in-place mutation of an already-flushed JSON value.
+    order.items = [{**order_items_payload[0], "paypal_order_id": paypal_order_id}, *order_items_payload[1:]]
     session.commit()
 
     return CreateOrderResponse(
@@ -172,7 +172,7 @@ async def capture_shop_order(
         # Amount differs from expected: flag order, nothing shipped
         order.status = OrderStatus.PENDING.value
         if order.items and isinstance(order.items[0], dict):
-            order.items[0]["amount_mismatch_flag"] = True
+            order.items = [{**order.items[0], "amount_mismatch_flag": True}, *order.items[1:]]
         session.commit()
         raise AppError(
             "AMOUNT_MISMATCH",

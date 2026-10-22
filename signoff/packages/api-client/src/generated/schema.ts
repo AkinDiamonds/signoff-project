@@ -363,6 +363,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/shop/orders/{order_code}/dispute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Order Dispute Status
+         * @description Check dispute eligibility and retrieve any active dispute for an order.
+         */
+        get: operations["get_order_dispute_status_api_shop_orders__order_code__dispute_get"];
+        put?: never;
+        /**
+         * Create Buyer Dispute
+         * @description Create a new PayPal dispute for a storefront order as the buyer.
+         */
+        post: operations["create_buyer_dispute_api_shop_orders__order_code__dispute_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shop/orders/{order_code}/dispute/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Buyer Dispute Message
+         * @description Send a buyer reply message on an active dispute (Scenario D).
+         */
+        post: operations["send_buyer_dispute_message_api_shop_orders__order_code__dispute_messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shop/orders/{order_code}/dispute/offer-response": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Respond To Merchant Offer
+         * @description Buyer accepts or declines a merchant settlement offer (Scenario C / S9).
+         */
+        post: operations["respond_to_merchant_offer_api_shop_orders__order_code__dispute_offer_response_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/shop/orders/{order_code}/reconcile": {
         parameters: {
             query?: never;
@@ -467,23 +531,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /**
-         * ActionMoneySchema
-         * @description Monetary amount schema for LLM outputs requiring decimal string values.
-         */
-        ActionMoneySchema: {
-            /**
-             * Currency Code
-             * @description 3-letter ISO currency code
-             * @default USD
-             */
-            currency_code: string;
-            /**
-             * Value
-             * @description Decimal string representation of the amount, e.g. '25.00'
-             */
-            value: string;
-        };
         /**
          * ActionType
          * @description Proposed action type for PayPal disputes.
@@ -635,6 +682,33 @@ export interface components {
             name: string;
         };
         /**
+         * BuyerDisputeDetailResponse
+         * @description Complete buyer-facing dispute status and history.
+         */
+        BuyerDisputeDetailResponse: {
+            amount: components["schemas"]["Money-Output"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Messages */
+            messages: components["schemas"]["DisputeMessageResponse"][];
+            offer?: components["schemas"]["DisputeOfferResponse"] | null;
+            /** Order Code */
+            order_code: string;
+            /** Reason */
+            reason: string;
+            /** Seller Response Due Date */
+            seller_response_due_date?: string | null;
+            /** Status */
+            status: string;
+            /** Transaction Id */
+            transaction_id: string;
+        };
+        /**
          * CaptureOrderRequest
          * @description Optional payload for order capture.
          */
@@ -694,6 +768,18 @@ export interface components {
             version: number;
         };
         /**
+         * CreateDisputeRequest
+         * @description Buyer dispute filing payload.
+         */
+        CreateDisputeRequest: {
+            amount: components["schemas"]["Money-Input"];
+            /** Customer Email */
+            customer_email: string;
+            /** Message */
+            message: string;
+            reason: components["schemas"]["SupportedDisputeReason"];
+        };
+        /**
          * CreateOrderRequest
          * @description Buyer order creation request.
          */
@@ -710,7 +796,7 @@ export interface components {
          * @description Result of order creation.
          */
         CreateOrderResponse: {
-            amount: components["schemas"]["Money"];
+            amount: components["schemas"]["Money-Output"];
             /** Order Code */
             order_code: string;
             /** Paypal Order Id */
@@ -785,7 +871,7 @@ export interface components {
          * @description Dispute context snapshot for human review card.
          */
         DisputeCardSummary: {
-            amount: components["schemas"]["ActionMoneySchema"];
+            amount: components["schemas"]["EditMoneySchema"];
             /** Buyer Message */
             buyer_message?: string | null;
             /** Id */
@@ -802,7 +888,7 @@ export interface components {
          * @description Complete dispute details including raw snapshot.
          */
         DisputeDetailResponse: {
-            amount: components["schemas"]["Money"];
+            amount: components["schemas"]["Money-Output"];
             /**
              * Created At
              * Format: date-time
@@ -836,7 +922,7 @@ export interface components {
          * @description Dispute item for dashboard list and grids.
          */
         DisputeListItem: {
-            amount: components["schemas"]["Money"];
+            amount: components["schemas"]["Money-Output"];
             /**
              * Created At
              * Format: date-time
@@ -860,6 +946,34 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /**
+         * DisputeMessageResponse
+         * @description Dispute communication message.
+         */
+        DisputeMessageResponse: {
+            /** Content */
+            content: string;
+            /** Posted By */
+            posted_by: string;
+            /**
+             * Time Posted
+             * Format: date-time
+             */
+            time_posted: string;
+        };
+        /**
+         * DisputeOfferResponse
+         * @description Merchant offer details.
+         */
+        DisputeOfferResponse: {
+            amount: components["schemas"]["Money-Output"];
+            /** Note */
+            note?: string | null;
+            /** Offer Type */
+            offer_type: string;
+            /** Status */
+            status?: string | null;
         };
         /**
          * DisputeReason
@@ -910,6 +1024,28 @@ export interface components {
             total_count?: number | null;
         };
         /**
+         * EditMoneySchema
+         * @description Money amount submitted on an approval edit.
+         *
+         *     Unlike the LLM-facing schema in ``agent.app.agent.schemas``, this one keeps the
+         *     raw decimal string and does not enforce a positive value. Approving a human edit
+         *     is a domain decision, so the service validates positivity, precision and the
+         *     disputed-amount ceiling and reports each violation as a 422 ``EditValidationError``.
+         */
+        EditMoneySchema: {
+            /**
+             * Currency Code
+             * @description 3-letter ISO currency code
+             * @default USD
+             */
+            currency_code: string;
+            /**
+             * Value
+             * @description Decimal string representation of the amount, e.g. '25.00'
+             */
+            value: string;
+        };
+        /**
          * EditResolveRequest
          * @description Edit amount and/or message and re-run gate evaluation.
          */
@@ -920,7 +1056,7 @@ export interface components {
              */
             action: "EDIT";
             /** @description Edited monetary amount */
-            amount?: components["schemas"]["ActionMoneySchema"] | null;
+            amount?: components["schemas"]["EditMoneySchema"] | null;
             /**
              * Message
              * @description Edited message content
@@ -1198,7 +1334,20 @@ export interface components {
          *     Amounts must arrive as strings and become Decimal. JSON floats are rejected;
          *     zero or negative amounts are invalid; currency must be three uppercase letters.
          */
-        Money: {
+        "Money-Input": {
+            /** Currency Code */
+            currency_code: string;
+            /** Value */
+            value: number | string;
+        };
+        /**
+         * Money
+         * @description Monetary amount with ISO currency code per build-plan/contracts.md.
+         *
+         *     Amounts must arrive as strings and become Decimal. JSON floats are rejected;
+         *     zero or negative amounts are invalid; currency must be three uppercase letters.
+         */
+        "Money-Output": {
             /** Currency Code */
             currency_code: string;
             /** Value */
@@ -1249,11 +1398,26 @@ export interface components {
             sequence_number: number;
         };
         /**
+         * OfferAction
+         * @description Allowed buyer actions on a merchant offer.
+         * @enum {string}
+         */
+        OfferAction: "ACCEPT" | "DENY";
+        /**
+         * OfferResponseRequest
+         * @description Buyer offer acceptance or rejection payload.
+         */
+        OfferResponseRequest: {
+            action: components["schemas"]["OfferAction"];
+            /** Customer Email */
+            customer_email: string;
+        };
+        /**
          * OrderDetailResponse
          * @description Order status and tracking view for buyers.
          */
         OrderDetailResponse: {
-            amount: components["schemas"]["Money"];
+            amount: components["schemas"]["Money-Output"];
             /**
              * Created At
              * Format: date-time
@@ -1269,6 +1433,21 @@ export interface components {
             status: string;
             /** Tracking Events */
             tracking_events: components["schemas"]["TrackingEventResponse"][];
+        };
+        /**
+         * OrderDisputeStatusResponse
+         * @description Dispute availability status for a customer order.
+         */
+        OrderDisputeStatusResponse: {
+            dispute?: components["schemas"]["BuyerDisputeDetailResponse"] | null;
+            /** Dispute Eligible */
+            dispute_eligible: boolean;
+            /** Dispute Exists */
+            dispute_exists: boolean;
+            /** Ineligibility Reason */
+            ineligibility_reason?: string | null;
+            /** Order Code */
+            order_code: string;
         };
         /**
          * OrderItemRequest
@@ -1355,7 +1534,7 @@ export interface components {
             description: string;
             /** Name */
             name: string;
-            price: components["schemas"]["Money"];
+            price: components["schemas"]["Money-Output"];
             /** Sku */
             sku: string;
         };
@@ -1460,6 +1639,22 @@ export interface components {
             /** Transaction Id */
             transaction_id: string;
         };
+        /**
+         * SendBuyerMessageRequest
+         * @description Buyer reply message payload.
+         */
+        SendBuyerMessageRequest: {
+            /** Customer Email */
+            customer_email: string;
+            /** Message */
+            message: string;
+        };
+        /**
+         * SupportedDisputeReason
+         * @description Dispute reasons supported by the Signoff dispute agent.
+         * @enum {string}
+         */
+        SupportedDisputeReason: "MERCHANDISE_OR_SERVICE_NOT_RECEIVED" | "MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED";
         /** TimelineResponse */
         TimelineResponse: {
             /** Items */
@@ -3166,6 +3361,361 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CaptureOrderResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_order_dispute_status_api_shop_orders__order_code__dispute_get: {
+        parameters: {
+            query: {
+                /** @description Customer email for verification */
+                email: string;
+            };
+            header?: never;
+            path: {
+                order_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDisputeStatusResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    create_buyer_dispute_api_shop_orders__order_code__dispute_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDisputeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerDisputeDetailResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    send_buyer_dispute_message_api_shop_orders__order_code__dispute_messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendBuyerMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerDisputeDetailResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    respond_to_merchant_offer_api_shop_orders__order_code__dispute_offer_response_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferResponseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerDisputeDetailResponse"];
                 };
             };
             /** @description Bad Request */

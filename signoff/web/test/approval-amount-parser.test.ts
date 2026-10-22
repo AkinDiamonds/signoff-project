@@ -77,9 +77,9 @@ describe('amountParser (table of at least 15 inputs)', () => {
     },
     {
       input: '$0.00',
-      expectedOk: true,
-      expectedValue: '0.00',
-      description: '12. Zero dollars and zero cents',
+      expectedOk: false,
+      expectedError: 'Amount must be greater than zero',
+      description: '12. Zero dollars and zero cents rejected',
     },
     {
       input: '',

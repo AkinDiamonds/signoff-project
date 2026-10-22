@@ -108,7 +108,7 @@ def create_approval(
     settings: Any | None = None,
 ) -> tuple[Approval, str]:
     """Generate a high-entropy random token, store its hash, and persist the approval card."""
-    now_dt = now or datetime.now(UTC)
+    now_dt = _as_utc(now) if now is not None else datetime.now(UTC)
     raw_token = secrets.token_urlsafe(32)
     token_hash_val = hash_token(raw_token)
 
@@ -166,7 +166,7 @@ def get_approval_by_token(
     now: datetime | None = None,
 ) -> Approval:
     """Retrieve an approval by raw token with uniform 404 response for invalid/expired/used tokens."""
-    now_dt = now or datetime.now(UTC)
+    now_dt = _as_utc(now) if now is not None else datetime.now(UTC)
     token_hash_val = hash_token(raw_token)
 
     stmt = select(Approval).where(Approval.token_hash == token_hash_val)
@@ -268,7 +268,7 @@ def resolve_approval(
     - Approve applies waiver rules (A-01 ALLOW) and enqueues execute job.
     - Deny records decision and stops.
     """
-    now_dt = now or datetime.now(UTC)
+    now_dt = _as_utc(now) if now is not None else datetime.now(UTC)
     token_hash_val = hash_token(raw_token)
 
     # 1. Lock the approval row to serialize concurrent resolves
@@ -421,7 +421,7 @@ def resolve_approval(
             resolution="APPROVE",
             approval_id=str(approval.id),
             dispute_id=approval.dispute_id,
-            decision_id=str(new_decision.id),
+            decision_id=new_decision.id,
             executed=True,
         )
 
@@ -547,7 +547,7 @@ def resolve_approval(
             resolution="EDIT",
             approval_id=str(approval.id),
             dispute_id=approval.dispute_id,
-            decision_id=str(new_decision.id),
+            decision_id=new_decision.id,
             executed=executed,
         )
 
@@ -556,7 +556,7 @@ def resolve_approval(
 
 def expire_overdue_approvals(session: Session, now: datetime | None = None) -> int:
     """Scan and settle all overdue approvals to EXPIRED status."""
-    now_dt = now or datetime.now(UTC)
+    now_dt = _as_utc(now) if now is not None else datetime.now(UTC)
 
     stmt = select(Approval).where(
         Approval.resolution == ApprovalResolution.PENDING.value,

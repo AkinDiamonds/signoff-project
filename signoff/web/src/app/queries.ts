@@ -75,7 +75,7 @@ function readStatus(data: Record<string, unknown>): StatusView {
 }
 
 export function useStatus() {
-  return useQuery({
+  return useQuery<StatusView, ApiQueryError>({
     queryKey: ['status'],
     queryFn: async () => readStatus(await unwrap(apiClient.getStatus())),
   });
@@ -92,14 +92,14 @@ export type DisputesQuery = NonNullable<
 >;
 
 export function useDisputes(params?: DisputesQuery) {
-  return useQuery({
+  return useQuery<DisputesResponse, ApiQueryError>({
     queryKey: ['disputes', params],
     queryFn: async (): Promise<DisputesResponse> => unwrap(apiClient.getDisputes(params)),
   });
 }
 
 export function useDispute(id: string, options?: { refetchInterval?: number }) {
-  return useQuery({
+  return useQuery<DisputeDetailResponse, ApiQueryError>({
     queryKey: ['dispute', id],
     queryFn: async (): Promise<DisputeDetailResponse> => unwrap(apiClient.getDispute(id)),
     enabled: Boolean(id),
@@ -108,7 +108,7 @@ export function useDispute(id: string, options?: { refetchInterval?: number }) {
 }
 
 export function useDisputeTimeline(id: string, options?: { refetchInterval?: number }) {
-  return useQuery({
+  return useQuery<TimelineResponse, ApiQueryError>({
     queryKey: ['dispute-timeline', id],
     queryFn: async (): Promise<TimelineResponse> => unwrap(apiClient.getDisputeTimeline(id)),
     enabled: Boolean(id),
@@ -117,7 +117,7 @@ export function useDisputeTimeline(id: string, options?: { refetchInterval?: num
 }
 
 export function useApprovalCard(token: string) {
-  return useQuery({
+  return useQuery<ApprovalCardResponse, ApiQueryError>({
     queryKey: ['approval-card', token],
     queryFn: async (): Promise<ApprovalCardResponse> => unwrap(apiClient.getApprovalCard(token)),
     enabled: Boolean(token),

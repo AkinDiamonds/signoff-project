@@ -1,4 +1,5 @@
 import { describe, expectTypeOf, it } from 'vitest';
+import { parseMoney } from '@signoff/api-client';
 import type { Money, ResolveRequest } from '@signoff/api-client';
 import { buildEditResolveRequest, type EditRequestPayload } from '../src/features/approval/types';
 import { parseAmountInput } from '../src/features/approval/amountParser';
@@ -14,7 +15,7 @@ describe('approval type contracts', () => {
   });
 
   it('buildEditResolveRequest constructs valid ResolveRequest', () => {
-    const dummyMoney = { value: '25.00', currency_code: 'USD' } as Money;
+    const dummyMoney: Money = parseMoney({ value: '25.00', currency_code: 'USD' });
 
     const withAmount = buildEditResolveRequest({ amount: dummyMoney });
     expectTypeOf(withAmount).toEqualTypeOf<ResolveRequest>();

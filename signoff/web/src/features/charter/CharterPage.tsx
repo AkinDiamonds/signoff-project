@@ -87,6 +87,7 @@ export const CharterPage: React.FC = () => {
   const mutation = useUpdateCharter();
 
   const [values, setValues] = useState<CharterFormValues | null>(null);
+  const [baseVersion, setBaseVersion] = useState<number | null>(null);
   const [errors, setErrors] = useState<CharterFieldErrors>({});
   const [newerCharter, setNewerCharter] = useState<Charter | null>(null);
   const [savedVersion, setSavedVersion] = useState<number | null>(null);
@@ -96,6 +97,7 @@ export const CharterPage: React.FC = () => {
   useEffect(() => {
     if (charterQuery.data && values === null) {
       setValues(toFormValues(charterQuery.data));
+      setBaseVersion(charterQuery.data.version);
     }
   }, [charterQuery.data, values]);
 
@@ -105,22 +107,15 @@ export const CharterPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (values === null || submitting.current) {
+    if (values === null || baseVersion === null || submitting.current) {
       return;
     }
     submitting.current = true;
     setSaveError(null);
     setNewerCharter(null);
     try {
-      // Always fetch the current version to avoid stale base_version after a prior save.
-      let baseVersion: number;
-      try {
-        const latest = await fetchLatestCharter();
-        baseVersion = latest.version;
-      } catch {
-        setSaveError('Could not confirm the current charter version. Please refresh and try again.');
-        return;
-      }
+      // base_version is the version the user loaded and edited. Fetching the
+      // latest version here would silently overwrite someone else's change.
       const built = buildCharterUpdate(values, baseVersion);
       if (!built.ok) {
         setErrors(built.errors);
@@ -130,6 +125,7 @@ export const CharterPage: React.FC = () => {
       try {
         const saved = await mutation.mutateAsync(built.value);
         setValues(toFormValues(saved));
+        setBaseVersion(saved.version);
         setSavedVersion(saved.version);
       } catch (error) {
         if (error instanceof ApiQueryError && error.status === 409) {
@@ -200,6 +196,7 @@ export const CharterPage: React.FC = () => {
             testId="charter-load-latest"
             onClick={() => {
               setValues(toFormValues(newerCharter));
+              setBaseVersion(newerCharter.version);
               setNewerCharter(null);
               setErrors({});
             }}

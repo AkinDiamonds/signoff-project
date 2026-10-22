@@ -182,7 +182,6 @@ export const CheckoutPage: React.FC = () => {
     }
   // Intentionally omit pendingOrderCode from deps: we access it via ref to avoid
   // re-mounting PayPal buttons mid-flow (which would break the SDK popup).
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email, items]);
 
   // Direct sandbox fallback payment (for automated tests or offline sandbox)

@@ -21,6 +21,15 @@ export const SUPPORTED_REASON_LABELS: Record<SupportedDisputeReason, string> = {
   MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED: 'Item not as described (Damaged, wrong item, or defect)',
 };
 
+const SUPPORTED_DISPUTE_REASONS: readonly SupportedDisputeReason[] = [
+  'MERCHANDISE_OR_SERVICE_NOT_RECEIVED',
+  'MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED',
+];
+
+export function isSupportedDisputeReason(value: string): value is SupportedDisputeReason {
+  return SUPPORTED_DISPUTE_REASONS.some((reason) => reason === value);
+}
+
 export interface DisputeMessage {
   posted_by: 'BUYER' | 'SELLER' | string;
   time_posted: string;

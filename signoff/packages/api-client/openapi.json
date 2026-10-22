@@ -1,28 +1,6 @@
 {
   "components": {
     "schemas": {
-      "ActionMoneySchema": {
-        "additionalProperties": false,
-        "description": "Monetary amount schema for LLM outputs requiring decimal string values.",
-        "properties": {
-          "currency_code": {
-            "default": "USD",
-            "description": "3-letter ISO currency code",
-            "title": "Currency Code",
-            "type": "string"
-          },
-          "value": {
-            "description": "Decimal string representation of the amount, e.g. '25.00'",
-            "title": "Value",
-            "type": "string"
-          }
-        },
-        "required": [
-          "value"
-        ],
-        "title": "ActionMoneySchema",
-        "type": "object"
-      },
       "ActionType": {
         "description": "Proposed action type for PayPal disputes.",
         "enum": [
@@ -828,7 +806,7 @@
         "description": "Dispute context snapshot for human review card.",
         "properties": {
           "amount": {
-            "$ref": "#/components/schemas/ActionMoneySchema"
+            "$ref": "#/components/schemas/EditMoneySchema"
           },
           "buyer_message": {
             "anyOf": [
@@ -1232,6 +1210,28 @@
         "title": "DisputesResponse",
         "type": "object"
       },
+      "EditMoneySchema": {
+        "additionalProperties": false,
+        "description": "Money amount submitted on an approval edit.\n\nUnlike the LLM-facing schema in ``agent.app.agent.schemas``, this one keeps the\nraw decimal string and does not enforce a positive value. Approving a human edit\nis a domain decision, so the service validates positivity, precision and the\ndisputed-amount ceiling and reports each violation as a 422 ``EditValidationError``.",
+        "properties": {
+          "currency_code": {
+            "default": "USD",
+            "description": "3-letter ISO currency code",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "value": {
+            "description": "Decimal string representation of the amount, e.g. '25.00'",
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "title": "EditMoneySchema",
+        "type": "object"
+      },
       "EditResolveRequest": {
         "additionalProperties": false,
         "description": "Edit amount and/or message and re-run gate evaluation.",
@@ -1245,7 +1245,7 @@
           "amount": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/ActionMoneySchema"
+                "$ref": "#/components/schemas/EditMoneySchema"
               },
               {
                 "type": "null"
@@ -2208,6 +2208,7 @@
           "decision_id": {
             "anyOf": [
               {
+                "format": "uuid",
                 "type": "string"
               },
               {

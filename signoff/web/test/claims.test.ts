@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { getClaim, PUBLIC_CLAIMS, type ClaimId } from '../src/features/site/claims';
+import { getClaim, PUBLIC_CLAIMS } from '../src/features/site/claims';
 
 describe('Public Claims Ledger Contract', () => {
   const ledgerPath = path.resolve(__dirname, '../../docs/claims-ledger.md');
@@ -46,7 +46,7 @@ describe('Public Claims Ledger Contract', () => {
     expect(valid.id).toBe('CLAIM-AI-NO-MUTATING');
     expect(valid.status).toBe('Verified');
 
-    expect(() => getClaim('UNKNOWN-CLAIM' as ClaimId)).toThrowError(/Unknown claim id/);
+    expect(() => getClaim('UNKNOWN-CLAIM')).toThrowError(/Unknown claim id/);
   });
 
   it('no duplicate claim IDs exist in PUBLIC_CLAIMS', () => {

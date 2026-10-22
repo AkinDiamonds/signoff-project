@@ -54,7 +54,7 @@ describe('Buyer Portal Frontend (@signoff/shop/portal)', () => {
 
     expect(screen.getByTestId('portal-lookup-title')).toBeTruthy();
     const codeInput = screen.getByTestId('portal-order-code-input');
-    const emailInput = screen.getByTestId('portal-email-input') as HTMLInputElement;
+    const emailInput = screen.getByTestId<HTMLInputElement>('portal-email-input');
 
     // Fill test buyer helper button
     fireEvent.click(screen.getByTestId('portal-fill-test-buyer-btn'));
@@ -258,7 +258,7 @@ describe('Buyer Portal Frontend (@signoff/shop/portal)', () => {
     });
 
     // Verify deep link to merchant dashboard
-    const deepLink = screen.getByTestId('portal-view-as-merchant-link') as HTMLAnchorElement;
+    const deepLink = screen.getByTestId<HTMLAnchorElement>('portal-view-as-merchant-link');
     expect(deepLink.href).toContain('/disputes/PP-D-9001');
 
     // Message markup was escaped and safely displayed

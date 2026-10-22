@@ -7,6 +7,7 @@
   "include": [
     "signoff/**/*",
     "scripts/**/*",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "vitest.setup.ts"
   ]
 }

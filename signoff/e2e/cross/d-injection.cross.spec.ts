@@ -12,7 +12,7 @@ test('D: hostile buyer reply is flagged, never executed @smoke @full', async ({ 
   const items = await waitForTimeline(request, disputeId, (events) => hasKind(events, 'INJECTION_FLAGGED'));
 
   const flagged = items.find((item) => item.kind === 'INJECTION_FLAGGED');
-  expect(flagged?.kind === 'INJECTION_FLAGGED' ? flagged.rule_id : '').toBe('G5-02');
+  expect(flagged && 'rule_id' in flagged ? flagged.rule_id : '').toBe('G5-02');
   expect(hasKind(items, 'EXECUTION_SENT') || hasKind(items, 'EXECUTION_CONFIRMED')).toBe(false);
 
   const detail: { order_code: string } = await (await request.get(`${AGENT_URL}/api/disputes/${disputeId}`)).json();

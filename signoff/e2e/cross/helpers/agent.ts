@@ -64,7 +64,10 @@ export async function waitForDispute(
       return predicate(current);
     }, { timeout: 30000, intervals: [250, 500, 1000] })
     .toBe(true);
-  return dispute as DisputeDetail;
+  if (dispute === null) {
+    throw new Error(`Dispute ${disputeId} was not readable.`);
+  }
+  return dispute;
 }
 
 export function hasKind(items: TimelineItem[], kind: string): boolean {

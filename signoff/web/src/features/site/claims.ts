@@ -163,7 +163,7 @@ export const PUBLIC_CLAIMS = [
   },
 ] as const satisfies readonly PublicClaim[];
 
-export function getClaim(id: ClaimId): PublicClaim {
+export function getClaim(id: string): PublicClaim {
   const claim = PUBLIC_CLAIMS.find((c) => c.id === id);
   if (!claim) {
     throw new Error(`Unknown claim id: ${id}`);

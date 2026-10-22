@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import {
-  Banner,
-  Button,
   Card,
   Deadline,
   EmptyState,
@@ -11,12 +9,14 @@ import {
   Skeleton,
   VerdictChip,
 } from '@signoff/ui';
-import type { components } from '@signoff/api-client/generated';
-import type { ApiQueryError } from '../../app/queries';
 import { useDispute, useDisputeTimeline } from '../../app/queries';
 import { DisputeStatusBadge } from './DisputeListPage';
 import { DecisionTimeline } from './timeline';
 import type { DisputeDetail } from './types';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 export const DisputeDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -60,7 +60,7 @@ export const DisputeDetailPage: React.FC = () => {
 
   // Error handling: 404 Not Found vs other errors
   if (disputeQuery.isError) {
-    const error = disputeQuery.error as ApiQueryError;
+    const error = disputeQuery.error;
     // Check if error is 404 / NOT_FOUND
     if (error.message?.toLowerCase().includes('not found') || error.correlationId === 'mock-not-found') {
       return (
@@ -114,9 +114,7 @@ export const DisputeDetailPage: React.FC = () => {
       snapshot.messages[0].content) ||
     null;
 
-  const rawEvidence = (snapshot.evidence && typeof snapshot.evidence === 'object')
-    ? (snapshot.evidence as Record<string, unknown>)
-    : null;
+  const rawEvidence = isRecord(snapshot.evidence) ? snapshot.evidence : null;
 
   // Determine evidence strength: check evidence object or timeline events
   let evidenceStrength: string | null = null;
@@ -312,25 +310,25 @@ export const DisputeDetailPage: React.FC = () => {
 
             {rawEvidence ? (
               <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '6px 12px', fontSize: '13px' }}>
-                {Boolean(rawEvidence.carrier) ? (
+                {rawEvidence.carrier ? (
                   <>
                     <dt style={{ color: '#64748b' }}>Carrier</dt>
                     <dd style={{ margin: 0, fontWeight: 500 }}>{String(rawEvidence.carrier)}</dd>
                   </>
                 ) : null}
-                {Boolean(rawEvidence.tracking_number) ? (
+                {rawEvidence.tracking_number ? (
                   <>
                     <dt style={{ color: '#64748b' }}>Tracking #</dt>
                     <dd style={{ margin: 0, fontFamily: 'monospace' }}>{String(rawEvidence.tracking_number)}</dd>
                   </>
                 ) : null}
-                {Boolean(rawEvidence.status) ? (
+                {rawEvidence.status ? (
                   <>
                     <dt style={{ color: '#64748b' }}>Tracking Status</dt>
                     <dd style={{ margin: 0, fontWeight: 500 }}>{String(rawEvidence.status)}</dd>
                   </>
                 ) : null}
-                {Boolean(rawEvidence.delivered_at) ? (
+                {rawEvidence.delivered_at ? (
                   <>
                     <dt style={{ color: '#64748b' }}>Delivered At</dt>
                     <dd style={{ margin: 0 }}>{new Date(String(rawEvidence.delivered_at)).toLocaleString()}</dd>
@@ -424,7 +422,7 @@ export const DisputeDetailPage: React.FC = () => {
           <ErrorState
             testId="timeline-error"
             message={timelineQuery.error.message}
-            correlationId={(timelineQuery.error as ApiQueryError).correlationId}
+            correlationId={timelineQuery.error.correlationId}
             onRetry={() => void timelineQuery.refetch()}
           />
         )}
