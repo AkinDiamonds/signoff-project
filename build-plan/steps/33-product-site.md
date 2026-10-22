@@ -1,7 +1,7 @@
 # Step 33: Signoff product site and judge guide
 
 Phase: P6 Client-facing · Depends on: 31,32 · Estimate: 2h with an agent · Commit: `feat(web): landing page and judge guide`
-Status: [ ] not started
+Status: [x] done
 
 ## Goal
 Looks like a real product and tells a judge exactly what to do in five minutes.

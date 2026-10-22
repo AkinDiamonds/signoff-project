@@ -6,13 +6,14 @@ import { ApprovalPage } from '../features/approval';
 import { CharterPage } from '../features/charter';
 import { DemoPanel } from '../features/demo';
 import { DashboardPage } from '../features/dashboard';
+import { GuidePage } from '../features/site';
 
 export const routes: RouteObject[] = [
   {
     element: <Layout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'guide', element: <PlaceholderPage title="Judge guide" step="33" /> },
+      { path: 'guide', element: <GuidePage /> },
       { path: 'app', element: <DashboardPage /> },
       { path: 'app/disputes', element: <DisputeListPage /> },
       { path: 'app/disputes/:id', element: <DisputeDetailPage /> },

@@ -42,11 +42,12 @@
 - Step 30 complete: storefront backend (`agent/app/shop/`) with catalog, order creation and capture endpoints, PayPal Orders client, in-memory catalog, SQLite persistence for orders/items, idempotent capture, inventory checks, and full stub integration. 15 unit tests in `test_shop_backend.py`. Commit `feat(shop): catalog, order create and capture`.
 - Step 31 complete: storefront frontend (`shop/src/*`) with home/catalog, product details, cart, PayPal JS SDK sandbox checkout, confirmation with order code, persistent fictional shop / sandbox banner with collapsible how-to-pay block, demo order shortcut, warm amber theme, and request-tampering regression test. CartItem strictly excludes price; all money formatted via `<Money>`. 6 component tests, 4 type tests, 3 Playwright E2E checks (`shop.spec.ts`). Commit `feat(shop): storefront, cart and checkout`.
 - Step 32 complete: buyer dispute portal (`shop/src/portal/*`, `agent/app/shop/disputes.py`) with order lookup (code and email), mock tracking timeline, 'report a problem' form with supported reasons only and Money amount validation, duplicate dispute blocking, unlinked account protection with demo order alternative, buyer dispute view with status, plain text escaping for messages, buyer reply form (Scenario D), merchant settlement offer response (S9 / Scenario C), and 'view as merchant' deep link to Signoff dashboard. 11 backend tests in `test_shop_disputes.py`, 4 frontend tests in `portal.test.tsx`, 4 type tests in `portal.test-d.ts`, and Playwright E2E in `portal.spec.ts`. Commit `feat(shop): buyer portal and dispute creation`.
+- Step 33 complete: public landing page and 5-minute judge guide (`web/src/features/site/*`). Landing page communicates the problem, signing-limit philosophy, 5-step pipeline, public verified claims with proof, 'Try it' call to action, and embedded system status. Judge guide at `/guide` delivers the 5-step numbered evaluation path, sandbox test credentials, real-vs-simulated comparison table, repo/license/video links, and persistent Buyer/Merchant view switcher. Public claims list is a readonly typed array mapped 1-to-1 to literal IDs in `docs/claims-ledger.md`. 4 claims tests, 1 typecheck test, 3 site component tests passing; 5 shell tests green; Playwright E2E suite prepared. Commit `feat(web): landing page and judge guide`.
 
 ## Next 3 actions
-1. **Step 33:** product site and guide.
-2. **Step 34:** full e2e suite (after P6 surfaces).
-3. **Step 35:** hardening and final pass.
+1. **Step 34:** full e2e suite (after P6 surfaces).
+2. **Step 35:** hardening and final pass.
+3. **Step 36:** predeploy and hosted-demo checks.
 
 ## Blockers
 - None.

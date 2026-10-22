@@ -23,6 +23,8 @@ Built for the PayPal AI Hackathon. **Sandbox only. Fictional data only.**
 | Demo panel | Working (scenarios A-E, pool status, session reset, frozen/quota/cached labels) |
 | Dashboard (AG Studio) | Working (live KPIs, dispute table, lazy AG Studio workspace, read-only assistant via server proxy) |
 | Custom dashboard widgets | Working (Decision Timeline, Deadline Radar, Authority Meter; empty/single/many states; accessible text labels) |
+| Storefront & buyer portal | Working (catalog, sandbox cart/checkout, demo orders, tracking, dispute reporting) |
+| Product landing & judge guide | Working (5-minute path, test credentials, real-vs-simulated table, view switcher, claims ledger) |
 | Prompt-injection test suite | Planned |
 | Test-dispute generator for judges | Working (pool, scenarios A-E, session scoping, quotas, reset) |
 | Deterministic PayPal stub (tests/local) | Working (fixture replay, fault injection, reset) |
