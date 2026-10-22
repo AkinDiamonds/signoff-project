@@ -17,6 +17,12 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { ConfirmationPage } from './pages/ConfirmationPage';
 import { HomePage } from './pages/HomePage';
 import { ProductPage } from './pages/ProductPage';
+import {
+  BuyerDisputePage,
+  OrderDetailPage,
+  OrderLookupPage,
+  ReportProblemPage,
+} from './portal';
 import { Link, RouterProvider, useRouter } from './router';
 import { warmColors, warmShadows } from './theme';
 
@@ -78,6 +84,20 @@ const ShopHeader: React.FC = () => {
             Catalog
           </Link>
 
+          <Link
+            to="/orders"
+            testId="shop-nav-portal-link"
+            style={{
+              fontSize: '14px',
+              fontWeight: 500,
+              color: warmColors.ink,
+              padding: '6px 12px',
+              borderRadius: '6px',
+            }}
+          >
+            Track Order
+          </Link>
+
           <DemoOrderShortcut
             variant="secondary"
             label="⚡ Demo Order"
@@ -136,6 +156,14 @@ const ShopContent: React.FC = () => {
     pageContent = <CheckoutPage />;
   } else if (path === '/confirmation/:code' && params.code) {
     pageContent = <ConfirmationPage orderCode={params.code} />;
+  } else if (path === '/orders') {
+    pageContent = <OrderLookupPage />;
+  } else if (path === '/orders/:code/dispute/new' && params.code) {
+    pageContent = <ReportProblemPage orderCode={params.code} />;
+  } else if (path === '/orders/:code/dispute' && params.code) {
+    pageContent = <BuyerDisputePage orderCode={params.code} />;
+  } else if (path === '/orders/:code' && params.code) {
+    pageContent = <OrderDetailPage orderCode={params.code} />;
   } else {
     pageContent = <HomePage />;
   }

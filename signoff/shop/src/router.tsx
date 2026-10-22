@@ -49,6 +49,29 @@ function matchRoute(currentPath: string): RouteMatch {
     return { path: '/confirmation/:code', params: { code: confirmMatch[1] } };
   }
 
+  // /orders
+  if (norm === '/orders') {
+    return { path: '/orders', params: {} };
+  }
+
+  // /orders/:code/dispute/new
+  const disputeNewMatch = /^\/orders\/([^/]+)\/dispute\/new$/.exec(norm);
+  if (disputeNewMatch && disputeNewMatch[1]) {
+    return { path: '/orders/:code/dispute/new', params: { code: disputeNewMatch[1] } };
+  }
+
+  // /orders/:code/dispute
+  const disputeMatch = /^\/orders\/([^/]+)\/dispute$/.exec(norm);
+  if (disputeMatch && disputeMatch[1]) {
+    return { path: '/orders/:code/dispute', params: { code: disputeMatch[1] } };
+  }
+
+  // /orders/:code
+  const orderMatch = /^\/orders\/([^/]+)$/.exec(norm);
+  if (orderMatch && orderMatch[1]) {
+    return { path: '/orders/:code', params: { code: orderMatch[1] } };
+  }
+
   // Default to 404 or home
   return { path: norm, params: {} };
 }

@@ -1,7 +1,7 @@
 # Step 32: Buyer portal: orders, tracking, dispute, messages
 
 Phase: P6 Client-facing · Depends on: 31,23,19 · Estimate: 4h with an agent · Commit: `feat(shop): buyer portal and dispute creation`
-Status: [ ] not started
+Status: [x] done
 Assumes (step 00 table): S9, S10. If the answer changed, edit this file first and log it below.
 
 ## Goal

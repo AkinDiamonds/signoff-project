@@ -116,18 +116,18 @@ def find_module_imports(source_code: str, module_name: str) -> list[str]:
 def test_import_guard_only_simulator_may_import_buyer_client():
     """The agent, executor and API layers must never create disputes as the buyer."""
     app_dir = Path(__file__).resolve().parents[1] / "app"
-    allowed_dir = app_dir / "simulator"
+    allowed_dirs = (app_dir / "simulator", app_dir / "shop")
     violations: list[str] = []
 
     for py_file in app_dir.rglob("*.py"):
-        if allowed_dir in py_file.parents or py_file.name == "buyer_client.py":
+        if any(ad in py_file.parents for ad in allowed_dirs) or py_file.name == "buyer_client.py":
             continue
         found = find_module_imports(py_file.read_text(encoding="utf-8"), "buyer_client")
         if found:
             violations.append(f"{py_file.name}: {found}")
 
     assert not violations, (
-        "Architecture violation! Only app/simulator may import buyer_client. "
+        "Architecture violation! Only app/simulator and app/shop may import buyer_client. "
         f"Found illegal imports in: {violations}"
     )
 

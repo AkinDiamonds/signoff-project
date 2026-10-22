@@ -12,6 +12,7 @@ from agent.app.domain.money import Money
 from agent.app.errors import NotFoundError, RateLimitedError
 from agent.app.paypal.orders_client import PayPalOrdersClient
 from agent.app.shop.catalog import get_catalog, get_product
+from agent.app.shop.disputes import router as disputes_router
 from agent.app.shop.schemas import (
     CaptureOrderRequest,
     CaptureOrderResponse,
@@ -28,6 +29,7 @@ from agent.app.shop.service import (
 )
 
 router = APIRouter(prefix="/api/shop", tags=["Storefront"])
+router.include_router(disputes_router)
 
 # In-memory rate limiting tracker for failed order lookups (max 10 failures per IP per 60s)
 _failed_lookups: dict[str, list[float]] = defaultdict(list)
