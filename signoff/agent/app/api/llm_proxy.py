@@ -49,12 +49,36 @@ ASSISTANT_TOOL_NAMES: tuple[str, ...] = (
     "get_charter",
 )
 
-# Studio's own page-layout tools (Option A – decision-log.md D12).
-# These let the native AI panel configure widgets and rename pages without
-# exposing any PayPal API surface. PayPal-shaped mutations (approve, deny,
-# refund …) are still blocked because they are absent from both tuples.
+# Studio's own page-layout and AI-harness tools (Option A – decision-log.md D12).
+# The full list of AG Studio tool names the native AI panel may send at runtime.
+# Enumerated from the installed ag-studio package (main.cjs.js, `name:` patterns).
+# PayPal-shaped mutations (approve, deny, refund …) are absent from both tuples.
 STUDIO_PAGE_TOOL_NAMES: tuple[str, ...] = (
+    # AG Studio AI harness built-in tools
+    "view_schema",
+    "view_report",
+    "view_page",
+    "view_widget",
+    "view_plan",
+    "execute_query",
+    "create_expression",
+    "update_expression",
+    "delete_expression",
+    "add_widget",
+    "position_widget",
+    "remove_widget",
+    "add_page_filter",
+    "remove_page_filter",
+    "add_widget_filter",
+    "remove_widget_filter",
     "configure_widget",
+    "create_plan",
+    "update_plan",
+    "clear_plan",
+    "rename_thread",
+    "delegate_to",
+    "complete_task",
+    # Legacy names shipped in earlier proxy allowlist
     "rename_page",
     "create_page",
     "delete_widget",
@@ -147,9 +171,9 @@ class StudioRequest(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    input: list[Any] = Field(min_length=1, max_length=MAX_MESSAGES)
-    instructions: str | None = Field(default=None, max_length=MAX_MESSAGE_CHARS)
-    tools: list[StudioTool] | None = Field(default=None, max_length=len(STUDIO_ALLOWED_TOOL_NAMES))
+    input: list[Any] = Field(default_factory=list, max_length=MAX_MESSAGES)
+    instructions: str | None = Field(default=None, max_length=64_000)
+    tools: list[StudioTool] | None = Field(default=None, max_length=64)
     responseFormat: dict[str, Any] | None = Field(default=None)
 
 
@@ -295,12 +319,14 @@ def build_studio_provider_messages(payload: StudioRequest) -> list[dict[str, str
     """
     system_content = STUDIO_ASSISTANT_INSTRUCTIONS
     if payload.instructions:
-        system_content = system_content + "\n\nAdditional context:\n" + payload.instructions
+        system_content = system_content + "\n\nAdditional context:\n" + payload.instructions[:4000]
 
     user_text = _extract_text_from_input(payload.input)
     messages: list[dict[str, str]] = [{"role": "system", "content": system_content}]
     if user_text:
         messages.append({"role": "user", "content": user_text})
+    else:
+        messages.append({"role": "user", "content": "How many disputes are open, and how much is at risk?"})
     return messages
 
 

@@ -10,7 +10,7 @@ import re
 from decimal import Decimal, InvalidOperation
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from agent.app.domain.actions import (
     AcceptClaim,
@@ -95,12 +95,21 @@ class SendMessageActionSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     action_type: Literal[ActionType.SEND_MESSAGE, "SEND_MESSAGE"] = ActionType.SEND_MESSAGE
-    message: str = Field(..., min_length=1)
+    message: str | None = None
+    detail: str | None = None
+
+    @model_validator(mode="after")
+    def populate_message(self) -> "SendMessageActionSchema":
+        if not self.message and self.detail:
+            self.message = self.detail
+        if not self.message:
+            raise ValueError("Either message or detail must be provided")
+        return self
 
     def to_domain(self) -> SendMessage:
         return SendMessage(
             action_type=ActionType.SEND_MESSAGE,
-            message=self.message,
+            message=self.message or "",
         )
 
 

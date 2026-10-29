@@ -10,7 +10,9 @@ signoff/agent   API and worker  FastAPI service, worker, PayPal clients, ledger
 
 ## Try it
 
-- Hosted demo: `HOSTED_URL_PLACEHOLDER`
+- Merchant dashboard: https://signoff-web.onrender.com
+- Buyer shop: https://signoff-shop.onrender.com
+- API: https://signoff-api.onrender.com
 - Local stub demo: run `docker compose up --build -d`, then open `http://localhost:5173/app/demo`.
 
 ## What is real

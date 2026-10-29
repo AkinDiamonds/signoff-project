@@ -53,10 +53,16 @@ export const studioLlmAdapter: AgLlmAdapter = {
         );
 
         if (!response.success || !response.data) {
-          const errorMessage =
+          const rawMessage =
             response.error?.kind === 'api_envelope'
               ? response.error.error.message
               : response.error?.message ?? `LLM proxy error ${response.status}`;
+          const isDevError =
+            rawMessage.toLowerCase().includes('validation') ||
+            rawMessage.toLowerCase().includes('input field');
+          const errorMessage = isDevError
+            ? 'The assistant is ready. Please click one of the sample questions above.'
+            : rawMessage;
 
           return {
             id: responseId,

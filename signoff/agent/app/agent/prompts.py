@@ -12,7 +12,7 @@ import json
 from agent.app.agent.evidence import BuiltEvidence
 from agent.app.paypal.models import Dispute
 
-PROMPT_VERSION = "2026-10-20.1"
+PROMPT_VERSION = "2026-10-29.1"
 MAX_BUYER_TEXT_LENGTH = 500
 TRUNCATION_MARKER = "... [TRUNCATED]"
 NON_ENGLISH_MARKER = "... [TRUNCATED - NON-ENGLISH]"
@@ -132,8 +132,16 @@ def build_agent_prompt(
         "Strict rules:\n"
         "1. Return ONLY a single JSON object matching the required schema: {\"actions\": [...]}\n"
         "2. Never execute actions or call tools; only propose permitted actions.\n"
-        "3. Allowed action types: PROVIDE_EVIDENCE, SEND_MESSAGE, MAKE_OFFER, ACCEPT_CLAIM, ESCALATE, APPEAL.\n"
-        "4. Do NOT include any text outside the JSON object.\n"
+        "3. Do NOT include any text outside the JSON object.\n"
+        "\n"
+        "Allowed action types and their exact required fields:\n"
+        "- PROVIDE_EVIDENCE: {\"action_type\": \"PROVIDE_EVIDENCE\", \"notes\": \"<string>\", \"evidence_type\": \"<string>\"}\n"
+        "- SEND_MESSAGE: {\"action_type\": \"SEND_MESSAGE\", \"message\": \"<string>\"}\n"
+        "- MAKE_OFFER: {\"action_type\": \"MAKE_OFFER\", \"amount\": {\"currency_code\": \"USD\", \"value\": \"25.00\"}, \"offer_type\": \"REFUND\", \"note\": \"<string>\"}\n"
+        "- ACCEPT_CLAIM: {\"action_type\": \"ACCEPT_CLAIM\", \"accept_claim_type\": \"REFUND\", \"note\": \"<string>\"}\n"
+        "- ESCALATE: {\"action_type\": \"ESCALATE\", \"note\": \"<string>\"}\n"
+        "- APPEAL: {\"action_type\": \"APPEAL\", \"note\": \"<string>\"}\n"
+        "Do not use \"detail\" or any field not listed above.\n"
         "\n"
         "--- DISPUTE DETAILS ---\n"
         f"Dispute ID: {dispute_id}\n"
