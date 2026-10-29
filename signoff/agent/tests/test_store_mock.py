@@ -1,6 +1,7 @@
 """Mock store seeding and lookup tests using an in-memory SQLite database."""
 
 from collections.abc import Generator
+from decimal import Decimal
 
 import pytest
 from sqlalchemy import create_engine, func, select
@@ -15,6 +16,7 @@ from agent.app.store_mock.repository import (
 )
 from agent.app.store_mock.scenarios import SCENARIOS
 from agent.app.store_mock.seed import SeedResult, seed_scenarios
+from scripts.bind_order import bind_order
 
 
 @pytest.fixture
@@ -94,3 +96,25 @@ def test_scenario_data_is_fictional_and_unique():
         assert scenario.paypal_transaction_id is not None
         assert scenario.paypal_transaction_id.startswith("TX-SCENARIO-")
         assert scenario.customer_email.endswith("@example.test")
+
+
+def test_bind_order_idempotent(session: Session, monkeypatch):
+    """bind_order creates an Order and TrackingEvents and is idempotent."""
+    monkeypatch.setattr("scripts.bind_order.get_session_factory", lambda: lambda: session)
+
+    bind_order("TX-REAL-99887766", "A")
+
+    order = session.scalar(select(Order).where(Order.paypal_transaction_id == "TX-REAL-99887766"))
+    assert order is not None
+    assert order.order_code == "SIG-A-TX-REAL-"
+    assert order.amount == Decimal("42.00")
+
+    events = list(session.scalars(select(TrackingEvent).where(TrackingEvent.order_id == order.id)).all())
+    assert len(events) == 1
+    assert events[0].carrier == "UPS"
+
+    # Running again is idempotent
+    bind_order("TX-REAL-99887766", "A")
+    total_orders = session.scalar(select(func.count()).select_from(Order).where(Order.paypal_transaction_id == "TX-REAL-99887766"))
+    assert total_orders == 1
+
