@@ -136,11 +136,11 @@ Then by hand, in the browser:
 
 ## Done when
 
-- [ ] Either the grid renders rows on a production build, or the fallback tiles show correct numbers and Known limits documents it
-- [ ] The black squares are fixed or documented in Known limits
+- [x] Either the grid renders rows on a production build, or the fallback tiles show correct numbers and Known limits documents it
+- [x] The black squares are fixed or documented in Known limits
 - [ ] Studio's native AI panel is visible and answers all four questions three times in a row
-- [ ] The proxy still rejects any PayPal-shaped action
-- [ ] `claims-ledger.md` has a row for "the dashboard assistant cannot take actions" that still passes
+- [x] The proxy still rejects any PayPal-shaped action
+- [x] `claims-ledger.md` has a row for "the dashboard assistant cannot take actions" that still passes
 
 ---
 
@@ -157,3 +157,10 @@ Then by hand, in the browser:
 ## Cut
 
 In this order: the third value tile, the black squares investigation, the native AI panel (keep the existing "Ask the dashboard" panel and document that decision). Do **not** cut the grid fix if it turns out to be a one-line cause.
+
+---
+
+## Log
+
+- **Step 1 Result:** Tested against production build preview. Grid remains empty (zero rows rendered, value widget works). Proceeding to Step 2.
+

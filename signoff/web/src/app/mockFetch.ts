@@ -355,7 +355,7 @@ export const mockFetch: typeof fetch = async (input, init) => {
   }
 
   if (method === 'POST') {
-    if (pathname === '/api/llm') {
+    if (pathname === '/api/llm' || pathname === '/api/llm/studio') {
       const llmError =
         typeof window !== 'undefined'
           ? new URLSearchParams(window.location.search).get('mock-llm-error')
@@ -386,8 +386,12 @@ export const mockFetch: typeof fetch = async (input, init) => {
       }
       const questionIndex = question.lastIndexOf('Question:');
       const asked = (questionIndex >= 0 ? question.slice(questionIndex + 'Question:'.length) : question).toLowerCase();
-      const answer = asked.includes('due')
+      const answer = asked.includes('due') || asked.includes('deadline')
         ? 'PP-D-1001 is due within the next week. PP-D-1002 has no seller response deadline.'
+        : asked.includes('auto') || asked.includes('share')
+        ? '75% of closed disputes were auto-resolved without human intervention.'
+        : asked.includes('1001') || asked.includes('happened')
+        ? 'PP-D-1001 is an open INR dispute for USD 89.50. Evidence was submitted and case is under review.'
         : 'There are 2 open disputes with USD 149.50 at risk. One is flagged for approval.';
       return json({ answer, model: 'mock-model', cached: false });
     }

@@ -105,6 +105,9 @@ Run the cross-app suite with `make e2e-stack && make e2e`.
 
 ## Known limits
 
+- **AG Studio grid widget.** The Studio grid renders no rows in this build. The value widgets and the plain dispute table carry the same data. Decision recorded in build-plan/v2/decision-log.md.
+- **AG Studio icons.** Some Studio panel icons render as empty squares without a licence key. This is cosmetic and does not affect the data.
+
 - **Sandbox only.** No production PayPal environment; all credentials are sandbox.
 - **AG Studio watermark.** AG Grid / AG Studio displays a watermark and console error without a licence key. This is expected and accepted per ADR-015; the hackathon judging will not penalise it.
 - **Buyer-assertion API.** The test-dispute generator uses the `POST /v1/customer/disputes` buyer-assertion client. Sandbox availability of the buyer assertion is still partial (S4), so the live rehearsal verifies it before recording; if PayPal rejects the assertion in a given sandbox, create the dispute from the sandbox UI and label it in the demo.

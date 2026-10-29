@@ -118,6 +118,7 @@ export const SAMPLE_QUESTIONS: readonly string[] = [
   'How many disputes are open, and how much is at risk?',
   'Which disputes are due soon?',
   'What share of closed disputes was auto-resolved?',
+  'Explain what happened on PP-D-1001.',
 ];
 
 export function buildAssistantRequest(question: string, kpis: Kpis, items: readonly DisputeItem[]): AssistantRequest {

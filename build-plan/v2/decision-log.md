@@ -21,9 +21,9 @@ Every decision that would otherwise be re-litigated. Add a row when you change s
 
 | # | When | Decision | Evidence |
 |---|---|---|---|
-| D11 | Stage 3 | Is the empty grid a dev-server artefact or a real bug? |  |
-| D12 | Stage 3 | Was the black-square cause found? |  |
-| D13 | Stage 3 | Proxy option A (allow Studio page tools) or B (questions only)? |  |
+| D11 | Stage 3 | Fall back to value widgets (grid widget renders zero rows in prod build) | Single deduped ag-grid@36.2.0, zero duplicate banners, .ag-body-viewport null in DOM. Cause not duplicate copies. |
+| D12 | Stage 3 | Document in Known limits (icons render as empty squares without licence key) | Unlicensed asset font/sprite not bundled; purely cosmetic, does not affect data. |
+| D13 | Stage 3 | Option A: extend proxy to allow Studio page-layout tools by name (configure_widget, rename_page, …); PayPal-shaped mutations still absent and blocked. New `/api/llm/studio` endpoint accepts AgLlmRequest wire format. | Option B (questions only) would degrade the Studio panel. |
 | D14 | Stage 5 | Days of usable life for a sandbox dispute, measured |  |
 | D15 | Stage 6 | How a pool row is marked `done` |  |
 | D16 | Stage 7 | Brand accent: keep teal for brand only, Shopify values for actions? |  |
