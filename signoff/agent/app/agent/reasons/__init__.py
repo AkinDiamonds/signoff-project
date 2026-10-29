@@ -20,7 +20,7 @@ from agent.app.agent.reasons.not_as_described import (
     NOT_AS_DESCRIBED_REASON,
     build_not_as_described,
 )
-from agent.app.store_mock.scenarios import OrderRecord
+from agent.app.store.models import OrderRecord
 
 EvidenceBuilder = Callable[..., BuiltEvidence]
 

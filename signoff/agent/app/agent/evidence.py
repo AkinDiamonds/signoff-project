@@ -11,7 +11,7 @@ from datetime import datetime
 
 from agent.app.domain.actions import ProvideEvidence
 from agent.app.domain.enums import EvidenceStrengthLabel, TrackingStatus
-from agent.app.store_mock.scenarios import OrderRecord, ShipmentRecord
+from agent.app.store.models import OrderRecord, ShipmentRecord
 
 NOT_RECEIVED_REASON = "MERCHANDISE_OR_SERVICE_NOT_RECEIVED"
 EVIDENCE_TYPE = "PROOF_OF_FULFILLMENT"

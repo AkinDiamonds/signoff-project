@@ -8,7 +8,7 @@ receipt rather than fulfillment proof.
 import re
 
 from agent.app.agent.evidence import BuiltEvidence, score_evidence
-from agent.app.store_mock.scenarios import OrderRecord
+from agent.app.store.models import OrderRecord
 
 NOT_AS_DESCRIBED_REASON = "MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED"
 EVIDENCE_TYPE = "RECEIPT"

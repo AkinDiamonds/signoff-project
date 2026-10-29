@@ -35,6 +35,7 @@ from agent.app.agent.loop import (
     normalize_and_order_actions,
     run_agent_loop,
 )
+from agent.app.store.base import StoreUnavailable
 from agent.app.agent.prompts import (
     NON_ENGLISH_MARKER,
     TRUNCATION_MARKER,
@@ -617,3 +618,38 @@ def test_agent_package_has_no_mutating_client_imports():
                         violations.append(f"{py_file.name}: from {mod} import {alias.name}")
 
     assert not violations, f"Forbidden mutating client imports in agent package: {violations}"
+
+
+@pytest.mark.asyncio
+async def test_store_unavailable_fails_closed_to_human_review(db_session: Session):
+    """StoreUnavailable causes agent run to fail closed: stop and request human review."""
+    class BrokenStoreAdapter:
+        def find_order(self, transaction_id: str):
+            raise StoreUnavailable("Store network connection timeout")
+
+        def get_shipments(self, order_code: str):
+            raise StoreUnavailable("Store network connection timeout")
+
+        def get_messages(self, order_code: str):
+            raise StoreUnavailable("Store network connection timeout")
+
+        def get_policies(self):
+            raise StoreUnavailable("Store network connection timeout")
+
+    dispute = make_dispute()
+    result = await run_agent_loop(
+        session=db_session,
+        dispute_id=dispute.dispute_id,
+        dispute=dispute,
+        store_adapter=BrokenStoreAdapter(),
+    )
+
+    assert result.human_needed is True
+    assert result.actions_count == 0
+    assert result.status == "no_action"
+    assert len(result.decisions) == 0
+
+    events, _ = get_timeline_events(db_session, dispute.dispute_id)
+    kinds = [e["kind"] for e in events]
+    assert TimelineEventKind.NO_ACTION.value in kinds
+
