@@ -77,6 +77,7 @@ class Settings(BaseSettings):
     web_base_url: str = Field(default="http://localhost:5173", validation_alias="WEB_BASE_URL")
     allowed_origins: str = Field(default="http://localhost:5173", validation_alias="ALLOWED_ORIGINS")
     approval_token_secret: str = Field(default="", validation_alias="APPROVAL_TOKEN_SECRET")
+    store_api_key: str = Field(default="", validation_alias="STORE_API_KEY")
     demo_frozen: bool = Field(default=False, validation_alias="DEMO_FROZEN")
 
     # Demo scenario generator
@@ -125,6 +126,8 @@ class Settings(BaseSettings):
                 missing.append("PAYPAL_CLIENT_SECRET")
             if not self.approval_token_secret:
                 missing.append("APPROVAL_TOKEN_SECRET")
+            if not self.store_api_key:
+                missing.append("STORE_API_KEY")
             if missing:
                 raise ValueError(
                     f"Production startup failed. Missing required environment variables: {', '.join(missing)}"

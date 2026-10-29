@@ -81,6 +81,7 @@ def test_prod_missing_required_variables_lists_names_only():
     assert "PAYPAL_CLIENT_ID" in error_msg
     assert "PAYPAL_CLIENT_SECRET" in error_msg
     assert "APPROVAL_TOKEN_SECRET" in error_msg
+    assert "STORE_API_KEY" in error_msg
 
 
 def test_prod_short_approval_token_secret_refused():
@@ -92,8 +93,33 @@ def test_prod_short_approval_token_secret_refused():
             paypal_client_id="cid",
             paypal_client_secret="csecret",
             approval_token_secret="too_short_secret",
+            store_api_key="valid_store_api_key_for_test",
         )
     assert "APPROVAL_TOKEN_SECRET must be at least 32 characters" in str(exc_info.value)
+
+
+def test_prod_refuses_without_store_api_key():
+    """Production startup validation: refuses to start without STORE_API_KEY."""
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(
+            app_env=AppEnv.prod,
+            paypal_env=PayPalEnv.sandbox,
+            paypal_client_id="cid",
+            paypal_client_secret="csecret",
+            approval_token_secret="a_valid_secret_that_is_at_least_32_chars_long",
+            store_api_key="",
+        )
+    assert "STORE_API_KEY" in str(exc_info.value)
+
+
+def test_local_allows_empty_store_api_key():
+    """Local startup validation: does not require STORE_API_KEY."""
+    settings = Settings(
+        app_env=AppEnv.local,
+        paypal_env=PayPalEnv.stub,
+        store_api_key="",
+    )
+    assert settings.store_api_key == ""
 
 
 def test_settings_is_frozen():
