@@ -92,7 +92,7 @@ Write in the pool table at the bottom of this file:
 
 | Dispute | Amount | Created | Buyer due date | Days of usable life |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| PP-R-WWC-10195206 | $85.00 | 2026-10-29 | 2026-11-18 | 20 days |
 
 Rule: any dispute older than two thirds of its window must be replaced before you record the video.
 
