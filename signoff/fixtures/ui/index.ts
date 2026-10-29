@@ -181,6 +181,10 @@ export const disputeTimelineFixture: Timeline = {
   next_cursor: null,
 };
 
+// Deadlines are relative to now so this fixture never expires and breaks the tests.
+const hoursFromNow = (hours: number): string =>
+  new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+
 export const approvalCardFixture: ApprovalCard = {
   id: 'appr-1001',
   decision_id: 'dec-1001',
@@ -195,7 +199,7 @@ export const approvalCardFixture: ApprovalCard = {
   verdict: 'NEEDS_APPROVAL',
   rule_id: 'G1-02',
   reason: 'Offer amount exceeds auto-offer charter limit of $25.00',
-  expires_at: '2026-10-25T12:00:00Z',
+  expires_at: hoursFromNow(20),
   resolution: 'PENDING',
   notes: null,
   dispute: {
@@ -203,7 +207,7 @@ export const approvalCardFixture: ApprovalCard = {
     amount: { value: '107.50', currency_code: 'USD' },
     reason: 'MERCHANDISE_OR_SERVICE_NOT_RECEIVED',
     status: 'WAITING_FOR_SELLER_RESPONSE',
-    seller_response_due_date: '2026-10-26T12:00:00Z',
+    seller_response_due_date: hoursFromNow(30),
     buyer_message: 'The package never arrived at my door.',
   },
   created_at: '2026-10-20T08:15:00Z',

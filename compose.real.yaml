@@ -1,0 +1,59 @@
+# Real-sandbox profile: no PayPal stub, no fake LLM, no demo seeding.
+# Usage (from the repo root, after filling signoff/.env and starting ngrok):
+#   docker compose --env-file signoff/.env -f compose.yaml -f compose.real.yaml \
+#     up -d postgres migrate agent worker web shop
+# Only these services start; the stub and frozen-web services are not used.
+
+x-real-env: &real-env
+  APP_ENV: "prod"
+  PAYPAL_ENV: "sandbox"
+  PAYPAL_BASE_URL: "https://api-m.sandbox.paypal.com"
+  PAYPAL_CLIENT_ID: "${PAYPAL_CLIENT_ID}"
+  PAYPAL_CLIENT_SECRET: "${PAYPAL_CLIENT_SECRET}"
+  PAYPAL_WEBHOOK_ID: "${PAYPAL_WEBHOOK_ID}"
+  PAYPAL_MERCHANT_ID: "${PAYPAL_MERCHANT_ID}"
+  PAYPAL_BUYER_PAYER_ID: "${PAYPAL_BUYER_PAYER_ID}"
+  PAYPAL_BUYER_EMAIL: "${PAYPAL_BUYER_EMAIL}"
+  LLM_PROVIDER: "${LLM_PROVIDER:-}"
+  LLM_MODEL: "${LLM_MODEL}"
+  LLM_API_KEY: "${LLM_API_KEY}"
+  LLM_API_BASE_URL: "${LLM_API_BASE_URL}"
+  LLM_DAILY_BUDGET_USD: "${LLM_DAILY_BUDGET_USD:-3}"
+  USE_SCENARIO_CACHE: "${USE_SCENARIO_CACHE:-true}"
+  DATABASE_URL: "postgresql+psycopg://signoff:signoff@postgres:5432/signoff"
+  PUBLIC_BASE_URL: "${PUBLIC_BASE_URL}"
+  WEB_BASE_URL: "${WEB_BASE_URL:-http://localhost:5173}"
+  ALLOWED_ORIGINS: "${ALLOWED_ORIGINS}"
+  APPROVAL_TOKEN_SECRET: "${APPROVAL_TOKEN_SECRET}"
+  DEMO_FROZEN: "${DEMO_FROZEN:-false}"
+  LOG_APPROVAL_LINKS: "${LOG_APPROVAL_LINKS:-true}"
+
+services:
+  agent:
+    environment: *real-env
+    ports:
+      - "8000:8000"
+
+  worker:
+    environment: *real-env
+
+  migrate:
+    environment: *real-env
+    command: ["python", "-m", "alembic", "upgrade", "head"]
+
+  web:
+    build:
+      args:
+        VITE_API_URL: "${PUBLIC_BASE_URL}"
+        PUBLIC_SHOP_URL: "${PUBLIC_SHOP_URL:-http://localhost:5174}"
+    ports:
+      - "5173:80"
+
+  shop:
+    build:
+      args:
+        VITE_API_URL: "${PUBLIC_BASE_URL}"
+        PUBLIC_SIGNOFF_URL: "${PUBLIC_SIGNOFF_URL:-http://localhost:5173}"
+        VITE_PAYPAL_CLIENT_ID: "${PAYPAL_CLIENT_ID}"
+    ports:
+      - "5174:80"
