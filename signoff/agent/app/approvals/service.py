@@ -148,6 +148,7 @@ def create_approval(
         if app_settings.paypal_env == PayPalEnv.stub and app_settings.app_env != AppEnv.prod:
             from agent.app.test_seams import record_test_approval_token
             record_test_approval_token(decision.dispute_id, raw_token)
+        if app_settings.log_approval_links:
             logger.info(
                 "APPROVAL_LINK dispute=%s url=%s/approve/%s",
                 decision.dispute_id,

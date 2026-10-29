@@ -151,6 +151,16 @@ class BuyerDisputeClient:
         debug_id = get_paypal_debug_id(resp)
         if resp.status_code == 401:
             raise TokenInvalidError("PayPal rejected the buyer assertion")
+        if resp.status_code == 400 and "target_client_id" in resp.text:
+            raise AppError(
+                code="BUYER_ASSERTION_UNAVAILABLE",
+                message=(
+                    "PayPal does not allow this app to file disputes on the buyer's behalf "
+                    "(DISPUTE_CREATE permission is not provisioned). Open the case in PayPal's "
+                    "Resolution Center; Signoff picks it up through the webhook or poller."
+                ),
+                status_code=409,
+            )
         if not 200 <= resp.status_code < 300:
             raise AppError(
                 code="PAYPAL_CREATE_FAILED",

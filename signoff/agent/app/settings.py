@@ -21,7 +21,8 @@ class PayPalEnv(StrEnum):
 
 SANDBOX_PAYPAL_HOST = "api-m.sandbox.paypal.com"
 ALLOWED_PAYPAL_URL = f"https://{SANDBOX_PAYPAL_HOST}"
-STUB_PAYPAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+# "stub" is the Compose service name; it only resolves inside the Compose network.
+STUB_PAYPAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1", "stub"})
 
 
 def is_allowed_paypal_url(url: str, paypal_env: "PayPalEnv") -> bool:
@@ -52,6 +53,8 @@ class Settings(BaseSettings):
     paypal_webhook_id: str = Field(default="", validation_alias="PAYPAL_WEBHOOK_ID")
     paypal_merchant_id: str = Field(default="", validation_alias="PAYPAL_MERCHANT_ID")
     paypal_buyer_payer_id: str = Field(default="", validation_alias="PAYPAL_BUYER_PAYER_ID")
+    paypal_buyer_email: str = Field(default="", validation_alias="PAYPAL_BUYER_EMAIL")
+    log_approval_links: bool = Field(default=False, validation_alias="LOG_APPROVAL_LINKS")
     paypal_base_url: str = Field(default=ALLOWED_PAYPAL_URL, validation_alias="PAYPAL_BASE_URL")
 
     # Database

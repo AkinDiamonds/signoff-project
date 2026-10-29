@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 
 from agent.app.db.models import DemoSession
 from agent.app.db.session import get_db_session
-from agent.app.errors import FrozenError
+from agent.app.errors import AppError, FrozenError
 from agent.app.paypal.buyer_client import BuyerDisputeClient
+from agent.app.settings import PayPalEnv
 from agent.app.simulator import service
 from agent.app.simulator.schemas import PoolResponse, ResetResponse, ScenarioCreated, ScenarioId
 
@@ -51,6 +52,15 @@ async def create_scenario(
     settings = request.app.state.settings
     if settings.demo_frozen:
         raise FrozenError("The demo is frozen for maintenance; scenario creation is disabled.")
+    if settings.paypal_env != PayPalEnv.stub:
+        raise AppError(
+            code="DEMO_UNAVAILABLE",
+            message=(
+                "Simulated demo scenarios are only available with the local PayPal stub. "
+                "In live sandbox mode, buy an order in the shop and open a case in PayPal."
+            ),
+            status_code=409,
+        )
 
     session = _session(request, db, session_id)
     response.headers["X-Demo-Session"] = session.id

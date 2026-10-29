@@ -24,6 +24,16 @@ def test_valid_settings_local_and_stub():
     assert settings.paypal_env == PayPalEnv.stub
 
 
+def test_stub_service_hostname_allowed_in_stub_mode():
+    """The Compose service name is a valid stub host inside the Compose network."""
+    settings = Settings(
+        app_env=AppEnv.test,
+        paypal_env=PayPalEnv.stub,
+        paypal_base_url="http://stub:4010",
+    )
+    assert settings.paypal_base_url == "http://stub:4010"
+
+
 def test_prod_with_stub_refused():
     """Startup validation: stub is refused when APP_ENV is prod."""
     with pytest.raises(ValidationError) as exc_info:

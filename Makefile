@@ -1,4 +1,4 @@
-.PHONY: check test-agent test-web test-types e2e e2e-stack e2e-smoke e2e-cross-smoke rehearse api-types dev stub
+.PHONY: check test-agent test-web test-types e2e e2e-stack e2e-smoke e2e-cross-smoke rehearse api-types dev stub docker-up docker-down docker-reset docker-logs
 
 ifeq ($(OS),Windows_NT)
 # Run every recipe through Git Bash's sh so the commands below mean the same
@@ -89,3 +89,18 @@ else
 	@echo "Starting agent development server..."
 	@PYTHONPATH="$(PY_PATH)" $(VENV_PY) -m uvicorn agent.app.main:app --reload --port 8000
 endif
+
+docker-up:
+	@echo "Building and starting the Docker demo stack..."
+	@docker compose up --build -d
+
+docker-down:
+	@echo "Stopping the Docker demo stack (database volume kept)..."
+	@docker compose down
+
+docker-reset:
+	@echo "Stopping the Docker demo stack and deleting the database volume..."
+	@docker compose down -v
+
+docker-logs:
+	@docker compose logs -f --tail=100

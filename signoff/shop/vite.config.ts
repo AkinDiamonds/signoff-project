@@ -15,10 +15,14 @@ export default defineConfig(({ mode }) => {
     );
   }
 
+  const signoffUrl =
+    env.PUBLIC_SIGNOFF_URL || process.env.PUBLIC_SIGNOFF_URL || 'http://localhost:5173';
+
   return {
     plugins: [react()],
     define: {
       'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl ?? ''),
+      'import.meta.env.PUBLIC_SIGNOFF_URL': JSON.stringify(signoffUrl),
     },
   };
 });

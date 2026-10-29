@@ -33,6 +33,10 @@ router = APIRouter(tags=["Buyer Portal Disputes"])
 LINKED_SANDBOX_BUYER_EMAIL = "alex.morgan@example.test"
 
 
+def _linked_buyer_email() -> str:
+    return Settings().paypal_buyer_email or LINKED_SANDBOX_BUYER_EMAIL
+
+
 class SupportedDisputeReason(StrEnum):
     """Dispute reasons supported by the Signoff dispute agent."""
 
@@ -238,14 +242,14 @@ def _build_dispute_response(
     )
 
 
-def _check_buyer_eligibility(order: Order) -> tuple[bool, str | None]:
+def _check_buyer_eligibility(order: Order, linked_email: str) -> tuple[bool, str | None]:
     """Check if the order was placed by the linked sandbox buyer account."""
-    is_alex = order.customer_email.strip().lower() == LINKED_SANDBOX_BUYER_EMAIL
+    is_alex = order.customer_email.strip().lower() == linked_email.strip().lower()
 
     if not is_alex:
         return (
             False,
-            f"This order was paid with an account other than the linked sandbox buyer ({LINKED_SANDBOX_BUYER_EMAIL}). "
+            f"This order was paid with an account other than the linked sandbox buyer ({linked_email}). "
             "PayPal dispute creation via API assertion is only enabled for the linked sandbox account. "
             "Please use the demo order shortcut to test dispute creation.",
         )
@@ -277,7 +281,7 @@ def get_order_dispute_status(
         )
 
     # Check linked sandbox buyer
-    eligible, reason = _check_buyer_eligibility(order)
+    eligible, reason = _check_buyer_eligibility(order, _linked_buyer_email())
     existing_dispute = _find_dispute_for_transaction(db, order.paypal_transaction_id)
 
     if existing_dispute is not None:
@@ -325,7 +329,7 @@ async def create_buyer_dispute(
         )
 
     # Linked sandbox buyer check
-    eligible, ineligibility_reason = _check_buyer_eligibility(order)
+    eligible, ineligibility_reason = _check_buyer_eligibility(order, _linked_buyer_email())
     if not eligible:
         raise AppError(
             code="BUYER_NOT_LINKED",

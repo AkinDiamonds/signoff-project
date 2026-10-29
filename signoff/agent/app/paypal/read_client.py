@@ -6,7 +6,7 @@ import logging
 import random
 import time
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlparse
 
@@ -300,7 +300,7 @@ class PayPalReadClient:
         url = f"{self.base_url}/v1/customer/disputes"
         params: dict[str, Any] = {"page_size": page_size}
         if start_time:
-            params["start_time"] = start_time.isoformat()
+            params["start_time"] = start_time.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%S.000Z")
         if dispute_state:
             params["dispute_state"] = dispute_state
         if status:

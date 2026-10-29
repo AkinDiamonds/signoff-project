@@ -1,3 +1,22 @@
+x-python: &python
+  image: signoff-python:local
+  build:
+    context: .
+    dockerfile: signoff/agent/Dockerfile
+
+x-app-env: &app-env
+  APP_ENV: test
+  PAYPAL_ENV: stub
+  PAYPAL_BASE_URL: "http://stub:4010"
+  PAYPAL_CLIENT_ID: stub-client
+  PAYPAL_CLIENT_SECRET: stub-secret
+  LLM_PROVIDER: fake
+  DATABASE_URL: "postgresql+psycopg://signoff:signoff@postgres:5432/signoff"
+  ALLOWED_ORIGINS: "http://localhost:5173,http://localhost:5174,http://localhost:5175"
+  DEMO_POOL_SIZE_PER_SCENARIO: "10"
+  DEMO_SCENARIOS_PER_IP_PER_DAY: "1000"
+  DEMO_SCENARIOS_PER_SESSION_PER_DAY: "1000"
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -17,5 +36,150 @@ services:
       timeout: 5s
       retries: 5
 
+  stub:
+    <<: *python
+    command: ["python", "-m", "scripts.paypal_stub.main"]
+    environment:
+      <<: *app-env
+      STUB_HOST: 0.0.0.0
+      STUB_PORT: "4010"
+      STUB_AGENT_URL: "http://agent:8000"
+    ports:
+      - "4010:4010"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4010/health', timeout=2).read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  migrate:
+    <<: *python
+    command: ["sh", "-c", "python -m alembic upgrade head && python -m scripts.seed_sandbox"]
+    environment: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  agent:
+    <<: *python
+    command: ["python", "-m", "uvicorn", "agent.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      <<: *app-env
+      TMPDIR: /var/lib/signoff/outbox
+    volumes:
+      - approval_outbox:/var/lib/signoff/outbox
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      stub:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=2).read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  frozen-agent:
+    <<: *python
+    command: ["python", "-m", "uvicorn", "agent.app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+    environment:
+      <<: *app-env
+      DEMO_FROZEN: "true"
+      WEB_BASE_URL: "http://localhost:5175"
+      TMPDIR: /var/lib/signoff/outbox
+    volumes:
+      - approval_outbox:/var/lib/signoff/outbox
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      stub:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/readyz', timeout=2).read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  worker:
+    <<: *python
+    command: ["python", "-m", "agent.app.worker", "--poll-interval", "0.2", "--reconcile-interval", "5"]
+    environment:
+      <<: *app-env
+      TMPDIR: /var/lib/signoff/outbox
+    volumes:
+      - approval_outbox:/var/lib/signoff/outbox
+    depends_on:
+      postgres:
+        condition: service_healthy
+      stub:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: signoff/web/Dockerfile
+      args:
+        VITE_API_URL: "http://localhost:8000"
+        PUBLIC_SHOP_URL: "http://localhost:5174"
+    ports:
+      - "5173:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  frozen-web:
+    build:
+      context: .
+      dockerfile: signoff/web/Dockerfile
+      args:
+        VITE_API_URL: "http://localhost:8001"
+        PUBLIC_SHOP_URL: "http://localhost:5174"
+    ports:
+      - "5175:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  shop:
+    build:
+      context: .
+      dockerfile: signoff/shop/Dockerfile
+      args:
+        VITE_API_URL: "http://localhost:8000"
+        PUBLIC_SIGNOFF_URL: "http://localhost:5173"
+    ports:
+      - "5174:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  approval_outbox:

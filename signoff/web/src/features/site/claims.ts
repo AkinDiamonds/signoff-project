@@ -93,10 +93,10 @@ export const PUBLIC_CLAIMS = [
   },
   {
     id: 'CLAIM-STATISTICS-PRIMARY-SRC',
-    statement: 'Chargeback industry statistics cite verified primary sources',
-    where: 'video, Devpost',
-    proof: 'primary source URL per number; card vs PayPal wording',
-    status: 'Planned',
+    statement: 'Public claims are limited to a typed registry where every entry maps to a proof row in the claims ledger',
+    where: 'landing, product UI',
+    proof: 'web/test/claims.test.ts, web/test/claims.test-d.ts',
+    status: 'Verified',
   },
   {
     id: 'CLAIM-STUB-OFFLINE',

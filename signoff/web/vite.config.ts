@@ -15,10 +15,13 @@ export default defineConfig(({ mode }) => {
     );
   }
 
+  const shopUrl = env.PUBLIC_SHOP_URL || process.env.PUBLIC_SHOP_URL || 'http://localhost:5174';
+
   return {
     plugins: [react()],
     define: {
       'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl ?? ''),
+      'import.meta.env.PUBLIC_SHOP_URL': JSON.stringify(shopUrl),
     },
   };
 });
