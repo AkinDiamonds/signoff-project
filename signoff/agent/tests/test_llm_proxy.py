@@ -295,6 +295,36 @@ def test_studio_data_tools_are_accepted():
     assert fake.calls == 1
 
 
+def test_studio_context_is_forwarded_in_system_prompt():
+    client, fake = build_client()
+    response = post_studio(
+        client,
+        {
+            "input": _STUDIO_USER_INPUT,
+            "responseFormat": {"type": "text"},
+            "context": {
+                "kpis": [{"metric": "Open disputes", "value": "1"}],
+                "disputes": [
+                    {
+                        "id": "PP-R-WWC-10195206",
+                        "amount_display": "USD 85.00",
+                        "status": "WAITING_FOR_SELLER_RESPONSE",
+                        "verdict": "PENDING",
+                        "due_at": "2026-11-18",
+                        "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
+                    }
+                ],
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert fake.calls == 1
+    system_msg = fake.messages[0][0]["content"]
+    assert "PP-R-WWC-10195206" in system_msg
+    assert "Open disputes" in system_msg
+
+
 def test_studio_missing_provider_returns_unavailable():
     client, _ = build_client()
     client.app.state.assistant_provider = None

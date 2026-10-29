@@ -175,6 +175,7 @@ class StudioRequest(BaseModel):
     instructions: str | None = Field(default=None, max_length=64_000)
     tools: list[StudioTool] | None = Field(default=None, max_length=64)
     responseFormat: dict[str, Any] | None = Field(default=None)
+    context: dict[str, Any] | None = Field(default=None)
 
 
 # ---------------------------------------------------------------------------
@@ -311,6 +312,27 @@ def _extract_text_from_input(input_items: list[Any]) -> str:
     return "\n".join(parts)
 
 
+def _format_context_snapshot(context: dict[str, Any]) -> str:
+    parts = ["Dashboard data (live snapshot):"]
+    kpis = context.get("kpis")
+    if isinstance(kpis, list):
+        parts.append("KPIs:")
+        for k in kpis:
+            if isinstance(k, dict):
+                parts.append(f"  * {k.get('metric', '')}: {k.get('value', '')}")
+    disputes = context.get("disputes")
+    if isinstance(disputes, list):
+        parts.append("Disputes:")
+        for d in disputes:
+            if isinstance(d, dict):
+                parts.append(
+                    f"  * {d.get('id', '')}: amount={d.get('amount_display', '')}, "
+                    f"status={d.get('status', '')}, verdict={d.get('verdict', '')}, "
+                    f"due={d.get('due_at', '')}, reason={d.get('reason', '')}"
+                )
+    return "\n".join(parts)
+
+
 def build_studio_provider_messages(payload: StudioRequest) -> list[dict[str, str]]:
     """Convert Studio AgLlmRequest input to flat provider messages.
 
@@ -318,6 +340,8 @@ def build_studio_provider_messages(payload: StudioRequest) -> list[dict[str, str
     Any client-supplied instructions are appended after ours as additional context.
     """
     system_content = STUDIO_ASSISTANT_INSTRUCTIONS
+    if payload.context:
+        system_content = system_content + "\n\n" + _format_context_snapshot(payload.context)
     if payload.instructions:
         system_content = system_content + "\n\nAdditional context:\n" + payload.instructions[:4000]
 

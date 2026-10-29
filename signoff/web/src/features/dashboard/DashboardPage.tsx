@@ -149,10 +149,8 @@ export const DashboardPage: React.FC = () => {
           : ''}
       </p>
 
-      {/* Legacy "Ask the dashboard" panel — kept as fallback, hidden unless ?assistant=1 is set. */}
-      {new URLSearchParams(window.location.search).get('assistant') === '1' && (
-        <AssistantPanel kpis={kpis} disputes={disputes} />
-      )}
+      {/* Ask the dashboard panel with 4 quick questions */}
+      <AssistantPanel kpis={kpis} disputes={disputes} />
 
       <Card title="Recent disputes" testId="dashboard-disputes-card">
         {disputesQuery.isPending && <Skeleton height="120px" />}

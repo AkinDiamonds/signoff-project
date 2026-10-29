@@ -21,6 +21,12 @@ import { apiClient } from '../../app/api';
 
 const STUDIO_LLM_ENDPOINT = '/api/llm/studio';
 
+let currentStudioContext: Record<string, unknown> | undefined;
+
+export function setStudioLlmContext(context: Record<string, unknown> | undefined): void {
+  currentStudioContext = context;
+}
+
 async function* emitTextAsChunks(text: string): AsyncGenerator<AgAiEvent> {
   const messageId = crypto.randomUUID();
   yield { type: 'TEXT_MESSAGE_START', messageId, role: 'assistant' } satisfies AgAiEvent;
@@ -40,6 +46,7 @@ export const studioLlmAdapter: AgLlmAdapter = {
         instructions: request.instructions,
         tools: request.tools,
         responseFormat: request.responseFormat,
+        context: currentStudioContext,
       };
 
       try {

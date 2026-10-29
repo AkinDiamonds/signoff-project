@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AgStudio } from 'ag-studio-react';
 import {
   AgStudioModuleRegistry,
@@ -9,7 +9,7 @@ import {
 import type { AgReportState, AgAiPromptStarter, AgAiHarnessDefaults } from 'ag-studio';
 import { Button, colors, typography } from '@signoff/ui';
 import type { StudioData } from './types';
-import { studioLlmAdapter } from './studioLlmAdapter';
+import { setStudioLlmContext, studioLlmAdapter } from './studioLlmAdapter';
 
 // Register the AI module once at module load (idempotent).
 AgStudioModuleRegistry.registerModules([AgStudioAiModule]);
@@ -103,6 +103,12 @@ const STUDIO_AI_DEFAULTS: AgAiHarnessDefaults = {
 
 export const StudioCanvas: React.FC<{ data: StudioData }> = ({ data }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
+
+  useEffect(() => {
+    if (data?.sources) {
+      setStudioLlmContext(Object.fromEntries(data.sources.map((s) => [s.id, s.data])));
+    }
+  }, [data]);
 
   return (
     <div>
