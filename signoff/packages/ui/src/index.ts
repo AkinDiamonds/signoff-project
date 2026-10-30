@@ -10,3 +10,6 @@ export * from './components/ErrorState';
 export * from './components/Skeleton';
 export * from './components/Banner';
 export * from './components/TruncatedText';
+export * from './components/PageHeader';
+export * from './components/DataTable';
+export * from './theme';

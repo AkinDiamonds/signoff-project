@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.3.0",
     "@signoff/api-client": "*",
     "@signoff/ui": "*",
     "react": "^18.3.1",

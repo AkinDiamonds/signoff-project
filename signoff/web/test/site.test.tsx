@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
+import { ThemeProvider } from '@signoff/ui';
 import { LandingPage } from '../src/features/site/LandingPage';
 import { GuidePage } from '../src/features/site/GuidePage';
 import { ViewSwitcher } from '../src/features/site/ViewSwitcher';
@@ -15,7 +16,9 @@ function renderWithProviders(ui: React.ReactElement) {
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>{ui}</MemoryRouter>
+      <ThemeProvider>
+        <MemoryRouter>{ui}</MemoryRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

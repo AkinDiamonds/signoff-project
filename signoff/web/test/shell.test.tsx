@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createMemoryRouter, RouterProvider } from 'react-router';
+import { ThemeProvider } from '@signoff/ui';
 import { routes } from '../src/app/routes';
 import { mockFetch } from '../src/app/mockFetch';
 import { statusFixture } from '../../fixtures/ui';
@@ -13,7 +14,9 @@ function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   return render(
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <ThemeProvider>
+        <RouterProvider router={router} />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
