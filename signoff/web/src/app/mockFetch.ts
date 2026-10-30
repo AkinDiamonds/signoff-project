@@ -434,7 +434,8 @@ export const mockFetch: typeof fetch = async (input, init) => {
     const claimMatch = pathname.match(/^\/api\/demo\/claim\/([^/]+)$/);
     if (claimMatch) {
       const disputeId = claimMatch[1] ?? '';
-      const demoToken = headers.get('x-demo-token');
+      const reqHeaders = new Headers(init?.headers as HeadersInit | undefined);
+      const demoToken = reqHeaders.get('x-demo-token');
       if (!demoToken || demoToken !== 'demo-token-active') {
         return envelope('NOT_FOUND', 'Claim endpoint is disabled or missing valid demo token', 404);
       }

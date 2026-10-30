@@ -214,3 +214,14 @@ export async function claimJudgeDispute(disputeId: string, demoToken = 'demo-tok
   return unwrap(Promise.resolve(res));
 }
 
+export function poolIsEmpty(pool: unknown): boolean {
+  if (Array.isArray(pool)) {
+    return pool.length === 0;
+  }
+  if (pool !== null && typeof pool === 'object') {
+    const p = pool as { available?: number };
+    return (p.available ?? 0) === 0;
+  }
+  return true;
+}
+

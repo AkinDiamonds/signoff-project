@@ -102,7 +102,6 @@ export const JudgePoolPage: React.FC = () => {
         </div>
         <Button
           variant="secondary"
-          size="sm"
           onClick={handleStartOver}
           testId="pool-start-over-button"
         >
@@ -152,7 +151,7 @@ export const JudgePoolPage: React.FC = () => {
           <EmptyState
             testId="pool-empty-state"
             title="No demo disputes right now"
-            message="No live demo disputes right now — three finished runs are available below."
+            description="No live demo disputes right now — three finished runs are available below."
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
@@ -182,8 +181,7 @@ export const JudgePoolPage: React.FC = () => {
                       <Button
                         variant="primary"
                         onClick={() => void handleClaim(item.dispute_id)}
-                        disabled={claimingId !== null}
-                        loading={isClaiming}
+                        disabled={claimingId !== null || isClaiming}
                         testId={`claim-dispute-btn-${item.dispute_id}`}
                       >
                         {isClaiming ? 'Claiming...' : 'Open this dispute'}
@@ -224,7 +222,6 @@ export const JudgePoolPage: React.FC = () => {
                   <div style={{ marginTop: '6px' }}>
                     <Button
                       variant="secondary"
-                      size="sm"
                       onClick={() => void navigate(`/app/disputes/${item.dispute_id}`)}
                       testId={`view-replay-btn-${item.dispute_id}`}
                     >
