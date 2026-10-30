@@ -17,7 +17,10 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from agent.app.db.models import Dispute, Job, LedgerEvent
+from typing import Any
+
+from agent.app.db.models import Decision, DemoPool, Dispute, Job, LedgerEvent, Order
+from agent.app.settings import Settings
 from agent.app.domain.enums import JobKind, JobStatus, TimelineEventKind
 from agent.app.errors import NotFoundError
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
@@ -47,12 +50,45 @@ class SyncResult:
     error: str | None = None
 
 
+def _infer_scenario_label(dispute_id: str, dispute_model: Any, session: Session) -> str:
+    """Infer a judge-friendly scenario label from bound orders or dispute reason."""
+    seller_txn_id = None
+    if getattr(dispute_model, "disputed_transactions", None):
+        for tx in dispute_model.disputed_transactions:
+            if getattr(tx, "seller_transaction_id", None):
+                seller_txn_id = tx.seller_transaction_id
+                break
+
+    if seller_txn_id:
+        order = session.scalar(select(Order).where(Order.paypal_transaction_id == seller_txn_id).limit(1))
+        if order and order.order_code:
+            code = order.order_code.upper()
+            if "-A-" in code:
+                return "Delivered with tracking — the agent fights this one"
+            if "-B-" in code:
+                return "In transit — the agent tracks shipment status"
+            if "-C-" in code:
+                return "Larger than your limit — needs your approval"
+            if "-D-" in code:
+                return "Prompt injection attempt — the guardrail catches it"
+            if "-E-" in code:
+                return "Repeat disputer — history flag flagged for review"
+
+    reason = getattr(dispute_model, "reason", "") or ""
+    if "NOT_AS_DESCRIBED" in reason:
+        return "Not as described — policy and return review"
+    if "MERCHANDISE_OR_SERVICE_NOT_RECEIVED" in reason:
+        return "Item not received — tracking and delivery review"
+    return "Standard dispute — automated agent evaluation"
+
+
 async def sync_dispute(
     dispute_id: str,
     session: Session,
     paypal_client: PayPalReadClient,
     event_id: str | None = None,
     event_type: str | None = None,
+    settings: Settings | None = None,
 ) -> SyncResult:
     """Synchronize local dispute state with PayPal.
 
@@ -224,6 +260,63 @@ async def sync_dispute(
 
         # Enqueue agent run if seller response required
         if requires_seller_response(dispute_state):
+            app_settings = settings or Settings()
+            if app_settings.demo_hold_disputes:
+                pool_row = session.get(DemoPool, clean_id)
+                if pool_row is None:
+                    has_been_processed = session.scalar(
+                        select(Decision.id).where(Decision.dispute_id == clean_id).limit(1)
+                    ) is not None or session.scalar(
+                        select(LedgerEvent.id).where(
+                            LedgerEvent.dispute_id == clean_id,
+                            LedgerEvent.event_kind.in_([
+                                TimelineEventKind.RUN_STARTED.value,
+                                TimelineEventKind.GATE_DECIDED.value,
+                            ]),
+                        ).limit(1)
+                    ) is not None
+
+                    if not has_been_processed:
+                        scenario_label = _infer_scenario_label(clean_id, dispute_model, session)
+                        pool_row = DemoPool(
+                            dispute_id=clean_id,
+                            state="pooled",
+                            scenario_label=scenario_label,
+                        )
+                        session.add(pool_row)
+                        next_seq += 1
+                        hold_event = LedgerEvent(
+                            dispute_id=clean_id,
+                            sequence_number=next_seq,
+                            event_kind=TimelineEventKind.DISPUTE_POOLED.value,
+                            payload={
+                                "status": db_status.value,
+                                "reason": db_reason.value,
+                                "message": "Dispute held in demo pool awaiting judge claim",
+                            },
+                        )
+                        session.add(hold_event)
+                        session.flush()
+                        logger.info("Dispute %s held in demo pool with state pooled", clean_id)
+                        return SyncResult(
+                            dispute_id=clean_id,
+                            fingerprint=fp_str,
+                            status=db_status.value,
+                            fingerprint_changed=fingerprint_changed,
+                            agent_run_enqueued=False,
+                            pending_runs_canceled=pending_runs_canceled,
+                        )
+                elif pool_row.state in ("pooled", "done"):
+                    logger.info("Dispute %s in demo pool with state %s; skipping RUN_AGENT enqueue", clean_id, pool_row.state)
+                    return SyncResult(
+                        dispute_id=clean_id,
+                        fingerprint=fp_str,
+                        status=db_status.value,
+                        fingerprint_changed=fingerprint_changed,
+                        agent_run_enqueued=False,
+                        pending_runs_canceled=pending_runs_canceled,
+                    )
+
             # Check for existing pending run_agent job to coalesce
             existing_run_job = session.execute(
                 select(Job).where(
@@ -263,8 +356,12 @@ async def sync_dispute(
             agent_run_enqueued = True
             session.flush()
 
-    # 6. If dispute is resolved, cancel any pending agent runs
+    # 6. If dispute is resolved, cancel any pending agent runs and mark pool row done
     if is_dispute_resolved(dispute_state):
+        pool_row = session.get(DemoPool, clean_id)
+        if pool_row and pool_row.state != "done":
+            pool_row.state = "done"
+            session.flush()
         pending_jobs = session.execute(
             select(Job).where(
                 Job.dispute_id == clean_id,

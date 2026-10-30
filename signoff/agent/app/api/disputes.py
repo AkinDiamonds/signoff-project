@@ -13,7 +13,9 @@ import base64
 from datetime import datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from agent.app.approvals.service import DEMO_APPROVAL_LINKS
+from agent.app.settings import Settings
 from pydantic import BaseModel
 from sqlalchemy import case, select
 from sqlalchemy.orm import Session
@@ -66,6 +68,7 @@ class DisputeDetailResponse(BaseModel):
     latest_verdict: Verdict | None = None
     latest_rule_id: str | None = None
     order_code: str | None = None
+    approval_url: str | None = None
 
 
 def _encode_cursor(offset: int) -> str:
@@ -249,6 +252,7 @@ async def list_disputes(
 )
 async def get_dispute_by_id(
     id: str,
+    request: Request,
     db_session: Annotated[Session, Depends(get_db_session)],
 ) -> DisputeDetailResponse:
     dispute = db_session.get(Dispute, id)
@@ -276,6 +280,16 @@ async def get_dispute_by_id(
                 order_code = order.order_code
                 break
 
+    approval_url = None
+    settings = getattr(request.app.state, "settings", None) if hasattr(request, "app") else Settings()
+    if settings and settings.demo_show_approval_links:
+        demo_links = getattr(request.app.state, "demo_approval_links", None) if hasattr(request, "app") else DEMO_APPROVAL_LINKS
+        if demo_links is None:
+            demo_links = DEMO_APPROVAL_LINKS
+        raw_token = demo_links.get(dispute.id)
+        if raw_token:
+            approval_url = f"{settings.web_base_url.rstrip('/')}/approve/{raw_token}"
+
     return DisputeDetailResponse(
         id=dispute.id,
         status=DisputeStatus(dispute.status),
@@ -289,4 +303,5 @@ async def get_dispute_by_id(
         latest_verdict=latest_verdict,
         latest_rule_id=latest_rule_id,
         order_code=order_code,
+        approval_url=approval_url,
     )

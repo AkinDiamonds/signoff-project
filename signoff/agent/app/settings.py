@@ -4,7 +4,7 @@ from decimal import Decimal
 from enum import StrEnum
 from urllib.parse import urlparse
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import AliasChoices, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -79,6 +79,12 @@ class Settings(BaseSettings):
     approval_token_secret: str = Field(default="", validation_alias="APPROVAL_TOKEN_SECRET")
     store_api_key: str = Field(default="", validation_alias="STORE_API_KEY")
     demo_frozen: bool = Field(default=False, validation_alias="DEMO_FROZEN")
+    demo_hold_disputes: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("DEMO_HOLD_DISPUTES", "DEMO_POOL_HOLD"),
+    )
+    demo_claim_token: str = Field(default="", validation_alias="DEMO_CLAIM_TOKEN")
+    demo_show_approval_links: bool = Field(default=False, validation_alias="DEMO_SHOW_APPROVAL_LINKS")
 
     # Demo scenario generator
     demo_pool_size_per_scenario: int = Field(default=3, ge=1, validation_alias="DEMO_POOL_SIZE_PER_SCENARIO")

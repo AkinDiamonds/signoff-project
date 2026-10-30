@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from agent.app.agent.llm import build_llm_service
+from agent.app.approvals.service import DEMO_APPROVAL_LINKS
 from agent.app.api.approvals import router as approvals_router
 from agent.app.api.charter import router as charter_router
 from agent.app.api.disputes import router as disputes_router
@@ -132,6 +133,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         per_ip_per_day=app_settings.demo_scenarios_per_ip_per_day,
     )
     app.state.demo_idempotency = {}
+    app.state.demo_approval_links = DEMO_APPROVAL_LINKS
 
     # Middleware registration: RequestId outer, CORS inner
     allowed_origins = app_settings.parsed_allowed_origins

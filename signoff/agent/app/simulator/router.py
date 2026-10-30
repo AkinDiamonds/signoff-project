@@ -1,20 +1,42 @@
-"""Demo scenario endpoints: create from the pool, inspect the pool, reset."""
+"""Demo scenario endpoints: create from the pool, inspect the pool, reset, hold, and claim."""
 
 from datetime import UTC, datetime
-from typing import Annotated
+from decimal import Decimal
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, Request, Response
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
-from agent.app.db.models import DemoSession
+from agent.app.db.models import DemoPool, DemoSession, Dispute, Job
 from agent.app.db.session import get_db_session
-from agent.app.errors import AppError, FrozenError
+from agent.app.domain.enums import JobKind, JobStatus
+from agent.app.domain.money import Money
+from agent.app.errors import AppError, FrozenError, NotFoundError
 from agent.app.paypal.buyer_client import BuyerDisputeClient
 from agent.app.settings import PayPalEnv
 from agent.app.simulator import service
 from agent.app.simulator.schemas import PoolResponse, ResetResponse, ScenarioCreated, ScenarioId
 
 router = APIRouter(prefix="/api/demo", tags=["Demo"])
+
+
+class DemoPoolDisputeItem(BaseModel):
+    dispute_id: str
+    state: str
+    scenario_label: str | None = None
+    amount: Money
+    reason: str
+    created_at: datetime
+    seller_response_due_date: datetime | None = None
+    claimed_at: datetime | None = None
+
+
+class ClaimDisputeResponse(BaseModel):
+    dispute_id: str
+    status: str
 
 
 def _session(
@@ -31,12 +53,116 @@ def _session(
     )
 
 
-@router.get("/pool", response_model=PoolResponse)
+@router.get("/pool")
 def get_pool(
+    request: Request,
     db: Annotated[Session, Depends(get_db_session)],
-) -> PoolResponse:
-    """Return global pool availability and per-scenario counts."""
-    return service.pool_snapshot(db)
+) -> Any:
+    """Return pooled disputes for demo judge flow, or scenario counts in legacy stub mode."""
+    settings = request.app.state.settings
+    pool_count = db.scalar(select(func.count(DemoPool.dispute_id))) or 0
+    if not settings.demo_hold_disputes and pool_count == 0:
+        return service.pool_snapshot(db)
+
+    stmt = (
+        select(DemoPool, Dispute)
+        .outerjoin(Dispute, DemoPool.dispute_id == Dispute.id)
+        .order_by(DemoPool.created_at.desc())
+    )
+    items: list[DemoPoolDisputeItem] = []
+    for pool_row, dispute in db.execute(stmt).all():
+        amount = (
+            Money(value=dispute.amount, currency_code=dispute.currency)
+            if dispute and dispute.amount is not None
+            else Money(value=Decimal("0.01"), currency_code="USD")
+        )
+        reason = dispute.reason if dispute else "OTHER"
+        due_date = dispute.seller_response_due_date if dispute else None
+        label = pool_row.scenario_label
+        if not label and dispute:
+            label = f"{reason.replace('_', ' ').capitalize()} dispute"
+        items.append(
+            DemoPoolDisputeItem(
+                dispute_id=pool_row.dispute_id,
+                state=pool_row.state,
+                scenario_label=label,
+                amount=amount,
+                reason=reason,
+                created_at=pool_row.created_at,
+                seller_response_due_date=due_date,
+                claimed_at=pool_row.claimed_at,
+            )
+        )
+    return items
+
+
+@router.post("/claim/{dispute_id}", response_model=ClaimDisputeResponse)
+def claim_dispute(
+    dispute_id: str,
+    request: Request,
+    db: Annotated[Session, Depends(get_db_session)],
+    demo_token: Annotated[str | None, Header(alias="X-Demo-Token")] = None,
+) -> Any:
+    """Claim a pooled dispute for judge evaluation, enqueuing a RUN_AGENT job."""
+    settings = request.app.state.settings
+    if not settings.demo_claim_token or demo_token != settings.demo_claim_token:
+        raise NotFoundError("Claim endpoint is disabled or missing valid demo token")
+
+    clean_id = dispute_id.strip()
+    pool_row = db.get(DemoPool, clean_id)
+    if pool_row is None:
+        raise NotFoundError(f"Dispute {clean_id} not found in demo pool")
+
+    if pool_row.state in ("claimed", "done"):
+        claimed_at_str = pool_row.claimed_at.isoformat() if pool_row.claimed_at else None
+        return JSONResponse(
+            status_code=409,
+            content={
+                "code": "ALREADY_CLAIMED",
+                "claimed_at": claimed_at_str,
+                "error": {
+                    "code": "ALREADY_CLAIMED",
+                    "message": "Dispute has already been claimed",
+                    "claimed_at": claimed_at_str,
+                },
+            },
+        )
+
+    now = datetime.now(UTC)
+    stmt = (
+        update(DemoPool)
+        .where(DemoPool.dispute_id == clean_id, DemoPool.state == "pooled")
+        .values(state="claimed", claimed_at=now)
+    )
+    result = db.execute(stmt)
+    if result.rowcount == 0:
+        db.refresh(pool_row)
+        claimed_at_str = pool_row.claimed_at.isoformat() if pool_row.claimed_at else None
+        return JSONResponse(
+            status_code=409,
+            content={
+                "code": "ALREADY_CLAIMED",
+                "claimed_at": claimed_at_str,
+                "error": {
+                    "code": "ALREADY_CLAIMED",
+                    "message": "Dispute has already been claimed",
+                    "claimed_at": claimed_at_str,
+                },
+            },
+        )
+
+    dispute = db.get(Dispute, clean_id)
+    fingerprint = dispute.state_fingerprint if dispute else ""
+    run_job = Job(
+        kind=JobKind.RUN_AGENT.value,
+        dispute_id=clean_id,
+        status=JobStatus.PENDING.value,
+        payload={"dispute_id": clean_id, "fingerprint": fingerprint},
+    )
+    db.add(run_job)
+    db.commit()
+
+    return ClaimDisputeResponse(dispute_id=clean_id, status="claimed")
 
 
 @router.post("/scenarios/{scenario_id}", response_model=ScenarioCreated, status_code=201)

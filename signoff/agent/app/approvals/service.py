@@ -63,6 +63,29 @@ logger = logging.getLogger(__name__)
 DEFAULT_APPROVAL_TTL = timedelta(days=3)
 MIN_EXPIRY_MARGIN = timedelta(hours=1)
 
+# Process-local in-memory map holding raw approval tokens for hosted demo evaluation.
+# Holds no more than 200 entries (evicts oldest). Exists only for the hosted demo.
+DEMO_APPROVAL_LINKS: dict[str, str] = {}
+MAX_DEMO_APPROVAL_LINKS = 200
+
+
+def record_demo_approval_link(dispute_id: str, raw_token: str) -> None:
+    """Record raw token in process-local map for demo display.
+
+    This map is process-local, holds no more than 200 entries (evict oldest),
+    and exists only for the hosted demo.
+    """
+    if len(DEMO_APPROVAL_LINKS) >= MAX_DEMO_APPROVAL_LINKS:
+        oldest_key = next(iter(DEMO_APPROVAL_LINKS))
+        del DEMO_APPROVAL_LINKS[oldest_key]
+    DEMO_APPROVAL_LINKS[dispute_id] = raw_token
+
+
+def get_demo_approval_token(dispute_id: str) -> str | None:
+    """Get raw token from process-local demo map."""
+    return DEMO_APPROVAL_LINKS.get(dispute_id)
+
+
 
 def _as_utc(dt: datetime) -> datetime:
     """Ensure datetime is timezone-aware UTC, even if loaded as naive from SQLite."""
@@ -148,6 +171,8 @@ def create_approval(
         if app_settings.paypal_env == PayPalEnv.stub and app_settings.app_env != AppEnv.prod:
             from agent.app.test_seams import record_test_approval_token
             record_test_approval_token(decision.dispute_id, raw_token)
+        if getattr(app_settings, "demo_show_approval_links", False):
+            record_demo_approval_link(decision.dispute_id, raw_token)
         if app_settings.log_approval_links:
             logger.info(
                 "APPROVAL_LINK dispute=%s url=%s/approve/%s",
