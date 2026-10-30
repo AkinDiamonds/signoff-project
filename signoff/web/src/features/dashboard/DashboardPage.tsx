@@ -79,8 +79,8 @@ export const DashboardPage: React.FC = () => {
             to={`/app/disputes/${row.id}`}
             style={{
               fontFamily: 'monospace',
-              fontWeight: typography.fontWeightSemibold,
-              color: colors.interactive,
+              fontWeight: 600,
+              color: '#0F766E',
               textDecoration: 'none',
             }}
           >
@@ -90,9 +90,9 @@ export const DashboardPage: React.FC = () => {
       },
       {
         id: 'reason',
-        header: 'Buyer reason',
+        header: 'Buyer Reason',
         cell: (row) => (
-          <span style={{ color: colors.ink }}>{formatDisputeReason(row.reason)}</span>
+          <span style={{ color: '#111827', fontWeight: 500 }}>{formatDisputeReason(row.reason)}</span>
         ),
       },
       {
@@ -103,14 +103,14 @@ export const DashboardPage: React.FC = () => {
       },
       {
         id: 'verdict',
-        header: 'Verdict',
+        header: 'Status',
         cell: (row) => (
           <StatusBadge status={row.latest_verdict ?? row.status} />
         ),
       },
       {
         id: 'due',
-        header: 'Due',
+        header: 'Due Date',
         cell: (row) => (
           <Deadline dueAt={row.seller_response_due_date ?? null} />
         ),
@@ -122,9 +122,9 @@ export const DashboardPage: React.FC = () => {
   if (kpisQuery.isPending) {
     return (
       <div data-testid="dashboard-loading" style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
-        <Skeleton height="36px" width="40%" />
-        <Skeleton height="120px" />
-        <Skeleton height="240px" />
+        <Skeleton height="36px" width="30%" />
+        <Skeleton height="80px" />
+        <Skeleton height="400px" />
       </div>
     );
   }
@@ -143,142 +143,163 @@ export const DashboardPage: React.FC = () => {
   const values = kpiValue(kpis);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
-      <PageHeader
-        title="Disputes"
-        description="What needs you today."
-        testId="dashboard-title"
-      />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[4], maxWidth: '1400px' }}>
+      {/* Page Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing[2] }}>
+        <div>
+          <PageHeader
+            title="Disputes & Operations"
+            description="Autonomous PayPal defense monitoring, signing limits, and real-time dispute metrics."
+            testId="dashboard-title"
+          />
+        </div>
+        <Link
+          to="/app/disputes"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            backgroundColor: '#0F766E',
+            color: '#FFFFFF',
+            padding: '8px 16px',
+            borderRadius: radius.control,
+            fontSize: '14px',
+            fontWeight: 600,
+            textDecoration: 'none',
+          }}
+        >
+          View All Disputes &rarr;
+        </Link>
+      </div>
 
-      {/* Four compact metric cards */}
+      {/* High Priority Operational Triage Banner */}
+      {needsApprovalCount > 0 ? (
+        <div
+          data-testid="kpi-card-approval"
+          style={{
+            padding: '16px 20px',
+            backgroundColor: '#FFFBEB',
+            border: '1px solid #FCD34D',
+            borderRadius: radius.card,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: '#FEF3C7',
+                color: '#D97706',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: '16px',
+              }}
+            >
+              !
+            </div>
+            <div>
+              <div style={{ fontSize: '15px', fontWeight: 600, color: '#92400E' }}>
+                <span data-testid="kpi-needs-approval">{needsApprovalCount}</span> dispute(s) require merchant signoff
+              </div>
+              <div style={{ fontSize: '13px', color: '#B45309' }}>
+                Proposed resolution exceeds auto-refund limit. Merchant action required before PayPal deadline.
+              </div>
+            </div>
+          </div>
+          <Link
+            to="/app/disputes?status=UNDER_REVIEW"
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#D97706',
+              color: '#FFFFFF',
+              borderRadius: radius.control,
+              fontSize: '13px',
+              fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            Review Pending &rarr;
+          </Link>
+        </div>
+      ) : (
+        <div
+          style={{
+            padding: '12px 18px',
+            backgroundColor: '#F0FDF4',
+            border: '1px solid #BBF7D0',
+            borderRadius: radius.card,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontSize: '13px',
+            color: '#166534',
+          }}
+        >
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
+          <span>All PayPal disputes are currently within auto-defense limits. No manual signoffs pending.</span>
+        </div>
+      )}
+
+      {/* Clean Metrics Strip (Replaces AI Card Fatigue) */}
       <section
         aria-label="Dispute metrics"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: spacing[2],
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          backgroundColor: '#FFFFFF',
+          borderRadius: radius.card,
+          border: `1px solid ${colors.border}`,
+          overflow: 'hidden',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
         }}
       >
-        {/* 1. Open disputes */}
-        <div
-          data-testid="kpi-card-open"
-          style={{
-            backgroundColor: colors.surface,
-            borderRadius: radius.card,
-            padding: spacing[2],
-            border: `1px solid ${colors.border}`,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontWeight: typography.fontWeightMedium }}>
-            Open disputes
+        <div data-testid="kpi-card-open" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Open Disputes
           </div>
-          <div
-            data-testid="kpi-open-disputes"
-            style={{ fontSize: '24px', fontWeight: typography.fontWeightSemibold, color: colors.ink, margin: '4px 0' }}
-          >
+          <div data-testid="kpi-open-disputes" style={{ fontSize: '26px', fontWeight: 700, color: '#111827', margin: '4px 0 2px' }}>
             {kpis.open_disputes}
           </div>
-          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
-            Awaiting response or review
-          </div>
+          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Awaiting response or review</div>
         </div>
 
-        {/* 2. At risk */}
-        <div
-          data-testid="kpi-card-risk"
-          style={{
-            backgroundColor: colors.surface,
-            borderRadius: radius.card,
-            padding: spacing[2],
-            border: `1px solid ${colors.border}`,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontWeight: typography.fontWeightMedium }}>
-            At risk
+        <div data-testid="kpi-card-risk" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            At Risk
           </div>
-          <div
-            style={{ fontSize: '24px', fontWeight: typography.fontWeightSemibold, color: colors.ink, margin: '4px 0' }}
-          >
+          <div style={{ fontSize: '26px', fontWeight: 700, color: '#111827', margin: '4px 0 2px' }}>
             <Money testId="kpi-dollars-at-risk" money={{ value: kpis.dollars_at_risk, currency_code: 'USD' }} />
           </div>
-          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
-            Open USD balance
-          </div>
+          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Active disputed volume</div>
         </div>
 
-        {/* 3. Recovered */}
-        <div
-          data-testid="kpi-card-recovered"
-          style={{
-            backgroundColor: colors.surface,
-            borderRadius: radius.card,
-            padding: spacing[2],
-            border: `1px solid ${colors.border}`,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontWeight: typography.fontWeightMedium }}>
+        <div data-testid="kpi-card-recovered" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Recovered
           </div>
-          <div
-            style={{ fontSize: '24px', fontWeight: typography.fontWeightSemibold, color: colors.ink, margin: '4px 0' }}
-          >
+          <div style={{ fontSize: '26px', fontWeight: 700, color: '#059669', margin: '4px 0 2px' }}>
             <Money testId="kpi-recovered" money={{ value: kpis.recovered, currency_code: 'USD' }} />
           </div>
-          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
-            Closed in your favour
-          </div>
+          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Protected revenue won</div>
         </div>
 
-        {/* 4. Needs your approval */}
-        <Link
-          to="/app/disputes?status=UNDER_REVIEW"
-          data-testid="kpi-card-approval"
-          style={{
-            backgroundColor: needsApprovalCount > 0 ? '#FFFDF5' : colors.surface,
-            borderRadius: radius.card,
-            padding: spacing[2],
-            border: `1px solid ${needsApprovalCount > 0 ? '#FFD79D' : colors.border}`,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            textDecoration: 'none',
-            color: 'inherit',
-            transition: 'border-color 0.15s ease',
-          }}
-        >
-          <div
-            style={{
-              fontSize: typography.fontSizeSmall,
-              color: needsApprovalCount > 0 ? '#5E4200' : colors.inkMuted,
-              fontWeight: typography.fontWeightSemibold,
-            }}
-          >
-            Needs your approval
+        <div style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Autonomous Win Rate
           </div>
-          <div
-            data-testid="kpi-needs-approval"
-            style={{
-              fontSize: '24px',
-              fontWeight: typography.fontWeightSemibold,
-              color: needsApprovalCount > 0 ? '#5E4200' : colors.ink,
-              margin: '4px 0',
-            }}
-          >
-            {needsApprovalCount}
+          <div style={{ fontSize: '26px', fontWeight: 700, color: '#0F766E', margin: '4px 0 2px' }}>
+            {values.share}
           </div>
-          <div style={{ fontSize: typography.fontSizeSmall, color: needsApprovalCount > 0 ? '#5E4200' : colors.inkMuted }}>
-            {needsApprovalCount > 0 ? 'Action required by merchant' : 'No pending reviews'}
-          </div>
-        </Link>
+          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Estimated time saved: {values.hours}</div>
+        </div>
       </section>
 
       {/* Hidden test-compatibility KPI hooks */}
@@ -293,41 +314,73 @@ export const DashboardPage: React.FC = () => {
           <span data-testid="kpi-hours-saved">{values.hours}</span>
         </span>
       </div>
-      <p data-testid="kpi-assumption" style={{ margin: 0, fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
+      <p data-testid="kpi-assumption" style={{ margin: 0, fontSize: '12px', color: '#6B7280' }}>
         Estimated hours saved assumes {kpis.assumed_minutes_per_dispute} minutes per closed dispute.
         {kpis.non_usd_open_disputes > 0
           ? ` ${kpis.non_usd_open_disputes} open dispute(s) in other currencies are excluded from USD sums.`
           : ''}
       </p>
 
-      {/* Recent disputes DataTable */}
+      {/* Flagship AG Studio Workspace (Always Visible, Primary Centerpiece) */}
+      <section aria-label="AG Studio Analytics" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0 }}>
+              AG Studio Analytics Workspace
+            </h2>
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                padding: '2px 8px',
+                borderRadius: '9999px',
+                backgroundColor: '#EFF6FF',
+                color: '#2563EB',
+                border: '1px solid #BFDBFE',
+              }}
+            >
+              Interactive BI
+            </span>
+          </div>
+        </div>
+
+        <div style={{ backgroundColor: '#FFFFFF', borderRadius: radius.card, border: `1px solid ${colors.border}`, padding: spacing[2] }}>
+          <StudioEmbed data={studioData} />
+        </div>
+      </section>
+
+      {/* Operational Recent Disputes Queue */}
       <section
         aria-label="Recent disputes"
         data-testid="dashboard-disputes-card"
         style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: radius.card,
+          border: `1px solid ${colors.border}`,
+          padding: spacing[3],
           display: 'flex',
           flexDirection: 'column',
           gap: spacing[2],
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: typography.fontSizeBody, fontWeight: typography.fontWeightSemibold, margin: 0 }}>
-            Recent disputes
+          <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
+            Recent Disputes Queue
           </h2>
           <Link
             to="/app/disputes"
             style={{
-              fontSize: typography.fontSizeSmall,
-              color: colors.interactive,
+              fontSize: '13px',
+              color: '#0F766E',
               textDecoration: 'none',
-              fontWeight: typography.fontWeightMedium,
+              fontWeight: 600,
             }}
           >
-            View all disputes &rarr;
+            All Disputes &rarr;
           </Link>
         </div>
 
-        {disputesQuery.isPending && <Skeleton height="160px" />}
+        {disputesQuery.isPending && <Skeleton height="140px" />}
 
         {disputesQuery.isError && (
           <ErrorState
@@ -339,9 +392,8 @@ export const DashboardPage: React.FC = () => {
 
         {disputesQuery.data && disputes.length === 0 && (
           <EmptyState
-            title="No disputes yet"
-            description="Create a scenario from the demo panel to see the full flow."
-            action={<Link to="/app/demo" style={{ color: colors.interactive }}>Open the demo panel</Link>}
+            title="No disputes pending"
+            description="PayPal dispute queue is currently clean. Incoming dispute webhooks will appear here in real time."
           />
         )}
 
@@ -357,38 +409,15 @@ export const DashboardPage: React.FC = () => {
         )}
       </section>
 
-      {/* Collapsed Dashboard tools disclosure */}
-      <details
-        data-testid="dashboard-tools-disclosure"
-        style={{
-          backgroundColor: colors.surface,
-          borderRadius: radius.card,
-          border: `1px solid ${colors.border}`,
-          padding: spacing[2],
-        }}
-      >
-        <summary
-          style={{
-            cursor: 'pointer',
-            fontSize: typography.fontSizeBody,
-            fontWeight: typography.fontWeightSemibold,
-            color: colors.ink,
-            userSelect: 'none',
-            padding: `${spacing[1]} 0`,
-          }}
-        >
-          Dashboard tools
-        </summary>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], marginTop: spacing[2] }}>
-          <AssistantPanel kpis={kpis} disputes={disputes} />
-          <WidgetsSection
-            disputes={disputes}
-            charter={charterQuery.data}
-            timeline={timelineQuery.data?.items ?? []}
-          />
-          <StudioEmbed data={studioData} />
-        </div>
-      </details>
+      {/* Integrated Assistant & Widgets Section (Test Compatible) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
+        <AssistantPanel kpis={kpis} disputes={disputes} />
+        <WidgetsSection
+          disputes={disputes}
+          charter={charterQuery.data}
+          timeline={timelineQuery.data?.items ?? []}
+        />
+      </div>
     </div>
   );
 };

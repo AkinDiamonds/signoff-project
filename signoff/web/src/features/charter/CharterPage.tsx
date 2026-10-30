@@ -118,6 +118,17 @@ const SettingRow: React.FC<SettingRowProps> = ({
   </div>
 );
 
+const HUMAN_REASON_LABELS: Record<string, string> = {
+  MERCHANDISE_OR_SERVICE_NOT_RECEIVED: 'Item Not Received',
+  UNAUTHORISED_TRANSACTION: 'Unauthorized Transaction',
+  MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED: 'Significantly Not As Described',
+  CANCEL_RECURRING_BILLING: 'Canceled Recurring Subscription',
+  CREDIT_NOT_PROCESSED: 'Credit Not Processed',
+  DUPLICATE_TRANSACTION: 'Duplicate Charge',
+  INCORRECT_AMOUNT: 'Incorrect Amount Billed',
+  PAYMENT_BY_OTHER_MEANS: 'Paid By Other Payment Method',
+};
+
 const CheckboxGroup = <T extends string>({
   legend,
   options,
@@ -138,21 +149,38 @@ const CheckboxGroup = <T extends string>({
       borderRadius: radius.card,
       padding: spacing[2],
       margin: 0,
+      backgroundColor: '#FAFAFA',
     }}
   >
-    <legend style={{ fontWeight: typography.fontWeightSemibold, fontSize: typography.fontSizeSmall, color: colors.ink }}>
+    <legend style={{ fontWeight: typography.fontWeightSemibold, fontSize: typography.fontSizeSmall, color: colors.ink, padding: '0 4px' }}>
       {legend}
     </legend>
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2], marginTop: spacing[1] }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px', marginTop: spacing[1] }}>
       {options.map((option) => (
-        <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: typography.fontSizeBody, color: colors.ink }}>
+        <label
+          key={option}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '13px',
+            color: colors.ink,
+            padding: '6px 10px',
+            borderRadius: radius.control,
+            backgroundColor: selected.includes(option) ? '#F0FDFA' : '#FFFFFF',
+            border: `1px solid ${selected.includes(option) ? '#99F6E4' : colors.border}`,
+            cursor: 'pointer',
+          }}
+        >
           <input
             type="checkbox"
             checked={selected.includes(option)}
             onChange={() => onChange(toggleList(selected, option))}
             data-testid={`${testId}-${option}`}
           />
-          {option.replace(/_/g, ' ')}
+          <span style={{ fontWeight: selected.includes(option) ? 600 : 400 }}>
+            {HUMAN_REASON_LABELS[option] || option.replace(/_/g, ' ')}
+          </span>
         </label>
       ))}
     </div>

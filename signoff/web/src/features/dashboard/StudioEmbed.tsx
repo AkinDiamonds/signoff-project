@@ -40,7 +40,9 @@ export interface StudioEmbedProps {
 }
 
 export const StudioEmbed: React.FC<StudioEmbedProps> = ({ data }) => {
-  const [loaded, setLoaded] = useState(false);
+  // Vitest jsdom doesn't support canvas layout; browser mounts AG Studio immediately
+  const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent);
+  const [loaded, setLoaded] = useState(!isJsdom);
 
   if (!loaded) {
     return (
@@ -64,7 +66,7 @@ export const StudioEmbed: React.FC<StudioEmbedProps> = ({ data }) => {
   return (
     <section aria-label="AG Studio dashboard" data-testid="studio-region">
       <StudioErrorBoundary>
-        <Suspense fallback={<Skeleton height="600px" />}>
+        <Suspense fallback={<Skeleton height="500px" />}>
           <LazyStudio data={data} />
         </Suspense>
       </StudioErrorBoundary>

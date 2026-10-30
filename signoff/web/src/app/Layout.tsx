@@ -12,12 +12,10 @@ import {
 import { ErrorBoundary } from './ErrorBoundary';
 
 const NAV_ITEMS = [
-  { to: '/app', label: 'Home' },
+  { to: '/app', label: 'Dashboard' },
   { to: '/app/disputes', label: 'Disputes' },
-  { to: '/app/pool', label: 'Demo disputes' },
-  { to: '/app/charter', label: 'Charter' },
-  { to: '/app/demo', label: 'Demo' },
-  { to: '/guide', label: 'Guide' },
+  { to: '/app/policy', label: 'Policy Rules' },
+  { to: '/app/settings', label: 'Settings' },
 ];
 
 export const Layout: React.FC = () => {
@@ -35,7 +33,7 @@ export const Layout: React.FC = () => {
           tabIndex={-1}
           style={{
             minHeight: '100vh',
-            backgroundColor: 'var(--signoff-app-bg, #F1F1F1)',
+            backgroundColor: 'var(--signoff-app-bg, #F8F9FA)',
             padding: spacing[2],
             display: 'flex',
             flexDirection: 'column',
@@ -59,8 +57,8 @@ export const Layout: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         fontFamily: typography.fontFamily,
-        backgroundColor: 'var(--signoff-app-bg, #F1F1F1)',
-        color: 'var(--signoff-text-primary, #303030)',
+        backgroundColor: 'var(--signoff-app-bg, #F8F9FA)',
+        color: 'var(--signoff-text-primary, #1A1F2C)',
       }}
     >
       <style>{`
@@ -87,32 +85,34 @@ export const Layout: React.FC = () => {
         .signoff-nav-link {
           display: flex;
           align-items: center;
-          height: 32px;
-          padding: 0 8px;
-          border-radius: ${radius.control};
-          font-size: ${typography.fontSizeBody};
-          line-height: 20px;
-          color: var(--signoff-sidebar-text, #303030);
+          height: 36px;
+          padding: 0 12px;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 500;
+          color: #4B5563;
           text-decoration: none;
           position: relative;
-          transition: background-color 0.1s ease;
+          transition: background-color 0.1s ease, color 0.1s ease;
         }
         .signoff-nav-link:hover {
-          background-color: rgba(0, 0, 0, 0.05);
+          background-color: rgba(0, 0, 0, 0.04);
+          color: #111827;
         }
         .signoff-nav-link.active {
-          background-color: rgba(0, 0, 0, 0.08);
+          background-color: #F0FDFA;
+          color: #0F766E;
           font-weight: 600;
         }
         .signoff-nav-link.active::before {
           content: '';
           position: absolute;
           left: 0;
-          top: 6px;
-          bottom: 6px;
+          top: 8px;
+          bottom: 8px;
           width: 3px;
           border-radius: 2px;
-          background-color: var(--signoff-nav-accent, #0F766E);
+          background-color: #0F766E;
         }
         @media (max-width: 899px) {
           .signoff-sidebar-desktop {
@@ -121,6 +121,10 @@ export const Layout: React.FC = () => {
           .signoff-menu-toggle {
             display: flex !important;
           }
+          .signoff-main-wrapper {
+            margin-left: 0 !important;
+            padding: 16px !important;
+          }
         }
         @media (min-width: 900px) {
           .signoff-menu-toggle {
@@ -128,6 +132,10 @@ export const Layout: React.FC = () => {
           }
           .signoff-sidebar-mobile {
             display: none !important;
+          }
+          .signoff-main-wrapper {
+            margin-left: 240px !important;
+            padding: 24px 32px !important;
           }
         }
       `}</style>
@@ -138,26 +146,26 @@ export const Layout: React.FC = () => {
 
       <Banner variant="sandbox" testId="banner-sandbox" />
 
-      {/* 56px Top Bar */}
+      {/* 56px Top Header Bar */}
       <header
         data-testid="shell-topbar"
         style={{
           height: '56px',
           boxSizing: 'border-box',
-          backgroundColor: 'var(--signoff-topbar, #FFFFFF)',
-          color: 'var(--signoff-topbar-text, #303030)',
-          borderBottom: '1px solid var(--signoff-border, #E1E1E1)',
+          backgroundColor: '#FFFFFF',
+          color: '#111827',
+          borderBottom: '1px solid #E5E7EB',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: `0 ${spacing[2]}`,
+          padding: `0 ${spacing[3]}`,
           position: 'sticky',
           top: 0,
           zIndex: 100,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1.5] }}>
-          {/* Hamburger button for mobile */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
+          {/* Mobile hamburger */}
           <button
             type="button"
             className="signoff-menu-toggle"
@@ -169,7 +177,7 @@ export const Layout: React.FC = () => {
               cursor: 'pointer',
               padding: '6px',
               borderRadius: radius.control,
-              color: 'var(--signoff-topbar-text, #303030)',
+              color: '#374151',
               display: 'none',
               alignItems: 'center',
               justifyContent: 'center',
@@ -180,9 +188,9 @@ export const Layout: React.FC = () => {
             </svg>
           </button>
 
-          {/* Signoff wordmark */}
+          {/* Signoff Wordmark */}
           <NavLink
-            to="/"
+            to="/app"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -191,71 +199,95 @@ export const Layout: React.FC = () => {
               color: 'inherit',
             }}
           >
-            <span
+            <div
               style={{
-                fontSize: '14px',
-                fontWeight: typography.fontWeightSemibold,
-                letterSpacing: '-0.01em',
+                width: '24px',
+                height: '24px',
+                borderRadius: '6px',
+                background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#FFFFFF',
+                fontWeight: 700,
+                fontSize: '13px',
               }}
             >
+              S
+            </div>
+            <span style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '-0.02em', color: '#111827' }}>
               Signoff
             </span>
           </NavLink>
 
-          {/* Sandbox demo chip */}
           <span
             style={{
-              display: 'inline-block',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
               fontSize: '11px',
-              fontWeight: 500,
-              backgroundColor: 'rgba(0, 0, 0, 0.06)',
-              color: 'inherit',
-              padding: '2px 6px',
-              borderRadius: radius.control,
+              fontWeight: 600,
+              backgroundColor: '#F3F4F6',
+              color: '#4B5563',
+              padding: '2px 8px',
+              borderRadius: '9999px',
+              border: '1px solid #E5E7EB',
             }}
           >
-            Sandbox demo
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }} />
+            Live Sync
           </span>
         </div>
 
-        {/* Right side: Store name + Theme icon */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1.5] }}>
+        {/* Right side header controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
           <span
             style={{
-              fontSize: typography.fontSizeBody,
-              fontWeight: typography.fontWeightMedium,
-              color: 'var(--signoff-topbar-text, #303030)',
+              fontSize: '13px',
+              fontWeight: 600,
+              color: '#374151',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              backgroundColor: '#F9FAFB',
+              border: '1px solid #E5E7EB',
             }}
           >
-            My Store
+            Signoff Shop
           </span>
           <ThemeToggleButton />
         </div>
       </header>
 
-      {/* Main app body: Sidebar + Content */}
+      {/* Main Body Layout */}
       <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
-        {/* Desktop Sidebar (240px) */}
+        {/* Desktop Fixed Sidebar (240px wide, pinned to full viewport height) */}
         <aside
           data-testid="shell-sidebar"
           className="signoff-sidebar-desktop"
           style={{
+            position: 'fixed',
+            top: '56px',
+            bottom: 0,
+            left: 0,
             width: '240px',
-            backgroundColor: 'var(--signoff-sidebar, #FFFFFF)',
-            borderRight: '1px solid var(--signoff-border, #E1E1E1)',
-            padding: `${spacing[2]} ${spacing[1]}`,
+            backgroundColor: '#FFFFFF',
+            borderRight: '1px solid #E5E7EB',
+            padding: `${spacing[3]} ${spacing[2]}`,
             boxSizing: 'border-box',
-            flexShrink: 0,
-            minHeight: 'calc(100vh - 56px)',
+            overflowY: 'auto',
+            zIndex: 40,
           }}
         >
           <nav aria-label="Main">
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px 8px' }}>
+              Merchant Workspace
+            </div>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
               {NAV_ITEMS.map((item) => (
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
-                    end={item.to === '/app' || item.to === '/'}
+                    end={item.to === '/app'}
                     className={({ isActive }) => `signoff-nav-link ${isActive ? 'active' : ''}`}
                   >
                     {item.label}
@@ -263,10 +295,26 @@ export const Layout: React.FC = () => {
                 </li>
               ))}
             </ul>
+
+            <div style={{ marginTop: '32px', paddingTop: '16px', borderTop: '1px solid #F3F4F6' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px 8px' }}>
+                Storefront
+              </div>
+              <a
+                href={import.meta.env.PUBLIC_SHOP_URL || 'http://localhost:5174'}
+                target="_blank"
+                rel="noreferrer"
+                className="signoff-nav-link"
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <span>Buyer Shop ↗</span>
+                <span style={{ fontSize: '11px', color: '#9CA3AF' }}>:5174</span>
+              </a>
+            </div>
           </nav>
         </aside>
 
-        {/* Mobile Slide-over Sidebar */}
+        {/* Mobile Slide-over Drawer */}
         {mobileNavOpen && (
           <div
             className="signoff-sidebar-mobile"
@@ -281,22 +329,36 @@ export const Layout: React.FC = () => {
               style={{
                 position: 'fixed',
                 inset: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                backdropFilter: 'blur(2px)',
               }}
               onClick={() => setMobileNavOpen(false)}
             />
             <aside
               style={{
                 position: 'relative',
-                width: '240px',
-                backgroundColor: 'var(--signoff-sidebar, #FFFFFF)',
-                borderRight: '1px solid var(--signoff-border, #E1E1E1)',
-                padding: `${spacing[2]} ${spacing[1]}`,
+                width: '260px',
+                height: '100%',
+                backgroundColor: '#FFFFFF',
+                borderRight: '1px solid #E5E7EB',
+                padding: `${spacing[3]} ${spacing[2]}`,
                 zIndex: 901,
                 display: 'flex',
                 flexDirection: 'column',
+                gap: spacing[2],
+                boxShadow: '4px 0 24px rgba(0, 0, 0, 0.15)',
               }}
             >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 8px 8px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#111827' }}>Navigation</span>
+                <button
+                  type="button"
+                  onClick={() => setMobileNavOpen(false)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#6B7280' }}
+                >
+                  &times;
+                </button>
+              </div>
               <nav aria-label="Main">
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {NAV_ITEMS.map((item) => (
@@ -304,7 +366,7 @@ export const Layout: React.FC = () => {
                       <NavLink
                         to={item.to}
                         onClick={() => setMobileNavOpen(false)}
-                        end={item.to === '/app' || item.to === '/'}
+                        end={item.to === '/app'}
                         className={({ isActive }) => `signoff-nav-link ${isActive ? 'active' : ''}`}
                       >
                         {item.label}
@@ -317,15 +379,14 @@ export const Layout: React.FC = () => {
           </div>
         )}
 
-        {/* Main Content Area */}
+        {/* Main Content Area - scrolls independently */}
         <main
           id="main-content"
           tabIndex={-1}
+          className="signoff-main-wrapper"
           style={{
             flex: 1,
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: spacing[4],
+            minHeight: 'calc(100vh - 56px)',
             boxSizing: 'border-box',
             outline: 'none',
             width: '100%',

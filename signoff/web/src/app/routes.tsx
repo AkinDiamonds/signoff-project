@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router';
 import { Layout } from './Layout';
+import { MarketingLayout } from './MarketingLayout';
 import { HomePage, NotFoundPage } from './pages';
 import { DisputeListPage, DisputeDetailPage } from '../features/disputes';
 import { ApprovalPage } from '../features/approval';
@@ -7,22 +8,33 @@ import { CharterPage } from '../features/charter';
 import { DemoPanel, JudgePoolPage } from '../features/demo';
 import { DashboardPage } from '../features/dashboard';
 import { GuidePage } from '../features/site';
+import { SettingsPage } from '../features/settings/SettingsPage';
 
 export const routes: RouteObject[] = [
+  // Standalone public marketing layout (no sidebar, no demo banners)
   {
-    element: <Layout />,
+    element: <MarketingLayout />,
     children: [
       { index: true, element: <HomePage /> },
       { path: 'guide', element: <GuidePage /> },
-      { path: 'app', element: <DashboardPage /> },
-      { path: 'app/disputes', element: <DisputeListPage /> },
-      { path: 'app/disputes/:id', element: <DisputeDetailPage /> },
-      { path: 'app/charter', element: <CharterPage /> },
-      { path: 'app/demo', element: <DemoPanel /> },
-      { path: 'app/pool', element: <JudgePoolPage /> },
-      { path: 'approve/:token', element: <ApprovalPage /> },
-      { path: '*', element: <NotFoundPage /> },
     ],
   },
+  // Authenticated merchant console layout (pinned fixed sidebar, independent scroll)
+  {
+    path: 'app',
+    element: <Layout />,
+    children: [
+      { index: true, element: <DashboardPage /> },
+      { path: 'disputes', element: <DisputeListPage /> },
+      { path: 'disputes/:id', element: <DisputeDetailPage /> },
+      { path: 'policy', element: <CharterPage /> },
+      { path: 'settings', element: <SettingsPage /> },
+      // Compatibility aliases
+      { path: 'charter', element: <CharterPage /> },
+      { path: 'demo', element: <DemoPanel /> },
+      { path: 'pool', element: <JudgePoolPage /> },
+    ],
+  },
+  { path: 'approve/:token', element: <ApprovalPage /> },
+  { path: '*', element: <NotFoundPage /> },
 ];
-
