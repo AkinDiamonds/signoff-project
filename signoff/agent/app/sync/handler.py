@@ -13,18 +13,17 @@ Fulfills Step 09 requirements:
 
 import logging
 from dataclasses import dataclass
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from typing import Any
-
 from agent.app.db.models import Decision, DemoPool, Dispute, Job, LedgerEvent, Order
-from agent.app.settings import Settings
 from agent.app.domain.enums import JobKind, JobStatus, TimelineEventKind
 from agent.app.errors import NotFoundError
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.paypal.read_client import PayPalReadClient
+from agent.app.settings import Settings
 from agent.app.sync.state import (
     is_dispute_resolved,
     map_dispute_state_to_db_status,
@@ -307,7 +306,11 @@ async def sync_dispute(
                             pending_runs_canceled=pending_runs_canceled,
                         )
                 elif pool_row.state in ("pooled", "done"):
-                    logger.info("Dispute %s in demo pool with state %s; skipping RUN_AGENT enqueue", clean_id, pool_row.state)
+                    logger.info(
+                        "Dispute %s in demo pool with state %s; skipping RUN_AGENT enqueue",
+                        clean_id,
+                        pool_row.state,
+                    )
                     return SyncResult(
                         dispute_id=clean_id,
                         fingerprint=fp_str,

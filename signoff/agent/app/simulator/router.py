@@ -18,7 +18,7 @@ from agent.app.errors import AppError, FrozenError, NotFoundError
 from agent.app.paypal.buyer_client import BuyerDisputeClient
 from agent.app.settings import PayPalEnv
 from agent.app.simulator import service
-from agent.app.simulator.schemas import PoolResponse, ResetResponse, ScenarioCreated, ScenarioId
+from agent.app.simulator.schemas import ResetResponse, ScenarioCreated, ScenarioId
 
 router = APIRouter(prefix="/api/demo", tags=["Demo"])
 

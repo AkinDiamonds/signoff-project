@@ -14,17 +14,17 @@ from datetime import datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from agent.app.approvals.service import DEMO_APPROVAL_LINKS
-from agent.app.settings import Settings
 from pydantic import BaseModel
 from sqlalchemy import case, select
 from sqlalchemy.orm import Session
 
+from agent.app.approvals.service import DEMO_APPROVAL_LINKS
 from agent.app.db.models import Decision, Dispute, Order
 from agent.app.db.session import get_db_session
 from agent.app.domain.enums import DisputeReason, DisputeStatus, Verdict
 from agent.app.domain.money import Money
 from agent.app.errors import NotFoundError
+from agent.app.settings import Settings
 
 router = APIRouter(prefix="/api/disputes", tags=["Disputes"])
 
@@ -283,7 +283,11 @@ async def get_dispute_by_id(
     approval_url = None
     settings = getattr(request.app.state, "settings", None) if hasattr(request, "app") else Settings()
     if settings and settings.demo_show_approval_links:
-        demo_links = getattr(request.app.state, "demo_approval_links", None) if hasattr(request, "app") else DEMO_APPROVAL_LINKS
+        demo_links = (
+            getattr(request.app.state, "demo_approval_links", None)
+            if hasattr(request, "app")
+            else DEMO_APPROVAL_LINKS
+        )
         if demo_links is None:
             demo_links = DEMO_APPROVAL_LINKS
         raw_token = demo_links.get(dispute.id)
