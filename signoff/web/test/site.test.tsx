@@ -72,36 +72,30 @@ describe('Site Feature Components', () => {
       });
 
       // Hero
-      expect(screen.getByRole('heading', { level: 1, name: /AI-Driven Dispute Defense/i })).toBeTruthy();
+      expect(screen.getByRole('heading', { level: 1, name: /Signoff fights PayPal disputes/i })).toBeTruthy();
       const guideCta = screen.getByTestId('landing-cta-guide');
       expect(guideCta.getAttribute('href')).toBe('/guide');
-      expect(screen.getByTestId('landing-cta-dashboard').getAttribute('href')).toBe('/app');
-
-      // Try it in 3 minutes
-      expect(screen.getByRole('heading', { name: /Try it in 3 minutes/i })).toBeTruthy();
       expect(screen.getByTestId('landing-cta-pool').getAttribute('href')).toBe('/app/pool');
 
       // Problem section
-      expect(screen.getByRole('heading', { name: /The Problem:/i })).toBeTruthy();
-      expect(screen.getByText(/Strict 10-20 Day Deadlines/i)).toBeTruthy();
+      expect(screen.getByRole('heading', { name: /PayPal disputes have a deadline/i })).toBeTruthy();
+      expect(screen.getAllByText(/10 days/i).length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText(/The Hallucination Danger/i)).toBeTruthy();
 
       // Signing limit idea
-      expect(screen.getByRole('heading', { name: /The Solution: The Authority Charter/i })).toBeTruthy();
-      expect(screen.getByText(/AI Proposes Only/i)).toBeTruthy();
-      expect(screen.getByText(/Pure Deterministic Gate/i)).toBeTruthy();
-      expect(screen.getByText(/1-Tap Mobile Signoff/i)).toBeTruthy();
+      expect(screen.getByRole('heading', { name: /You set the limit\. The rule is hard\./i })).toBeTruthy();
+      expect(screen.getByText(/An approval can raise your own limits/i)).toBeTruthy();
+      expect(screen.getByText(/An approval can never override PayPal/i)).toBeTruthy();
 
-      // Pipeline
-      expect(screen.getByRole('heading', { name: /How It Works:/i })).toBeTruthy();
-      expect(screen.getByText('Webhook Sync')).toBeTruthy();
-      expect(screen.getByText('Evidence Assembly')).toBeTruthy();
-      expect(screen.getByText('Policy Gate')).toBeTruthy();
-      expect(screen.getByText('Merchant Signoff')).toBeTruthy();
-      expect(screen.getByText('Write-Ahead Dispatch')).toBeTruthy();
+      // Pipeline (4 steps)
+      expect(screen.getByRole('heading', { name: /How it works/i })).toBeTruthy();
+      expect(screen.getByText('PayPal opens a dispute')).toBeTruthy();
+      expect(screen.getByText('The agent gathers your evidence')).toBeTruthy();
+      expect(screen.getByText('Your rules decide what it can do')).toBeTruthy();
+      expect(screen.getByText('It acts, or it asks you')).toBeTruthy();
 
       // Claims
-      expect(screen.getByRole('heading', { name: /Public Claims & Proof Ledger/i })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: /What we can prove/i })).toBeTruthy();
       expect(screen.getByTestId('claim-card-CLAIM-AI-NO-MUTATING')).toBeTruthy();
       expect(screen.getByTestId('claim-card-CLAIM-GATE-FAIL-CLOSED')).toBeTruthy();
 
@@ -111,11 +105,11 @@ describe('Site Feature Components', () => {
   });
 
   describe('GuidePage', () => {
-    it('renders 5-step numbered path, credentials, comparison table, and resource links', () => {
+    it('renders 5-step numbered path, comparison table, and resource links', () => {
       renderWithProviders(<GuidePage />);
 
       // Header and resource links
-      expect(screen.getByRole('heading', { level: 1, name: /5-Minute Judge Guide/i })).toBeTruthy();
+      expect(screen.getByRole('heading', { level: 1, name: /How to test Signoff/i })).toBeTruthy();
       expect(screen.getByTestId('guide-link-repo').getAttribute('href')).toContain('github.com');
       expect(screen.getByTestId('guide-link-license').getAttribute('href')).toBe('/LICENSE');
       expect(screen.getByTestId('guide-link-video').getAttribute('href')).toContain('youtube.com');
@@ -130,11 +124,6 @@ describe('Site Feature Components', () => {
       expect(screen.getByTestId('guide-step-4-disputes-link')).toBeTruthy();
       expect(screen.getByTestId('guide-step-4-demo-link')).toBeTruthy();
       expect(screen.getByTestId('guide-step-5')).toBeTruthy();
-
-      // Test credentials
-      expect(screen.getByTestId('guide-credentials-card')).toBeTruthy();
-      expect(screen.getByTestId('guide-buyer-email').textContent).toBe('alex.morgan@example.test');
-      expect(screen.getByTestId('guide-merchant-id').textContent).toBe('sb-merchant@example.test');
 
       // Real vs Simulated Table
       const table = screen.getByTestId('real-simulated-table');

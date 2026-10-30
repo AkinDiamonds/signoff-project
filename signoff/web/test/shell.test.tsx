@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { ThemeProvider } from '@signoff/ui';
@@ -23,6 +23,7 @@ function renderAt(path: string) {
 
 describe('web shell', () => {
   afterEach(() => {
+    cleanup();
     vi.unstubAllGlobals();
   });
 

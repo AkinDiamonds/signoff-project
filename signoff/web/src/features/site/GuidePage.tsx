@@ -1,17 +1,16 @@
 /**
  * Judge Guide page at `/guide`.
- * Provides the 5-minute evaluation path, test credentials,
- * real-versus-simulated architectural breakdown, links to repo/license/video,
- * and persistent view switcher.
+ * Provides the 3-minute evaluation walkthrough, real-versus-simulated
+ * architectural transparency, and direct links to live test scenarios.
  */
 
 import React from 'react';
 import { Card, colors, spacing } from '@signoff/ui';
 import { ViewSwitcher } from './ViewSwitcher';
 
-export const GuidePage: React.FC = () => {
-  const shopBaseUrl = import.meta.env.PUBLIC_SHOP_URL || 'http://localhost:5174';
+const SERIF_STACK = `'Newsreader', 'Instrument Serif', 'Playfair Display', Georgia, 'Times New Roman', serif`;
 
+export const GuidePage: React.FC = () => {
   return (
     <div data-testid="guide-page" style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
       {/* Persistent Audience View Switcher */}
@@ -24,23 +23,20 @@ export const GuidePage: React.FC = () => {
           paddingBottom: spacing[2],
         }}
       >
-        <span
+        <h1
           style={{
-            fontSize: '12px',
-            fontWeight: 700,
-            color: colors.brandPrimary,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
+            fontFamily: SERIF_STACK,
+            fontSize: '32px',
+            fontWeight: 400,
+            color: colors.ink,
+            margin: '0 0 8px 0',
+            lineHeight: 1.2,
           }}
         >
-          Hackathon Evaluation Walkthrough
-        </span>
-        <h1 style={{ fontSize: '26px', fontWeight: 800, color: colors.ink, margin: '4px 0 8px 0' }}>
-          5-Minute Judge Guide
+          How to test Signoff
         </h1>
         <p style={{ fontSize: '15px', color: colors.inkMuted, margin: 0, lineHeight: 1.5 }}>
-          Follow this 5-step path to test both sides of Signoff: the buyer storefront experience and the merchant
-          dispute defense operations.
+          Follow these five steps. No terminal, no sandbox account, no prior knowledge needed.
         </p>
       </header>
 
@@ -112,27 +108,24 @@ export const GuidePage: React.FC = () => {
         </a>
       </section>
 
-      {/* Numbered 5-Minute Path */}
+      {/* Numbered 5-Step Evaluation Path */}
       <section aria-labelledby="numbered-path-title" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
-        <h2 id="numbered-path-title" style={{ fontSize: '18px', fontWeight: 700, color: colors.ink, margin: 0 }}>
-          Numbered Path: Test in 5 Minutes
+        <h2 id="numbered-path-title" style={{ fontFamily: SERIF_STACK, fontSize: '22px', fontWeight: 400, color: colors.ink, margin: 0 }}>
+          Follow these five steps
         </h2>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
           {/* Step 1 */}
-          <Card title="Step 1: Open the Storefront" testId="guide-step-1">
+          <Card title="Step 1: Open a live dispute" testId="guide-step-1">
             <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: colors.ink, lineHeight: 1.5 }}>
-              Open our demonstration storefront (fictional artisan store). The shop is connected to the PayPal sandbox
-              environment with custom catalog items and real-time cart pricing.
+              The agent has not run yet — you are about to watch it. Open the dispute pool to select an open case.
             </p>
             <a
-              href={`${shopBaseUrl}/`}
-              target="_blank"
-              rel="noreferrer"
+              href="/app/pool"
               data-testid="guide-step-1-link"
               style={{
                 display: 'inline-block',
-                backgroundColor: '#b45309',
+                backgroundColor: colors.brandPrimary,
                 color: '#ffffff',
                 padding: '8px 16px',
                 borderRadius: '6px',
@@ -141,33 +134,29 @@ export const GuidePage: React.FC = () => {
                 textDecoration: 'none',
               }}
             >
-              Open Candle Storefront ↗
+              Open Dispute Pool →
             </a>
           </Card>
 
           {/* Step 2 */}
-          <Card title="Step 2: Use a Demo Order (or PayPal Checkout)" testId="guide-step-2">
-            <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: colors.ink, lineHeight: 1.5 }}>
-              In the shop cart, click <strong>&quot;Use a demo order&quot;</strong> to instantly claim a pre-funded paid
-              sandbox order without typing credit card numbers. Alternatively, complete a live sandbox checkout using
-              the PayPal buttons and the test credentials below.
+          <Card title="Step 2: Watch it work" testId="guide-step-2">
+            <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: colors.ink, lineHeight: 1.5 }}>
+              Observe the four timeline stages: evidence gathering from your store, evaluation against your rules,
+              the policy gate verdict, and the confirmed PayPal action. Wait ~20 seconds for the pipeline to complete.
             </p>
             <div style={{ fontSize: '12px', color: colors.inkMuted }}>
-              Copy the resulting 10-character Order Code (e.g., <code>ORD-xxxxxx</code>) displayed on the confirmation page.
+              The agent re-fetches carrier tracking and synthesizes proof without making unauthorized write calls.
             </div>
           </Card>
 
           {/* Step 3 */}
-          <Card title="Step 3: Report a Problem (Buyer Portal)" testId="guide-step-3">
+          <Card title="Step 3: Approve something" testId="guide-step-3">
             <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: colors.ink, lineHeight: 1.5 }}>
-              Go to the Buyer Portal, enter your Order Code and buyer email (<code>alex.morgan@example.test</code>),
-              and click <strong>&quot;Report a Problem&quot;</strong>. Select a supported reason:
-              <em>&quot;Item Not Received&quot;</em> or <em>&quot;Significantly Not As Described&quot;</em>.
+              This action is over the auto-approve limit — you are the one authorising it. Open any dispute requiring
+              merchant signoff to inspect the proposed plan and 1-tap signoff token.
             </p>
             <a
-              href={`${shopBaseUrl}/orders`}
-              target="_blank"
-              rel="noreferrer"
+              href="/app/disputes"
               data-testid="guide-step-3-link"
               style={{
                 display: 'inline-block',
@@ -181,16 +170,15 @@ export const GuidePage: React.FC = () => {
                 textDecoration: 'none',
               }}
             >
-              Go to Buyer Order Lookup ↗
+              View Disputes Needing Signoff →
             </a>
           </Card>
 
           {/* Step 4 */}
-          <Card title="Step 4: Watch the Dashboard & Policy Gate" testId="guide-step-4">
+          <Card title="Step 4: See a prompt injection blocked" testId="guide-step-4">
             <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: colors.ink, lineHeight: 1.5 }}>
-              Switch back to the Signoff Dashboard (`/app` or `/app/disputes`). The dispute is ingested instantly via
-              verified webhooks. The AI assembles shipping evidence, evaluates the claim, and sends the proposed action
-              to the pure deterministic policy gate.
+              Look for a buyer message attempting prompt injection (e.g. demanding an unearned refund) and inspect
+              the gate decision that deterministically blocks and fails closed.
             </p>
             <div style={{ display: 'flex', gap: spacing[1], flexWrap: 'wrap' }}>
               <a
@@ -206,7 +194,7 @@ export const GuidePage: React.FC = () => {
                   textDecoration: 'none',
                 }}
               >
-                View Disputes List →
+                Inspect Injection Dispute →
               </a>
               <a
                 href="/app/demo"
@@ -222,88 +210,41 @@ export const GuidePage: React.FC = () => {
                   textDecoration: 'none',
                 }}
               >
-                Trigger Demo Scenarios A-E →
+                Scenario Controls →
               </a>
             </div>
           </Card>
 
           {/* Step 5 */}
-          <Card title="Step 5: Approve on Mobile (1-Tap Signoff)" testId="guide-step-5">
+          <Card title="Step 5: Ask the dashboard" testId="guide-step-5">
             <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: colors.ink, lineHeight: 1.5 }}>
-              For disputes that exceed charter thresholds (e.g. Scenario B, C, or E), Signoff generates a mobile-first
-              cryptographic approval token. Open the approval screen (`/approve/:token`) on your mobile browser or
-              viewport to review evidence, adjust settlement offers, and execute the signoff with a single tap.
+              Open the merchant dashboard at <code>/app</code> to inspect the four key operational metrics:
+              dollars at risk, deadline radar, authority meter usage, and auto-resolved share.
             </p>
-            <div style={{ fontSize: '12px', color: colors.inkMuted }}>
-              Notice: Double-tap protection, anti-tampering amount validation, and instant write-ahead execution.
-            </div>
+            <a
+              href="/app"
+              style={{
+                display: 'inline-block',
+                backgroundColor: colors.surface,
+                color: colors.ink,
+                border: `1px solid ${colors.borderStrong}`,
+                padding: '8px 16px',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 600,
+                textDecoration: 'none',
+              }}
+            >
+              Open Merchant Dashboard →
+            </a>
           </Card>
         </div>
       </section>
 
-      {/* Test Credentials Card */}
-      <section aria-labelledby="credentials-title">
-        <Card title="Sandbox Test Credentials" testId="guide-credentials-card">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
-            <p style={{ margin: 0, fontSize: '13px', color: colors.ink, lineHeight: 1.5 }}>
-              All interactions run exclusively against the official PayPal Sandbox environment. No real money or personal
-              credit accounts are ever accessed or charged.
-            </p>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                gap: spacing[2],
-                marginTop: spacing[1],
-              }}
-            >
-              <div
-                style={{
-                  backgroundColor: colors.surfaceSubtle,
-                  border: `1px solid ${colors.border}`,
-                  padding: spacing[2],
-                  borderRadius: '6px',
-                }}
-              >
-                <strong style={{ fontSize: '13px', color: colors.ink, display: 'block' }}>
-                  Public Test Buyer
-                </strong>
-                <div style={{ fontSize: '12px', color: colors.inkMuted, marginTop: '4px' }}>
-                  Email: <code data-testid="guide-buyer-email">alex.morgan@example.test</code>
-                </div>
-                <div style={{ fontSize: '11px', color: colors.inkMuted, marginTop: '2px' }}>
-                  Use with any standard sandbox password or fast-track using &quot;Use a demo order&quot;.
-                </div>
-              </div>
-
-              <div
-                style={{
-                  backgroundColor: colors.surfaceSubtle,
-                  border: `1px solid ${colors.border}`,
-                  padding: spacing[2],
-                  borderRadius: '6px',
-                }}
-              >
-                <strong style={{ fontSize: '13px', color: colors.ink, display: 'block' }}>
-                  Merchant Sandbox Account
-                </strong>
-                <div style={{ fontSize: '12px', color: colors.inkMuted, marginTop: '4px' }}>
-                  Merchant ID: <code data-testid="guide-merchant-id">sb-merchant@example.test</code>
-                </div>
-                <div style={{ fontSize: '11px', color: colors.inkMuted, marginTop: '2px' }}>
-                  Pre-configured with Authority Charter v1 ($25 auto-offer, $15 auto-accept).
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </section>
-
-      {/* Real-versus-Simulated Table */}
+      {/* What is Real Table */}
       <section aria-labelledby="real-simulated-title" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
-        <h2 id="real-simulated-title" style={{ fontSize: '18px', fontWeight: 700, color: colors.ink, margin: 0 }}>
-          Real vs. Simulated Architecture
+        <h2 id="real-simulated-title" style={{ fontFamily: SERIF_STACK, fontSize: '22px', fontWeight: 400, color: colors.ink, margin: 0 }}>
+          What is real
         </h2>
 
         <div style={{ overflowX: 'auto', border: `1px solid ${colors.border}`, borderRadius: '8px' }}>
@@ -329,51 +270,57 @@ export const GuidePage: React.FC = () => {
               {[
                 {
                   component: 'PayPal Disputes API',
-                  real: 'Full REST API integration in dev & production sandbox environments',
-                  simulated: 'Deterministic offline stub with fault injection for tests',
+                  real: 'Real PayPal sandbox (disputes, evidence submission, settlements)',
+                  simulated: '—',
+                  proof: 'agent/tests/test_paypal_stub.py',
+                },
+                {
+                  component: 'Evidence (tracking, delivery)',
+                  real: 'Real carrier tracking schemas and delivery timestamps',
+                  simulated: '—',
+                  proof: 'agent/tests/test_evidence.py',
+                },
+                {
+                  component: 'Offers submitted',
+                  real: 'Real PayPal sandbox dispute negotiation offers',
+                  simulated: '—',
                   proof: 'agent/tests/test_paypal_stub.py',
                 },
                 {
                   component: 'Dispute Webhooks',
                   real: 'Real HMAC-SHA256 signature verification & deduplication',
-                  simulated: 'Synthetic webhook generator for automated scenarios A-E',
+                  simulated: '—',
                   proof: 'agent/tests/test_webhooks.py',
+                },
+                {
+                  component: 'Orders and tracking',
+                  real: '—',
+                  simulated: 'Simulated store adapter',
+                  proof: 'e2e/specs/shop.spec.ts',
+                },
+                {
+                  component: 'LLM Reasoning',
+                  real: 'Real model via server proxy with token & budget caps',
+                  simulated: 'Deterministic scenario replay cache',
+                  proof: 'agent/tests/test_llm.py',
                 },
                 {
                   component: 'Policy Gate Engine',
                   real: '100% pure deterministic Python rule engine (zero network/IO)',
-                  simulated: 'None (gate is identical in all environments)',
+                  simulated: '—',
                   proof: 'agent/tests/test_gate.py',
                 },
                 {
-                  component: 'Storefront Checkout',
-                  real: 'PayPal JavaScript SDK standard sandbox checkout flow',
-                  simulated: 'Instant demo order claim shortcut for fast-track testing',
-                  proof: 'e2e/specs/shop.spec.ts',
-                },
-                {
-                  component: 'Shipping Carrier Evidence',
-                  real: 'Formatted tracking numbers, carrier schemas, and delivery timestamps',
-                  simulated: 'Artisan carrier mock records for scenario reproducibility',
-                  proof: 'agent/tests/test_evidence.py',
-                },
-                {
-                  component: 'LLM Reasoning',
-                  real: 'OpenAI-compatible LLM provider interface with budget caps',
-                  simulated: 'Deterministic cached plan replay for CI & local mode',
-                  proof: 'agent/tests/test_llm.py',
-                },
-                {
                   component: 'Mobile Approval Tokens',
-                  real: 'Real cryptographic SHA-256 tokens-at-rest with expiration',
-                  simulated: 'None (full security protocol active in all environments)',
+                  real: 'Cryptographic SHA-256 single-use tokens',
+                  simulated: '—',
                   proof: 'agent/tests/test_approvals.py',
                 },
               ].map((row, idx) => (
                 <tr
                   key={row.component}
                   style={{
-                    borderBottom: idx < 6 ? `1px solid ${colors.border}` : 'none',
+                    borderBottom: idx < 7 ? `1px solid ${colors.border}` : 'none',
                     backgroundColor: idx % 2 === 0 ? '#ffffff' : colors.surfaceSubtle,
                   }}
                 >
