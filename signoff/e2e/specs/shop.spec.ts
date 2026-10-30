@@ -9,7 +9,7 @@ test.describe('Storefront E2E (Step 31)', () => {
     // 1. Visit storefront home
     await page.goto('/');
     await expect(page.getByTestId('shop-banner')).toBeVisible();
-    await expect(page.getByTestId('shop-banner-text')).toContainText('Fictional shop · PayPal sandbox');
+    await expect(page.getByTestId('shop-banner-text')).toContainText('Demo store. Payments use the PayPal sandbox. No real money moves.');
 
     // 2. Inspect banner collapsible details
     const howToPayBtn = page.getByTestId('shop-banner-how-to-pay-toggle');
@@ -19,7 +19,8 @@ test.describe('Storefront E2E (Step 31)', () => {
 
     // 3. Add item to cart
     await expect(page.getByTestId('shop-catalog-grid')).toBeVisible();
-    const addBtn = page.getByTestId('shop-quick-add-CND-LAV-01');
+    await page.getByTestId('shop-view-product-CND-LAV-01').click();
+    const addBtn = page.getByTestId('shop-add-to-cart-btn');
     await expect(addBtn).toBeVisible();
     await addBtn.click();
 
@@ -56,7 +57,8 @@ test.describe('Storefront E2E (Step 31)', () => {
 
     // Add item to cart
     await expect(page.getByTestId('shop-catalog-grid')).toBeVisible();
-    await page.getByTestId('shop-quick-add-CND-VAN-02').click();
+    await page.getByTestId('shop-view-product-CND-VAN-02').click();
+    await page.getByTestId('shop-add-to-cart-btn').click();
     await expect(page.getByTestId('shop-cart-badge')).toHaveText('1');
 
     // Go to cart then checkout
@@ -101,7 +103,8 @@ test.describe('Storefront E2E (Step 31)', () => {
     await expect(page.getByTestId('shop-catalog-grid')).toBeVisible();
 
     // Add CND-LAV-01 ($21.00 official catalog price)
-    await page.getByTestId('shop-quick-add-CND-LAV-01').click();
+    await page.getByTestId('shop-view-product-CND-LAV-01').click();
+    await page.getByTestId('shop-add-to-cart-btn').click();
     await page.getByTestId('shop-cart-button').click();
     await page.getByTestId('shop-checkout-btn').click();
 

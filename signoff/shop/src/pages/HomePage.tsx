@@ -1,238 +1,210 @@
 /**
  * Catalog storefront home page.
+ *
+ * Implements Step 2, Rule 1-2:
+ * - Page background #FFFFFF, 8px radius, no border on cards (subtle shadow only)
+ * - Product grid: 3 columns at 1440px, 2 at 768px, 1 at 390px
+ * - Card: square image area with warm neutral background and product initial in serif
+ * - Name at 15px semibold, price at 13px secondary
+ * - Whole card is the link to /product/:sku
  */
 
-import React, { useState } from 'react';
-import { Button, Card, ErrorState, Money, Skeleton } from '@signoff/ui';
+import React from 'react';
+import { Card, ErrorState, Money, Skeleton } from '@signoff/ui';
 import { useCart } from '../CartContext';
 import { Link } from '../router';
-import { warmColors, warmShadows } from '../theme';
+import { colors, retailTheme } from '../theme';
 
 export const HomePage: React.FC = () => {
-  const { catalog, loadingCatalog, catalogError, refreshCatalog, addToCart } = useCart();
-  const [addedSku, setAddedSku] = useState<string | null>(null);
-
+  const { catalog, loadingCatalog, catalogError, refreshCatalog } = useCart();
   const products = Object.values(catalog);
 
-  const handleQuickAdd = (sku: string) => {
-    addToCart(sku, 1);
-    setAddedSku(sku);
-    setTimeout(() => setAddedSku(null), 2000);
-  };
-
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 16px' }}>
-      {/* Hero section */}
-      <section
-        style={{
-          marginBottom: '40px',
-          textAlign: 'center',
-          padding: '40px 20px',
-          backgroundColor: warmColors.surface,
-          borderRadius: '12px',
-          border: `1px solid ${warmColors.border}`,
-          boxShadow: warmShadows.sm,
-        }}
-      >
-        <span
+    <div
+      style={{
+        backgroundColor: retailTheme.pageBg,
+        minHeight: '100vh',
+        padding: '32px 16px',
+        fontFamily: retailTheme.fontFamily,
+      }}
+    >
+      <style>{`
+        .product-grid {
+          display: grid;
+          gap: 24px;
+          grid-template-columns: 1fr;
+        }
+        @media (min-width: 640px) {
+          .product-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media (min-width: 1024px) {
+          .product-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+        .product-card-link {
+          text-decoration: none;
+          color: inherit;
+          display: flex;
+          flex-direction: column;
+          border-radius: 8px;
+          background-color: #FFFFFF;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+          overflow: hidden;
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .product-card-link:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+      `}</style>
+
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Subtle Store Header */}
+        <section
           style={{
-            display: 'inline-block',
-            padding: '4px 12px',
-            borderRadius: '9999px',
-            backgroundColor: warmColors.primaryLight,
-            color: warmColors.primary,
-            fontSize: '12px',
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            marginBottom: '12px',
+            marginBottom: '32px',
+            textAlign: 'center',
+            padding: '24px 16px',
           }}
         >
-          Artisan Soy Candles
-        </span>
-        <h1
-          id="shop-title"
-          style={{
-            fontSize: '32px',
-            fontWeight: 700,
-            color: warmColors.ink,
-            margin: '0 0 12px 0',
-          }}
-        >
-          Luminary Candles
-        </h1>
-        <p
-          style={{
-            fontSize: '16px',
-            color: warmColors.inkMuted,
-            maxWidth: '600px',
-            margin: '0 auto',
-            lineHeight: 1.6,
-          }}
-        >
-          Hand-poured artisan candles crafted with pure essential oils and sustainable soy wax.
-          Explore our collection and test sandbox checkout below.
-        </p>
-      </section>
+          <h1
+            id="shop-title"
+            style={{
+              fontSize: '28px',
+              fontWeight: 700,
+              color: retailTheme.ink,
+              margin: '0 0 8px 0',
+              fontFamily: retailTheme.serifFont,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Luminary Candles
+          </h1>
+          <p
+            style={{
+              fontSize: '14px',
+              color: retailTheme.inkMuted,
+              maxWidth: '520px',
+              margin: '0 auto',
+              lineHeight: 1.5,
+            }}
+          >
+            Hand-poured artisan candles crafted with pure essential oils and natural soy wax.
+          </p>
+        </section>
 
-      {/* Catalog status / errors */}
-      {loadingCatalog && products.length === 0 && (
-        <div data-testid="shop-catalog-loading" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
-          {[1, 2, 3, 4].map(idx => (
-            <Card key={idx} testId={`shop-skeleton-${idx}`}>
-              <div style={{ height: '160px', marginBottom: '16px' }}>
-                <Skeleton width="100%" height="160px" />
-              </div>
-              <Skeleton width="60%" height="24px" />
-              <div style={{ marginTop: '8px' }}>
-                <Skeleton width="40%" height="18px" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {catalogError && (
-        <ErrorState
-          message={catalogError}
-          onRetry={() => void refreshCatalog()}
-          testId="shop-retry-catalog-btn"
-        />
-      )}
-
-      {/* Product grid */}
-      {products.length > 0 && (
-        <div
-          data-testid="shop-catalog-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: '24px',
-          }}
-        >
-          {products.map(product => {
-            const isAdded = addedSku === product.sku;
-
-            return (
-              <div
-                key={product.sku}
-                data-testid={`shop-product-card-${product.sku}`}
-                style={{
-                  backgroundColor: warmColors.surface,
-                  borderRadius: '12px',
-                  border: `1px solid ${warmColors.border}`,
-                  boxShadow: warmShadows.sm,
-                  overflow: 'hidden',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-                }}
-              >
-                {/* Candle graphic placeholder */}
-                <div
-                  style={{
-                    height: '160px',
-                    backgroundColor: warmColors.surfaceMuted,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderBottom: `1px solid ${warmColors.borderMuted}`,
-                  }}
-                >
-                  <span style={{ fontSize: '48px', userSelect: 'none' }}>🕯️</span>
-                  <span style={{ fontSize: '11px', color: warmColors.inkSubtle, marginTop: '4px' }}>
-                    {product.sku}
-                  </span>
+        {/* Catalog loading skeletons */}
+        {loadingCatalog && products.length === 0 && (
+          <div
+            data-testid="shop-catalog-loading"
+            className="product-grid"
+          >
+            {[1, 2, 3].map(idx => (
+              <Card key={idx} testId={`shop-skeleton-${idx}`}>
+                <div style={{ aspectRatio: '1 / 1', marginBottom: '16px' }}>
+                  <Skeleton width="100%" height="100%" />
                 </div>
+                <Skeleton width="60%" height="20px" />
+                <div style={{ marginTop: '8px' }}>
+                  <Skeleton width="40%" height="16px" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
 
+        {catalogError && (
+          <ErrorState
+            message={catalogError}
+            onRetry={() => void refreshCatalog()}
+            testId="shop-retry-catalog-btn"
+          />
+        )}
+
+        {/* Product grid */}
+        {products.length > 0 && (
+          <div
+            data-testid="shop-catalog-grid"
+            className="product-grid"
+          >
+            {products.map(product => {
+              const initial = product.name ? product.name.charAt(0).toUpperCase() : 'C';
+
+              return (
                 <div
-                  style={{
-                    padding: '20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    flex: 1,
-                  }}
+                  key={product.sku}
+                  data-testid={`shop-product-card-${product.sku}`}
                 >
-                  <Link to={`/product/${product.sku}`}>
-                    <h3
-                      data-testid={`shop-product-title-${product.sku}`}
-                      style={{
-                        margin: '0 0 8px 0',
-                        fontSize: '18px',
-                        fontWeight: 600,
-                        color: warmColors.ink,
-                      }}
-                    >
-                      {product.name}
-                    </h3>
-                  </Link>
-
-                  <p
-                    style={{
-                      margin: '0 0 16px 0',
-                      fontSize: '13px',
-                      color: warmColors.inkMuted,
-                      lineHeight: 1.5,
-                      flex: 1,
-                    }}
+                  <Link
+                    to={`/product/${product.sku}`}
+                    className="product-card-link"
+                    testId={`shop-view-product-${product.sku}`}
                   >
-                    {product.description}
-                  </p>
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginTop: 'auto',
-                      paddingTop: '16px',
-                      borderTop: `1px solid ${warmColors.borderMuted}`,
-                    }}
-                  >
+                    {/* Square image area with solid warm background and product initial in serif */}
                     <div
                       style={{
-                        fontSize: '18px',
-                        fontWeight: 700,
-                        color: warmColors.accent,
+                        width: '100%',
+                        aspectRatio: '1 / 1',
+                        backgroundColor: retailTheme.imageBg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        userSelect: 'none',
                       }}
                     >
-                      <Money money={product.price} testId={`shop-product-price-${product.sku}`} />
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <Link
-                        to={`/product/${product.sku}`}
-                        testId={`shop-view-product-${product.sku}`}
+                      <span
                         style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          padding: '6px 12px',
-                          borderRadius: '6px',
-                          border: `1px solid ${warmColors.border}`,
-                          fontSize: '13px',
-                          fontWeight: 500,
-                          color: warmColors.ink,
-                          backgroundColor: warmColors.surface,
+                          fontFamily: retailTheme.serifFont,
+                          fontSize: '56px',
+                          color: colors.ink,
+                          lineHeight: 1,
                         }}
                       >
-                        Details
-                      </Link>
-                      <Button
-                        variant="primary"
-                        onClick={() => handleQuickAdd(product.sku)}
-                        testId={`shop-quick-add-${product.sku}`}
-                      >
-                        {isAdded ? 'Added ✓' : 'Add to cart'}
-                      </Button>
+                        {initial}
+                      </span>
                     </div>
-                  </div>
+
+                    {/* Product Card Details */}
+                    <div
+                      style={{
+                        padding: '16px 14px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                      }}
+                    >
+                      <div
+                        data-testid={`shop-product-title-${product.sku}`}
+                        style={{
+                          fontSize: '15px',
+                          fontWeight: 600,
+                          color: retailTheme.ink,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {product.name}
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: '13px',
+                          color: retailTheme.inkMuted,
+                          fontWeight: 500,
+                        }}
+                      >
+                        <Money money={product.price} testId={`shop-product-price-${product.sku}`} />
+                      </div>
+                    </div>
+                  </Link>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -15,7 +15,7 @@ const MOCK_CATALOG = [
     sku: 'CND-VAN-02',
     name: 'Vanilla Bean & Bourbon Candle',
     description: 'Rich Madagascar vanilla with notes of oak barrel bourbon.',
-    price: { value: '38.00', currency_code: 'USD' },
+    price: { value: '19.00', currency_code: 'USD' },
   },
 ];
 
@@ -131,7 +131,7 @@ describe('Storefront Application (@signoff/shop)', () => {
     // Persistent banner
     const banner = screen.getByTestId('shop-banner');
     expect(banner).toBeTruthy();
-    expect(screen.getByTestId('shop-banner-text').textContent).toContain('Fictional shop · PayPal sandbox');
+    expect(screen.getByTestId('shop-banner-text').textContent).toContain('Demo store. Payments use the PayPal sandbox. No real money moves.');
 
     // External links
     expect(screen.getByTestId('shop-guide-link')).toBeTruthy();
@@ -161,7 +161,7 @@ describe('Storefront Application (@signoff/shop)', () => {
     });
 
     expect(screen.getByTestId('shop-product-price-CND-LAV-01').textContent).toContain('USD 21.00');
-    expect(screen.getByTestId('shop-product-price-CND-VAN-02').textContent).toContain('USD 38.00');
+    expect(screen.getByTestId('shop-product-price-CND-VAN-02').textContent).toContain('USD 19.00');
   });
 
   it('allows adding products to cart and updates cart badge count', async () => {
@@ -170,20 +170,29 @@ describe('Storefront Application (@signoff/shop)', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('shop-quick-add-CND-LAV-01')).toBeTruthy();
+      expect(screen.getByTestId('shop-view-product-CND-LAV-01')).toBeTruthy();
     });
 
     const badge = screen.getByTestId('shop-cart-badge');
     expect(badge.textContent).toBe('0');
 
+    // Click product card to navigate to detail
     await act(async () => {
-      fireEvent.click(screen.getByTestId('shop-quick-add-CND-LAV-01'));
+      fireEvent.click(screen.getByTestId('shop-view-product-CND-LAV-01'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('shop-add-to-cart-btn')).toBeTruthy();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('shop-add-to-cart-btn'));
     });
 
     expect(screen.getByTestId('shop-cart-badge').textContent).toBe('1');
 
     await act(async () => {
-      fireEvent.click(screen.getByTestId('shop-quick-add-CND-LAV-01'));
+      fireEvent.click(screen.getByTestId('shop-add-to-cart-btn'));
     });
 
     expect(screen.getByTestId('shop-cart-badge').textContent).toBe('2');
@@ -195,12 +204,20 @@ describe('Storefront Application (@signoff/shop)', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('shop-quick-add-CND-LAV-01')).toBeTruthy();
+      expect(screen.getByTestId('shop-view-product-CND-LAV-01')).toBeTruthy();
     });
 
-    // Add item to cart
+    // Go to product and add to cart
     await act(async () => {
-      fireEvent.click(screen.getByTestId('shop-quick-add-CND-LAV-01'));
+      fireEvent.click(screen.getByTestId('shop-view-product-CND-LAV-01'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('shop-add-to-cart-btn')).toBeTruthy();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('shop-add-to-cart-btn'));
     });
 
     // Navigate to /cart
@@ -243,12 +260,20 @@ describe('Storefront Application (@signoff/shop)', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('shop-quick-add-CND-LAV-01')).toBeTruthy();
+      expect(screen.getByTestId('shop-view-product-CND-LAV-01')).toBeTruthy();
     });
 
-    // Add item
+    // Go to product and add
     await act(async () => {
-      fireEvent.click(screen.getByTestId('shop-quick-add-CND-LAV-01'));
+      fireEvent.click(screen.getByTestId('shop-view-product-CND-LAV-01'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('shop-add-to-cart-btn')).toBeTruthy();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('shop-add-to-cart-btn'));
     });
 
     // Go to cart
@@ -260,13 +285,6 @@ describe('Storefront Application (@signoff/shop)', () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId('shop-checkout-btn'));
     });
-
-    await waitFor(() => {
-      expect(screen.getByTestId('shop-checkout-container')).toBeTruthy();
-    });
-
-    // Cart badge still has 1 item
-    expect(screen.getByTestId('shop-cart-badge').textContent).toBe('1');
 
     // Return to cart link
     await act(async () => {

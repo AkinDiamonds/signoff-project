@@ -1,12 +1,16 @@
 /**
  * Order confirmation page.
+ *
+ * Implements Step 3, Rule 4:
+ * - On success, go to the confirmation page showing the order code in large monospace,
+ *   the amount, and one next action: Track this order.
  */
 
 import React, { useEffect, useState } from 'react';
 import { Button, Money, Skeleton, StatusBadge } from '@signoff/ui';
 import { fetchOrderDetail } from '../api';
 import { useRouter } from '../router';
-import { warmColors, warmShadows } from '../theme';
+import { retailTheme } from '../theme';
 import type { OrderDetail } from '../types';
 
 export const ConfirmationPage: React.FC<{ orderCode: string }> = ({ orderCode }) => {
@@ -14,12 +18,10 @@ export const ConfirmationPage: React.FC<{ orderCode: string }> = ({ orderCode })
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
     let active = true;
     setLoading(true);
 
-    // Try fetching with default sandbox email, or fallback to minimal local confirmation display
     fetchOrderDetail(orderCode, 'alex.morgan@example.test')
       .then(res => {
         if (active) {
@@ -29,7 +31,6 @@ export const ConfirmationPage: React.FC<{ orderCode: string }> = ({ orderCode })
       })
       .catch(() => {
         if (active) {
-          // If unauthenticated lookup fails, we still render the confirmed order code
           setLoading(false);
         }
       });
@@ -40,71 +41,73 @@ export const ConfirmationPage: React.FC<{ orderCode: string }> = ({ orderCode })
   }, [orderCode]);
 
   return (
-    <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 16px' }}>
+    <div
+      style={{
+        backgroundColor: retailTheme.pageBg,
+        minHeight: '100vh',
+        padding: '48px 16px',
+        fontFamily: retailTheme.fontFamily,
+      }}
+    >
       <div
         data-testid="shop-confirmation-card"
         style={{
-          backgroundColor: warmColors.surface,
-          borderRadius: '16px',
-          border: `1px solid ${warmColors.border}`,
-          boxShadow: warmShadows.md,
-          padding: '36px',
+          maxWidth: '600px',
+          margin: '0 auto',
+          backgroundColor: '#FFFFFF',
+          borderRadius: '8px',
+          boxShadow: retailTheme.cardShadow,
+          padding: '40px 32px',
           textAlign: 'center',
         }}
       >
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '64px',
-            height: '64px',
-            borderRadius: '50%',
-            backgroundColor: warmColors.successBg,
-            border: `1px solid ${warmColors.successBorder}`,
-            color: warmColors.successInk,
-            fontSize: '32px',
-            marginBottom: '16px',
-          }}
-        >
-          ✓
-        </div>
-
         <h1
           data-testid="shop-confirmation-title"
-          style={{ fontSize: '28px', fontWeight: 700, margin: '0 0 8px 0', color: warmColors.ink }}
-        >
-          Thank you for your order!
-        </h1>
-        <p style={{ color: warmColors.inkMuted, fontSize: '15px', margin: '0 0 24px 0' }}>
-          Your candle order has been paid in full via PayPal Sandbox.
-        </p>
-
-        {/* Order code callout */}
-        <div
           style={{
-            display: 'inline-block',
-            backgroundColor: warmColors.surfaceMuted,
-            padding: '12px 24px',
-            borderRadius: '8px',
-            border: `1px solid ${warmColors.border}`,
-            marginBottom: '32px',
+            fontSize: '24px',
+            fontWeight: 700,
+            margin: '0 0 12px 0',
+            color: retailTheme.ink,
+            fontFamily: retailTheme.serifFont,
           }}
         >
-          <div style={{ fontSize: '12px', color: warmColors.inkMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Order Reference Code
+          Thank you for your order
+        </h1>
+
+        <p style={{ color: retailTheme.inkMuted, fontSize: '14px', margin: '0 0 28px 0' }}>
+          Your order has been paid in full via the PayPal sandbox.
+        </p>
+
+        {/* Large monospace order code */}
+        <div
+          style={{
+            backgroundColor: retailTheme.imageBg,
+            padding: '16px 24px',
+            borderRadius: '8px',
+            marginBottom: '28px',
+          }}
+        >
+          <div style={{ fontSize: '12px', color: retailTheme.inkMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Order Code
           </div>
           <div
             data-testid="shop-order-code"
-            style={{ fontSize: '24px', fontWeight: 700, fontFamily: 'monospace', color: warmColors.accent, marginTop: '4px' }}
+            style={{
+              fontSize: '32px',
+              fontWeight: 700,
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+              color: retailTheme.ink,
+              marginTop: '4px',
+              letterSpacing: '0.05em',
+            }}
           >
             {orderCode}
           </div>
         </div>
 
         {loading && (
-          <div style={{ padding: '20px 0' }}>
-            <Skeleton width="100%" height="80px" />
+          <div style={{ padding: '16px 0' }}>
+            <Skeleton width="100%" height="48px" />
           </div>
         )}
 
@@ -112,101 +115,52 @@ export const ConfirmationPage: React.FC<{ orderCode: string }> = ({ orderCode })
           <div
             data-testid="shop-order-details"
             style={{
-              textAlign: 'left',
-              backgroundColor: warmColors.surfaceMuted,
-              padding: '24px',
-              borderRadius: '12px',
-              border: `1px solid ${warmColors.borderMuted}`,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '16px 20px',
+              backgroundColor: retailTheme.surfaceWarm,
+              borderRadius: '8px',
               marginBottom: '32px',
+              fontSize: '14px',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div style={{ fontWeight: 600, color: warmColors.ink }}>
-                Payment Status:
-              </div>
-              <div data-testid="shop-order-status">
-                <StatusBadge verdict="ALLOW" testId="shop-order-status-badge" />
-                <span style={{ marginLeft: '8px', fontWeight: 600, fontSize: '13px', color: warmColors.successInk }}>
-                  {order.status}
-                </span>
-              </div>
+            <div data-testid="shop-order-status" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <StatusBadge verdict="ALLOW" testId="shop-order-status-badge" />
+              <span style={{ fontWeight: 600, color: retailTheme.ink }}>{order.status}</span>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div style={{ fontWeight: 600, color: warmColors.ink }}>
-                Total Paid:
-              </div>
-              <div style={{ fontWeight: 700, color: warmColors.accent, fontSize: '18px' }}>
-                <Money money={order.amount} testId="shop-order-amount" />
-              </div>
+            <div style={{ fontWeight: 700, fontSize: '18px', color: retailTheme.ink }}>
+              <Money money={order.amount} testId="shop-order-amount" />
             </div>
-
-            {/* Line items */}
-            {order.items && order.items.length > 0 && (
-              <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: `1px solid ${warmColors.border}` }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: warmColors.inkMuted, marginBottom: '8px' }}>
-                  Items in this shipment:
-                </div>
-                {order.items.map(item => (
-                  <div
-                    key={item.sku}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      fontSize: '14px',
-                      padding: '4px 0',
-                    }}
-                  >
-                    <span>{item.name || item.sku} × {item.quantity}</span>
-                    <span style={{ fontWeight: 500 }}>
-                      <Money
-                        money={{ value: item.unit_price, currency_code: 'USD' }}
-                        testId={`shop-order-item-price-${item.sku}`}
-                      />
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Tracking information */}
-            {order.tracking_events && order.tracking_events.length > 0 && (
-              <div
-                data-testid="shop-order-tracking"
-                style={{
-                  marginTop: '16px',
-                  paddingTop: '16px',
-                  borderTop: `1px solid ${warmColors.border}`,
-                }}
-              >
-                <div style={{ fontSize: '13px', fontWeight: 600, color: warmColors.inkMuted, marginBottom: '6px' }}>
-                  Mock Tracking:
-                </div>
-                {order.tracking_events.map((ev, idx) => (
-                  <div key={idx} style={{ fontSize: '13px', color: warmColors.ink }}>
-                    <strong>{ev.carrier}</strong> tracking: <code style={{ backgroundColor: '#fff', padding: '2px 6px', borderRadius: '4px' }}>{ev.tracking_number}</code> ({ev.status})
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-          <Button
-            variant="secondary"
-            onClick={() => navigate('/')}
-            testId="shop-confirmation-continue-btn"
-          >
-            Back to Storefront
-          </Button>
+        {/* One next action: Track this order */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
           <Button
             variant="primary"
             onClick={() => navigate(`/orders/${orderCode}`)}
             testId="shop-view-in-portal-btn"
           >
-            View in Buyer Portal →
+            Track this order
           </Button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            data-testid="shop-confirmation-continue-btn"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: retailTheme.inkMuted,
+              fontSize: '13px',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+            }}
+          >
+            ← Return to store
+          </button>
         </div>
       </div>
     </div>

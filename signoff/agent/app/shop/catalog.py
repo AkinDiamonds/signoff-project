@@ -29,25 +29,25 @@ CATALOG_FIXTURES: tuple[CatalogItem, ...] = (
         sku="CND-VAN-02",
         name="Vanilla Candle",
         description="Warm, rich Madagascar vanilla bean with subtle notes of cream and amber.",
-        price=Decimal("38.00"),
+        price=Decimal("19.00"),
+    ),
+    CatalogItem(
+        sku="CND-CED-03",
+        name="Cedar Candle",
+        description="Earthy Pacific cedarwood with crisp mountain pine and smoky undertones.",
+        price=Decimal("24.00"),
+    ),
+    CatalogItem(
+        sku="CND-ROSE-04",
+        name="Rose Candle",
+        description="Delicate Turkish rose petals balanced with light musk and soft greenery.",
+        price=Decimal("22.00"),
     ),
     CatalogItem(
         sku="GIFT-SET-01",
         name="Candle Gift Set",
         description="Curated trio of hand-poured artisan candles in a gift-ready presentation box.",
         price=Decimal("60.00"),
-    ),
-    CatalogItem(
-        sku="CND-CED-03",
-        name="Cedar Candle",
-        description="Earthy Pacific cedarwood with crisp mountain pine and smoky undertones.",
-        price=Decimal("64.00"),
-    ),
-    CatalogItem(
-        sku="CND-ROSE-04",
-        name="Rose Candle",
-        description="Delicate Turkish rose petals balanced with light musk and soft greenery.",
-        price=Decimal("55.00"),
     ),
 )
 
@@ -74,6 +74,11 @@ def seed_catalog(session: Session) -> int:
                 )
             )
             added += 1
+        else:
+            if existing.price != item.price or existing.name != item.name:
+                existing.price = item.price
+                existing.name = item.name
+                existing.description = item.description
     if added > 0:
         session.flush()
     return added

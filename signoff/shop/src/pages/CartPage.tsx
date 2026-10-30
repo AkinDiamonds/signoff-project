@@ -1,5 +1,10 @@
 /**
- * Cart review page.
+ * Cart page with single-column summary.
+ *
+ * Implements Step 2, Rule 5 & Step 3:
+ * - Single-column summary layout with one checkout button
+ * - Above the checkout button: one-line summary "2 items · USD 42.00"
+ * - Button reads "Pay with PayPal" and leads to the checkout moment
  */
 
 import React from 'react';
@@ -7,91 +12,96 @@ import { Button, EmptyState, Money } from '@signoff/ui';
 import { DemoOrderShortcut } from '../components/DemoOrderShortcut';
 import { useCart } from '../CartContext';
 import { Link, useRouter } from '../router';
-import { warmColors, warmShadows } from '../theme';
+import { retailTheme } from '../theme';
 
 export const CartPage: React.FC = () => {
   const { items, catalog, subtotal, updateQuantity, removeFromCart, clearCart } = useCart();
   const { navigate } = useRouter();
 
+  const totalCount = items.reduce((sum, it) => sum + it.quantity, 0);
+
   if (items.length === 0) {
     return (
-      <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 16px' }}>
-        <div data-testid="shop-empty-cart">
-          <EmptyState
-            title="Your cart is empty"
-            description="Explore our collection of hand-poured artisan candles."
-            action={
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
-                <Button variant="primary" onClick={() => navigate('/')} testId="shop-browse-btn">
-                  Browse Catalog
-                </Button>
-                <DemoOrderShortcut />
-              </div>
-            }
-          />
+      <div
+        style={{
+          backgroundColor: retailTheme.pageBg,
+          minHeight: '100vh',
+          padding: '40px 16px',
+          fontFamily: retailTheme.fontFamily,
+        }}
+      >
+        <div style={{ maxWidth: '640px', margin: '0 auto' }}>
+          <div data-testid="shop-empty-cart">
+            <EmptyState
+              title="Your cart is empty"
+              description="Explore our hand-poured artisan candles."
+              action={
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
+                  <Button variant="primary" onClick={() => navigate('/')} testId="shop-browse-btn">
+                    Browse Candles
+                  </Button>
+                  <DemoOrderShortcut />
+                </div>
+              }
+            />
+          </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <div style={{ maxWidth: '900px', margin: '40px auto', padding: '0 16px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, color: warmColors.ink }}>
-          Shopping Cart
-        </h1>
-        <button
-          type="button"
-          onClick={clearCart}
-          data-testid="shop-clear-cart-btn"
-          style={{
-            background: 'none',
-            border: 'none',
-            color: warmColors.inkMuted,
-            fontSize: '13px',
-            textDecoration: 'underline',
-            cursor: 'pointer',
-          }}
-        >
-          Clear cart
-        </button>
-      </div>
+  const summaryLineText = `${totalCount} ${totalCount === 1 ? 'item' : 'items'} · ${subtotal.currency_code} ${subtotal.value}`;
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr',
-          gap: '24px',
-        }}
-      >
+  return (
+    <div
+      style={{
+        backgroundColor: retailTheme.pageBg,
+        minHeight: '100vh',
+        padding: '36px 16px',
+        fontFamily: retailTheme.fontFamily,
+      }}
+    >
+      <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: 700,
+              margin: 0,
+              color: retailTheme.ink,
+              fontFamily: retailTheme.serifFont,
+            }}
+          >
+            Shopping Cart
+          </h1>
+          <button
+            type="button"
+            onClick={clearCart}
+            data-testid="shop-clear-cart-btn"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: retailTheme.inkMuted,
+              fontSize: '12px',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+            }}
+          >
+            Clear cart
+          </button>
+        </div>
+
+        {/* Single-column summary container with subtle shadow */}
         <div
           data-testid="shop-cart-items-table"
           style={{
-            backgroundColor: warmColors.surface,
-            borderRadius: '12px',
-            border: `1px solid ${warmColors.border}`,
-            boxShadow: warmShadows.sm,
-            overflow: 'hidden',
+            backgroundColor: '#FFFFFF',
+            borderRadius: '8px',
+            boxShadow: retailTheme.cardShadow,
+            padding: '24px',
+            marginBottom: '24px',
           }}
         >
-          <div
-            style={{
-              padding: '16px 20px',
-              backgroundColor: warmColors.surfaceMuted,
-              borderBottom: `1px solid ${warmColors.border}`,
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr 1fr auto',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: warmColors.inkMuted,
-            }}
-          >
-            <div>Item</div>
-            <div style={{ textAlign: 'center' }}>Quantity</div>
-            <div style={{ textAlign: 'right' }}>Price</div>
-            <div style={{ width: '40px' }} />
-          </div>
-
           {items.map(item => {
             const product = catalog[item.sku];
             const name = product ? product.name : item.sku;
@@ -107,38 +117,40 @@ export const CartPage: React.FC = () => {
                 key={item.sku}
                 data-testid={`shop-cart-row-${item.sku}`}
                 style={{
-                  padding: '20px',
+                  padding: '16px 0',
                   display: 'grid',
-                  gridTemplateColumns: '2fr 1fr 1fr auto',
+                  gridTemplateColumns: '1fr auto auto auto',
                   alignItems: 'center',
-                  borderBottom: `1px solid ${warmColors.borderMuted}`,
+                  gap: '16px',
+                  borderBottom: `1px solid ${retailTheme.borderSubtle}`,
                 }}
               >
                 <div>
                   <Link
                     to={`/product/${item.sku}`}
-                    style={{ fontWeight: 600, color: warmColors.ink, fontSize: '15px' }}
+                    style={{ fontWeight: 600, color: retailTheme.ink, fontSize: '14px', textDecoration: 'none' }}
                   >
                     {name}
                   </Link>
-                  <div style={{ fontSize: '12px', color: warmColors.inkSubtle, marginTop: '2px' }}>
+                  <div style={{ fontSize: '12px', color: retailTheme.inkMuted, marginTop: '2px' }}>
                     SKU: {item.sku}
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button
                     type="button"
                     onClick={() => updateQuantity(item.sku, item.quantity - 1)}
                     data-testid={`shop-qty-minus-${item.sku}`}
                     style={{
-                      width: '28px',
-                      height: '28px',
+                      width: '24px',
+                      height: '24px',
                       borderRadius: '4px',
-                      border: `1px solid ${warmColors.border}`,
-                      backgroundColor: warmColors.surface,
+                      border: `1px solid ${retailTheme.borderSubtle}`,
+                      backgroundColor: '#FFFFFF',
                       cursor: 'pointer',
-                      fontWeight: 600,
+                      fontSize: '14px',
+                      lineHeight: '22px',
                     }}
                     aria-label="Decrease quantity"
                   >
@@ -146,7 +158,7 @@ export const CartPage: React.FC = () => {
                   </button>
                   <span
                     data-testid={`shop-qty-val-${item.sku}`}
-                    style={{ fontWeight: 600, minWidth: '20px', textAlign: 'center' }}
+                    style={{ fontSize: '13px', fontWeight: 600, minWidth: '16px', textAlign: 'center' }}
                   >
                     {item.quantity}
                   </span>
@@ -156,13 +168,14 @@ export const CartPage: React.FC = () => {
                     disabled={item.quantity >= 5}
                     data-testid={`shop-qty-plus-${item.sku}`}
                     style={{
-                      width: '28px',
-                      height: '28px',
+                      width: '24px',
+                      height: '24px',
                       borderRadius: '4px',
-                      border: `1px solid ${warmColors.border}`,
-                      backgroundColor: item.quantity >= 5 ? warmColors.surfaceMuted : warmColors.surface,
+                      border: `1px solid ${retailTheme.borderSubtle}`,
+                      backgroundColor: item.quantity >= 5 ? retailTheme.surfaceWarm : '#FFFFFF',
                       cursor: item.quantity >= 5 ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
+                      fontSize: '14px',
+                      lineHeight: '22px',
                     }}
                     aria-label="Increase quantity"
                   >
@@ -170,80 +183,87 @@ export const CartPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div style={{ textAlign: 'right', fontWeight: 600, color: warmColors.accent }}>
+                <div style={{ textAlign: 'right', fontWeight: 600, fontSize: '14px', color: retailTheme.ink }}>
                   <Money money={lineTotal} testId={`shop-item-total-${item.sku}`} />
                 </div>
 
-                <div style={{ textAlign: 'right', width: '40px' }}>
-                  <button
-                    type="button"
-                    onClick={() => removeFromCart(item.sku)}
-                    data-testid={`shop-remove-item-${item.sku}`}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: warmColors.inkMuted,
-                      cursor: 'pointer',
-                      fontSize: '16px',
-                    }}
-                    aria-label="Remove item"
-                    title="Remove item"
-                  >
-                    ✕
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => removeFromCart(item.sku)}
+                  data-testid={`shop-remove-item-${item.sku}`}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: retailTheme.inkMuted,
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    padding: '4px',
+                  }}
+                  aria-label="Remove item"
+                >
+                  ✕
+                </button>
               </div>
             );
           })}
-        </div>
 
-        {/* Order Summary & Actions */}
-        <div
-          style={{
-            backgroundColor: warmColors.surface,
-            borderRadius: '12px',
-            border: `1px solid ${warmColors.border}`,
-            boxShadow: warmShadows.sm,
-            padding: '24px',
-          }}
-        >
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center',
-              fontSize: '18px',
-              fontWeight: 700,
-              marginBottom: '20px',
-              paddingBottom: '16px',
-              borderBottom: `1px solid ${warmColors.borderMuted}`,
+              alignItems: 'baseline',
+              paddingTop: '20px',
+              fontSize: '15px',
+              fontWeight: 600,
+              color: retailTheme.ink,
             }}
           >
-            <span>Subtotal:</span>
-            <span style={{ color: warmColors.accent }}>
-              <Money money={subtotal} testId="shop-cart-subtotal" />
+            <span>Subtotal</span>
+            <span data-testid="shop-cart-subtotal">
+              <Money money={subtotal} />
             </span>
           </div>
+        </div>
 
-          <p style={{ fontSize: '13px', color: warmColors.inkMuted, margin: '0 0 20px 0' }}>
-            Taxes and shipping computed during checkout. Prices verified directly with server catalog.
-          </p>
+        {/* Single Checkout Summary Card */}
+        <div
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '8px',
+            boxShadow: retailTheme.cardShadow,
+            padding: '24px',
+            textAlign: 'center',
+          }}
+        >
+          {/* One-line summary above checkout button */}
+          <div
+            data-testid="shop-cart-one-line-summary"
+            style={{
+              fontSize: '14px',
+              fontWeight: 600,
+              color: retailTheme.ink,
+              marginBottom: '16px',
+            }}
+          >
+            {summaryLineText}
+          </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Link to="/" style={{ color: warmColors.primary, fontSize: '14px', fontWeight: 500 }}>
-              ← Continue Shopping
+          {/* Single checkout button: Pay with PayPal */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+            <Button
+              variant="primary"
+              onClick={() => navigate('/checkout')}
+              testId="shop-checkout-btn"
+            >
+              Pay with PayPal
+            </Button>
+          </div>
+
+          <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Link to="/" style={{ color: retailTheme.inkMuted, fontSize: '13px', textDecoration: 'underline' }}>
+              ← Continue shopping
             </Link>
-
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <DemoOrderShortcut variant="secondary" />
-              <Button
-                variant="primary"
-                onClick={() => navigate('/checkout')}
-                testId="shop-checkout-btn"
-              >
-                Proceed to Checkout →
-              </Button>
-            </div>
+            <DemoOrderShortcut variant="secondary" />
           </div>
         </div>
       </div>

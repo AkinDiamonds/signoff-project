@@ -14,16 +14,19 @@ export type { MoneyAmount };
 
 export type SupportedDisputeReason =
   | 'MERCHANDISE_OR_SERVICE_NOT_RECEIVED'
-  | 'MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED';
+  | 'MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED'
+  | 'OTHER';
 
 export const SUPPORTED_REASON_LABELS: Record<SupportedDisputeReason, string> = {
-  MERCHANDISE_OR_SERVICE_NOT_RECEIVED: 'Item not received (Package missing or late)',
-  MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED: 'Item not as described (Damaged, wrong item, or defect)',
+  MERCHANDISE_OR_SERVICE_NOT_RECEIVED: 'Item not received',
+  MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED: 'Item not as described',
+  OTHER: 'Other',
 };
 
 const SUPPORTED_DISPUTE_REASONS: readonly SupportedDisputeReason[] = [
   'MERCHANDISE_OR_SERVICE_NOT_RECEIVED',
   'MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED',
+  'OTHER',
 ];
 
 export function isSupportedDisputeReason(value: string): value is SupportedDisputeReason {
