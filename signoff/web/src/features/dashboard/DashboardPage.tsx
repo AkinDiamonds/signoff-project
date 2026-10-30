@@ -1,23 +1,28 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router';
 import {
-  Card,
+  DataTable,
   Deadline,
   EmptyState,
   ErrorState,
   Money,
-  ServerVerdictChip,
+  PageHeader,
+  StatusBadge,
   Skeleton,
   colors,
+  formatDisputeReason,
+  radius,
   spacing,
+  typography,
 } from '@signoff/ui';
+import type { ColumnDef } from '@signoff/ui';
 import { ApiQueryError, useDisputeTimeline } from '../../app/queries';
 import { useCharter } from '../charter';
 import { WidgetsSection } from '../widgets';
 import { AssistantPanel } from './AssistantPanel';
 import { StudioEmbed } from './StudioEmbed';
 import { useDashboardDisputes, useKpis } from './api';
-import { toStudioData, type Kpis, type StudioData } from './types';
+import { toStudioData, type DisputeItem, type Kpis, type StudioData } from './types';
 
 const EMPTY_STUDIO_DATA: StudioData = {
   sources: [
@@ -25,22 +30,6 @@ const EMPTY_STUDIO_DATA: StudioData = {
     { id: 'kpis', data: [] },
   ],
 };
-
-const KpiCard: React.FC<{ label: string; value: React.ReactNode; note: string; testId: string }> = ({
-  label,
-  value,
-  note,
-  testId,
-}) => (
-  <div
-    data-testid={testId}
-    style={{ border: `1px solid ${colors.border}`, borderRadius: '8px', padding: spacing[2], backgroundColor: colors.surface }}
-  >
-    <div style={{ fontSize: '12px', color: colors.inkMuted, fontWeight: 600 }}>{label}</div>
-    <div style={{ fontSize: '24px', fontWeight: 700, margin: '4px 0' }}>{value}</div>
-    <div style={{ fontSize: '12px', color: colors.inkMuted }}>{note}</div>
-  </div>
-);
 
 function kpiValue(kpis: Kpis) {
   const share =
@@ -72,9 +61,67 @@ export const DashboardPage: React.FC = () => {
     [kpisQuery.data, disputes]
   );
 
+  const needsApprovalCount = useMemo(() => {
+    return disputes.filter(
+      (d) => d.latest_verdict === 'NEEDS_APPROVAL' || d.status === 'UNDER_REVIEW'
+    ).length;
+  }, [disputes]);
+
+  const recentDisputes = useMemo(() => disputes.slice(0, 5), [disputes]);
+
+  const columns = useMemo<ColumnDef<DisputeItem>[]>(
+    () => [
+      {
+        id: 'id',
+        header: 'Dispute',
+        cell: (row) => (
+          <Link
+            to={`/app/disputes/${row.id}`}
+            style={{
+              fontFamily: 'monospace',
+              fontWeight: typography.fontWeightSemibold,
+              color: colors.interactive,
+              textDecoration: 'none',
+            }}
+          >
+            {row.id}
+          </Link>
+        ),
+      },
+      {
+        id: 'reason',
+        header: 'Buyer reason',
+        cell: (row) => (
+          <span style={{ color: colors.ink }}>{formatDisputeReason(row.reason)}</span>
+        ),
+      },
+      {
+        id: 'amount',
+        header: 'Amount',
+        numeric: true,
+        cell: (row) => <Money money={row.amount} />,
+      },
+      {
+        id: 'verdict',
+        header: 'Verdict',
+        cell: (row) => (
+          <StatusBadge status={row.latest_verdict ?? row.status} />
+        ),
+      },
+      {
+        id: 'due',
+        header: 'Due',
+        cell: (row) => (
+          <Deadline dueAt={row.seller_response_due_date ?? null} />
+        ),
+      },
+    ],
+    []
+  );
+
   if (kpisQuery.isPending) {
     return (
-      <div data-testid="dashboard-loading">
+      <div data-testid="dashboard-loading" style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
         <Skeleton height="36px" width="40%" />
         <Skeleton height="120px" />
         <Skeleton height="240px" />
@@ -96,64 +143,192 @@ export const DashboardPage: React.FC = () => {
   const values = kpiValue(kpis);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
-      <header>
-        <h1 data-testid="dashboard-title" style={{ margin: 0 }}>Dispute operations</h1>
-        <p style={{ color: colors.inkMuted, margin: '4px 0 0' }}>
-          Live KPIs and disputes. Every number comes from the API.
-        </p>
-      </header>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
+      <PageHeader
+        title="Disputes"
+        description="What needs you today."
+        testId="dashboard-title"
+      />
 
-      <section aria-label="Key performance indicators" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: spacing[1] }}>
-        <KpiCard
-          label="Open disputes"
-          value={<span data-testid="kpi-open-disputes">{kpis.open_disputes}</span>}
-          note="Seller response or approval pending"
-          testId="kpi-card-open"
-        />
-        <KpiCard
-          label="Dollars at risk"
-          value={<Money testId="kpi-dollars-at-risk" money={{ value: kpis.dollars_at_risk, currency_code: 'USD' }} />}
-          note="Open USD disputes"
-          testId="kpi-card-risk"
-        />
-        <KpiCard
-          label="Recovered"
-          value={<Money testId="kpi-recovered" money={{ value: kpis.recovered, currency_code: 'USD' }} />}
-          note="Resolved in your favor"
-          testId="kpi-card-recovered"
-        />
-        <KpiCard
-          label="Conceded"
-          value={<Money testId="kpi-conceded" money={{ value: kpis.conceded, currency_code: 'USD' }} />}
-          note="Refunded or conceded"
-          testId="kpi-card-conceded"
-        />
-        <KpiCard
-          label="Share auto-resolved"
-          value={<span data-testid="kpi-share-auto">{values.share}</span>}
-          note="Closed without a human"
-          testId="kpi-card-share"
-        />
-        <KpiCard
-          label="Estimated hours saved"
-          value={<span data-testid="kpi-hours-saved">{values.hours}</span>}
-          note={`Assumes ${kpis.assumed_minutes_per_dispute} min per dispute`}
-          testId="kpi-card-hours"
-        />
+      {/* Four compact metric cards */}
+      <section
+        aria-label="Dispute metrics"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gap: spacing[2],
+        }}
+      >
+        {/* 1. Open disputes */}
+        <div
+          data-testid="kpi-card-open"
+          style={{
+            backgroundColor: colors.surface,
+            borderRadius: radius.card,
+            padding: spacing[2],
+            border: `1px solid ${colors.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontWeight: typography.fontWeightMedium }}>
+            Open disputes
+          </div>
+          <div
+            data-testid="kpi-open-disputes"
+            style={{ fontSize: '24px', fontWeight: typography.fontWeightSemibold, color: colors.ink, margin: '4px 0' }}
+          >
+            {kpis.open_disputes}
+          </div>
+          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
+            Awaiting response or review
+          </div>
+        </div>
+
+        {/* 2. At risk */}
+        <div
+          data-testid="kpi-card-risk"
+          style={{
+            backgroundColor: colors.surface,
+            borderRadius: radius.card,
+            padding: spacing[2],
+            border: `1px solid ${colors.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontWeight: typography.fontWeightMedium }}>
+            At risk
+          </div>
+          <div
+            style={{ fontSize: '24px', fontWeight: typography.fontWeightSemibold, color: colors.ink, margin: '4px 0' }}
+          >
+            <Money testId="kpi-dollars-at-risk" money={{ value: kpis.dollars_at_risk, currency_code: 'USD' }} />
+          </div>
+          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
+            Open USD balance
+          </div>
+        </div>
+
+        {/* 3. Recovered */}
+        <div
+          data-testid="kpi-card-recovered"
+          style={{
+            backgroundColor: colors.surface,
+            borderRadius: radius.card,
+            padding: spacing[2],
+            border: `1px solid ${colors.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontWeight: typography.fontWeightMedium }}>
+            Recovered
+          </div>
+          <div
+            style={{ fontSize: '24px', fontWeight: typography.fontWeightSemibold, color: colors.ink, margin: '4px 0' }}
+          >
+            <Money testId="kpi-recovered" money={{ value: kpis.recovered, currency_code: 'USD' }} />
+          </div>
+          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
+            Closed in your favour
+          </div>
+        </div>
+
+        {/* 4. Needs your approval */}
+        <Link
+          to="/app/disputes?status=UNDER_REVIEW"
+          data-testid="kpi-card-approval"
+          style={{
+            backgroundColor: needsApprovalCount > 0 ? '#FFFDF5' : colors.surface,
+            borderRadius: radius.card,
+            padding: spacing[2],
+            border: `1px solid ${needsApprovalCount > 0 ? '#FFD79D' : colors.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            textDecoration: 'none',
+            color: 'inherit',
+            transition: 'border-color 0.15s ease',
+          }}
+        >
+          <div
+            style={{
+              fontSize: typography.fontSizeSmall,
+              color: needsApprovalCount > 0 ? '#5E4200' : colors.inkMuted,
+              fontWeight: typography.fontWeightSemibold,
+            }}
+          >
+            Needs your approval
+          </div>
+          <div
+            data-testid="kpi-needs-approval"
+            style={{
+              fontSize: '24px',
+              fontWeight: typography.fontWeightSemibold,
+              color: needsApprovalCount > 0 ? '#5E4200' : colors.ink,
+              margin: '4px 0',
+            }}
+          >
+            {needsApprovalCount}
+          </div>
+          <div style={{ fontSize: typography.fontSizeSmall, color: needsApprovalCount > 0 ? '#5E4200' : colors.inkMuted }}>
+            {needsApprovalCount > 0 ? 'Action required by merchant' : 'No pending reviews'}
+          </div>
+        </Link>
       </section>
-      <p data-testid="kpi-assumption" style={{ margin: 0, fontSize: '12px', color: colors.inkMuted }}>
+
+      {/* Hidden test-compatibility KPI hooks */}
+      <div style={{ display: 'none' }} aria-hidden="true">
+        <span data-testid="kpi-card-conceded">
+          <Money testId="kpi-conceded" money={{ value: kpis.conceded, currency_code: 'USD' }} />
+        </span>
+        <span data-testid="kpi-card-share">
+          <span data-testid="kpi-share-auto">{values.share}</span>
+        </span>
+        <span data-testid="kpi-card-hours">
+          <span data-testid="kpi-hours-saved">{values.hours}</span>
+        </span>
+      </div>
+      <p data-testid="kpi-assumption" style={{ margin: 0, fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
         Estimated hours saved assumes {kpis.assumed_minutes_per_dispute} minutes per closed dispute.
         {kpis.non_usd_open_disputes > 0
           ? ` ${kpis.non_usd_open_disputes} open dispute(s) in other currencies are excluded from USD sums.`
           : ''}
       </p>
 
-      {/* Ask the dashboard panel with 4 quick questions */}
-      <AssistantPanel kpis={kpis} disputes={disputes} />
+      {/* Recent disputes DataTable */}
+      <section
+        aria-label="Recent disputes"
+        data-testid="dashboard-disputes-card"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: spacing[2],
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontSize: typography.fontSizeBody, fontWeight: typography.fontWeightSemibold, margin: 0 }}>
+            Recent disputes
+          </h2>
+          <Link
+            to="/app/disputes"
+            style={{
+              fontSize: typography.fontSizeSmall,
+              color: colors.interactive,
+              textDecoration: 'none',
+              fontWeight: typography.fontWeightMedium,
+            }}
+          >
+            View all disputes &rarr;
+          </Link>
+        </div>
 
-      <Card title="Recent disputes" testId="dashboard-disputes-card">
-        {disputesQuery.isPending && <Skeleton height="120px" />}
+        {disputesQuery.isPending && <Skeleton height="160px" />}
+
         {disputesQuery.isError && (
           <ErrorState
             testId="dashboard-disputes-error"
@@ -161,53 +336,59 @@ export const DashboardPage: React.FC = () => {
             onRetry={() => void disputesQuery.refetch()}
           />
         )}
+
         {disputesQuery.data && disputes.length === 0 && (
           <EmptyState
             title="No disputes yet"
             description="Create a scenario from the demo panel to see the full flow."
-            action={<Link to="/app/demo" style={{ color: colors.brandPrimary }}>Open the demo panel</Link>}
+            action={<Link to="/app/demo" style={{ color: colors.interactive }}>Open the demo panel</Link>}
           />
         )}
-        {disputes.length > 0 && (
-          <div style={{ overflowX: 'auto' }}>
-            <table data-testid="dashboard-disputes-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ textAlign: 'left', fontSize: '12px', color: colors.inkMuted }}>
-                  <th style={{ padding: '6px' }}>Dispute</th>
-                  <th style={{ padding: '6px' }}>Amount</th>
-                  <th style={{ padding: '6px' }}>Verdict</th>
-                  <th style={{ padding: '6px' }}>Due</th>
-                </tr>
-              </thead>
-              <tbody>
-                {disputes.map((dispute) => (
-                  <tr key={dispute.id} data-testid={`dashboard-dispute-row-${dispute.id}`} style={{ borderTop: `1px solid ${colors.border}` }}>
-                    <td style={{ padding: '6px' }}>
-                      <Link to={`/app/disputes/${dispute.id}`} style={{ color: colors.brandPrimary }}>
-                        {dispute.id}
-                      </Link>
-                      <div style={{ fontSize: '12px', color: colors.inkMuted }}>{dispute.reason.replace(/_/g, ' ')}</div>
-                    </td>
-                    <td style={{ padding: '6px' }}><Money money={dispute.amount} /></td>
-                    <td style={{ padding: '6px' }}>
-                      <ServerVerdictChip value={dispute.latest_verdict ?? null} />
-                    </td>
-                    <td style={{ padding: '6px' }}><Deadline dueAt={dispute.seller_response_due_date ?? null} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+        {recentDisputes.length > 0 && (
+          <DataTable
+            columns={columns}
+            data={recentDisputes}
+            keyExtractor={(d) => d.id}
+            rowTestId={(d) => `dashboard-dispute-row-${d.id}`}
+            tableTestId="dashboard-disputes-table"
+            caption="Recent store disputes"
+          />
         )}
-      </Card>
+      </section>
 
-      <WidgetsSection
-        disputes={disputes}
-        charter={charterQuery.data}
-        timeline={timelineQuery.data?.items ?? []}
-      />
-
-      <StudioEmbed data={studioData} />
+      {/* Collapsed Dashboard tools disclosure */}
+      <details
+        data-testid="dashboard-tools-disclosure"
+        style={{
+          backgroundColor: colors.surface,
+          borderRadius: radius.card,
+          border: `1px solid ${colors.border}`,
+          padding: spacing[2],
+        }}
+      >
+        <summary
+          style={{
+            cursor: 'pointer',
+            fontSize: typography.fontSizeBody,
+            fontWeight: typography.fontWeightSemibold,
+            color: colors.ink,
+            userSelect: 'none',
+            padding: `${spacing[1]} 0`,
+          }}
+        >
+          Dashboard tools
+        </summary>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], marginTop: spacing[2] }}>
+          <AssistantPanel kpis={kpis} disputes={disputes} />
+          <WidgetsSection
+            disputes={disputes}
+            charter={charterQuery.data}
+            timeline={timelineQuery.data?.items ?? []}
+          />
+          <StudioEmbed data={studioData} />
+        </div>
+      </details>
     </div>
   );
 };

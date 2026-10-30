@@ -12,4 +12,5 @@ export * from './components/Banner';
 export * from './components/TruncatedText';
 export * from './components/PageHeader';
 export * from './components/DataTable';
+export * from './mappings';
 export * from './theme';

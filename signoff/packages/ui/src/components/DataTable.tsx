@@ -14,9 +14,11 @@ export interface DataTableProps<T> {
   columns: ColumnDef<T>[];
   data: T[];
   keyExtractor: (row: T, index: number) => string;
+  rowTestId?: (row: T, index: number) => string;
   caption?: string;
   onRowClick?: (row: T) => void;
   testId?: string;
+  tableTestId?: string;
   emptyState?: React.ReactNode;
 }
 
@@ -24,9 +26,11 @@ export function DataTable<T>({
   columns,
   data,
   keyExtractor,
+  rowTestId,
   caption,
   onRowClick,
   testId,
+  tableTestId,
   emptyState,
 }: DataTableProps<T>) {
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
@@ -65,6 +69,7 @@ export function DataTable<T>({
       }}
     >
       <table
+        data-testid={tableTestId}
         style={{
           width: '100%',
           borderCollapse: 'collapse',
@@ -130,6 +135,7 @@ export function DataTable<T>({
             return (
               <tr
                 key={key}
+                data-testid={rowTestId ? rowTestId(row, idx) : undefined}
                 tabIndex={onRowClick ? 0 : undefined}
                 role={onRowClick ? 'button' : undefined}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}

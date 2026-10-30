@@ -6,9 +6,13 @@ import {
   EmptyState,
   ErrorState,
   Money,
+  PageHeader,
   Skeleton,
   colors,
+  formatDisputeReason,
+  radius,
   spacing,
+  typography,
 } from '@signoff/ui';
 import { ApiQueryError } from '../../app/queries';
 import {
@@ -57,7 +61,7 @@ export const JudgePoolPage: React.FC = () => {
 
   if (poolQuery.isLoading) {
     return (
-      <div style={{ maxWidth: '640px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
         <Skeleton height="32px" width="240px" />
         <Skeleton height="120px" />
         <Skeleton height="120px" />
@@ -67,13 +71,11 @@ export const JudgePoolPage: React.FC = () => {
 
   if (poolQuery.isError) {
     return (
-      <div style={{ maxWidth: '640px', margin: '0 auto' }}>
-        <ErrorState
-          testId="pool-error"
-          message={poolQuery.error?.message ?? 'Failed to load demo dispute pool.'}
-          onRetry={() => void poolQuery.refetch()}
-        />
-      </div>
+      <ErrorState
+        testId="pool-error"
+        message={poolQuery.error?.message ?? 'Failed to load demo dispute pool.'}
+        onRetry={() => void poolQuery.refetch()}
+      />
     );
   }
 
@@ -85,21 +87,16 @@ export const JudgePoolPage: React.FC = () => {
     <div
       data-testid="judge-pool-page"
       style={{
-        maxWidth: '480px',
-        margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
         gap: spacing[3],
-        padding: `0 ${spacing[1]}`,
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: spacing[1] }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: colors.ink }}>Demo disputes</h1>
-          <p style={{ margin: '4px 0 0', fontSize: '14px', color: colors.inkMuted }}>
-            Choose a live scenario to watch the dispute agent evaluate and defend.
-          </p>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing[2] }}>
+        <PageHeader
+          title="Demo disputes"
+          description="Choose a live scenario to watch the dispute agent evaluate and defend."
+        />
         <Button
           variant="secondary"
           onClick={handleStartOver}
@@ -113,12 +110,12 @@ export const JudgePoolPage: React.FC = () => {
         <div
           data-testid="pool-start-over-notice"
           style={{
-            padding: '10px 14px',
-            backgroundColor: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            borderRadius: '6px',
-            fontSize: '13px',
-            color: '#166534',
+            padding: `${spacing[1]} ${spacing[2]}`,
+            backgroundColor: colors.badgeSuccessBg,
+            border: `1px solid ${colors.badgeSuccessBorder}`,
+            borderRadius: radius.card,
+            fontSize: typography.fontSizeSmall,
+            color: colors.badgeSuccessText,
           }}
         >
           {startOverNotice}
@@ -129,21 +126,21 @@ export const JudgePoolPage: React.FC = () => {
         <div
           data-testid="pool-claim-error"
           style={{
-            padding: '12px 14px',
-            backgroundColor: claimError.is409 ? '#fffbeb' : '#fef2f2',
-            border: `1px solid ${claimError.is409 ? '#fde68a' : '#fecaca'}`,
-            borderRadius: '6px',
-            fontSize: '13px',
-            color: claimError.is409 ? '#92400e' : '#b91c1c',
+            padding: `${spacing[1]} ${spacing[2]}`,
+            backgroundColor: claimError.is409 ? colors.badgeAttentionBg : colors.badgeCriticalBg,
+            border: `1px solid ${claimError.is409 ? colors.badgeAttentionBorder : colors.badgeCriticalBorder}`,
+            borderRadius: radius.card,
+            fontSize: typography.fontSizeSmall,
+            color: claimError.is409 ? colors.badgeAttentionText : colors.badgeCriticalText,
           }}
         >
           <strong>{claimError.is409 ? 'Already Claimed' : 'Claim Error'}:</strong> {claimError.message}
         </div>
       )}
 
-      {/* Available Pooled Section */}
-      <section aria-labelledby="available-disputes-heading">
-        <h2 id="available-disputes-heading" style={{ fontSize: '16px', fontWeight: 600, color: colors.ink, marginBottom: spacing[1] }}>
+      {/* Available Pooled Section: 2-column card grid */}
+      <section aria-labelledby="available-disputes-heading" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+        <h2 id="available-disputes-heading" style={{ fontSize: typography.fontSizeBody, fontWeight: typography.fontWeightSemibold, color: colors.ink, margin: 0 }}>
           Available for Evaluation ({pooledDisputes.length})
         </h2>
 
@@ -154,92 +151,152 @@ export const JudgePoolPage: React.FC = () => {
             description="No live demo disputes right now — three finished runs are available below."
           />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: spacing[2],
+            }}
+          >
             {pooledDisputes.map((item) => {
               const isClaiming = claimingId === item.dispute_id;
+              const plainReason = formatDisputeReason(item.reason);
               return (
-                <Card key={item.dispute_id} testId={`pool-dispute-card-${item.dispute_id}`}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                      <strong style={{ fontSize: '15px', color: colors.ink }}>
-                        {item.scenario_label || `${item.reason.replace(/_/g, ' ')} dispute`}
+                <div
+                  key={item.dispute_id}
+                  data-testid={`pool-dispute-card-${item.dispute_id}`}
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: radius.card,
+                    border: `1px solid ${colors.border}`,
+                    padding: spacing[3],
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: spacing[2],
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: spacing[1] }}>
+                      <strong style={{ fontSize: typography.fontSizeBody, color: colors.ink }}>
+                        {item.scenario_label || `${plainReason} dispute`}
                       </strong>
                       <Money money={item.amount} testId={`pool-dispute-amount-${item.dispute_id}`} />
                     </div>
 
-                    <div style={{ fontSize: '13px', color: colors.inkMuted }}>
-                      Reason: {item.reason.replace(/_/g, ' ')}
+                    <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
+                      {plainReason}
                     </div>
 
                     {item.seller_response_due_date && (
-                      <div style={{ fontSize: '12px', color: '#b45309' }}>
+                      <div style={{ fontSize: typography.fontSizeSmall, color: colors.badgeAttentionText }}>
                         Due: {new Date(item.seller_response_due_date).toLocaleDateString()}
                       </div>
                     )}
-
-                    <div style={{ marginTop: '8px' }}>
-                      <Button
-                        variant="primary"
-                        onClick={() => void handleClaim(item.dispute_id)}
-                        disabled={claimingId !== null || isClaiming}
-                        testId={`claim-dispute-btn-${item.dispute_id}`}
-                      >
-                        {isClaiming ? 'Claiming...' : 'Open this dispute'}
-                      </Button>
-                    </div>
                   </div>
-                </Card>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => void handleClaim(item.dispute_id)}
+                      disabled={claimingId !== null || isClaiming}
+                      data-testid={`claim-dispute-btn-${item.dispute_id}`}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: colors.primaryAction,
+                        color: '#FFFFFF',
+                        borderRadius: radius.control,
+                        border: 'none',
+                        fontSize: typography.fontSizeBody,
+                        fontWeight: typography.fontWeightMedium,
+                        cursor: claimingId !== null || isClaiming ? 'not-allowed' : 'pointer',
+                        opacity: claimingId !== null || isClaiming ? 0.6 : 1,
+                      }}
+                    >
+                      {isClaiming ? 'Claiming...' : 'Open this dispute'}
+                    </button>
+                  </div>
+                </div>
               );
             })}
           </div>
         )}
       </section>
 
-      {/* Part G: Finished Runs (Replay) */}
-      <section aria-labelledby="finished-runs-heading" style={{ marginTop: spacing[2] }}>
-        <h2 id="finished-runs-heading" style={{ fontSize: '16px', fontWeight: 600, color: colors.ink, marginBottom: spacing[1] }}>
+      {/* Finished Runs Section: 2-column card grid */}
+      <section aria-labelledby="finished-runs-heading" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2], marginTop: spacing[2] }}>
+        <h2 id="finished-runs-heading" style={{ fontSize: typography.fontSizeBody, fontWeight: typography.fontWeightSemibold, color: colors.ink, margin: 0 }}>
           Finished runs ({finishedDisputes.length})
         </h2>
 
         {finishedDisputes.length === 0 ? (
-          <div style={{ fontSize: '13px', color: colors.inkMuted, fontStyle: 'italic', padding: '12px 0' }}>
+          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontStyle: 'italic', padding: '12px 0' }}>
             No finished evaluation runs recorded yet.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: spacing[2],
+            }}
+          >
             {finishedDisputes.map((item) => (
-              <Card key={item.dispute_id} testId={`finished-run-card-${item.dispute_id}`}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                    <strong style={{ fontSize: '14px', color: colors.ink }}>
+              <div
+                key={item.dispute_id}
+                data-testid={`finished-run-card-${item.dispute_id}`}
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: radius.card,
+                  border: `1px solid ${colors.border}`,
+                  padding: spacing[3],
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: spacing[2],
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: spacing[1] }}>
+                    <strong style={{ fontSize: typography.fontSizeBody, color: colors.ink }}>
                       {item.scenario_label || item.dispute_id}
                     </strong>
                     <Money money={item.amount} testId={`finished-amount-${item.dispute_id}`} />
                   </div>
-                  <div style={{ fontSize: '12px', color: colors.inkMuted }}>
-                    {item.reason.replace(/_/g, ' ')} &bull; State: {item.state}
+                  <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
+                    {formatDisputeReason(item.reason)} &bull; State: {item.state}
                   </div>
                   {(item.latest_verdict || item.latest_rule_id) && (
                     <div
                       data-testid={`finished-verdict-${item.dispute_id}`}
-                      style={{ fontSize: '12px', color: colors.ink }}
+                      style={{ fontSize: typography.fontSizeSmall, color: colors.ink }}
                     >
                       {item.latest_verdict && <span>Verdict: {item.latest_verdict}</span>}
                       {item.latest_verdict && item.latest_rule_id && <span> &bull; </span>}
                       {item.latest_rule_id && <span>Rule: {item.latest_rule_id}</span>}
                     </div>
                   )}
-                  <div style={{ marginTop: '6px' }}>
-                    <Button
-                      variant="secondary"
-                      onClick={() => void navigate(`/app/disputes/${item.dispute_id}`)}
-                      testId={`view-replay-btn-${item.dispute_id}`}
-                    >
-                      View run detail &rarr;
-                    </Button>
-                  </div>
                 </div>
-              </Card>
+
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => void navigate(`/app/disputes/${item.dispute_id}`)}
+                    data-testid={`view-replay-btn-${item.dispute_id}`}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: colors.surface,
+                      color: colors.ink,
+                      borderRadius: radius.control,
+                      border: `1px solid ${colors.borderStrong}`,
+                      fontSize: typography.fontSizeBody,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    View run detail &rarr;
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -247,4 +304,3 @@ export const JudgePoolPage: React.FC = () => {
     </div>
   );
 };
-

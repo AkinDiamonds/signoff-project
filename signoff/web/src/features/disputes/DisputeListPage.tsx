@@ -3,13 +3,20 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import {
   Button,
   Card,
-  Deadline,
+  DataTable,
   EmptyState,
   ErrorState,
   Money,
+  PageHeader,
   Skeleton,
-  VerdictChip,
+  StatusBadge,
+  colors,
+  formatDisputeReason,
+  radius,
+  spacing,
+  typography,
 } from '@signoff/ui';
+import type { ColumnDef } from '@signoff/ui';
 import type { DisputeReason, DisputeStatus } from '@signoff/api-client';
 import { useDisputes } from '../../app/queries';
 import {
@@ -23,24 +30,36 @@ import {
 } from './filterSchema';
 import type { DisputeListItem } from './types';
 
-export const DisputeStatusBadge: React.FC<{ status: string; testId?: string }> = ({ status, testId }) => (
-  <span
-    data-testid={testId}
-    style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      padding: '3px 8px',
-      borderRadius: '999px',
-      fontSize: '12px',
-      fontWeight: 600,
-      backgroundColor: '#f1f5f9',
-      color: '#334155',
-      border: '1px solid #cbd5e1',
-    }}
-  >
-    {status.replace(/_/g, ' ')}
-  </span>
-);
+export const DisputeStatusBadge: React.FC<{ status: string; testId?: string }> = ({
+  status,
+  testId,
+}) => <StatusBadge status={status} testId={testId} />;
+
+function formatDueInfo(dueAt: string | null | undefined): { relative: string; absolute: string } {
+  if (!dueAt) return { relative: 'No deadline', absolute: '—' };
+  const target = new Date(dueAt).getTime();
+  const now = Date.now();
+  const diffDays = Math.round((target - now) / 86400000);
+  const absolute = new Date(dueAt).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  if (diffDays < 0) {
+    const overdue = Math.abs(diffDays);
+    return {
+      relative: overdue === 1 ? 'Overdue by 1 day' : `Overdue by ${overdue} days`,
+      absolute,
+    };
+  }
+  if (diffDays === 0) {
+    return { relative: 'Due today', absolute };
+  }
+  return {
+    relative: diffDays === 1 ? 'Due in 1 day' : `Due in ${diffDays} days`,
+    absolute,
+  };
+}
 
 export const DisputeListPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -72,7 +91,6 @@ export const DisputeListPage: React.FC = () => {
   // Query with auto refetch every 10s
   const query = useDisputes(apiQuery);
 
-  // Stale tracking and ignoring responses older than the one currently shown
   const [displayedItems, setDisplayedItems] = useState<DisputeListItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -80,7 +98,6 @@ export const DisputeListPage: React.FC = () => {
 
   useEffect(() => {
     if (query.data) {
-      // Find the maximum updated_at in the incoming items
       let maxTimestamp = 0;
       for (const item of query.data.items) {
         const ts = new Date(item.updated_at).getTime();
@@ -89,7 +106,6 @@ export const DisputeListPage: React.FC = () => {
         }
       }
 
-      // Ignore if response is older than the one shown
       if (latestTimestampRef.current === 0 || maxTimestamp >= latestTimestampRef.current) {
         latestTimestampRef.current = maxTimestamp;
         setDisplayedItems(query.data.items);
@@ -99,68 +115,147 @@ export const DisputeListPage: React.FC = () => {
     }
   }, [query.data]);
 
-  // Update URL search params cleanly
   const updateFilter = (patch: Partial<typeof filters>) => {
     const updated = { ...filters, ...patch };
-    // Reset cursor when changing status, reason, or scope
-    if ('status' in patch || 'reason' in patch || 'scope' in patch) {
+    if ('status' in patch || 'reason' in patch || 'scope' in patch || 'q' in patch) {
       updated.cursor = null;
     }
     setSearchParams(filtersToSearchParams(updated));
   };
 
-  const handleNextPage = () => {
-    if (nextCursor) {
-      updateFilter({ cursor: nextCursor });
-    }
-  };
+  // Filter items client-side by search query if set
+  const filteredItems = useMemo(() => {
+    if (!filters.q) return displayedItems;
+    const queryTerm = filters.q.toLowerCase();
+    return displayedItems.filter((item) => {
+      const matchId = item.id.toLowerCase().includes(queryTerm);
+      const matchOrder = item.order_code && item.order_code.toLowerCase().includes(queryTerm);
+      return Boolean(matchId || matchOrder);
+    });
+  }, [displayedItems, filters.q]);
 
-  const handlePrevPage = () => {
-    // Reset cursor to start
-    updateFilter({ cursor: null });
-  };
+  const columns = useMemo<ColumnDef<DisputeListItem>[]>(
+    () => [
+      {
+        id: 'id',
+        header: 'Dispute',
+        cell: (row) => (
+          <Link
+            to={`/app/disputes/${row.id}`}
+            data-testid={`dispute-link-${row.id}`}
+            style={{
+              fontFamily: 'monospace',
+              fontWeight: typography.fontWeightSemibold,
+              color: colors.interactive,
+              textDecoration: 'none',
+            }}
+          >
+            {row.id}
+          </Link>
+        ),
+      },
+      {
+        id: 'reason',
+        header: 'Buyer reason',
+        cell: (row) => (
+          <span style={{ color: colors.ink }}>{formatDisputeReason(row.reason)}</span>
+        ),
+      },
+      {
+        id: 'amount',
+        header: 'Amount',
+        numeric: true,
+        cell: (row) => <Money money={row.amount} testId={`dispute-amount-${row.id}`} />,
+      },
+      {
+        id: 'verdict',
+        header: 'Verdict',
+        cell: (row) => (
+          <StatusBadge
+            status={row.latest_verdict ?? row.status}
+            testId={`dispute-verdict-${row.id}`}
+          />
+        ),
+      },
+      {
+        id: 'due',
+        header: 'Due',
+        cell: (row) => {
+          const { relative, absolute } = formatDueInfo(row.seller_response_due_date);
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ color: colors.ink, fontWeight: typography.fontWeightMedium }}>
+                {relative}
+              </span>
+              <span style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
+                {absolute}
+              </span>
+            </div>
+          );
+        },
+      },
+    ],
+    []
+  );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', margin: '0 0 4px 0', color: '#0f172a' }}>Disputes</h1>
-          <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>
-            Review merchant disputes, gate decisions, and audit timelines.
-          </p>
-        </div>
-        {lastUpdated && (
-          <div
-            data-testid="disputes-stale-indicator"
-            style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <span
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: query.isFetching ? '#f59e0b' : '#10b981',
-              }}
-            />
-            {query.isFetching ? 'Refreshing...' : `Updated ${lastUpdated.toLocaleTimeString()}`}
-          </div>
-        )}
-      </header>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
+      <PageHeader
+        title="All disputes"
+        description="Every dispute PayPal has opened for this store."
+      />
 
-      {/* Filters Bar */}
+      {/* Filter Row above the table */}
       <Card testId="disputes-filter-card">
         <form
           onSubmit={(e) => e.preventDefault()}
           style={{
             display: 'flex',
             flexWrap: 'wrap',
-            gap: '16px',
+            gap: spacing[2],
             alignItems: 'flex-end',
           }}
         >
-          {/* Status Filter */}
+          {/* Search box: matches dispute id or order code */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: '1 1 200px' }}>
+            <label
+              htmlFor="filter-search"
+              style={{
+                fontSize: typography.fontSizeSmall,
+                fontWeight: typography.fontWeightSemibold,
+                color: colors.inkMuted,
+              }}
+            >
+              Search
+            </label>
+            <input
+              id="filter-search"
+              data-testid="filter-search"
+              type="text"
+              placeholder="Filter by dispute ID or order code"
+              value={filters.q}
+              onChange={(e) => updateFilter({ q: e.target.value })}
+              style={{
+                padding: '6px 10px',
+                borderRadius: radius.control,
+                border: `1px solid ${colors.borderStrong}`,
+                fontSize: typography.fontSizeBody,
+                color: colors.ink,
+                outline: 'none',
+              }}
+            />
+          </div>
+
+          {/* Status select */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label htmlFor="filter-status" style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
+            <label
+              htmlFor="filter-status"
+              style={{
+                fontSize: typography.fontSizeSmall,
+                fontWeight: typography.fontWeightSemibold,
+                color: colors.inkMuted,
+              }}
+            >
               Status
             </label>
             <select
@@ -175,9 +270,11 @@ export const DisputeListPage: React.FC = () => {
               }}
               style={{
                 padding: '6px 12px',
-                borderRadius: '6px',
-                border: '1px solid #cbd5e1',
-                fontSize: '14px',
+                borderRadius: radius.control,
+                border: `1px solid ${colors.borderStrong}`,
+                fontSize: typography.fontSizeBody,
+                backgroundColor: colors.surface,
+                color: colors.ink,
               }}
             >
               {VALID_STATUSES.map((st) => (
@@ -188,9 +285,16 @@ export const DisputeListPage: React.FC = () => {
             </select>
           </div>
 
-          {/* Reason Filter */}
+          {/* Reason select */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label htmlFor="filter-reason" style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
+            <label
+              htmlFor="filter-reason"
+              style={{
+                fontSize: typography.fontSizeSmall,
+                fontWeight: typography.fontWeightSemibold,
+                color: colors.inkMuted,
+              }}
+            >
               Reason
             </label>
             <select
@@ -205,26 +309,41 @@ export const DisputeListPage: React.FC = () => {
               }}
               style={{
                 padding: '6px 12px',
-                borderRadius: '6px',
-                border: '1px solid #cbd5e1',
-                fontSize: '14px',
+                borderRadius: radius.control,
+                border: `1px solid ${colors.borderStrong}`,
+                fontSize: typography.fontSizeBody,
+                backgroundColor: colors.surface,
+                color: colors.ink,
               }}
             >
               {VALID_REASONS.map((rs) => (
                 <option key={rs} value={rs}>
-                  {rs === 'ALL' ? 'All reasons' : rs.replace(/_/g, ' ')}
+                  {rs === 'ALL' ? 'All reasons' : formatDisputeReason(rs)}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Scope Toggle (mine vs all) */}
+          {/* Scope Toggle (preserved for test compatibility) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Scope</span>
+            <span
+              style={{
+                fontSize: typography.fontSizeSmall,
+                fontWeight: typography.fontWeightSemibold,
+                color: colors.inkMuted,
+              }}
+            >
+              Scope
+            </span>
             <div
               role="radiogroup"
               aria-label="Dispute session scope"
-              style={{ display: 'flex', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden' }}
+              style={{
+                display: 'flex',
+                borderRadius: radius.control,
+                border: `1px solid ${colors.borderStrong}`,
+                overflow: 'hidden',
+              }}
             >
               <button
                 type="button"
@@ -235,11 +354,11 @@ export const DisputeListPage: React.FC = () => {
                 style={{
                   padding: '6px 12px',
                   border: 'none',
-                  backgroundColor: filters.scope === 'mine' ? '#0f766e' : '#ffffff',
-                  color: filters.scope === 'mine' ? '#ffffff' : '#334155',
+                  backgroundColor: filters.scope === 'mine' ? colors.primaryAction : colors.surface,
+                  color: filters.scope === 'mine' ? '#FFFFFF' : colors.ink,
                   cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: 500,
+                  fontSize: typography.fontSizeBody,
+                  fontWeight: typography.fontWeightMedium,
                 }}
               >
                 My session
@@ -253,12 +372,12 @@ export const DisputeListPage: React.FC = () => {
                 style={{
                   padding: '6px 12px',
                   border: 'none',
-                  borderLeft: '1px solid #cbd5e1',
-                  backgroundColor: filters.scope === 'all' ? '#0f766e' : '#ffffff',
-                  color: filters.scope === 'all' ? '#ffffff' : '#334155',
+                  borderLeft: `1px solid ${colors.borderStrong}`,
+                  backgroundColor: filters.scope === 'all' ? colors.primaryAction : colors.surface,
+                  color: filters.scope === 'all' ? '#FFFFFF' : colors.ink,
                   cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: 500,
+                  fontSize: typography.fontSizeBody,
+                  fontWeight: typography.fontWeightMedium,
                 }}
               >
                 All sessions
@@ -270,6 +389,7 @@ export const DisputeListPage: React.FC = () => {
           {(filters.status !== DEFAULT_DISPUTE_FILTERS.status ||
             filters.reason !== DEFAULT_DISPUTE_FILTERS.reason ||
             filters.scope !== DEFAULT_DISPUTE_FILTERS.scope ||
+            filters.q !== '' ||
             filters.cursor !== null) && (
             <Button
               variant="secondary"
@@ -285,7 +405,11 @@ export const DisputeListPage: React.FC = () => {
       {/* Main Content Area */}
       {query.isPending && (
         <Card testId="disputes-loading-card">
-          <div role="status" aria-label="Loading disputes" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div
+            role="status"
+            aria-label="Loading disputes"
+            style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}
+          >
             <Skeleton height="32px" />
             <Skeleton height="48px" />
             <Skeleton height="48px" />
@@ -302,154 +426,91 @@ export const DisputeListPage: React.FC = () => {
         />
       )}
 
-      {query.isSuccess && displayedItems.length === 0 && (
+      {query.isSuccess && filteredItems.length === 0 && (
         <EmptyState
           testId="disputes-empty-state"
-          title="No disputes found"
-          description="There are no disputes matching your current filter settings. You can trigger demo scenarios from the demo page."
+          title="No disputes yet"
+          description="Disputes appear here when PayPal opens one."
           action={
-            <Link
-              to="/app/demo"
-              data-testid="empty-state-demo-link"
-              style={{
-                display: 'inline-block',
-                padding: '8px 16px',
-                backgroundColor: '#0f766e',
-                color: '#ffffff',
-                borderRadius: '6px',
-                textDecoration: 'none',
-                fontWeight: 600,
-                fontSize: '14px',
-              }}
-            >
-              Go to Demo scenarios
-            </Link>
+            <div style={{ display: 'flex', gap: spacing[2], alignItems: 'center' }}>
+              <Link
+                to="/guide"
+                style={{
+                  display: 'inline-block',
+                  padding: '8px 16px',
+                  backgroundColor: colors.primaryAction,
+                  color: '#FFFFFF',
+                  borderRadius: radius.control,
+                  textDecoration: 'none',
+                  fontWeight: typography.fontWeightSemibold,
+                  fontSize: typography.fontSizeBody,
+                }}
+              >
+                See how it works
+              </Link>
+              {/* Preserved demo link for test compatibility */}
+              <Link
+                to="/app/demo"
+                data-testid="empty-state-demo-link"
+                style={{
+                  fontSize: typography.fontSizeSmall,
+                  color: colors.interactive,
+                  textDecoration: 'none',
+                }}
+              >
+                Open demo panel
+              </Link>
+            </div>
           }
         />
       )}
 
-      {query.isSuccess && displayedItems.length > 0 && (
-        <Card testId="disputes-table-card">
-          <div style={{ overflowX: 'auto' }}>
-            <table
-              data-testid="disputes-table"
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                textAlign: 'left',
-                fontSize: '14px',
-              }}
-            >
-              <thead>
-                <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b' }}>
-                  <th style={{ padding: '12px 8px' }}>Dispute ID</th>
-                  <th style={{ padding: '12px 8px' }}>Order</th>
-                  <th style={{ padding: '12px 8px' }}>Reason</th>
-                  <th style={{ padding: '12px 8px' }}>Amount</th>
-                  <th style={{ padding: '12px 8px' }}>Status</th>
-                  <th style={{ padding: '12px 8px' }}>Latest Verdict</th>
-                  <th style={{ padding: '12px 8px' }}>Deadline</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayedItems.map((item) => (
-                  <tr
-                    key={item.id}
-                    data-testid={`dispute-row-${item.id}`}
-                    onClick={() => navigate(`/app/disputes/${item.id}`)}
-                    style={{
-                      borderBottom: '1px solid #f1f5f9',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.15s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f8fafc';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }}
-                  >
-                    <td style={{ padding: '12px 8px' }}>
-                      <Link
-                        to={`/app/disputes/${item.id}`}
-                        data-testid={`dispute-link-${item.id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{ color: '#0284c7', fontWeight: 600, textDecoration: 'none' }}
-                      >
-                        {item.id}
-                      </Link>
-                    </td>
-                    <td style={{ padding: '12px 8px', color: '#475569' }}>
-                      {item.order_code ?? '—'}
-                    </td>
-                    <td style={{ padding: '12px 8px', color: '#334155' }}>
-                      {item.reason.replace(/_/g, ' ')}
-                    </td>
-                    <td style={{ padding: '12px 8px' }}>
-                      <Money money={item.amount} testId={`dispute-amount-${item.id}`} />
-                    </td>
-                    <td style={{ padding: '12px 8px' }}>
-                      <DisputeStatusBadge status={item.status} testId={`dispute-status-${item.id}`} />
-                    </td>
-                    <td style={{ padding: '12px 8px' }}>
-                      {item.latest_verdict ? (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <VerdictChip
-                            verdict={item.latest_verdict}
-                            testId={`dispute-verdict-${item.id}`}
-                          />
-                          {item.latest_rule_id && (
-                            <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-                              {item.latest_rule_id}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span style={{ color: '#94a3b8' }}>Pending</span>
-                      )}
-                    </td>
-                    <td style={{ padding: '12px 8px' }}>
-                      <Deadline dueAt={item.seller_response_due_date ?? null} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {query.isSuccess && filteredItems.length > 0 && (
+        <>
+          <DataTable
+            columns={columns}
+            data={filteredItems}
+            keyExtractor={(item) => item.id}
+            rowTestId={(item) => `dispute-row-${item.id}`}
+            tableTestId="disputes-table"
+            caption="All store disputes"
+            onRowClick={(item) => navigate(`/app/disputes/${item.id}`)}
+          />
 
-          {/* Pagination bar */}
           <div
             data-testid="disputes-pagination"
             style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginTop: '16px',
-              paddingTop: '16px',
-              borderTop: '1px solid #f1f5f9',
+              padding: `${spacing[2]} 0`,
             }}
           >
             <Button
               variant="secondary"
               disabled={filters.cursor === null}
-              onClick={handlePrevPage}
+              onClick={() => updateFilter({ cursor: null })}
               testId="pagination-prev-button"
             >
               First page
             </Button>
-            <span style={{ fontSize: '13px', color: '#64748b' }}>
+            <span style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
               Showing {displayedItems.length} items
             </span>
             <Button
               variant="secondary"
               disabled={!nextCursor}
-              onClick={handleNextPage}
+              onClick={() => {
+                if (nextCursor) {
+                  updateFilter({ cursor: nextCursor });
+                }
+              }}
               testId="pagination-next-button"
             >
               Next page
             </Button>
           </div>
-        </Card>
+        </>
       )}
     </div>
   );

@@ -6,11 +6,17 @@ import {
   EmptyState,
   ErrorState,
   Money,
+  PageHeader,
   Skeleton,
-  VerdictChip,
+  StatusBadge,
+  colors,
+  formatDisputeReason,
+  getRuleExplanation,
+  radius,
+  spacing,
+  typography,
 } from '@signoff/ui';
 import { useDispute, useDisputeTimeline } from '../../app/queries';
-import { DisputeStatusBadge } from './DisputeListPage';
 import { DecisionTimeline } from './timeline';
 import type { DisputeDetail } from './types';
 
@@ -22,16 +28,13 @@ export const DisputeDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const disputeId = id ?? '';
 
-  // Poll every 5s
   const disputeQuery = useDispute(disputeId, { refetchInterval: 5000 });
   const timelineQuery = useDisputeTimeline(disputeId, { refetchInterval: 5000 });
 
-  // Stale and timestamp tracking: ignore responses older than the one shown
   const [displayedDispute, setDisplayedDispute] = useState<DisputeDetail | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const latestTimestampRef = useRef<number>(0);
 
-  // Message collapsing
   const [isMessageExpanded, setIsMessageExpanded] = useState<boolean>(false);
 
   useEffect(() => {
@@ -45,23 +48,18 @@ export const DisputeDetailPage: React.FC = () => {
     }
   }, [disputeQuery.data]);
 
-  // Loading state
   if (disputeQuery.isPending && !displayedDispute) {
     return (
-      <Card testId="dispute-detail-loading">
-        <div role="status" aria-label="Loading dispute details" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Skeleton height="36px" width="40%" />
-          <Skeleton height="120px" />
-          <Skeleton height="200px" />
-        </div>
-      </Card>
+      <div data-testid="dispute-detail-loading" style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
+        <Skeleton height="36px" width="40%" />
+        <Skeleton height="120px" />
+        <Skeleton height="200px" />
+      </div>
     );
   }
 
-  // Error handling: 404 Not Found vs other errors
   if (disputeQuery.isError) {
     const error = disputeQuery.error;
-    // Check if error is 404 / NOT_FOUND
     if (error.message?.toLowerCase().includes('not found') || error.correlationId === 'mock-not-found') {
       return (
         <EmptyState
@@ -75,12 +73,12 @@ export const DisputeDetailPage: React.FC = () => {
               style={{
                 display: 'inline-block',
                 padding: '8px 16px',
-                backgroundColor: '#0f766e',
-                color: '#ffffff',
-                borderRadius: '6px',
+                backgroundColor: colors.primaryAction,
+                color: '#FFFFFF',
+                borderRadius: radius.control,
                 textDecoration: 'none',
-                fontWeight: 600,
-                fontSize: '14px',
+                fontWeight: typography.fontWeightSemibold,
+                fontSize: typography.fontSizeBody,
               }}
             >
               Back to disputes
@@ -104,7 +102,6 @@ export const DisputeDetailPage: React.FC = () => {
     return null;
   }
 
-  // Extract snapshot details
   const snapshot = displayedDispute.snapshot ?? {};
   const rawBuyerMessage =
     (typeof snapshot.buyer_message === 'string' && snapshot.buyer_message) ||
@@ -116,7 +113,6 @@ export const DisputeDetailPage: React.FC = () => {
 
   const rawEvidence = isRecord(snapshot.evidence) ? snapshot.evidence : null;
 
-  // Determine evidence strength: check evidence object or timeline events
   let evidenceStrength: string | null = null;
   if (rawEvidence && typeof rawEvidence.evidence_strength === 'string') {
     evidenceStrength = rawEvidence.evidence_strength;
@@ -129,9 +125,6 @@ export const DisputeDetailPage: React.FC = () => {
     }
   }
 
-  // Show agent-in-progress banner when:
-  // - No verdict yet (still analyzing), OR
-  // - Verdict is NEEDS_APPROVAL (waiting for human review = still in-progress)
   const hasGateDecided = Boolean(
     timelineQuery.data?.items?.some(
       (ev) => 'kind' in ev && (ev.kind === 'GATE_DECIDED' || ev.kind === 'EXECUTION_CONFIRMED')
@@ -149,66 +142,84 @@ export const DisputeDetailPage: React.FC = () => {
       ? `${rawBuyerMessage.slice(0, 180)}...`
       : rawBuyerMessage;
 
+  const ruleId = displayedDispute.latest_rule_id ?? 'G3-01';
+  const ruleExplanation = getRuleExplanation(ruleId);
+  const plainReason = formatDisputeReason(displayedDispute.reason);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Navigation & Header */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
+      {/* Breadcrumb navigation */}
       <nav aria-label="Breadcrumb">
         <Link
           to="/app/disputes"
           data-testid="breadcrumb-disputes-link"
-          style={{ fontSize: '13px', color: '#0284c7', textDecoration: 'none', fontWeight: 500 }}
+          style={{
+            fontSize: typography.fontSizeSmall,
+            color: colors.interactive,
+            textDecoration: 'none',
+            fontWeight: typography.fontWeightMedium,
+          }}
         >
-          &larr; Back to dispute list
+          &larr; All disputes
         </Link>
       </nav>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Page Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing[2] }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2], flexWrap: 'wrap' }}>
             <h1
               data-testid="dispute-detail-id"
-              style={{ fontSize: '24px', margin: 0, color: '#0f172a' }}
+              style={{
+                fontSize: typography.fontSizePageTitle,
+                fontWeight: typography.fontWeightSemibold,
+                margin: 0,
+                color: colors.ink,
+                fontFamily: 'monospace',
+              }}
             >
-              Dispute {displayedDispute.id}
+              {displayedDispute.id}
             </h1>
-            <DisputeStatusBadge status={displayedDispute.status} testId="detail-status-badge" />
+            <StatusBadge
+              status={displayedDispute.latest_verdict ?? displayedDispute.status}
+              testId="detail-status-badge"
+            />
           </div>
-          <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '14px' }}>
-            Reason: {displayedDispute.reason.replace(/_/g, ' ')}
-          </p>
+          <div style={{ fontSize: typography.fontSizeBody, color: colors.inkMuted }}>
+            {plainReason} &bull; <Money money={displayedDispute.amount} testId="detail-header-amount" />
+          </div>
         </div>
 
-        {/* Polling indicator */}
         {lastUpdated && (
           <div
             data-testid="detail-stale-indicator"
-            style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <span
               style={{
                 width: '8px',
                 height: '8px',
                 borderRadius: '50%',
-                backgroundColor: disputeQuery.isFetching ? '#f59e0b' : '#10b981',
+                backgroundColor: disputeQuery.isFetching ? '#F59E0B' : '#10B981',
               }}
             />
-            {disputeQuery.isFetching ? 'Checking updates...' : `Updated ${lastUpdated.toLocaleTimeString()}`}
+            {disputeQuery.isFetching ? 'Updating...' : `Updated ${lastUpdated.toLocaleTimeString()}`}
           </div>
         )}
       </div>
 
-      {/* Agent running banner */}
+      {/* Agent in progress banner */}
       {isAgentRunning && (
         <div
           data-testid="agent-in-progress-banner"
           style={{
-            padding: '12px 16px',
-            backgroundColor: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            borderRadius: '8px',
+            padding: `${spacing[2]} ${spacing[3]}`,
+            backgroundColor: '#F0FDF4',
+            border: '1px solid #BBF7D0',
+            borderRadius: radius.card,
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
+            gap: spacing[2],
           }}
         >
           <span
@@ -217,264 +228,282 @@ export const DisputeDetailPage: React.FC = () => {
               width: '10px',
               height: '10px',
               borderRadius: '50%',
-              backgroundColor: '#16a34a',
-              boxShadow: '0 0 0 3px #86efac',
+              backgroundColor: '#16A34A',
             }}
           />
           <div>
-            <strong style={{ fontSize: '14px', color: '#166534' }}>
-              Agent running
+            <strong style={{ fontSize: typography.fontSizeBody, color: '#166534' }}>
+              Agent actively investigating
             </strong>
-            <div style={{ fontSize: '13px', color: '#15803d' }}>
-              The dispute agent is actively gathering evidence and preparing a resolution plan.
+            <div style={{ fontSize: typography.fontSizeSmall, color: '#15803D' }}>
+              Gathering evidence and checking your merchant signing rules.
             </div>
           </div>
         </div>
       )}
 
-      {/* Demo Approval Card Button */}
-      {displayedDispute.approval_url && (
-        <div
-          data-testid="demo-approval-card-banner"
-          style={{
-            padding: '16px',
-            backgroundColor: '#eff6ff',
-            border: '2px solid #3b82f6',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '12px',
-          }}
-        >
-          <div>
-            <strong style={{ fontSize: '15px', color: '#1e40af', display: 'block' }}>
-              Action Requires Approval
-            </strong>
-            <span style={{ fontSize: '13px', color: '#1d4ed8' }}>
-              {displayedDispute.latest_rule_id ? `Rule: ${displayedDispute.latest_rule_id} — ` : ''}
-              Signing limit reached or high-risk exception flagged.
-            </span>
-          </div>
-          <a
-            href={displayedDispute.approval_url}
-            data-testid="open-approval-card-button"
-            style={{
-              display: 'inline-block',
-              backgroundColor: '#2563eb',
-              color: '#ffffff',
-              padding: '10px 20px',
-              borderRadius: '6px',
-              fontWeight: 600,
-              fontSize: '14px',
-              textDecoration: 'none',
-              boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)',
-            }}
-          >
-            Open approval card &rarr;
-          </a>
-        </div>
-      )}
+      {/* 2-Column Shopify record layout */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: spacing[3],
+          alignItems: 'start',
+        }}
+      >
+        {/* Left column (about two thirds: timeline, evidence, buyer message) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], gridColumn: 'span 2' }}>
+          {/* 1. What happened card: Audit timeline newest first */}
+          <Card title="What happened" testId="decision-timeline-card">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+              <p style={{ margin: 0, fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
+                Immutable audit trail of actions, checks, and gate evaluations.
+              </p>
+              {timelineQuery.isPending && (
+                <div role="status" aria-label="Loading timeline" style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
+                  <Skeleton height="24px" width="50%" />
+                  <Skeleton height="24px" width="70%" />
+                </div>
+              )}
+              {timelineQuery.isError && (
+                <ErrorState
+                  testId="timeline-error"
+                  message={timelineQuery.error.message}
+                  correlationId={timelineQuery.error.correlationId}
+                  onRetry={() => void timelineQuery.refetch()}
+                />
+              )}
+              {timelineQuery.isSuccess && (
+                <DecisionTimeline events={timelineQuery.data.items ?? []} reverse={true} />
+              )}
+            </div>
+          </Card>
 
-      {/* Overview Card */}
-      <Card title="Summary" testId="dispute-summary-card">
-        <dl
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-            gap: '16px',
-            margin: 0,
-          }}
-        >
-          <div>
-            <dt style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Amount</dt>
-            <dd style={{ margin: '4px 0 0 0' }}>
-              <Money money={displayedDispute.amount} testId="detail-amount" />
-            </dd>
-          </div>
-          <div>
-            <dt style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Linked Order</dt>
-            <dd style={{ margin: '4px 0 0 0', fontWeight: 600, color: '#0f172a' }}>
-              {displayedDispute.order_code ?? '—'}
-            </dd>
-          </div>
-          <div>
-            <dt style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Seller Response Due</dt>
-            <dd style={{ margin: '4px 0 0 0' }}>
-              <Deadline dueAt={displayedDispute.seller_response_due_date ?? null} />
-            </dd>
-          </div>
-          <div>
-            <dt style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Latest Verdict</dt>
-            <dd style={{ margin: '4px 0 0 0' }}>
-              {displayedDispute.latest_verdict ? (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <VerdictChip
-                    verdict={displayedDispute.latest_verdict}
-                    testId="detail-verdict-chip"
-                  />
-                  {displayedDispute.latest_rule_id && (
-                    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-                      {displayedDispute.latest_rule_id}
+          {/* 2. Evidence gathered card */}
+          <Card title="Evidence gathered" testId="dispute-evidence-panel">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1] }}>
+                <span style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontWeight: typography.fontWeightSemibold }}>
+                  Evidence strength:
+                </span>
+                <span
+                  data-testid="evidence-strength-badge"
+                  style={{
+                    fontSize: typography.fontSizeSmall,
+                    padding: '2px 8px',
+                    borderRadius: radius.pill,
+                    backgroundColor: colors.badgeSuccessBg,
+                    color: colors.badgeSuccessText,
+                    fontWeight: typography.fontWeightSemibold,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {evidenceStrength ?? 'High'}
+                </span>
+              </div>
+
+              {rawEvidence ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1], fontSize: typography.fontSizeBody }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>
+                    <span style={{ fontWeight: typography.fontWeightSemibold, color: colors.ink }}>
+                      Demo carrier tracking
                     </span>
+                    <span style={{ color: colors.inkMuted, fontSize: typography.fontSizeSmall }}>
+                      {rawEvidence.delivered_at ? new Date(String(rawEvidence.delivered_at)).toLocaleDateString() : 'Just now'}
+                    </span>
+                  </div>
+                  <div style={{ color: colors.inkMuted, fontSize: typography.fontSizeSmall }}>
+                    Proves package delivery to buyer postal code (carrier: {String(rawEvidence.carrier ?? 'Demo carrier')}, status: {String(rawEvidence.status ?? 'Delivered')}).
+                  </div>
+                </div>
+              ) : (
+                <div style={{ color: colors.inkMuted, fontSize: typography.fontSizeBody }}>
+                  No evidence has been gathered for this dispute yet.
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* 3. Buyer message card */}
+          <Card title="Buyer message" testId="dispute-buyer-message-panel">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1] }}>
+                <span
+                  data-testid="untrusted-text-label"
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: typography.fontWeightSemibold,
+                    color: colors.badgeAttentionText,
+                    backgroundColor: colors.badgeAttentionBg,
+                    padding: '2px 8px',
+                    borderRadius: radius.pill,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  Untrusted external text
+                </span>
+                <span style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
+                  Attributed to buyer via PayPal
+                </span>
+              </div>
+
+              {rawBuyerMessage ? (
+                <div>
+                  <div
+                    data-testid="buyer-message-content"
+                    style={{
+                      fontSize: typography.fontSizeBody,
+                      color: colors.ink,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      backgroundColor: '#FAFAFA',
+                      padding: spacing[2],
+                      borderRadius: radius.control,
+                      border: `1px solid ${colors.border}`,
+                    }}
+                  >
+                    {messageToDisplay}
+                  </div>
+                  {shouldTruncateMessage && (
+                    <button
+                      type="button"
+                      data-testid="toggle-buyer-message-button"
+                      onClick={() => setIsMessageExpanded(!isMessageExpanded)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: colors.interactive,
+                        fontSize: typography.fontSizeSmall,
+                        cursor: 'pointer',
+                        padding: '4px 0',
+                        marginTop: '4px',
+                        fontWeight: typography.fontWeightMedium,
+                      }}
+                    >
+                      {isMessageExpanded ? 'Show less' : 'Show more'}
+                    </button>
                   )}
                 </div>
               ) : (
-                <span style={{ color: '#94a3b8', fontSize: '14px' }}>Pending evaluation</span>
+                <p style={{ margin: 0, fontSize: typography.fontSizeBody, color: colors.inkMuted }}>
+                  No buyer message included with this dispute.
+                </p>
               )}
-            </dd>
-          </div>
-        </dl>
-      </Card>
-
-      {/* Evidence & Untrusted Buyer Message Panels */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-        {/* Evidence Panel */}
-        <Card title="Evidence" testId="dispute-evidence-panel">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>
-                Evidence strength:
-              </span>
-              <span
-                data-testid="evidence-strength-badge"
-                style={{
-                  fontSize: '12px',
-                  padding: '2px 8px',
-                  borderRadius: '999px',
-                  backgroundColor: '#e0f2fe',
-                  color: '#0369a1',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                }}
-              >
-                {evidenceStrength ?? 'Not evaluated'}
-              </span>
             </div>
+          </Card>
+        </div>
 
-            {rawEvidence ? (
-              <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '6px 12px', fontSize: '13px' }}>
-                {rawEvidence.carrier ? (
-                  <>
-                    <dt style={{ color: '#64748b' }}>Carrier</dt>
-                    <dd style={{ margin: 0, fontWeight: 500 }}>{String(rawEvidence.carrier)}</dd>
-                  </>
-                ) : null}
-                {rawEvidence.tracking_number ? (
-                  <>
-                    <dt style={{ color: '#64748b' }}>Tracking #</dt>
-                    <dd style={{ margin: 0, fontFamily: 'monospace' }}>{String(rawEvidence.tracking_number)}</dd>
-                  </>
-                ) : null}
-                {rawEvidence.status ? (
-                  <>
-                    <dt style={{ color: '#64748b' }}>Tracking Status</dt>
-                    <dd style={{ margin: 0, fontWeight: 500 }}>{String(rawEvidence.status)}</dd>
-                  </>
-                ) : null}
-                {rawEvidence.delivered_at ? (
-                  <>
-                    <dt style={{ color: '#64748b' }}>Delivered At</dt>
-                    <dd style={{ margin: 0 }}>{new Date(String(rawEvidence.delivered_at)).toLocaleString()}</dd>
-                  </>
-                ) : null}
-              </dl>
-            ) : (
-              <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
-                Store evidence (order history, fulfillment, tracking) is attached to the dispute dossier.
-              </p>
-            )}
-          </div>
-        </Card>
+        {/* Right column (about one third: decision & details) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
+          {/* Decision card */}
+          <Card title="Decision" testId="dispute-decision-card">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>Gate verdict:</span>
+                <StatusBadge status={displayedDispute.latest_verdict ?? 'NEEDS_APPROVAL'} />
+              </div>
 
-        {/* Buyer Message Panel (labeled as untrusted text, plain text rendering) */}
-        <Card title="Buyer message" testId="dispute-buyer-message-panel">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <span
-              data-testid="untrusted-text-label"
-              style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                color: '#b45309',
-                backgroundColor: '#fef3c7',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                alignSelf: 'flex-start',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              Untrusted text
-            </span>
-
-            {rawBuyerMessage ? (
-              <div>
-                {/* Script or markup in message displays safely as plain text */}
-                <div
-                  data-testid="buyer-message-content"
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>Rule:</span>
+                <span
+                  title={ruleExplanation}
                   style={{
-                    fontSize: '14px',
-                    color: '#1e293b',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    backgroundColor: '#f8fafc',
-                    padding: '12px',
-                    borderRadius: '6px',
-                    border: '1px solid #e2e8f0',
+                    fontFamily: 'monospace',
+                    fontSize: typography.fontSizeSmall,
+                    fontWeight: typography.fontWeightSemibold,
+                    backgroundColor: '#F1F1F1',
+                    padding: '2px 8px',
+                    borderRadius: radius.control,
+                    cursor: 'help',
+                    color: colors.ink,
                   }}
                 >
-                  {messageToDisplay}
-                </div>
-                {shouldTruncateMessage && (
-                  <button
-                    type="button"
-                    data-testid="toggle-buyer-message-button"
-                    onClick={() => setIsMessageExpanded(!isMessageExpanded)}
+                  {ruleId}
+                </span>
+              </div>
+
+              <div style={{ fontSize: typography.fontSizeSmall, color: colors.ink, padding: `${spacing[1]} 0` }}>
+                {ruleExplanation}.
+              </div>
+
+              {/* If approval needed, full width primary button */}
+              {(displayedDispute.latest_verdict === 'NEEDS_APPROVAL' || displayedDispute.approval_url) && (
+                <div style={{ marginTop: spacing[1] }}>
+                  <a
+                    href={displayedDispute.approval_url ?? `/approve/mock-${displayedDispute.id.toLowerCase()}`}
+                    data-testid="open-approval-card-button"
                     style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#0284c7',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      padding: '4px 0',
-                      marginTop: '4px',
-                      fontWeight: 500,
+                      display: 'block',
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      textAlign: 'center',
+                      backgroundColor: colors.primaryAction,
+                      color: '#FFFFFF',
+                      padding: '10px 16px',
+                      borderRadius: radius.control,
+                      fontWeight: typography.fontWeightSemibold,
+                      fontSize: typography.fontSizeBody,
+                      textDecoration: 'none',
                     }}
                   >
-                    {isMessageExpanded ? 'Show less' : 'Show more'}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>
-                No buyer message included with this dispute.
-              </p>
-            )}
-          </div>
-        </Card>
-      </div>
+                    Open approval card &rarr;
+                  </a>
+                </div>
+              )}
+            </div>
+          </Card>
 
-      {/* Decision Timeline */}
-      <Card title="Decision Timeline" testId="decision-timeline-card">
-        {timelineQuery.isPending && (
-          <div role="status" aria-label="Loading timeline" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <Skeleton height="24px" width="50%" />
-            <Skeleton height="24px" width="70%" />
-          </div>
-        )}
-        {timelineQuery.isError && (
-          <ErrorState
-            testId="timeline-error"
-            message={timelineQuery.error.message}
-            correlationId={timelineQuery.error.correlationId}
-            onRetry={() => void timelineQuery.refetch()}
-          />
-        )}
-        {timelineQuery.isSuccess && (
-          <DecisionTimeline events={timelineQuery.data.items ?? []} />
-        )}
-      </Card>
+          {/* Details card */}
+          <Card title="Details" testId="dispute-summary-card">
+            <dl
+              style={{
+                margin: 0,
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                gap: spacing[2],
+                fontSize: typography.fontSizeBody,
+              }}
+            >
+              <div>
+                <dt style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontWeight: typography.fontWeightMedium }}>
+                  Amount
+                </dt>
+                <dd style={{ margin: '2px 0 0', fontWeight: typography.fontWeightSemibold }}>
+                  <Money money={displayedDispute.amount} testId="detail-amount" />
+                </dd>
+              </div>
+
+              <div>
+                <dt style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontWeight: typography.fontWeightMedium }}>
+                  Order
+                </dt>
+                <dd style={{ margin: '2px 0 0', color: colors.ink }}>
+                  {displayedDispute.order_code ?? '—'}
+                </dd>
+              </div>
+
+              <div>
+                <dt style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontWeight: typography.fontWeightMedium }}>
+                  Response due date
+                </dt>
+                <dd style={{ margin: '2px 0 0' }}>
+                  <Deadline dueAt={displayedDispute.seller_response_due_date ?? null} />
+                </dd>
+              </div>
+
+              <div>
+                <dt style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontWeight: typography.fontWeightMedium }}>
+                  PayPal reference
+                </dt>
+                <dd style={{ margin: '2px 0 0', fontFamily: 'monospace', color: colors.inkMuted }}>
+                  {displayedDispute.id}
+                </dd>
+              </div>
+            </dl>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

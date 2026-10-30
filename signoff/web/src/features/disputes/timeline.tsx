@@ -1,7 +1,7 @@
 import React from 'react';
 import { VERDICTS } from '@signoff/api-client';
 import type { Verdict } from '@signoff/api-client';
-import { VerdictChip } from '@signoff/ui';
+import { VerdictChip, colors, getRuleExplanation, radius, spacing, typography } from '@signoff/ui';
 import type { ApiTimelineEvent } from './types';
 
 function isVerdict(value: string): value is Verdict {
@@ -61,12 +61,12 @@ export function renderTimelineEventContent(event: KnownTimelineEvent): {
           <span
             data-testid="evidence-strength-chip"
             style={{
-              fontSize: '12px',
+              fontSize: typography.fontSizeSmall,
               padding: '2px 8px',
-              borderRadius: '999px',
-              backgroundColor: '#e0f2fe',
-              color: '#0369a1',
-              fontWeight: 600,
+              borderRadius: radius.pill,
+              backgroundColor: colors.badgeSuccessBg,
+              color: colors.badgeSuccessText,
+              fontWeight: typography.fontWeightSemibold,
               textTransform: 'uppercase',
             }}
           >
@@ -90,10 +90,23 @@ export function renderTimelineEventContent(event: KnownTimelineEvent): {
             ) : (
               <span style={{ fontSize: '12px', fontWeight: 600 }}>{event.verdict}</span>
             )}
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>{event.rule_id}</span>
+            <span
+              title={getRuleExplanation(event.rule_id)}
+              style={{
+                fontSize: '12px',
+                fontFamily: 'monospace',
+                backgroundColor: '#F1F1F1',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                cursor: 'help',
+                color: '#303030',
+              }}
+            >
+              {event.rule_id}
+            </span>
           </div>
         ),
-        details: `Evaluated rule ${event.rule_id} with verdict ${event.verdict}.`,
+        details: `Evaluated rule ${event.rule_id}: ${getRuleExplanation(event.rule_id)}.`,
       };
     case 'APPROVAL_REQUESTED':
       return {
@@ -131,12 +144,12 @@ export function renderTimelineEventContent(event: KnownTimelineEvent): {
         badge: (
           <span
             style={{
-              fontSize: '12px',
+              fontSize: typography.fontSizeSmall,
               padding: '2px 8px',
-              borderRadius: '999px',
-              backgroundColor: '#fee2e2',
-              color: '#b91c1c',
-              fontWeight: 600,
+              borderRadius: radius.pill,
+              backgroundColor: colors.badgeCriticalBg,
+              color: colors.badgeCriticalText,
+              fontWeight: typography.fontWeightSemibold,
             }}
           >
             FLAGGED
@@ -167,19 +180,20 @@ export function renderTimelineEventContent(event: KnownTimelineEvent): {
 
 export interface DecisionTimelineProps {
   events: ApiTimelineEvent[];
+  reverse?: boolean;
 }
 
-export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events }) => {
+export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events, reverse = false }) => {
   // Sort strictly by sequence_number ascending
   const sorted = [...events].sort((a, b) => {
     const seqA = 'sequence_number' in a && typeof a.sequence_number === 'number' ? a.sequence_number : 0;
     const seqB = 'sequence_number' in b && typeof b.sequence_number === 'number' ? b.sequence_number : 0;
-    return seqA - seqB;
+    return reverse ? seqB - seqA : seqA - seqB;
   });
 
   if (sorted.length === 0) {
     return (
-      <div data-testid="timeline-empty" style={{ padding: '16px', color: '#64748b' }}>
+      <div data-testid="timeline-empty" style={{ padding: spacing[2], color: colors.inkMuted, fontSize: typography.fontSizeSmall }}>
         No timeline events recorded yet.
       </div>
     );
@@ -191,11 +205,11 @@ export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events }) =>
       style={{
         listStyle: 'none',
         margin: 0,
-        padding: '8px 0 8px 16px',
-        borderLeft: '2px solid #e2e8f0',
+        padding: `${spacing[1]} 0 ${spacing[1]} ${spacing[2]}`,
+        borderLeft: `2px solid ${colors.border}`,
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px',
+        gap: spacing[2],
       }}
     >
       {sorted.map((item, idx) => {
@@ -222,7 +236,7 @@ export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events }) =>
             data-event-kind={'kind' in item ? item.kind : 'UNKNOWN'}
             style={{
               position: 'relative',
-              paddingLeft: '16px',
+              paddingLeft: spacing[2],
             }}
           >
             {/* Timeline bullet */}
@@ -235,9 +249,9 @@ export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events }) =>
                 width: '12px',
                 height: '12px',
                 borderRadius: '50%',
-                backgroundColor: '#0284c7',
-                border: '2px solid #ffffff',
-                boxShadow: '0 0 0 2px #0284c7',
+                backgroundColor: colors.brandPrimary,
+                border: `2px solid ${colors.surface}`,
+                boxShadow: `0 0 0 2px ${colors.brandPrimary}`,
               }}
             />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -245,23 +259,23 @@ export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events }) =>
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
+                  gap: spacing[1],
                   flexWrap: 'wrap',
                 }}
               >
-                <strong style={{ fontSize: '14px', color: '#0f172a' }}>{content.title}</strong>
+                <strong style={{ fontSize: typography.fontSizeBody, color: colors.ink }}>{content.title}</strong>
                 {content.badge}
                 {createdAt && (
                   <time
                     dateTime={createdAt}
-                    style={{ fontSize: '12px', color: '#64748b', marginLeft: 'auto' }}
+                    style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, marginLeft: 'auto' }}
                   >
                     {new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </time>
                 )}
               </div>
               {content.details && (
-                <div style={{ fontSize: '13px', color: '#334155' }}>{content.details}</div>
+                <div style={{ fontSize: typography.fontSizeSmall, color: colors.ink }}>{content.details}</div>
               )}
             </div>
           </li>

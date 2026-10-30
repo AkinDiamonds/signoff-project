@@ -9,6 +9,7 @@ export interface DisputeFilters {
   scope: 'mine' | 'all';
   cursor: string | null;
   limit: number;
+  q: string;
 }
 
 export const DEFAULT_DISPUTE_FILTERS: DisputeFilters = {
@@ -17,6 +18,7 @@ export const DEFAULT_DISPUTE_FILTERS: DisputeFilters = {
   scope: 'mine',
   cursor: null,
   limit: 10,
+  q: '',
 };
 
 export const VALID_STATUSES: readonly StatusFilter[] = [
@@ -66,11 +68,15 @@ export function parseDisputeFilters(searchParams: URLSearchParams): DisputeFilte
   const cursor = rawCursor && rawCursor.trim() ? rawCursor.trim() : null;
 
   const rawLimit = Number(searchParams.get('limit'));
-  const limit = Number.isInteger(rawLimit) && rawLimit > 0 && rawLimit <= 100
-    ? rawLimit
-    : DEFAULT_DISPUTE_FILTERS.limit;
+  const limit =
+    Number.isInteger(rawLimit) && rawLimit > 0 && rawLimit <= 100
+      ? rawLimit
+      : DEFAULT_DISPUTE_FILTERS.limit;
 
-  return { status, reason, scope, cursor, limit };
+  const rawQ = searchParams.get('q');
+  const q = rawQ ? rawQ.trim() : '';
+
+  return { status, reason, scope, cursor, limit, q };
 }
 
 export function filtersToSearchParams(filters: DisputeFilters): URLSearchParams {
@@ -89,6 +95,9 @@ export function filtersToSearchParams(filters: DisputeFilters): URLSearchParams 
   }
   if (filters.limit !== DEFAULT_DISPUTE_FILTERS.limit) {
     params.set('limit', String(filters.limit));
+  }
+  if (filters.q && filters.q.trim()) {
+    params.set('q', filters.q.trim());
   }
   return params;
 }

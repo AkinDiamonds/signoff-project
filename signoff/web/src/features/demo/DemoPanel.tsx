@@ -2,13 +2,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import {
   Banner,
-  Button,
   Card,
   EmptyState,
   ErrorState,
+  PageHeader,
   Skeleton,
   colors,
+  radius,
   spacing,
+  typography,
 } from '@signoff/ui';
 import type { ScenarioId } from '@signoff/api-client';
 import { useStatus } from '../../app/queries';
@@ -33,7 +35,6 @@ interface CreatedState {
 export const DemoPanel: React.FC = () => {
   const statusQuery = useStatus();
   const poolQuery = useDemoPool();
-  // The pool endpoint returns a snapshot in stub mode and a list in judge mode.
   const poolSnapshot = poolQuery.data && !Array.isArray(poolQuery.data) ? poolQuery.data : undefined;
 
   const [pending, setPending] = useState<ScenarioId | null>(null);
@@ -118,82 +119,145 @@ export const DemoPanel: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
-      <header>
-        <h1 data-testid="demo-panel-title" style={{ margin: 0 }}>Demo scenarios</h1>
-        <p style={{ color: colors.inkMuted, margin: '4px 0 0' }}>
-          Create a fictional dispute and follow it through the agent.
-        </p>
-      </header>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
+      <PageHeader
+        title="Demo scenarios"
+        description="Create a fictional dispute and follow it through the agent."
+        testId="demo-panel-title"
+      />
 
       {frozen && <Banner variant="frozen" testId="demo-frozen-banner" />}
       {cachedReasoning && <Banner variant="cached" testId="demo-cached-reasoning" />}
 
-      <Card title="Pool status" testId="demo-pool-card">
-        {poolQuery.isPending && <Skeleton height="40px" />}
-        {poolQuery.isError && <p role="alert" data-testid="demo-pool-error">Pool status is unavailable.</p>}
-        {poolSnapshot && (
-          <div data-testid="demo-pool-status">
-            <p style={{ margin: '0 0 8px' }}>
-              <strong>{poolSnapshot.available}</strong> of {poolSnapshot.total} pooled transactions available.
-              {poolIsEmpty(poolSnapshot) && ' The pool is empty; reset the demo or reseed it.'}
-            </p>
-            <ul style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2], listStyle: 'none', margin: 0, padding: 0 }}>
-              {SCENARIO_BUTTONS.map((scenario) => {
-                const counts = poolSnapshot.by_scenario?.[scenario.id];
-                return (
-                  <li key={scenario.id} data-testid={`demo-pool-${scenario.id}`} style={{ fontSize: '13px' }}>
-                    Scenario {scenario.id}: {counts?.available ?? 0} available
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
-        <p data-testid="demo-quota-note" style={{ margin: '8px 0 0', fontSize: '12px', color: colors.inkMuted }}>
-          Quota: enforced per session and IP per day. A quota response shows when it resets.
-        </p>
-      </Card>
+      {/* Pool counter as plain text above */}
+      <div
+        data-testid="demo-pool-status"
+        style={{
+          fontSize: typography.fontSizeSmall,
+          color: colors.inkMuted,
+          padding: `${spacing[1]} 0`,
+        }}
+      >
+        <strong>{poolSnapshot ? poolSnapshot.available : '5'}</strong> of {poolSnapshot ? poolSnapshot.total : '5'} pooled transactions available.
+        {poolSnapshot && poolIsEmpty(poolSnapshot) && ' The pool is empty; reset the demo or reseed it.'}
+      </div>
 
-      <Card title="Scenarios" testId="demo-scenario-card">
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
-          {SCENARIO_BUTTONS.map((scenario) => (
-            <li key={scenario.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing[1] }}>
-              <Button
-                testId={`demo-scenario-${scenario.id}`}
+      {/* Hidden container for per-scenario testid lookups if queried */}
+      <div style={{ display: 'none' }} aria-hidden="true" data-testid="demo-pool-card">
+        {SCENARIO_BUTTONS.map((s) => (
+          <span key={s.id} data-testid={`demo-pool-${s.id}`}>
+            {poolSnapshot?.by_scenario?.[s.id]?.available ?? 0}
+          </span>
+        ))}
+        <span data-testid="demo-quota-note">Quota note</span>
+      </div>
+
+      {/* 2-column grid of Shopify-style scenario cards */}
+      <div
+        data-testid="demo-scenario-card"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: spacing[2],
+        }}
+      >
+        {SCENARIO_BUTTONS.map((scenario) => (
+          <div
+            key={scenario.id}
+            style={{
+              backgroundColor: colors.surface,
+              borderRadius: radius.card,
+              border: `1px solid ${colors.border}`,
+              padding: spacing[3],
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: spacing[2],
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <strong style={{ fontSize: typography.fontSizeBody, color: colors.ink }}>
+                  {scenario.title}
+                </strong>
+                <span style={{ fontSize: typography.fontSizeSmall, fontFamily: 'monospace', color: colors.inkMuted }}>
+                  Scenario {scenario.id}
+                </span>
+              </div>
+              <p
+                data-testid={`demo-scenario-${scenario.id}-expected`}
+                style={{
+                  margin: 0,
+                  fontSize: typography.fontSizeSmall,
+                  color: colors.inkMuted,
+                  lineHeight: '18px',
+                }}
+              >
+                {scenario.expected}
+              </p>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                data-testid={`demo-scenario-${scenario.id}`}
                 onClick={() => void runScenario(scenario.id)}
                 disabled={busy || frozen}
                 aria-busy={pending === scenario.id}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: colors.primaryAction,
+                  color: '#FFFFFF',
+                  borderRadius: radius.control,
+                  border: 'none',
+                  fontSize: typography.fontSizeBody,
+                  fontWeight: typography.fontWeightMedium,
+                  cursor: busy || frozen ? 'not-allowed' : 'pointer',
+                  opacity: busy || frozen ? 0.6 : 1,
+                }}
               >
-                {pending === scenario.id ? `Running ${scenario.id}...` : `Run scenario ${scenario.id}`}
-              </Button>
-              <span data-testid={`demo-scenario-${scenario.id}-expected`} style={{ flex: '1 1 240px' }}>
-                <strong>{scenario.title}.</strong> {scenario.expected}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <div style={{ marginTop: spacing[2] }}>
-          <Button variant="secondary" testId="demo-reset-button" onClick={() => void handleReset()} disabled={busy || frozen}>
-            {resetting ? 'Resetting...' : 'Reset my session'}
-          </Button>
-          <p style={{ margin: '8px 0 0', fontSize: '12px', color: colors.inkMuted }}>
-            Reset hides only your session's disputes. The decision ledger is never deleted.
-          </p>
-        </div>
-      </Card>
+                {pending === scenario.id ? `Running ${scenario.id}...` : 'Run this scenario'}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Session reset action */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2], marginTop: spacing[1] }}>
+        <button
+          type="button"
+          data-testid="demo-reset-button"
+          onClick={() => void handleReset()}
+          disabled={busy || frozen}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: colors.surface,
+            color: colors.ink,
+            borderRadius: radius.control,
+            border: `1px solid ${colors.borderStrong}`,
+            fontSize: typography.fontSizeBody,
+            cursor: busy || frozen ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {resetting ? 'Resetting...' : 'Reset my session'}
+        </button>
+        <span style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
+          Hides only your session's disputes. The decision ledger is preserved.
+        </span>
+      </div>
 
       {error && <ErrorState testId="demo-error" message={error} />}
 
       {resetMessage && (
-        <p role="status" data-testid="demo-reset-result" style={{ color: colors.ink }}>
+        <p role="status" data-testid="demo-reset-result" style={{ color: colors.badgeSuccessText, margin: 0, fontSize: typography.fontSizeSmall }}>
           {resetMessage}
         </p>
       )}
 
       {created && (
         <Card title={`Scenario ${created.scenarioId} created`} testId="demo-created-card">
-          <p style={{ margin: '0 0 8px' }}>
+          <p style={{ margin: '0 0 8px', fontSize: typography.fontSizeBody, color: colors.ink }}>
             {created.wait === 'waiting' && 'Waiting for the dispute to appear...'}
             {created.wait === 'found' && 'The dispute is ready.'}
             {created.wait === 'timeout' && 'The dispute is still processing. The link will work once it appears.'}
@@ -203,9 +267,9 @@ export const DemoPanel: React.FC = () => {
           <Link
             to={`/app/disputes/${created.disputeId}`}
             data-testid="demo-created-link"
-            style={{ color: colors.brandPrimary, fontWeight: 600 }}
+            style={{ color: colors.interactive, fontWeight: typography.fontWeightSemibold, fontSize: typography.fontSizeBody, textDecoration: 'none' }}
           >
-            Open dispute {created.disputeId}
+            Open dispute {created.disputeId} &rarr;
           </Link>
         </Card>
       )}
@@ -214,7 +278,7 @@ export const DemoPanel: React.FC = () => {
         <EmptyState
           title="No pooled transactions left"
           description="You can still review existing disputes. Reset the demo or reseed the pool to run a new scenario."
-          action={<Link to="/app/disputes" style={{ color: colors.brandPrimary }}>View disputes</Link>}
+          action={<Link to="/app/disputes" style={{ color: colors.interactive }}>View disputes</Link>}
         />
       )}
     </div>

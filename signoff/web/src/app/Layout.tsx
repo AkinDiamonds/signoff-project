@@ -64,6 +64,10 @@ export const Layout: React.FC = () => {
       }}
     >
       <style>{`
+        :focus-visible {
+          outline: 2px solid var(--signoff-nav-accent, #0F766E) !important;
+          outline-offset: 2px !important;
+        }
         .signoff-skip-link {
           position: absolute;
           left: 8px;

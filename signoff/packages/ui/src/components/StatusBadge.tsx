@@ -8,7 +8,7 @@ export interface StatusBadgeProps {
   status?: string;
   label?: string;
   className?: string;
-  testId?: string;
+  testId?: string | undefined;
 }
 
 interface Palette {
