@@ -232,6 +232,51 @@ export const DisputeDetailPage: React.FC = () => {
         </div>
       )}
 
+      {/* Demo Approval Card Button */}
+      {displayedDispute.approval_url && (
+        <div
+          data-testid="demo-approval-card-banner"
+          style={{
+            padding: '16px',
+            backgroundColor: '#eff6ff',
+            border: '2px solid #3b82f6',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}
+        >
+          <div>
+            <strong style={{ fontSize: '15px', color: '#1e40af', display: 'block' }}>
+              Action Requires Approval
+            </strong>
+            <span style={{ fontSize: '13px', color: '#1d4ed8' }}>
+              {displayedDispute.latest_rule_id ? `Rule: ${displayedDispute.latest_rule_id} — ` : ''}
+              Signing limit reached or high-risk exception flagged.
+            </span>
+          </div>
+          <a
+            href={displayedDispute.approval_url}
+            data-testid="open-approval-card-button"
+            style={{
+              display: 'inline-block',
+              backgroundColor: '#2563eb',
+              color: '#ffffff',
+              padding: '10px 20px',
+              borderRadius: '6px',
+              fontWeight: 600,
+              fontSize: '14px',
+              textDecoration: 'none',
+              boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)',
+            }}
+          >
+            Open approval card &rarr;
+          </a>
+        </div>
+      )}
+
       {/* Overview Card */}
       <Card title="Summary" testId="dispute-summary-card">
         <dl

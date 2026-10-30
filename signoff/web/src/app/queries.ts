@@ -83,7 +83,9 @@ export function useStatus() {
 
 
 export type DisputesResponse = components['schemas']['DisputesResponse'];
-export type DisputeDetailResponse = components['schemas']['DisputeDetailResponse'];
+export type DisputeDetailResponse = components['schemas']['DisputeDetailResponse'] & {
+  approval_url?: string | null;
+};
 export type TimelineResponse = components['schemas']['TimelineResponse'];
 export type ApprovalCardResponse = components['schemas']['ApprovalCardResponse'];
 

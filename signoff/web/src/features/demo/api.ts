@@ -175,6 +175,42 @@ export function describeDemoError(error: unknown, scenarioId: string): string {
   return 'The scenario could not be created.';
 }
 
-export function poolIsEmpty(pool: DemoPool): boolean {
-  return pool.available <= 0;
+export interface PooledDispute {
+  dispute_id: string;
+  state: 'pooled' | 'claimed' | 'done';
+  scenario_label: string | null;
+  amount: {
+    currency_code: string;
+    value: string;
+  };
+  reason: string;
+  created_at: string;
+  seller_response_due_date: string | null;
+  claimed_at: string | null;
 }
+
+export function useJudgePool() {
+  return useQuery({
+    queryKey: ['demo', 'judge-pool'],
+    queryFn: async (): Promise<PooledDispute[]> => {
+      const data = await unwrap(apiClient.request<unknown>('/api/demo/pool'));
+      if (Array.isArray(data)) {
+        return data as PooledDispute[];
+      }
+      return [];
+    },
+    refetchInterval: 10000,
+  });
+}
+
+export async function claimJudgeDispute(disputeId: string, demoToken = 'demo-token-active'): Promise<{ dispute_id: string; status: string }> {
+  const headers = new Headers({
+    'X-Demo-Token': demoToken,
+  });
+  const res = await apiClient.request<{ dispute_id: string; status: string }>(`/api/demo/claim/${disputeId}`, {
+    method: 'POST',
+    headers,
+  });
+  return unwrap(Promise.resolve(res));
+}
+

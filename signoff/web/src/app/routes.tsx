@@ -4,7 +4,7 @@ import { HomePage, NotFoundPage } from './pages';
 import { DisputeListPage, DisputeDetailPage } from '../features/disputes';
 import { ApprovalPage } from '../features/approval';
 import { CharterPage } from '../features/charter';
-import { DemoPanel } from '../features/demo';
+import { DemoPanel, JudgePoolPage } from '../features/demo';
 import { DashboardPage } from '../features/dashboard';
 import { GuidePage } from '../features/site';
 
@@ -19,6 +19,7 @@ export const routes: RouteObject[] = [
       { path: 'app/disputes/:id', element: <DisputeDetailPage /> },
       { path: 'app/charter', element: <CharterPage /> },
       { path: 'app/demo', element: <DemoPanel /> },
+      { path: 'app/pool', element: <JudgePoolPage /> },
       { path: 'approve/:token', element: <ApprovalPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/app/disputes', label: 'Disputes' },
   { to: '/app/charter', label: 'Charter' },
   { to: '/app/demo', label: 'Demo' },
+  { to: '/app/pool', label: 'Pool' },
   { to: '/guide', label: 'Guide' },
 ];
 

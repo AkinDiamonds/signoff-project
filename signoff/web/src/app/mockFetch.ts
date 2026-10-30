@@ -265,6 +265,41 @@ export const mockFetch: typeof fetch = async (input, init) => {
     }
 
     if (pathname === '/api/demo/pool') {
+      const modeParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('mock-pool') : null;
+      if (modeParam === 'judge') {
+        return json([
+          {
+            dispute_id: 'PP-MOCK-POOL-1',
+            state: 'pooled',
+            scenario_label: 'Delivered with tracking — the agent fights this one',
+            amount: { value: '42.00', currency_code: 'USD' },
+            reason: 'MERCHANDISE_OR_SERVICE_NOT_RECEIVED',
+            created_at: new Date(Date.now() - 3600000).toISOString(),
+            seller_response_due_date: new Date(Date.now() + 86400000 * 7).toISOString(),
+            claimed_at: null,
+          },
+          {
+            dispute_id: 'PP-MOCK-POOL-2',
+            state: 'pooled',
+            scenario_label: 'Larger than your limit — needs your approval',
+            amount: { value: '145.00', currency_code: 'USD' },
+            reason: 'MERCHANDISE_OR_SERVICE_NOT_RECEIVED',
+            created_at: new Date(Date.now() - 7200000).toISOString(),
+            seller_response_due_date: new Date(Date.now() + 86400000 * 5).toISOString(),
+            claimed_at: null,
+          },
+          {
+            dispute_id: 'PP-MOCK-POOL-3',
+            state: 'done',
+            scenario_label: 'Repeat disputer — history flag flagged for review',
+            amount: { value: '55.00', currency_code: 'USD' },
+            reason: 'NOT_AS_DESCRIBED',
+            created_at: new Date(Date.now() - 86400000).toISOString(),
+            seller_response_due_date: new Date(Date.now() + 86400000 * 3).toISOString(),
+            claimed_at: new Date(Date.now() - 80000000).toISOString(),
+          },
+        ]);
+      }
       return json(demoPool);
     }
 
@@ -394,6 +429,30 @@ export const mockFetch: typeof fetch = async (input, init) => {
         ? 'PP-D-1001 is an open INR dispute for USD 89.50. Evidence was submitted and case is under review.'
         : 'There are 2 open disputes with USD 149.50 at risk. One is flagged for approval.';
       return json({ answer, model: 'mock-model', cached: false });
+    }
+
+    const claimMatch = pathname.match(/^\/api\/demo\/claim\/([^/]+)$/);
+    if (claimMatch) {
+      const disputeId = claimMatch[1] ?? '';
+      const demoToken = headers.get('x-demo-token');
+      if (!demoToken || demoToken !== 'demo-token-active') {
+        return envelope('NOT_FOUND', 'Claim endpoint is disabled or missing valid demo token', 404);
+      }
+      if (disputeId === 'PP-ALREADY-CLAIMED' || disputeId === 'PP-MOCK-POOL-3') {
+        return json(
+          {
+            code: 'ALREADY_CLAIMED',
+            claimed_at: new Date(Date.now() - 3600000).toISOString(),
+            error: {
+              code: 'ALREADY_CLAIMED',
+              message: 'Dispute has already been claimed',
+              claimed_at: new Date(Date.now() - 3600000).toISOString(),
+            },
+          },
+          409
+        );
+      }
+      return json({ dispute_id: disputeId, status: 'claimed' });
     }
 
     const scenarioMatch = pathname.match(/^\/api\/demo\/scenarios\/([A-E])$/);
