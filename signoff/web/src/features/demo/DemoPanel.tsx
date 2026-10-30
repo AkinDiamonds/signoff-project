@@ -33,6 +33,8 @@ interface CreatedState {
 export const DemoPanel: React.FC = () => {
   const statusQuery = useStatus();
   const poolQuery = useDemoPool();
+  // The pool endpoint returns a snapshot in stub mode and a list in judge mode.
+  const poolSnapshot = poolQuery.data && !Array.isArray(poolQuery.data) ? poolQuery.data : undefined;
 
   const [pending, setPending] = useState<ScenarioId | null>(null);
   const [resetting, setResetting] = useState(false);
@@ -130,15 +132,15 @@ export const DemoPanel: React.FC = () => {
       <Card title="Pool status" testId="demo-pool-card">
         {poolQuery.isPending && <Skeleton height="40px" />}
         {poolQuery.isError && <p role="alert" data-testid="demo-pool-error">Pool status is unavailable.</p>}
-        {poolQuery.data && (
+        {poolSnapshot && (
           <div data-testid="demo-pool-status">
             <p style={{ margin: '0 0 8px' }}>
-              <strong>{poolQuery.data.available}</strong> of {poolQuery.data.total} pooled transactions available.
-              {poolIsEmpty(poolQuery.data) && ' The pool is empty; reset the demo or reseed it.'}
+              <strong>{poolSnapshot.available}</strong> of {poolSnapshot.total} pooled transactions available.
+              {poolIsEmpty(poolSnapshot) && ' The pool is empty; reset the demo or reseed it.'}
             </p>
             <ul style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2], listStyle: 'none', margin: 0, padding: 0 }}>
               {SCENARIO_BUTTONS.map((scenario) => {
-                const counts = poolQuery.data?.by_scenario?.[scenario.id];
+                const counts = poolSnapshot.by_scenario?.[scenario.id];
                 return (
                   <li key={scenario.id} data-testid={`demo-pool-${scenario.id}`} style={{ fontSize: '13px' }}>
                     Scenario {scenario.id}: {counts?.available ?? 0} available
@@ -208,7 +210,7 @@ export const DemoPanel: React.FC = () => {
         </Card>
       )}
 
-      {poolQuery.data?.available === 0 && !created && (
+      {poolSnapshot?.available === 0 && !created && (
         <EmptyState
           title="No pooled transactions left"
           description="You can still review existing disputes. Reset the demo or reseed the pool to run a new scenario."

@@ -30,7 +30,7 @@ This checklist documents the required and optional environment variables across 
 | `LLM_PROVIDER` | All | `glimmer` (hosted model) or `openai` (fallback). |
 | `LLM_API_KEY` | When provider needs key | API key for the chosen LLM provider. |
 | `LLM_API_BASE_URL` | When provider needs URL | Endpoint URL for the LLM provider. |
-| `STORE_API_KEY` | Prod | Authentication key for store read API (`X-Store-Key`). |
+| `STORE_API_KEY` | Prod | Authentication key for store read API (`X-Store-Key`). It must be identical on the API and the worker, because the worker calls the API's store endpoints. |
 
 ## Demo & Judge Flow Settings
 
@@ -39,6 +39,7 @@ This checklist documents the required and optional environment variables across 
 | `DEMO_HOLD_DISPUTES` / `DEMO_POOL_HOLD` | Demo | Holds newly arriving disputes in pool until claimed by a judge. |
 | `DEMO_CLAIM_TOKEN` | Demo | Secret token required in `X-Demo-Token` header for `/api/demo/claim/{dispute_id}`. |
 | `DEMO_SHOW_APPROVAL_LINKS` | Demo | Exposes `approval_url` on `/api/disputes/{id}` for one-tap approval card access in demo. |
+| `VITE_DEMO_CLAIM_TOKEN` | Web build | Build-time copy of `DEMO_CLAIM_TOKEN`; the pool page sends it as `X-Demo-Token`. |
 | `DEMO_FROZEN` | Optional | Emergency kill switch: returns 503 for scenario generation. |
 | `LOG_APPROVAL_LINKS` | Optional | Logs full approval URL to server log on card generation. |
 

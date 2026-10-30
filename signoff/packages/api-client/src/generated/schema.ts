@@ -83,6 +83,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/demo/claim/{dispute_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claim Dispute
+         * @description Claim a pooled dispute for judge evaluation, enqueuing a RUN_AGENT job.
+         */
+        post: operations["claim_dispute_api_demo_claim__dispute_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/demo/pool": {
         parameters: {
             query?: never;
@@ -92,7 +112,7 @@ export interface paths {
         };
         /**
          * Get Pool
-         * @description Return global pool availability and per-scenario counts.
+         * @description Return pooled disputes for demo judge flow, or scenario counts in legacy stub mode.
          */
         get: operations["get_pool_api_demo_pool_get"];
         put?: never;
@@ -257,6 +277,26 @@ export interface paths {
          * @description Proxies one chat turn to the configured LLM. The key stays server-side, the model is fixed by configuration, client model overrides are ignored, and no mutating tool exists.
          */
         post: operations["ask_assistant_api_llm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/llm/studio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask the Studio native AI assistant
+         * @description Accepts AG Studio's AgLlmRequest wire format (input / instructions / tools / responseFormat). Converts the input to a flat message list, prepends the Studio system instruction (four-question limit), and proxies to the configured LLM. The LLM key never leaves the server. Studio page-layout tools are allowed in addition to the read-only dashboard data tools; PayPal-shaped mutations are not.
+         */
+        post: operations["ask_studio_assistant_api_llm_studio_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -459,6 +499,86 @@ export interface paths {
          * @description Service status, queue metrics, and operating environment flags.
          */
         get: operations["api_status_api_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/orders/by-transaction/{transaction_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Order By Transaction
+         * @description Retrieve an order by PayPal transaction ID.
+         */
+        get: operations["get_order_by_transaction_api_store_orders_by_transaction__transaction_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/orders/{order_code}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Order Messages
+         * @description Retrieve buyer messages for an order from dispute records, or empty list if none.
+         */
+        get: operations["get_order_messages_api_store_orders__order_code__messages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/orders/{order_code}/shipments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Order Shipments
+         * @description Retrieve shipment tracking events for an order ordered by event_time.
+         */
+        get: operations["get_order_shipments_api_store_orders__order_code__shipments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Policies
+         * @description Return static merchant policies.
+         */
+        get: operations["get_policies_api_store_policies_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -767,6 +887,13 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** ClaimDisputeResponse */
+        ClaimDisputeResponse: {
+            /** Dispute Id */
+            dispute_id: string;
+            /** Status */
+            status: string;
+        };
         /**
          * CreateDisputeRequest
          * @description Buyer dispute filing payload.
@@ -845,6 +972,31 @@ export interface components {
             /** Next Cursor */
             next_cursor?: string | null;
         };
+        /** DemoPoolDisputeItem */
+        DemoPoolDisputeItem: {
+            amount: components["schemas"]["Money-Output"];
+            /** Claimed At */
+            claimed_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Dispute Id */
+            dispute_id: string;
+            /** Latest Rule Id */
+            latest_rule_id?: string | null;
+            /** Latest Verdict */
+            latest_verdict?: string | null;
+            /** Reason */
+            reason: string;
+            /** Scenario Label */
+            scenario_label?: string | null;
+            /** Seller Response Due Date */
+            seller_response_due_date?: string | null;
+            /** State */
+            state: string;
+        };
         /**
          * DenyResolveRequest
          * @description Deny the proposed action, recording decision and taking no further action.
@@ -889,6 +1041,8 @@ export interface components {
          */
         DisputeDetailResponse: {
             amount: components["schemas"]["Money-Output"];
+            /** Approval Url */
+            approval_url?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -1650,6 +1804,133 @@ export interface components {
             message: string;
         };
         /**
+         * ShipmentResponse
+         * @description Tracking and delivery milestone event.
+         */
+        ShipmentResponse: {
+            /** Carrier */
+            carrier: string;
+            /**
+             * Event Time
+             * Format: date-time
+             */
+            event_time: string;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            } | null;
+            /** Status */
+            status: string;
+            /** Tracking Number */
+            tracking_number: string;
+        };
+        /**
+         * StoreMessageResponse
+         * @description Buyer dispute message.
+         */
+        StoreMessageResponse: {
+            /** Content */
+            content: string;
+            /** Posted By */
+            posted_by: string;
+            /**
+             * Time Posted
+             * Format: date-time
+             */
+            time_posted: string;
+        };
+        /**
+         * StoreOrderResponse
+         * @description Store customer order details.
+         */
+        StoreOrderResponse: {
+            /** Amount */
+            amount: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /** Customer Email */
+            customer_email: string;
+            /** Items */
+            items: unknown[];
+            /** Order Code */
+            order_code: string;
+            /** Status */
+            status: string;
+        };
+        /**
+         * StorePoliciesResponse
+         * @description Static merchant store policies.
+         */
+        StorePoliciesResponse: {
+            /**
+             * Cancellation Policy
+             * @default Orders may be cancelled before shipment tracking is generated.
+             */
+            cancellation_policy: string;
+            /**
+             * Refund Window Days
+             * @default 30
+             */
+            refund_window_days: number;
+            /**
+             * Return Policy
+             * @default Items must be returned in original condition within 30 days of delivery.
+             */
+            return_policy: string;
+            /**
+             * Return Window Days
+             * @default 30
+             */
+            return_window_days: number;
+            /**
+             * Shipping Policy
+             * @default Orders are shipped within 1-2 business days via standard tracked carriers.
+             */
+            shipping_policy: string;
+        };
+        /**
+         * StudioRequest
+         * @description Wire body posted by studioLlmAdapter.ts.
+         *
+         *     Fields map 1-to-1 to AgLlmRequest: input, instructions, tools, responseFormat.
+         *     We pass instructions through to the provider after prepending our own system
+         *     prompt. The responseFormat and tool schemas are validated but not forwarded to
+         *     the underlying provider (which only understands a flat message list).
+         */
+        StudioRequest: {
+            /** Context */
+            context?: {
+                [key: string]: unknown;
+            } | null;
+            /** Input */
+            input?: unknown[];
+            /** Instructions */
+            instructions?: string | null;
+            /** Responseformat */
+            responseFormat?: {
+                [key: string]: unknown;
+            } | null;
+            /** Tools */
+            tools?: components["schemas"]["StudioTool"][] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * StudioTool
+         * @description Minimal projection of AgAiToolSchema — only name is needed for the allowlist check.
+         */
+        StudioTool: {
+            /** Name */
+            name: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * SupportedDisputeReason
          * @description Dispute reasons supported by the Signoff dispute agent.
          * @enum {string}
@@ -2207,6 +2488,93 @@ export interface operations {
             };
         };
     };
+    claim_dispute_api_demo_claim__dispute_id__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-Token"?: string | null;
+            };
+            path: {
+                dispute_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClaimDisputeResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     get_pool_api_demo_pool_get: {
         parameters: {
             query?: never;
@@ -2222,7 +2590,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PoolResponse"];
+                    "application/json": components["schemas"]["PoolResponse"] | components["schemas"]["DemoPoolDisputeItem"][];
                 };
             };
             /** @description Bad Request */
@@ -2919,6 +3287,93 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["AssistantRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ask_studio_assistant_api_llm_studio_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudioRequest"];
             };
         };
         responses: {
@@ -3889,6 +4344,352 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_order_by_transaction_api_store_orders_by_transaction__transaction_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Store-Key"?: string | null;
+            };
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoreOrderResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_order_messages_api_store_orders__order_code__messages_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Store-Key"?: string | null;
+            };
+            path: {
+                order_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoreMessageResponse"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_order_shipments_api_store_orders__order_code__shipments_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Store-Key"?: string | null;
+            };
+            path: {
+                order_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShipmentResponse"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_policies_api_store_policies_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Store-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorePoliciesResponse"];
                 };
             };
             /** @description Bad Request */

@@ -1,8 +1,8 @@
 """Tests for judge flow: hold mode, claim endpoint, pool listing, and approval URL (Part D, F)."""
 
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Iterator
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,15 +10,32 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from agent.app.approvals.service import DEMO_APPROVAL_LINKS, create_approval, record_demo_approval_link
+from agent.app.approvals.service import record_demo_approval_link
 from agent.app.db.base import Base
 from agent.app.db.models import Decision, DemoPool, Dispute, Job, LedgerEvent
 from agent.app.db.session import get_db_session
-from agent.app.domain.enums import DisputeReason, DisputeStatus, JobKind, JobStatus, TimelineEventKind, Verdict
-from agent.app.domain.money import Money
+from agent.app.domain.enums import (
+    ActionType,
+    DisputeReason,
+    DisputeStatus,
+    JobKind,
+    JobStatus,
+    TimelineEventKind,
+    Verdict,
+)
 from agent.app.main import create_app
-from agent.app.paypal.models import AllowedResponseOptions, BuyerInfo, Dispute as PayPalDispute, DisputedTransaction, Money as PPMoney
-from agent.app.settings import AppEnv, PayPalEnv, Settings
+from agent.app.paypal.models import (
+    AllowedResponseOptions,
+    BuyerInfo,
+    DisputedTransaction,
+)
+from agent.app.paypal.models import (
+    Dispute as PayPalDispute,
+)
+from agent.app.paypal.models import (
+    Money as PPMoney,
+)
+from agent.app.settings import Settings
 from agent.app.sync.handler import sync_dispute
 
 
@@ -133,7 +150,6 @@ def test_claim_endpoint_unknown_dispute_returns_404(db_session: Session):
 
 def test_claim_endpoint_success_and_double_claim_409(db_session: Session):
     dispute_id = "PP-CLAIM-TEST-1"
-    now = datetime.now(UTC)
 
     # Seed Dispute and DemoPool row
     dispute = Dispute(
@@ -208,7 +224,35 @@ def test_get_demo_pool_listing(db_session: Session):
         scenario_label="Larger than your limit — needs your approval",
         created_at=now,
     )
-    db_session.add_all([dispute, pool_row])
+
+    # A finished run with a decision supplies the verdict and rule id for replay.
+    done_dispute_id = "PP-POOL-DONE-1"
+    done_dispute = Dispute(
+        id=done_dispute_id,
+        status=DisputeStatus.RESOLVED.value,
+        reason=DisputeReason.MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED.value,
+        amount=Decimal("55.00"),
+        currency="USD",
+        state_fingerprint="fp-done-123",
+        snapshot={},
+    )
+    done_pool_row = DemoPool(
+        dispute_id=done_dispute_id,
+        state="done",
+        scenario_label="Repeat disputer — history flag flagged for review",
+        created_at=now,
+    )
+    decision = Decision(
+        dispute_id=done_dispute_id,
+        action_type=ActionType.ESCALATE.value,
+        verdict=Verdict.NEEDS_APPROVAL.value,
+        rule_id="G3-04",
+        reason="Amount above the auto-offer limit",
+        action_hash="a" * 64,
+        dispute_fingerprint="fp-done-123",
+        charter_version=1,
+    )
+    db_session.add_all([dispute, pool_row, done_dispute, done_pool_row, decision])
     db_session.commit()
 
     settings = Settings(demo_hold_disputes=True)
@@ -228,15 +272,23 @@ def test_get_demo_pool_listing(db_session: Session):
     assert target["amount"]["value"] == "99.50"
     assert target["amount"]["currency_code"] == "USD"
     assert target["reason"] == "MERCHANDISE_OR_SERVICE_NOT_RECEIVED"
+    assert target["latest_verdict"] is None
+    assert target["latest_rule_id"] is None
     # Buyer notes and tokens must not leak
     assert "token" not in target
     assert "notes" not in target
     assert "buyer_messages" not in target
 
+    # Finished runs carry the latest verdict and rule id for replay.
+    done = next((item for item in items if item["dispute_id"] == done_dispute_id), None)
+    assert done is not None
+    assert done["state"] == "done"
+    assert done["latest_verdict"] == Verdict.NEEDS_APPROVAL.value
+    assert done["latest_rule_id"] == "G3-04"
+
 
 def test_dispute_detail_approval_url(db_session: Session):
     dispute_id = "PP-APPROVAL-URL-1"
-    now = datetime.now(UTC)
     dispute = Dispute(
         id=dispute_id,
         status=DisputeStatus.UNDER_REVIEW.value,

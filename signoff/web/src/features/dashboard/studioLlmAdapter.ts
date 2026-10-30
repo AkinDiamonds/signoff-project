@@ -55,7 +55,7 @@ export const studioLlmAdapter: AgLlmAdapter = {
           {
             method: 'POST',
             body,
-            signal: options?.signal,
+            signal: options?.signal ?? null,
           }
         );
 
@@ -86,7 +86,7 @@ export const studioLlmAdapter: AgLlmAdapter = {
           id: responseId,
           createdAt,
           status: 'completed',
-          model: response.data.model,
+          model: response.data.model ?? 'unknown',
           output: [
             {
               id: messageId,

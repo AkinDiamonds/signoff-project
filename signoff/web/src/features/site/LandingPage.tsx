@@ -120,6 +120,44 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Try it in 3 minutes */}
+      <section
+        aria-labelledby="try-it-title"
+        data-testid="landing-try-it"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: spacing[1],
+          textAlign: 'center',
+          padding: spacing[2],
+        }}
+      >
+        <h2 id="try-it-title" style={{ fontSize: '20px', fontWeight: 700, color: colors.ink, margin: 0 }}>
+          Try it in 3 minutes
+        </h2>
+        <p style={{ fontSize: '14px', color: colors.inkMuted, margin: 0, maxWidth: '560px' }}>
+          Open the demo pool, pick a dispute, and watch the agent gather evidence and stop at the
+          authority gate. No setup, no sandbox account needed.
+        </p>
+        <Link
+          to="/app/pool"
+          data-testid="landing-cta-pool"
+          style={{
+            marginTop: spacing[1],
+            backgroundColor: colors.brandPrimary,
+            color: '#ffffff',
+            padding: '12px 28px',
+            borderRadius: '8px',
+            fontSize: '15px',
+            fontWeight: 600,
+            textDecoration: 'none',
+          }}
+        >
+          Open the demo disputes →
+        </Link>
+      </section>
+
       {/* The Problem Section */}
       <section aria-labelledby="problem-title" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
         <h2 id="problem-title" style={{ fontSize: '20px', fontWeight: 700, color: colors.ink, margin: 0 }}>

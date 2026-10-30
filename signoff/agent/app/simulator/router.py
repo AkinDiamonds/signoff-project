@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
-from agent.app.db.models import DemoPool, DemoSession, Dispute, Job
+from agent.app.db.models import Decision, DemoPool, DemoSession, Dispute, Job
 from agent.app.db.session import get_db_session
 from agent.app.domain.enums import JobKind, JobStatus
 from agent.app.domain.money import Money
@@ -18,7 +18,7 @@ from agent.app.errors import AppError, FrozenError, NotFoundError
 from agent.app.paypal.buyer_client import BuyerDisputeClient
 from agent.app.settings import PayPalEnv
 from agent.app.simulator import service
-from agent.app.simulator.schemas import ResetResponse, ScenarioCreated, ScenarioId
+from agent.app.simulator.schemas import PoolResponse, ResetResponse, ScenarioCreated, ScenarioId
 
 router = APIRouter(prefix="/api/demo", tags=["Demo"])
 
@@ -32,6 +32,8 @@ class DemoPoolDisputeItem(BaseModel):
     created_at: datetime
     seller_response_due_date: datetime | None = None
     claimed_at: datetime | None = None
+    latest_verdict: str | None = None
+    latest_rule_id: str | None = None
 
 
 class ClaimDisputeResponse(BaseModel):
@@ -53,7 +55,7 @@ def _session(
     )
 
 
-@router.get("/pool")
+@router.get("/pool", response_model=PoolResponse | list[DemoPoolDisputeItem])
 def get_pool(
     request: Request,
     db: Annotated[Session, Depends(get_db_session)],
@@ -69,8 +71,22 @@ def get_pool(
         .outerjoin(Dispute, DemoPool.dispute_id == Dispute.id)
         .order_by(DemoPool.created_at.desc())
     )
+    rows = db.execute(stmt).all()
+
+    # Latest decision per dispute, for the finished-run verdict and rule id.
+    dispute_ids = [pool_row.dispute_id for pool_row, _ in rows]
+    latest_decisions: dict[str, tuple[str, str]] = {}
+    if dispute_ids:
+        decision_rows = db.execute(
+            select(Decision.dispute_id, Decision.verdict, Decision.rule_id)
+            .where(Decision.dispute_id.in_(dispute_ids))
+            .order_by(Decision.created_at.asc(), Decision.id.asc())
+        ).all()
+        for decision_dispute_id, verdict, rule_id in decision_rows:
+            latest_decisions[decision_dispute_id] = (verdict, rule_id)
+
     items: list[DemoPoolDisputeItem] = []
-    for pool_row, dispute in db.execute(stmt).all():
+    for pool_row, dispute in rows:
         amount = (
             Money(value=dispute.amount, currency_code=dispute.currency)
             if dispute and dispute.amount is not None
@@ -81,6 +97,7 @@ def get_pool(
         label = pool_row.scenario_label
         if not label and dispute:
             label = f"{reason.replace('_', ' ').capitalize()} dispute"
+        verdict, rule_id = latest_decisions.get(pool_row.dispute_id, (None, None))
         items.append(
             DemoPoolDisputeItem(
                 dispute_id=pool_row.dispute_id,
@@ -91,6 +108,8 @@ def get_pool(
                 created_at=pool_row.created_at,
                 seller_response_due_date=due_date,
                 claimed_at=pool_row.claimed_at,
+                latest_verdict=verdict,
+                latest_rule_id=rule_id,
             )
         )
     return items

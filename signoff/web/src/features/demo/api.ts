@@ -2,11 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import type { components, paths } from '@signoff/api-client/generated';
 import { apiClient } from '../../app/api';
 import { ApiQueryError, unwrap } from '../../app/queries';
-import type { DemoPool, ScenarioCreated } from './types';
+import type { ScenarioCreated } from './types';
 
 const SESSION_KEY = 'signoff.demo.session';
 const IDEMPOTENCY_PREFIX = 'signoff.demo.idempotency.';
 const IDEMPOTENCY_TTL_MS = 10 * 60 * 1000;
+// Must match DEMO_CLAIM_TOKEN on the API. The fallback keeps the bundled demo usable
+// when the build does not set a token (the local mock accepts the same value).
+const DEMO_CLAIM_TOKEN = import.meta.env.VITE_DEMO_CLAIM_TOKEN ?? 'demo-token-active';
 
 type ResetResponse = components['schemas']['ResetResponse'];
 type PoolPath = paths['/api/demo/pool']['get']['responses']['200']['content']['application/json'];
@@ -187,23 +190,22 @@ export interface PooledDispute {
   created_at: string;
   seller_response_due_date: string | null;
   claimed_at: string | null;
+  latest_verdict: string | null;
+  latest_rule_id: string | null;
 }
 
 export function useJudgePool() {
   return useQuery({
     queryKey: ['demo', 'judge-pool'],
     queryFn: async (): Promise<PooledDispute[]> => {
-      const data = await unwrap(apiClient.request<unknown>('/api/demo/pool'));
-      if (Array.isArray(data)) {
-        return data as PooledDispute[];
-      }
-      return [];
+      const data = await unwrap(apiClient.request<PooledDispute[]>('/api/demo/pool'));
+      return Array.isArray(data) ? data : [];
     },
     refetchInterval: 10000,
   });
 }
 
-export async function claimJudgeDispute(disputeId: string, demoToken = 'demo-token-active'): Promise<{ dispute_id: string; status: string }> {
+export async function claimJudgeDispute(disputeId: string, demoToken = DEMO_CLAIM_TOKEN): Promise<{ dispute_id: string; status: string }> {
   const headers = new Headers({
     'X-Demo-Token': demoToken,
   });
@@ -218,9 +220,9 @@ export function poolIsEmpty(pool: unknown): boolean {
   if (Array.isArray(pool)) {
     return pool.length === 0;
   }
-  if (pool !== null && typeof pool === 'object') {
-    const p = pool as { available?: number };
-    return (p.available ?? 0) === 0;
+  if (pool !== null && typeof pool === 'object' && 'available' in pool) {
+    const available = pool.available;
+    return typeof available === 'number' ? available === 0 : true;
   }
   return true;
 }

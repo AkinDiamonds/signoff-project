@@ -75,8 +75,16 @@ Save that as `DATABASE_URL`. Using the raw Render URL produces `ModuleNotFoundEr
    | `WEB_BASE_URL` | the merchant site URL — fill after Step 4 |
    | `ALLOWED_ORIGINS` | `<merchant site>,<shop site>` — fill after Steps 4 and 5 |
    | `APPROVAL_TOKEN_SECRET` | from Stage 2 |
+   | `STORE_API_KEY` | a long random string (see below) |
+   | `DEMO_HOLD_DISPUTES` | `true` for the judge flow, `false` to let the agent run immediately |
+   | `DEMO_CLAIM_TOKEN` | a non-empty demo token, for example `demo-token-active` |
+   | `DEMO_SHOW_APPROVAL_LINKS` | `true` so a judge can reach the approval card |
    | `LOG_APPROVAL_LINKS` | `false` |
    | `DEMO_FROZEN` | `false` |
+
+   `STORE_API_KEY` must be the **same value on the API and the worker**: the worker calls the API's own
+   `/api/store/*` endpoints with it. Generate one with
+   `python -c "import secrets; print(secrets.token_urlsafe(32))"`. Production refuses to start without it.
 
    Leave `PAYPAL_WEBHOOK_ID` empty for now. The app starts without it; webhooks will fail verification until Step 6.
 
@@ -118,6 +126,7 @@ If it restarts immediately, the usual cause is a missing environment variable. T
 4. **Publish directory:** `signoff/web/dist`
 5. **Environment variables** (used at build time, so they must be set before the first build):
    - `VITE_API_URL` = the API URL from Step 2
+   - `VITE_DEMO_CLAIM_TOKEN` = the same value as the API's `DEMO_CLAIM_TOKEN`
    - `PUBLIC_SHOP_URL` = the shop URL (fill after Step 5; rebuilding later is cheap)
 6. **Rewrite rule** so client-side routes work: source `/*`, destination `/index.html`, action **Rewrite**. Without this, `/app/disputes` returns 404 on refresh.
 7. Deploy, then copy the URL.

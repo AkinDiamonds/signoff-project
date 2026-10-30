@@ -25,7 +25,7 @@ Every decision that would otherwise be re-litigated. Add a row when you change s
 | D12 | Stage 3 | Document in Known limits (icons render as empty squares without licence key) | Unlicensed asset font/sprite not bundled; purely cosmetic, does not affect data. |
 | D13 | Stage 3 | Option A: extend proxy to allow Studio page-layout tools by name (configure_widget, rename_page, …); PayPal-shaped mutations still absent and blocked. New `/api/llm/studio` endpoint accepts AgLlmRequest wire format. | Option B (questions only) would degrade the Studio panel. |
 | D14 | Stage 5 | Days of usable life for a sandbox dispute, measured |  |
-| D15 | Stage 6 | How a pool row is marked `done` |  |
+| D15 | Stage 6 | The sync handler marks a pool row `done` when its dispute reaches a resolved state; no admin call | `signoff/agent/app/sync/handler.py`, resolved-dispute branch; test `test_judge_flow.py` |
 | D16 | Stage 7 | Brand accent: keep teal for brand only, Shopify values for actions? |  |
 | D17 | Stage 13 | Can a Shopify dev store take real PayPal payments? |  |
 

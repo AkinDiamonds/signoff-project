@@ -176,3 +176,59 @@ describe('Demo panel (Step 27)', () => {
     expect(other).not.toBe(first);
   });
 });
+
+describe('Judge pool page (Step 06)', () => {
+  let fetchSpy: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    resetMockState();
+    sessionStorage.clear();
+    window.history.replaceState({}, '', '/app/pool?mock-pool=judge');
+    fetchSpy = vi.fn(mockFetch);
+    vi.stubGlobal('fetch', fetchSpy);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    window.history.replaceState({}, '', '/');
+  });
+
+  it('lists pooled disputes and finished runs with verdict and rule id', async () => {
+    await act(async () => {
+      renderAt('/app/pool');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('judge-pool-page')).toBeTruthy();
+    });
+
+    expect(screen.getByText('Delivered with tracking — the agent fights this one')).toBeTruthy();
+    const verdict = screen.getByTestId('finished-verdict-PP-MOCK-POOL-3');
+    expect(verdict.textContent).toContain('NEEDS_APPROVAL');
+    expect(verdict.textContent).toContain('G3-04');
+  });
+
+  it('Start over clears the judge session without mutating the ledger', async () => {
+    sessionStorage.setItem('signoff.demo.session', 'demo-session-before-start-over');
+
+    await act(async () => {
+      renderAt('/app/pool');
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('judge-pool-page')).toBeTruthy();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('pool-start-over-button'));
+    });
+
+    expect(sessionStorage.getItem('signoff.demo.session')).toBeNull();
+    expect(screen.getByTestId('pool-start-over-notice')).toBeTruthy();
+
+    const mutatingCalls = fetchSpy.mock.calls.filter(([, init]) => {
+      const method = init?.method?.toUpperCase();
+      return method !== undefined && method !== 'GET';
+    });
+    expect(mutatingCalls).toHaveLength(0);
+  });
+});

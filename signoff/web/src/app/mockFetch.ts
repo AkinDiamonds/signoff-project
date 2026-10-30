@@ -277,6 +277,8 @@ export const mockFetch: typeof fetch = async (input, init) => {
             created_at: new Date(Date.now() - 3600000).toISOString(),
             seller_response_due_date: new Date(Date.now() + 86400000 * 7).toISOString(),
             claimed_at: null,
+            latest_verdict: null,
+            latest_rule_id: null,
           },
           {
             dispute_id: 'PP-MOCK-POOL-2',
@@ -287,6 +289,8 @@ export const mockFetch: typeof fetch = async (input, init) => {
             created_at: new Date(Date.now() - 7200000).toISOString(),
             seller_response_due_date: new Date(Date.now() + 86400000 * 5).toISOString(),
             claimed_at: null,
+            latest_verdict: null,
+            latest_rule_id: null,
           },
           {
             dispute_id: 'PP-MOCK-POOL-3',
@@ -297,6 +301,8 @@ export const mockFetch: typeof fetch = async (input, init) => {
             created_at: new Date(Date.now() - 86400000).toISOString(),
             seller_response_due_date: new Date(Date.now() + 86400000 * 3).toISOString(),
             claimed_at: new Date(Date.now() - 80000000).toISOString(),
+            latest_verdict: 'NEEDS_APPROVAL',
+            latest_rule_id: 'G3-04',
           },
         ]);
       }
@@ -434,7 +440,7 @@ export const mockFetch: typeof fetch = async (input, init) => {
     const claimMatch = pathname.match(/^\/api\/demo\/claim\/([^/]+)$/);
     if (claimMatch) {
       const disputeId = claimMatch[1] ?? '';
-      const reqHeaders = new Headers(init?.headers as HeadersInit | undefined);
+      const reqHeaders = new Headers(init?.headers);
       const demoToken = reqHeaders.get('x-demo-token');
       if (!demoToken || demoToken !== 'demo-token-active') {
         return envelope('NOT_FOUND', 'Claim endpoint is disabled or missing valid demo token', 404);

@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_MOCK_API?: string;
   readonly PUBLIC_SHOP_URL?: string;
   readonly PUBLIC_SIGNOFF_URL?: string;
+  readonly VITE_DEMO_CLAIM_TOKEN?: string;
 }
 
 interface ImportMeta {

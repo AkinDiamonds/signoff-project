@@ -562,6 +562,24 @@
         "title": "CharterResponse",
         "type": "object"
       },
+      "ClaimDisputeResponse": {
+        "properties": {
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dispute_id",
+          "status"
+        ],
+        "title": "ClaimDisputeResponse",
+        "type": "object"
+      },
       "CreateDisputeRequest": {
         "description": "Buyer dispute filing payload.",
         "properties": {
@@ -764,6 +782,96 @@
         "title": "DecisionsResponse",
         "type": "object"
       },
+      "DemoPoolDisputeItem": {
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/Money-Output"
+          },
+          "claimed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "latest_rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Rule Id"
+          },
+          "latest_verdict": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Verdict"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "scenario_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Label"
+          },
+          "seller_response_due_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Response Due Date"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dispute_id",
+          "state",
+          "amount",
+          "reason",
+          "created_at"
+        ],
+        "title": "DemoPoolDisputeItem",
+        "type": "object"
+      },
       "DenyResolveRequest": {
         "additionalProperties": false,
         "description": "Deny the proposed action, recording decision and taking no further action.",
@@ -857,6 +965,17 @@
         "properties": {
           "amount": {
             "$ref": "#/components/schemas/Money-Output"
+          },
+          "approval_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Url"
           },
           "created_at": {
             "format": "date-time",
@@ -2394,6 +2513,233 @@
         "title": "SendBuyerMessageRequest",
         "type": "object"
       },
+      "ShipmentResponse": {
+        "description": "Tracking and delivery milestone event.",
+        "properties": {
+          "carrier": {
+            "title": "Carrier",
+            "type": "string"
+          },
+          "event_time": {
+            "format": "date-time",
+            "title": "Event Time",
+            "type": "string"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "tracking_number": {
+            "title": "Tracking Number",
+            "type": "string"
+          }
+        },
+        "required": [
+          "carrier",
+          "tracking_number",
+          "status",
+          "event_time"
+        ],
+        "title": "ShipmentResponse",
+        "type": "object"
+      },
+      "StoreMessageResponse": {
+        "description": "Buyer dispute message.",
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "posted_by": {
+            "title": "Posted By",
+            "type": "string"
+          },
+          "time_posted": {
+            "format": "date-time",
+            "title": "Time Posted",
+            "type": "string"
+          }
+        },
+        "required": [
+          "posted_by",
+          "time_posted",
+          "content"
+        ],
+        "title": "StoreMessageResponse",
+        "type": "object"
+      },
+      "StoreOrderResponse": {
+        "description": "Store customer order details.",
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "customer_email": {
+            "title": "Customer Email",
+            "type": "string"
+          },
+          "items": {
+            "items": {},
+            "title": "Items",
+            "type": "array"
+          },
+          "order_code": {
+            "title": "Order Code",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_code",
+          "customer_email",
+          "amount",
+          "currency",
+          "status",
+          "created_at",
+          "items"
+        ],
+        "title": "StoreOrderResponse",
+        "type": "object"
+      },
+      "StorePoliciesResponse": {
+        "description": "Static merchant store policies.",
+        "properties": {
+          "cancellation_policy": {
+            "default": "Orders may be cancelled before shipment tracking is generated.",
+            "title": "Cancellation Policy",
+            "type": "string"
+          },
+          "refund_window_days": {
+            "default": 30,
+            "title": "Refund Window Days",
+            "type": "integer"
+          },
+          "return_policy": {
+            "default": "Items must be returned in original condition within 30 days of delivery.",
+            "title": "Return Policy",
+            "type": "string"
+          },
+          "return_window_days": {
+            "default": 30,
+            "title": "Return Window Days",
+            "type": "integer"
+          },
+          "shipping_policy": {
+            "default": "Orders are shipped within 1-2 business days via standard tracked carriers.",
+            "title": "Shipping Policy",
+            "type": "string"
+          }
+        },
+        "title": "StorePoliciesResponse",
+        "type": "object"
+      },
+      "StudioRequest": {
+        "additionalProperties": true,
+        "description": "Wire body posted by studioLlmAdapter.ts.\n\nFields map 1-to-1 to AgLlmRequest: input, instructions, tools, responseFormat.\nWe pass instructions through to the provider after prepending our own system\nprompt. The responseFormat and tool schemas are validated but not forwarded to\nthe underlying provider (which only understands a flat message list).",
+        "properties": {
+          "context": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context"
+          },
+          "input": {
+            "items": {},
+            "maxItems": 20,
+            "title": "Input",
+            "type": "array"
+          },
+          "instructions": {
+            "anyOf": [
+              {
+                "maxLength": 64000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructions"
+          },
+          "responseFormat": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responseformat"
+          },
+          "tools": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/StudioTool"
+                },
+                "maxItems": 64,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tools"
+          }
+        },
+        "title": "StudioRequest",
+        "type": "object"
+      },
+      "StudioTool": {
+        "additionalProperties": true,
+        "description": "Minimal projection of AgAiToolSchema \u2014 only name is needed for the allowlist check.",
+        "properties": {
+          "name": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "StudioTool",
+        "type": "object"
+      },
       "SupportedDisputeReason": {
         "description": "Dispute reasons supported by the Signoff dispute agent.",
         "enum": [
@@ -3223,16 +3569,146 @@
         ]
       }
     },
+    "/api/demo/claim/{dispute_id}": {
+      "post": {
+        "description": "Claim a pooled dispute for judge evaluation, enqueuing a RUN_AGENT job.",
+        "operationId": "claim_dispute_api_demo_claim__dispute_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dispute_id",
+            "required": true,
+            "schema": {
+              "title": "Dispute Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Demo-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimDisputeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Claim Dispute",
+        "tags": [
+          "Demo"
+        ]
+      }
+    },
     "/api/demo/pool": {
       "get": {
-        "description": "Return global pool availability and per-scenario counts.",
+        "description": "Return pooled disputes for demo judge flow, or scenario counts in legacy stub mode.",
         "operationId": "get_pool_api_demo_pool_get",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PoolResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PoolResponse"
+                    },
+                    {
+                      "items": {
+                        "$ref": "#/components/schemas/DemoPoolDisputeItem"
+                      },
+                      "type": "array"
+                    }
+                  ],
+                  "title": "Response Get Pool Api Demo Pool Get"
                 }
               }
             },
@@ -4335,6 +4811,108 @@
           }
         },
         "summary": "Ask the read-only dashboard assistant",
+        "tags": [
+          "Assistant"
+        ]
+      }
+    },
+    "/api/llm/studio": {
+      "post": {
+        "description": "Accepts AG Studio's AgLlmRequest wire format (input / instructions / tools / responseFormat). Converts the input to a flat message list, prepends the Studio system instruction (four-question limit), and proxies to the configured LLM. The LLM key never leaves the server. Studio page-layout tools are allowed in addition to the read-only dashboard data tools; PayPal-shaped mutations are not.",
+        "operationId": "ask_studio_assistant_api_llm_studio_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Ask the Studio native AI assistant",
         "tags": [
           "Assistant"
         ]
@@ -5535,6 +6113,481 @@
         "summary": "Api Status",
         "tags": [
           "System"
+        ]
+      }
+    },
+    "/api/store/orders/by-transaction/{transaction_id}": {
+      "get": {
+        "description": "Retrieve an order by PayPal transaction ID.",
+        "operationId": "get_order_by_transaction_api_store_orders_by_transaction__transaction_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Store-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Store-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreOrderResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get Order By Transaction",
+        "tags": [
+          "Store"
+        ]
+      }
+    },
+    "/api/store/orders/{order_code}/messages": {
+      "get": {
+        "description": "Retrieve buyer messages for an order from dispute records, or empty list if none.",
+        "operationId": "get_order_messages_api_store_orders__order_code__messages_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_code",
+            "required": true,
+            "schema": {
+              "title": "Order Code",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Store-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Store-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StoreMessageResponse"
+                  },
+                  "title": "Response Get Order Messages Api Store Orders  Order Code  Messages Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get Order Messages",
+        "tags": [
+          "Store"
+        ]
+      }
+    },
+    "/api/store/orders/{order_code}/shipments": {
+      "get": {
+        "description": "Retrieve shipment tracking events for an order ordered by event_time.",
+        "operationId": "get_order_shipments_api_store_orders__order_code__shipments_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_code",
+            "required": true,
+            "schema": {
+              "title": "Order Code",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Store-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Store-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ShipmentResponse"
+                  },
+                  "title": "Response Get Order Shipments Api Store Orders  Order Code  Shipments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get Order Shipments",
+        "tags": [
+          "Store"
+        ]
+      }
+    },
+    "/api/store/policies": {
+      "get": {
+        "description": "Return static merchant policies.",
+        "operationId": "get_policies_api_store_policies_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Store-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Store-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorePoliciesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get Policies",
+        "tags": [
+          "Store"
         ]
       }
     },

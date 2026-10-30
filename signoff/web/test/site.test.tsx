@@ -74,6 +74,10 @@ describe('Site Feature Components', () => {
       expect(guideCta.getAttribute('href')).toBe('/guide');
       expect(screen.getByTestId('landing-cta-dashboard').getAttribute('href')).toBe('/app');
 
+      // Try it in 3 minutes
+      expect(screen.getByRole('heading', { name: /Try it in 3 minutes/i })).toBeTruthy();
+      expect(screen.getByTestId('landing-cta-pool').getAttribute('href')).toBe('/app/pool');
+
       // Problem section
       expect(screen.getByRole('heading', { name: /The Problem:/i })).toBeTruthy();
       expect(screen.getByText(/Strict 10-20 Day Deadlines/i)).toBeTruthy();

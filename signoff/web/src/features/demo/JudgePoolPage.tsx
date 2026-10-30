@@ -219,6 +219,16 @@ export const JudgePoolPage: React.FC = () => {
                   <div style={{ fontSize: '12px', color: colors.inkMuted }}>
                     {item.reason.replace(/_/g, ' ')} &bull; State: {item.state}
                   </div>
+                  {(item.latest_verdict || item.latest_rule_id) && (
+                    <div
+                      data-testid={`finished-verdict-${item.dispute_id}`}
+                      style={{ fontSize: '12px', color: colors.ink }}
+                    >
+                      {item.latest_verdict && <span>Verdict: {item.latest_verdict}</span>}
+                      {item.latest_verdict && item.latest_rule_id && <span> &bull; </span>}
+                      {item.latest_rule_id && <span>Rule: {item.latest_rule_id}</span>}
+                    </div>
+                  )}
                   <div style={{ marginTop: '6px' }}>
                     <Button
                       variant="secondary"
