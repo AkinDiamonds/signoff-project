@@ -92,7 +92,10 @@ def start() -> None:
     STATE_DIR.mkdir(exist_ok=True)
     env = stack_env()
     py = sys.executable
-    subprocess.run(["docker", "compose", "up", "-d", "postgres"], cwd=ROOT, check=True, capture_output=True)
+    subprocess.run(
+        ["docker", "compose", "up", "-d", "--wait", "--wait-timeout", "60", "postgres"],
+        cwd=ROOT, check=True, capture_output=True,
+    )
     recreate_database()
     run([py, "-m", "alembic", "upgrade", "head"], env)
     run([py, "-m", "scripts.seed_sandbox"], env)
