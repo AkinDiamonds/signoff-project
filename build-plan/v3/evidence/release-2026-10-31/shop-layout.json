@@ -1,0 +1,6 @@
+{
+  "result": "PASS",
+  "environment": "Render desktop Chromium phone viewport; not physical Android",
+  "viewport": 390,
+  "content": 390
+}

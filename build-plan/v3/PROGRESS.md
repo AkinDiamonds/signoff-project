@@ -6,13 +6,13 @@ This is the progress board. Verified outcomes are in EXECUTION-LOG.md; product c
 |---|---|---|
 | T00 audit | PARTIAL | 39 deployed page/viewport observations recorded; hosted order/valid approval/provider diagnostics still unobserved. |
 | T01 engineering baseline | PASS locally | 489 backend + 169 frontend tests; lint/types/import contracts/parity/builds pass. |
-| T02 owner access and readiness | PASS locally; deployment pending | Owner access/readiness plus real HTTPS cross-site cookie/session/reload/CSRF/logout verification. Route-fulfillment fixture caused the prior metadata failure; native HTTPS passes unchanged cookie assertions. [Evidence](evidence/t02/README.md). |
+| T02 owner access and readiness | PASS locally and on Render desktop Chromium | Owner login/session/reload, Secure/HttpOnly/Partitioned cookie, CSRF rejection, logout/denied access and fresh worker heartbeat verified. Physical Android remains pending. [Deployed evidence](evidence/release-2026-10-31/README.md). |
 | T03 commerce | IMPLEMENTED IN PART; hosted proof pending | Durable IDs/intents, exact capture/payee validation, stable request IDs, concurrent/restart recovery and shared resolver. Remaining legacy scoping/alias checks and real hosted purchase proof stay open. |
 | T04–T05 fulfilment and evidence | TODO | Automatic simulated fulfilment and inspectable evidence. |
 | T06–T08 agent and approvals | TODO | Reliable plans, verified execution, durable phone approvals. |
 | T09–T10 notifications | TODO | Toasts, inbox and Android web push. |
 | T11–T13 product/mobile validation | TODO | Accurate dashboard, coherent mobile flows and complete regression suite. |
-| T14–T17 Render release and proof | INITIAL ROLLOUT IN PROGRESS | Owner authorized existing main auto-deploy and installed login variables. Compatible release/migrations prepared; actual rollout and full hosted/phone journey still require observation. |
+| T14–T17 Render release and proof | INITIAL RELEASE OBSERVED; full journey pending | Main auto-deploy used. Deployed owner access, worker presence, PayPal-only buyer handoff and 390px shop layout observed. Fresh actual purchase/dispute/model/execution and physical-phone proof remain. |
 
 Checkpoint branch: `codex/signoff-v3`. The owner has requested commits/pushes at verified milestones. Keep checkpoint SHA/push/CI status in EXECUTION-LOG.md. Show browser screenshots as user-facing features become available, and label local versus deployed evidence.
 
@@ -20,6 +20,6 @@ Pushed product checkpoints: T01 `07f1d7b`; T02 code `20f24fb`; prior handoff `d4
 
 Fresh-workspace diagnostic preparation: current source preview recreated on 8042/5176, isolated preview DB migrated. Both browser launch attempts failed because matching Chromium executables are absent, before any page or cookie observation. Browser retries stopped and reported under the repository rule. Portable probe/setup sources are in `evidence/t02/diagnostics/`; install Chromium before the next authorized diagnostic attempt. Original cookie assertion remains unresolved.
 
-Latest: 578 backend / 179 frontend tests, lint/types/import/parity and both builds PASS. Local HTTPS authentication PASS. Full cross-app browser suite: 8/12 passed on second attempt; stale test hooks/amount fixture corrected, retries stopped/reported, corrected browser cases not yet claimed passing. See release/execution log. No physical Android or new Render release proof claimed yet.
+Latest: 578 backend / 179 frontend tests, lint/types/import/parity and both builds PASS. Local and deployed HTTPS owner authentication PASS. Main 1c772d7 **standard CI and full E2E workflows both completed/success**, including 12/12 remote browser tests. Local failure history and the corrected unused-pip-cache issue are preserved in the execution log. No physical Android/full fresh transaction proof claimed.
 
 Next: T03 payment/order correlation and capture validation, T04 automatic simulated fulfilment, and T05 evidence presentation. No T02 Render rollout has been performed or verified.

@@ -1,0 +1,35 @@
+{
+  "environment": "Render",
+  "device": "desktop Chromium at phone viewport; not physical Android",
+  "steps": [
+    "anonymous protected route redirects to login",
+    "owner login and retained session",
+    "production secure HttpOnly partitioned cookie",
+    "authenticated reload and missing-CSRF logout rejected",
+    "UI logout and protected access denied afterward",
+    "separate shop uses PayPal-only dispute handoff; no form or direct capture shortcut"
+  ],
+  "tlsTrust": "scoped managed-session proxy certificate SPKI",
+  "ownerConfiguration": {
+    "status": 200,
+    "required": true,
+    "configured": true,
+    "authenticated": false
+  },
+  "integrationStates": {
+    "status": 200,
+    "worker": "verified",
+    "workerCheckedAt": "2026-10-31T19:13:32.967126Z",
+    "webhook": "verified",
+    "paypal": "configured",
+    "llm": "configured"
+  },
+  "cookie": {
+    "name": "__Host-signoff_session",
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None",
+    "partitionKey": "https://signoff-web.onrender.com"
+  },
+  "result": "PASS"
+}
