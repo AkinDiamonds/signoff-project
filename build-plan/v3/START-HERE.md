@@ -10,7 +10,7 @@ Complete the existing product and prove it on Render. Single merchant account; n
 
 ### Resume update — 2026-10-31, fresh cloud workspace
 
-- Branch `codex/signoff-v3` checked out at confirmed remote `d491e61`. No unfamiliar local changes existed. A diagnostic-preparation checkpoint follows this entry; identify its SHA with `git log -1`. Latest pushed **product code** remains `20f24fb`.
+- Branch `codex/signoff-v3` checked out at confirmed remote `d491e61`. No unfamiliar local changes existed. Diagnostic-preparation checkpoint **`88b2b7c` is pushed and confirmed by native `git ls-remote`**; tracking-only commits may follow. Latest pushed **product code** remains `20f24fb`. No uncommitted product changes.
 - GitHub CI is now observed **success** for both `20f24fb` (run 41211299897) and `d491e61` (run 41211594512). These results do not prove cross-site cookies.
 - Locked dependency sync passed with `UV_CACHE_DIR=$PWD/work/uv-cache uv sync --frozen --extra dev`; default cache failed because it is read-only. Network commands need the execution tool's additional network permission; ordinary Git fetch could not reach the proxy, network-enabled fetch succeeded.
 - Existing local `signoff-postgres` was verified. Created fresh disposable `signoff_test_preview` and `signoff_test_v3`; only preview was migrated to head with the guarded helper. Inherited DATABASE_URL was never used for test/migration operations.
@@ -20,6 +20,7 @@ Complete the existing product and prove it on Render. Single merchant account; n
 - **Next concrete step:** install matching Chromium (`npx playwright install chromium`, network-enabled), then resume the stopped probe after the owner has received this report. See evidence README for exact fixture commands. Do not treat missing executables as a cookie diagnosis or advance to T03/deployment yet.
 - Local test/lint/type/build suites were not rerun during this blocked diagnostic attempt. No production source change. Before checkpoint commit, only handoff/evidence documents and portable diagnostic sources are changed; use Git status for current uncommitted state.
 - Targeted diagnostic JavaScript ESLint, Node syntax check and Git whitespace check passed (exit 0). No browser assertion ran.
+- Diagnostic checkpoint CI run 41213129730 observed **in_progress**, conclusion null; do not call it passed. Earlier code/handoff CI successes above remain confirmed.
 
 - Original base `fd9c2b7472612bfe935144b860359a937f07fb37`. The owner now authorizes checkpoint commits/pushes. Continue on `codex/signoff-v3`; inspect Git log/status and remote before proceeding. Render deployment is a separate release step.
 - Confirmed pushed code checkpoints: baseline `07f1d7b`; owner access/readiness `20f24fb`. Latest source CI was observed in progress, not passed: https://github.com/AkinDiamonds/signoff-project/actions/runs/41211299897 . Tracking-only commits may follow; inspect actual branch head.
