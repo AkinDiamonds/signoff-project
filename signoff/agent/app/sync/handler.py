@@ -23,7 +23,7 @@ from agent.app.domain.enums import JobKind, JobStatus, TimelineEventKind
 from agent.app.errors import NotFoundError
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.paypal.read_client import PayPalReadClient
-from agent.app.settings import Settings
+from agent.app.settings import AppEnv, Settings
 from agent.app.sync.state import (
     is_dispute_resolved,
     map_dispute_state_to_db_status,
@@ -259,7 +259,9 @@ async def sync_dispute(
         # Enqueue agent run if seller response required
         if requires_seller_response(dispute_state):
             app_settings = settings or Settings()
-            if app_settings.demo_hold_disputes:
+            # Judge-claim pooling is a rehearsal fixture, never a prerequisite
+            # for the normal merchant webhook -> agent -> policy-gate journey.
+            if app_settings.demo_hold_disputes and app_settings.app_env != AppEnv.prod:
                 pool_row = session.get(DemoPool, clean_id)
                 if pool_row is None:
                     has_been_processed = session.scalar(

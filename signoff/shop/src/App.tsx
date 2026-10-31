@@ -18,11 +18,10 @@ import { ConfirmationPage } from './pages/ConfirmationPage';
 import { HomePage } from './pages/HomePage';
 import { ProductPage } from './pages/ProductPage';
 import {
-  BuyerDisputePage,
   OrderDetailPage,
   OrderLookupPage,
-  ReportProblemPage,
 } from './portal';
+import { PayPalResolutionPanel } from './portal/PayPalResolutionPanel';
 import { Link, RouterProvider, useRouter } from './router';
 import { warmColors, warmShadows } from './theme';
 
@@ -64,7 +63,7 @@ const ShopHeader: React.FC = () => {
               Luminary Candles
             </div>
             <div style={{ fontSize: '11px', color: warmColors.inkMuted }}>
-              Artisan soy candles & buyer portal
+              Artisan soy candles · Order tracking
             </div>
           </div>
         </Link>
@@ -159,9 +158,9 @@ const ShopContent: React.FC = () => {
   } else if (path === '/orders') {
     pageContent = <OrderLookupPage />;
   } else if (path === '/orders/:code/dispute/new' && params.code) {
-    pageContent = <ReportProblemPage orderCode={params.code} />;
+    pageContent = <PayPalResolutionPanel />;
   } else if (path === '/orders/:code/dispute' && params.code) {
-    pageContent = <BuyerDisputePage orderCode={params.code} />;
+    pageContent = <PayPalResolutionPanel />;
   } else if (path === '/orders/:code' && params.code) {
     pageContent = <OrderDetailPage orderCode={params.code} />;
   } else {

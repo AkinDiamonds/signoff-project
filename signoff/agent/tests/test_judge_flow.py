@@ -35,7 +35,7 @@ from agent.app.paypal.models import (
 from agent.app.paypal.models import (
     Money as PPMoney,
 )
-from agent.app.settings import Settings
+from agent.app.settings import AppEnv, Settings
 from agent.app.sync.handler import sync_dispute
 
 
@@ -113,6 +113,21 @@ async def test_hold_mode_pools_new_dispute_without_enqueuing_agent(db_session: S
         select(Job).where(Job.dispute_id == dispute_id, Job.kind == JobKind.RUN_AGENT.value)
     ).scalars().all()
     assert len(jobs) == 0
+
+
+@pytest.mark.asyncio
+async def test_production_dispute_does_not_wait_for_a_judge_claim(db_session: Session):
+    dispute_id = "PP-MERCHANT-FLOW"
+    settings = Settings(demo_hold_disputes=True).model_copy(update={"app_env": AppEnv.prod})
+    result = await sync_dispute(
+        dispute_id, db_session, DummyPayPalClient(_make_sample_dispute(dispute_id)), settings=settings
+    )
+    assert result.agent_run_enqueued is True
+    assert db_session.get(DemoPool, dispute_id) is None
+    jobs = db_session.scalars(
+        select(Job).where(Job.dispute_id == dispute_id, Job.kind == JobKind.RUN_AGENT.value)
+    ).all()
+    assert len(jobs) == 1
 
 
 def test_claim_endpoint_empty_or_invalid_token_returns_404(db_session: Session):

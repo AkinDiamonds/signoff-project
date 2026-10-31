@@ -15,6 +15,7 @@ import { Button, ErrorState, Money, Skeleton } from '@signoff/ui';
 import { captureShopOrder, createShopOrder, getDemoSessionId } from '../api';
 import { useCart } from '../CartContext';
 import { Link, useRouter } from '../router';
+import { isStubCheckoutEnabled } from '../sandbox';
 import { retailTheme } from '../theme';
 
 declare global {
@@ -388,23 +389,23 @@ export const CheckoutPage: React.FC = () => {
             {sdkFailed && (
               <div style={{ marginBottom: '12px' }}>
                 <ErrorState
-                  message="PayPal SDK unavailable in offline/test environment. Use the sandbox checkout button below."
+                  message="PayPal checkout could not load. Refresh this page and try again. No payment has been confirmed."
                   testId="shop-sdk-error-state"
                 />
               </div>
             )}
 
             {/* Pay with PayPal Button */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+            {isStubCheckoutEnabled() && <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
               <Button
                 variant="primary"
                 onClick={() => void handleSandboxFallbackPay()}
                 disabled={capturing}
                 testId="shop-sandbox-pay-btn"
               >
-                Pay with PayPal
+                Run local stub checkout
               </Button>
-            </div>
+            </div>}
           </div>
         </div>
       </div>

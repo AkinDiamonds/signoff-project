@@ -64,7 +64,7 @@ export default defineConfig({
       command: 'npm run -w @signoff/shop dev -- --port 5174 --strictPort',
       url: SHOP_URL,
       reuseExistingServer: !process.env.CI,
-      env: { VITE_API_URL: AGENT_URL },
+      env: { VITE_API_URL: AGENT_URL, VITE_STUB_CHECKOUT: 'true' },
     },
     {
       command: `npm run -w @signoff/web dev -- --port ${FROZEN_WEB_PORT} --strictPort`,

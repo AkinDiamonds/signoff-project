@@ -10,6 +10,8 @@ These answers were supplied directly by the owner after reviewing the master pla
 6. **Autonomy:** the agent may execute valid actions automatically when evidence and merchant policy permit. Actions requiring approval must wait for explicit approval; approval never overrides hard PayPal, stale-state or idempotency constraints.
 7. **Existing retained scope:** mobile usability, toasts, persistent notifications and opt-in mobile push; trustworthy evidence, real sandbox PayPal/LLM integration, deployed Render verification.
 8. **Primary phone:** the owner will test on Android. Prioritize Android Chrome push and phone approval validation; do not claim iPhone physical-device validation from that evidence.
+9. **Buyer dispute journey (reconfirmed):** the separately deployed shop hands payment approval to PayPal-hosted checkout. Buyers later report problems and manage disputes separately in PayPal's Resolution Center, never through a Signoff buyer-dispute form. Signoff's merchant product receives verified PayPal webhooks and continues evidence → policy gate → approval/execution. Legacy buyer assertion/forms are local stub rehearsal fixtures only and must not be available on the deployed product.
+10. **Release mechanism:** the owner has configured Render to auto-deploy `main` and authorizes pushing the tested compatible release to `main`. Use that existing setup; no Render workspace/configuration recreation is requested. The owner will install the generated owner-login variables securely in Render.
 
 ## Supplied competition rules affecting release
 

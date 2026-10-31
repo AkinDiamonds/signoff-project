@@ -1703,6 +1703,10 @@ export interface components {
             items: components["schemas"]["OrderItemResponse"][];
             /** Order Code */
             order_code: string;
+            /** Paypal Capture Id */
+            paypal_capture_id?: string | null;
+            /** Paypal Order Id */
+            paypal_order_id?: string | null;
             /** Status */
             status: string;
             /** Tracking Events */

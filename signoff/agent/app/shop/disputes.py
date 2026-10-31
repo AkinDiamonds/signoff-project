@@ -26,9 +26,17 @@ from agent.app.domain.money import Money
 from agent.app.errors import AppError, NotFoundError
 from agent.app.paypal.buyer_client import BuyerDisputeClient
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
-from agent.app.settings import Settings
+from agent.app.settings import AppEnv, PayPalEnv, Settings
 
-router = APIRouter(tags=["Buyer Portal Disputes"])
+
+def require_local_buyer_rehearsal(request: Request) -> None:
+    """Legacy fixtures are never buyer dispute endpoints in the real product."""
+    settings: Settings = request.app.state.settings
+    if settings.app_env != AppEnv.test or settings.paypal_env != PayPalEnv.stub:
+        raise NotFoundError("Buyer disputes are managed in PayPal Resolution Center")
+
+
+router = APIRouter(tags=["Local Buyer Rehearsal"], dependencies=[Depends(require_local_buyer_rehearsal)])
 
 LINKED_SANDBOX_BUYER_EMAIL = "alex.morgan@example.test"
 

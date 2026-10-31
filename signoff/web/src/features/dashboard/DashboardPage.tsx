@@ -295,7 +295,7 @@ export const DashboardPage: React.FC = () => {
             Autonomous Win Rate
           </div>
           <div style={{ fontSize: '26px', fontWeight: 700, color: '#0F766E', margin: '4px 0 2px' }}>
-            {values.share}
+            <span data-testid="kpi-autonomous-share">{values.share}</span>
           </div>
           <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Estimated time saved: {values.hours}</div>
         </div>

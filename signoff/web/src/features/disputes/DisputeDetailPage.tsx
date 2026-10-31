@@ -456,7 +456,7 @@ export const DisputeDetailPage: React.FC = () => {
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${colors.border}` }}>
               <span style={{ fontSize: '13px', color: '#6B7280' }}>Gate Verdict:</span>
-              <StatusBadge status={displayedDispute.latest_verdict ?? 'NEEDS_APPROVAL'} />
+              <StatusBadge status={displayedDispute.latest_verdict ?? 'NEEDS_APPROVAL'} testId="detail-verdict-chip" />
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${colors.border}` }}>

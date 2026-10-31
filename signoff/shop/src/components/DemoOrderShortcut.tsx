@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import { Button } from '@signoff/ui';
 import { captureShopOrder, createShopOrder, getDemoSessionId, setDemoSessionId } from '../api';
 import { useRouter } from '../router';
+import { isStubCheckoutEnabled } from '../sandbox';
 import { warmColors } from '../theme';
 
 export interface DemoOrderShortcutProps {
@@ -17,7 +18,11 @@ export interface DemoOrderShortcutProps {
   testId?: string;
 }
 
-export const DemoOrderShortcut: React.FC<DemoOrderShortcutProps> = ({
+export const DemoOrderShortcut: React.FC<DemoOrderShortcutProps> = props => (
+  isStubCheckoutEnabled() ? <LocalStubOrderShortcut {...props} /> : null
+);
+
+const LocalStubOrderShortcut: React.FC<DemoOrderShortcutProps> = ({
   variant = 'secondary',
   label = '⚡ Use a demo order',
   testId = 'shop-demo-order-shortcut-btn',

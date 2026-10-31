@@ -9,15 +9,13 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Button, Money, Skeleton, StatusBadge } from '@signoff/ui';
+import { Button, Money, Skeleton } from '@signoff/ui';
 import { fetchOrderDetail } from '../api';
-import { DemoOrderShortcut } from '../components/DemoOrderShortcut';
 import { useRouter } from '../router';
 import { colors, retailTheme } from '../theme';
 import type { OrderDetail } from '../types';
-import { fetchOrderDisputeStatus } from './portalApi';
+import { PayPalResolutionPanel } from './PayPalResolutionPanel';
 import { PortalTrackingTimeline } from './PortalTrackingTimeline';
-import type { OrderDisputeStatus } from './types';
 
 export const OrderDetailPage: React.FC<{ orderCode: string }> = ({ orderCode }) => {
   const { navigate } = useRouter();
@@ -34,7 +32,6 @@ export const OrderDetailPage: React.FC<{ orderCode: string }> = ({ orderCode }) 
   });
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
-  const [disputeStatus, setDisputeStatus] = useState<OrderDisputeStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -43,14 +40,10 @@ export const OrderDetailPage: React.FC<{ orderCode: string }> = ({ orderCode }) 
     setLoading(true);
     setErrorMessage(null);
 
-    Promise.all([
-      fetchOrderDetail(orderCode, email),
-      fetchOrderDisputeStatus(orderCode, email).catch(() => null),
-    ])
-      .then(([orderRes, disputeRes]) => {
+    fetchOrderDetail(orderCode, email)
+      .then(orderRes => {
         if (!active) return;
         setOrder(orderRes);
-        setDisputeStatus(disputeRes);
         setLoading(false);
       })
       .catch(err => {
@@ -99,14 +92,6 @@ export const OrderDetailPage: React.FC<{ orderCode: string }> = ({ orderCode }) 
     );
   }
 
-  const hasExistingDispute = Boolean(disputeStatus?.dispute_exists);
-  const dispute = disputeStatus?.dispute;
-
-  // Find latest merchant message if available
-  const latestMerchantMsg = dispute?.messages
-    ?.filter(m => m.posted_by === 'SELLER')
-    .slice(-1)[0];
-
   return (
     <div
       style={{
@@ -144,78 +129,6 @@ export const OrderDetailPage: React.FC<{ orderCode: string }> = ({ orderCode }) 
             Buyer: <strong>{order.customer_email}</strong>
           </div>
         </div>
-
-        {/* When there is a dispute: A card titled "Your case" with status in StatusBadge and merchant's latest message */}
-        {hasExistingDispute && dispute && (
-          <div
-            data-testid="portal-existing-dispute-banner"
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '8px',
-              boxShadow: retailTheme.cardShadow,
-              padding: '24px',
-              marginBottom: '24px',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h2
-                style={{
-                  fontSize: '18px',
-                  fontWeight: 700,
-                  margin: 0,
-                  color: retailTheme.ink,
-                  fontFamily: retailTheme.serifFont,
-                }}
-              >
-                Your case
-              </h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <StatusBadge
-                  verdict={dispute.status === 'RESOLVED' ? 'ALLOW' : 'NEEDS_APPROVAL'}
-                  testId="portal-dispute-status-badge"
-                />
-                <span style={{ fontSize: '13px', fontWeight: 600, color: retailTheme.ink }}>
-                  {dispute.status}
-                </span>
-              </div>
-            </div>
-
-            <div style={{ fontSize: '13px', color: retailTheme.inkMuted, marginBottom: '16px' }}>
-              Disputed amount:{' '}
-              <Money money={dispute.amount} testId="portal-banner-dispute-amount" />
-            </div>
-
-            {/* Merchant's latest message */}
-            <div
-              style={{
-                backgroundColor: retailTheme.surfaceWarm,
-                padding: '12px 16px',
-                borderRadius: '6px',
-                fontSize: '13px',
-                marginBottom: '16px',
-              }}
-            >
-              <div style={{ fontWeight: 600, color: retailTheme.ink, marginBottom: '4px' }}>
-                Merchant&apos;s latest update:
-              </div>
-              <div style={{ color: retailTheme.inkMuted }}>
-                {latestMerchantMsg ? latestMerchantMsg.content : 'Awaiting merchant review.'}
-              </div>
-            </div>
-
-            <Button
-              variant="primary"
-              onClick={() =>
-                navigate(
-                  `/orders/${order.order_code}/dispute?email=${encodeURIComponent(order.customer_email)}`
-                )
-              }
-              testId="portal-view-existing-dispute-btn"
-            >
-              View Case &amp; Messages →
-            </Button>
-          </div>
-        )}
 
         {/* Main Order Card */}
         <div
@@ -313,69 +226,7 @@ export const OrderDetailPage: React.FC<{ orderCode: string }> = ({ orderCode }) 
             />
           </div>
 
-          {/* Report Problem or View Dispute action */}
-          <div
-            data-testid="portal-problem-section"
-            style={{
-              paddingTop: '20px',
-              borderTop: `1px solid ${retailTheme.borderSubtle}`,
-            }}
-          >
-            {hasExistingDispute ? (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: '13px', color: retailTheme.inkMuted }}>
-                  Case opened with merchant and PayPal.
-                </div>
-                <Button
-                  variant="primary"
-                  onClick={() =>
-                    navigate(
-                      `/orders/${order.order_code}/dispute?email=${encodeURIComponent(order.customer_email)}`
-                    )
-                  }
-                  testId="portal-dispute-view-btn"
-                >
-                  View Case →
-                </Button>
-              </div>
-            ) : disputeStatus?.dispute_eligible ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: retailTheme.ink }}>
-                    Problem with your order?
-                  </div>
-                  <div style={{ fontSize: '12px', color: retailTheme.inkMuted }}>
-                    Package missing, damaged, or not as described?
-                  </div>
-                </div>
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    navigate(
-                      `/orders/${order.order_code}/dispute/new?email=${encodeURIComponent(
-                        order.customer_email
-                      )}`
-                    )
-                  }
-                  testId="portal-report-problem-btn"
-                >
-                  Report a Problem
-                </Button>
-              </div>
-            ) : (
-              <div data-testid="portal-dispute-disabled-banner" style={{ fontSize: '13px', color: retailTheme.inkMuted }}>
-                <p style={{ margin: '0 0 12px 0' }}>
-                  {disputeStatus?.ineligibility_reason ||
-                    'Disputes are only available for orders paid via the connected sandbox buyer account.'}
-                </p>
-                <DemoOrderShortcut
-                  variant="secondary"
-                  label="⚡ Use Demo Order Instead"
-                  testId="portal-dispute-demo-order-btn"
-                />
-              </div>
-            )}
-          </div>
+          <PayPalResolutionPanel />
         </div>
       </div>
     </div>

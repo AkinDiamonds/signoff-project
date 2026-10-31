@@ -58,7 +58,7 @@ Planning update (2026-10-31): Owner requested a detailed product-completion plan
 3. Live rehearsal (`make rehearse`) once sandbox credentials are in `.env`.
 
 ## Blockers
-- V3 T02 local HTTPS cookie/session verification now PASS; old response-fulfillment fixture caused the missing partition key. Backend 500/frontend 178 checks reverified. No Render/physical-phone proof; next implementation is T03. Current handoff: repository-root `build-plan/v3/START-HERE.md`.
+- V3 T02 local HTTPS authentication PASS; T03 capture/resolver/intents/recovery implemented in part; PayPal-only buyer journey corrected. Current checks: 578 backend/179 frontend plus lint/types/contracts/builds PASS. Local full browser suite 8/12, stale hooks/fixture corrected but full retries stopped/reported. Owner authorized main auto-deploy and confirmed owner variables installed. Current release/handoff: repository-root `build-plan/v3/START-HERE.md` and `RELEASE.md`; no hosted/physical-phone completion claimed yet.
 - None.
 - S8-S14 spike answers can be validated incrementally during steps 21, 23, 34.
 - The evidence builder's carrier allowlist (`UPS`, `USPS`, `FEDEX`, `DHL`) is conservative and fails closed. Confirm the accepted carrier values against the PayPal evidence schema before the live rehearsal; the in-repo fixtures do not include a provide-evidence request body.

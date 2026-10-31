@@ -1,5 +1,7 @@
 import { expect, test } from './fixtures';
 import {
+  AGENT_URL,
+  BUYER_EMAIL,
   createBuyerDispute,
   createScenario,
   createShopOrder,
@@ -35,7 +37,14 @@ test('resilience: the poller syncs a dispute with no webhook @full', async ({ re
 
 test('resilience: LLM failure records RUN_FAILED and executes nothing @full', async ({ page, request, session }) => {
   const orderCode = await createShopOrder(request, session.id, [{ sku: 'CND-CED-03', quantity: 1 }]);
-  const disputeId = await createBuyerDispute(request, orderCode, 'FAIL_LLM: please refund this order.', '64.00');
+  const orderResponse = await request.get(
+    `${AGENT_URL}/api/shop/orders/${orderCode}?email=${encodeURIComponent(BUYER_EMAIL)}`
+  );
+  expect(orderResponse.status()).toBe(200);
+  const order: { amount: { value: string } } = await orderResponse.json();
+  const disputeId = await createBuyerDispute(
+    request, orderCode, 'FAIL_LLM: please refund this order.', order.amount.value
+  );
   await stub.emit(request, disputeId, ['CUSTOMER.DISPUTE.CREATED']);
 
   const items = await waitForTimeline(request, disputeId, (events) => hasKind(events, 'RUN_FAILED'));

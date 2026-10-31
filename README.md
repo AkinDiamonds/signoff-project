@@ -4,7 +4,7 @@ An AI agent that handles PayPal disputes for small online merchants inside limit
 
 ```
 signoff/web     merchant web    dashboard, dispute detail, approvals, AG Studio
-signoff/shop    buyer shop      candle storefront, orders, tracking, buyer replies
+signoff/shop    buyer shop      candle storefront, PayPal checkout, orders, simulated tracking
 signoff/agent   API and worker  FastAPI service, worker, PayPal clients, ledger
 ```
 
@@ -17,11 +17,16 @@ signoff/agent   API and worker  FastAPI service, worker, PayPal clients, ledger
 
 ## What is real
 
+Buyers approve their payment on PayPal-hosted checkout. If a problem arises, they separately open a dispute in PayPal's Resolution Center. Signoff receives verified PayPal webhooks and presents the merchant's evidence, policy decision and any required approval. The deployed shop does not host buyer dispute creation or replies.
+
 | Part | Status |
 |---|---|
 | Disputes, evidence and offers | Real PayPal sandbox APIs |
-| Candle shop orders and tracking | Simulated |
-| Agent reasoning | A real LLM behind a server proxy |
+| Shop payment | PayPal sandbox with hosted buyer approval |
+| Shipping | Explicitly simulated |
+| Agent reasoning | OpenAI-compatible provider behind a server proxy; deployed journey verification tracked below |
+
+Current implementation and observed verification: [progress](build-plan/v3/PROGRESS.md), [release notes](build-plan/v3/RELEASE.md). This is an incremental release; pending fulfilment, notifications/push and full hosted journey work are not claimed complete.
 
 ## Built with
 

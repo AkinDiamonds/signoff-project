@@ -79,4 +79,6 @@ export interface OrderDetail {
   items: OrderLineItem[];
   tracking_events: TrackingMilestone[];
   created_at: string;
+  paypal_order_id?: string | null;
+  paypal_capture_id?: string | null;
 }

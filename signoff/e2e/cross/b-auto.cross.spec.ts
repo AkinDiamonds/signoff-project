@@ -5,6 +5,7 @@ import { stub } from './helpers/stub';
 interface Kpis {
   open_disputes: number;
   dollars_at_risk: string;
+  share_auto_resolved: number | null;
 }
 
 test('B: small dispute auto-handled without approval @smoke @full', async ({ page, request, session }) => {
@@ -25,5 +26,8 @@ test('B: small dispute auto-handled without approval @smoke @full', async ({ pag
   await expect(page.getByTestId('dashboard-title')).toBeVisible();
   await expect(page.getByTestId(`dashboard-dispute-row-${disputeId}`)).toBeVisible();
   await expect(page.getByTestId('kpi-open-disputes')).toHaveText(String(after.open_disputes));
-  await expect(page.getByTestId('kpi-share-auto')).toBeVisible();
+  await expect(page.getByTestId('kpi-autonomous-share')).toBeVisible();
+  await expect(page.getByTestId('kpi-autonomous-share')).toHaveText(
+    after.share_auto_resolved === null ? '—' : `${Math.round(after.share_auto_resolved * 100)}%`
+  );
 });

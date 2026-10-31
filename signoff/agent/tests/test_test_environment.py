@@ -2,6 +2,7 @@
 
 import pytest
 
+from scripts.e2e_stack import stack_env
 from scripts.test_environment import DEFAULT_TEST_DATABASE_URL, isolate_test_environment
 
 
@@ -23,6 +24,21 @@ def test_all_settings_aliases_removed_without_removing_runtime_proxy():
         "DATABASE_URL": DEFAULT_TEST_DATABASE_URL,
         "HTTPS_PROXY": "http://proxy:8080",
     }
+
+
+def test_e2e_stack_never_inherits_deployed_credentials_or_mode_aliases(monkeypatch):
+    monkeypatch.setenv('DATABASE_URL', 'postgresql+psycopg://user:fixture@shared.invalid/merchant')
+    monkeypatch.setenv('DEMO_HOLD_DISPUTES', 'true')
+    monkeypatch.setenv('DEMO_POOL_HOLD', 'true')
+    monkeypatch.setenv('LLM_API_KEY', 'fixture-shared-key')
+    monkeypatch.setenv('MERCHANT_PASSWORD_HASH', 'fixture-shared-credential')
+    monkeypatch.setenv('PAYPAL_MERCHANT_ID', 'SHARED-MERCHANT')
+    env = stack_env()
+    assert env['DATABASE_URL'].endswith('@localhost:5432/signoff_e2e')
+    assert env['APP_ENV'] == 'test' and env['PAYPAL_ENV'] == 'stub'
+    assert env['DEMO_HOLD_DISPUTES'] == 'false' and 'DEMO_POOL_HOLD' not in env
+    assert env['PAYPAL_MERCHANT_ID'] == 'MOCK-MERCHANT-001'
+    assert 'LLM_API_KEY' not in env and 'MERCHANT_PASSWORD_HASH' not in env
 
 
 def test_explicit_test_database_is_preserved():

@@ -83,7 +83,7 @@ export const ShopBanner: React.FC = () => {
               textDecoration: 'underline',
             }}
           >
-            Judge Guide ↗
+            Sandbox Guide ↗
           </a>
           <a
             href={`${signoffBaseUrl}/app`}
@@ -110,13 +110,13 @@ export const ShopBanner: React.FC = () => {
         >
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ fontWeight: 600, color: retailTheme.ink, marginBottom: '4px' }}>
-              PayPal Sandbox Test Buyer Credentials
+              PayPal Sandbox Checkout
             </div>
             <p style={{ margin: '0 0 6px 0', color: retailTheme.inkMuted }}>
-              Email: <code data-testid="shop-buyer-email" style={{ fontFamily: 'monospace' }}>alex.morgan@example.test</code>
+              Sign in on PayPal using your sandbox buyer account to approve the payment.
             </p>
             <div style={{ color: retailTheme.inkMuted }}>
-              Judges can also use <strong>&quot;Use a demo order&quot;</strong> in the header or cart to instantly test dispute flows.
+              Report payment problems separately in PayPal’s Resolution Center. Shipping on this store is simulated.
             </div>
           </div>
         </div>

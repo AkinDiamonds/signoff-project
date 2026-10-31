@@ -15,6 +15,8 @@ from pathlib import Path
 
 import httpx
 
+from scripts.test_environment import DEFAULT_TEST_DATABASE_URL, isolate_test_environment
+
 ROOT = Path(__file__).resolve().parents[2]
 STATE_DIR = ROOT / ".e2e-stack"
 PID_FILE = STATE_DIR / "pids.json"
@@ -25,6 +27,11 @@ ORIGINS = "http://localhost:5173,http://localhost:5174,http://localhost:5175"
 
 def stack_env() -> dict[str, str]:
     env = dict(os.environ)
+    # Clear every Settings name/alias before supplying the dedicated stub stack.
+    # The initial disposable URL is validated by the same guard as unit tests;
+    # this stack then explicitly selects its separate local e2e database below.
+    env["SIGNOFF_TEST_DATABASE_URL"] = DEFAULT_TEST_DATABASE_URL
+    isolate_test_environment(env)
     env.update(
         {
             "PYTHONPATH": os.pathsep.join([str(ROOT / "signoff"), str(ROOT / "signoff" / "agent")]),
@@ -33,6 +40,11 @@ def stack_env() -> dict[str, str]:
             "PAYPAL_BASE_URL": "http://localhost:4010",
             "PAYPAL_CLIENT_ID": "stub-client",
             "PAYPAL_CLIENT_SECRET": "stub-secret",
+            "PAYPAL_MERCHANT_ID": "MOCK-MERCHANT-001",
+            "PAYPAL_BUYER_EMAIL": "alex.morgan@example.test",
+            "APPROVAL_TOKEN_SECRET": "local-stub-only-approval-key-over-32-characters",
+            "STORE_API_KEY": "local-stub-store-key",
+            "DEMO_HOLD_DISPUTES": "false",
             "LLM_PROVIDER": "fake",
             "DATABASE_URL": DB_URL,
             "ALLOWED_ORIGINS": ORIGINS,

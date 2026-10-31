@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { BUYER_EMAIL, createScenario, getTimeline, hasKind, waitForTimeline } from './helpers/agent';
+import { createScenario, hasKind, waitForTimeline } from './helpers/agent';
 import { stub } from './helpers/stub';
 
 const SHOP_URL = process.env.SHOP_URL ?? 'http://localhost:5174';
@@ -22,34 +22,16 @@ test('A: evidence submitted and execution confirmed @smoke @full', async ({ page
   expect(state.disputes[disputeId]?.evidences).toHaveLength(1);
 });
 
-test('A: buyer reports a problem in the shop portal @full', async ({ browser, page, request, session }) => {
+test('Shop sends buyers to PayPal Resolution Center @full', async ({ browser }) => {
   const shopContext = await browser.newContext({ baseURL: SHOP_URL });
   const shop = await shopContext.newPage();
-  await session.applyTo(shop);
-
-  await shop.goto('/');
-  await expect(shop.getByTestId('shop-catalog-grid')).toBeVisible();
-  await shop.getByTestId('shop-header-demo-order-btn').click();
-  await expect(shop).toHaveURL(/\/confirmation\//);
-  const orderCode = (await shop.getByTestId('shop-order-code').textContent())?.trim() ?? '';
-
-  await shop.goto(`/orders/${orderCode}?email=${encodeURIComponent(BUYER_EMAIL)}`);
-  await shop.getByTestId('portal-report-problem-btn').click();
-  await expect(shop.getByTestId('portal-report-title')).toContainText(orderCode);
-  await shop.getByTestId('portal-message-input').fill('My candles never arrived.');
-  await shop.getByTestId('portal-submit-dispute-btn').click();
-  await expect(shop).toHaveURL(new RegExp(`/orders/${orderCode}/dispute`));
-  const disputeId = (await shop.getByTestId('portal-dispute-id').textContent())?.trim() ?? '';
+  const writes: string[] = [];
+  shop.on('request', request => {
+    if (request.method() === 'POST') writes.push(request.url());
+  });
+  await shop.goto('/orders/SIGEXTERNAL/dispute/new');
+  await expect(shop.getByTestId('paypal-resolution-link')).toHaveAttribute('href', 'https://www.sandbox.paypal.com/disputes/');
+  await expect(shop.getByRole('textbox')).toHaveCount(0);
+  expect(writes).toEqual([]);
   await shopContext.close();
-
-  await stub.emit(request, disputeId, ['CUSTOMER.DISPUTE.CREATED']);
-  await waitForTimeline(request, disputeId, (events) => hasKind(events, 'EXECUTION_CONFIRMED'));
-
-  await session.applyTo(page);
-  await page.goto(`/app/disputes/${disputeId}`);
-  await expect(page.getByTestId('buyer-message-content')).toContainText('never arrived');
-  await expect(page.getByTestId('decision-timeline')).toContainText('Execution confirmed');
-
-  const timeline = await getTimeline(request, disputeId);
-  expect(hasKind(timeline, 'APPROVAL_REQUESTED')).toBe(false);
 });

@@ -21,6 +21,7 @@ const MOCK_CATALOG = [
 
 describe('Storefront Application (@signoff/shop)', () => {
   beforeEach(() => {
+    vi.stubEnv('VITE_STUB_CHECKOUT', 'false');
     window.localStorage.clear();
     window.sessionStorage.clear();
     window.history.pushState({}, '', '/');
@@ -147,7 +148,9 @@ describe('Storefront Application (@signoff/shop)', () => {
 
     const content = screen.getByTestId('shop-banner-how-to-pay-content');
     expect(content).toBeTruthy();
-    expect(screen.getByTestId('shop-buyer-email').textContent).toBe('alex.morgan@example.test');
+    expect(content.textContent).toContain('Sign in on PayPal using your sandbox buyer account');
+    expect(content.textContent).toContain('PayPal’s Resolution Center');
+    expect(screen.queryByTestId('shop-header-demo-order-btn')).toBeNull();
   });
 
   it('renders catalog products and money formatted with <Money>', async () => {
@@ -234,6 +237,7 @@ describe('Storefront Application (@signoff/shop)', () => {
   });
 
   it('claims a demo order via the shortcut and navigates to confirmation', async () => {
+    vi.stubEnv('VITE_STUB_CHECKOUT', 'true');
     await act(async () => {
       render(<App />);
     });
@@ -252,6 +256,29 @@ describe('Storefront Application (@signoff/shop)', () => {
 
     expect(screen.getByTestId('shop-order-status').textContent).toContain('PAID');
     expect(screen.getByTestId('shop-order-amount').textContent).toContain('USD 42.00');
+  });
+
+  it('public checkout captures only after PayPal hosted approval', async () => {
+    const buttons = vi.fn((_options: {
+      createOrder: () => Promise<string>;
+      onApprove: (data: { orderID: string }) => Promise<void>;
+    }) => ({ render: vi.fn().mockResolvedValue(undefined) }));
+    vi.stubGlobal('paypal', { Buttons: buttons });
+    window.localStorage.setItem('signoff.shop.cart', JSON.stringify([{ sku: 'CND-LAV-01', quantity: 2 }]));
+    window.history.pushState({}, '', '/checkout');
+    render(<App />);
+    await waitFor(() => expect(buttons).toHaveBeenCalled());
+    expect(screen.queryByTestId('shop-sandbox-pay-btn')).toBeNull();
+    const options = buttons.mock.calls[0]?.[0];
+    if (!options) throw new Error('Expected PayPal SDK buttons');
+    let paypalId = '';
+    await act(async () => { paypalId = await options.createOrder(); });
+    expect(paypalId).toBe('PP-ORDER-999');
+    expect(vi.mocked(fetch).mock.calls.some(([url]) => String(url).endsWith('/capture'))).toBe(false);
+    await act(async () => { await options.onApprove({ orderID: paypalId }); });
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith('/capture'))).toHaveLength(1);
+    await waitFor(() => expect(screen.getByTestId('shop-confirmation-card')).toBeTruthy());
+    vi.unstubAllGlobals();
   });
 
   it('cancel returns with cart items intact', async () => {

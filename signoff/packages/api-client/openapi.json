@@ -2147,6 +2147,28 @@
             "title": "Order Code",
             "type": "string"
           },
+          "paypal_capture_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paypal Capture Id"
+          },
+          "paypal_order_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paypal Order Id"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -6761,7 +6783,7 @@
         "summary": "Get Order Dispute Status",
         "tags": [
           "Storefront",
-          "Buyer Portal Disputes"
+          "Local Buyer Rehearsal"
         ]
       },
       "post": {
@@ -6893,7 +6915,7 @@
         "summary": "Create Buyer Dispute",
         "tags": [
           "Storefront",
-          "Buyer Portal Disputes"
+          "Local Buyer Rehearsal"
         ]
       }
     },
@@ -7027,7 +7049,7 @@
         "summary": "Send Buyer Dispute Message",
         "tags": [
           "Storefront",
-          "Buyer Portal Disputes"
+          "Local Buyer Rehearsal"
         ]
       }
     },
@@ -7161,7 +7183,7 @@
         "summary": "Respond To Merchant Offer",
         "tags": [
           "Storefront",
-          "Buyer Portal Disputes"
+          "Local Buyer Rehearsal"
         ]
       }
     },
