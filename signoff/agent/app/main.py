@@ -3,6 +3,8 @@
 import logging
 import re
 import uuid
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, status
@@ -21,6 +23,7 @@ from agent.app.api.timeline import router as timeline_router
 from agent.app.approvals.service import DEMO_APPROVAL_LINKS
 from agent.app.auth import require_merchant
 from agent.app.auth import router as auth_router
+from agent.app.db.release import prepare_production_schema
 from agent.app.db.session import check_database_health, get_db_session
 from agent.app.errors import (
     ErrorEnvelope,
@@ -94,6 +97,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app_settings = settings or Settings()
     setup_logging()
 
+    @asynccontextmanager
+    async def release_lifespan(_app: FastAPI) -> AsyncIterator[None]:
+        prepare_production_schema(app_settings)
+        yield
+
     standard_responses: dict[int | str, dict[str, Any]] = {
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorEnvelope, "description": "Authentication required"},
         status.HTTP_403_FORBIDDEN: {"model": ErrorEnvelope, "description": "Request not permitted"},
@@ -125,6 +133,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     }
 
     app = FastAPI(
+        lifespan=release_lifespan,
         title="Signoff Dispute Agent API",
         description="Autonomous PayPal dispute operations constrained by merchant charter rules.",
         version="0.1.0",

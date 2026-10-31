@@ -9,7 +9,7 @@ sys.path.insert(0, str(root_dir / "signoff"))
 sys.path.insert(0, str(root_dir / "signoff" / "agent"))
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import Connection, engine_from_config, pool
 
 import agent.app.db.models  # noqa: F401 - ensure all models register with Base.metadata
 from agent.app.db.base import Base
@@ -48,6 +48,18 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
+    existing_connection = config.attributes.get("connection")
+    if isinstance(existing_connection, Connection):
+        context.configure(
+            connection=existing_connection,
+            target_metadata=target_metadata,
+            compare_type=True,
+            compare_server_default=True,
+        )
+        with context.begin_transaction():
+            context.run_migrations()
+        return
+
     configuration = config.get_section(config.config_ini_section, {})
     configuration["sqlalchemy.url"] = get_database_url()
 

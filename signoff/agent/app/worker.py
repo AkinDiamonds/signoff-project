@@ -24,6 +24,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from agent.app.db.models import Job
+from agent.app.db.release import prepare_production_schema
 from agent.app.db.session import get_session_factory
 from agent.app.domain.enums import JobKind, JobStatus
 from agent.app.integrations import observe
@@ -41,6 +42,7 @@ from agent.app.queue import (
     release_job,
 )
 from agent.app.queue.wiring import build_registry
+from agent.app.settings import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -323,6 +325,7 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
+    prepare_production_schema(Settings())
     worker = Worker(
         worker_id=args.worker_id,
         registry=build_registry(),

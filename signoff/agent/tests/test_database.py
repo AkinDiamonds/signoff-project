@@ -13,6 +13,7 @@ Validates all safety invariants defined in Step 03:
 - Python enum to database CHECK constraint parity.
 """
 
+import re
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
@@ -96,6 +97,18 @@ def test_migration_round_trip() -> None:
     command.downgrade(alembic_cfg, "base")
     command.upgrade(alembic_cfg, "head")
 
+
+def test_migrated_ledger_constraint_matches_all_domain_events(engine: Engine) -> None:
+    """Check the real migrated PostgreSQL constraint, not only ORM metadata."""
+    with engine.connect() as connection:
+        definition = connection.scalar(text(
+            "SELECT pg_get_constraintdef(oid) FROM pg_constraint "
+            "WHERE conrelid='ledger_events'::regclass "
+            "AND conname='ck_ledger_events_ck_event_kind_timelineeventkind'"
+        ))
+    assert isinstance(definition, str)
+    actual = set(re.findall(r"'([A-Z_]+)'", definition))
+    assert actual == {kind.value for kind in TimelineEventKind}
 
 def test_decisions_trigger_rejects_raw_sql_update_and_delete(db_session: Session) -> None:
     """Raw SQL UPDATE or DELETE on decisions must be rejected by append-only trigger."""
