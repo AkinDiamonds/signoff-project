@@ -8,10 +8,11 @@ from decimal import Decimal
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from agent.app.db.models import Order, TrackingEvent
-from agent.app.domain.enums import OrderStatus, TrackingStatus
+from agent.app.db.models import Order, SimulatedShipment, TrackingEvent
+from agent.app.domain.enums import OrderStatus
 from agent.app.domain.money import Money
 from agent.app.errors import AppError, NotFoundError
+from agent.app.fulfillment.service import create_simulated_shipment
 from agent.app.paypal.orders_client import PayPalOrdersClient
 from agent.app.settings import AppEnv, PayPalEnv, Settings
 from agent.app.shop.catalog import get_product
@@ -96,11 +97,7 @@ def _record_payment(session: Session, order: Order, paypal_order_id: str, captur
         return
     existing_tracking = session.scalar(select(TrackingEvent.id).where(TrackingEvent.order_id == order.id))
     if existing_tracking is None:
-        session.add(TrackingEvent(
-            order_id=order.id, carrier="UPS", tracking_number=f"1Z999AA10{order.order_code}",
-            status=TrackingStatus.IN_TRANSIT.value, event_time=datetime.now(UTC),
-            payload={"source": "simulated", "note": "Simulated package received at origin facility."},
-        ))
+        create_simulated_shipment(session, order, now=datetime.now(UTC))
     session.commit()
     session.refresh(order)
 
@@ -283,10 +280,12 @@ def get_buyer_order(
             tracking_number=ev.tracking_number,
             status=ev.status,
             event_time=_ensure_utc(ev.event_time),
+            source='simulated' if (ev.payload or {}).get('source') == 'simulated' else 'unknown',
         )
         for ev in events
     ]
 
+    shipment = session.get(SimulatedShipment, order.id)
     return OrderDetailResponse(
         order_code=order.order_code,
         status=order.status,
@@ -297,6 +296,9 @@ def get_buyer_order(
         created_at=created,
         paypal_order_id=order.paypal_order_id,
         paypal_capture_id=order.paypal_capture_id,
+        shipment_source='simulated' if shipment else 'unknown',
+        shipment_mode=shipment.mode if shipment else None,
+        next_shipping_event_at=_ensure_utc(shipment.next_event_at) if shipment and shipment.next_event_at else None,
     )
 
 

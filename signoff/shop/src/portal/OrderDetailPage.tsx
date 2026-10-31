@@ -216,6 +216,14 @@ export const OrderDetailPage: React.FC<{ orderCode: string }> = ({ orderCode }) 
           </div>
 
           {/* Simplified Tracking Timeline */}
+          {order.shipment_source === 'simulated' && <section style={{ padding: 14, marginBottom: 16, background: '#ecfdf5', borderRadius: 8, lineHeight: 1.6 }}>
+            <strong>Simulated shipment</strong> · No real carrier is contacted.
+            {order.shipment_mode === 'missing_tracking' && <p style={{ marginBottom: 0 }}>Tracking is unavailable for this sandbox scenario.</p>}
+            {order.shipment_mode === 'exception' && <p style={{ marginBottom: 0 }}>This simulated shipment has an exception. Automatic updates are paused.</p>}
+            {order.next_shipping_event_at && <p style={{ marginBottom: 0, fontSize: 13 }}>
+              Next simulated update: {new Date(order.next_shipping_event_at).toLocaleString()}
+            </p>}
+          </section>}
           <div style={{ marginBottom: '24px' }}>
             <div style={{ fontSize: '13px', fontWeight: 600, color: retailTheme.inkMuted, marginBottom: '12px' }}>
               Shipment Tracking

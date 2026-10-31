@@ -21,6 +21,13 @@ Production API and worker prepare schema before accepting traffic/jobs, using th
 - `d18e6c2a9001`: owner sessions, failed sign-in attempts, integration observations.
 - `e42b7d910002`: nullable explicit PayPal order/capture IDs and durable capture-attempt timestamp. No guessed legacy backfill or new uniqueness constraint. Ambiguous legacy mappings remain unmodified and fail closed.
 - `f53c8ea20003`: expand ledger CHECK constraint to permit existing domain value DISPUTE_POOLED. No financial history update/delete; append-only triggers preserved.
+- `a64d9fb30004`: one persistent simulated shipment per newly verified paid order, with stage, pause mode, next-event schedule and optimistic version. Existing tracking/financial history is not backfilled or rewritten. API and worker use the existing serialized startup migration.
+
+## Simulated shipping increment
+
+New verified payments start at PRE_TRANSIT. The worker advances due shipments about once a minute through IN_TRANSIT, OUT_FOR_DELIVERY and DELIVERED, using actual occurrence times rather than inventing missed milestones. Owner-only `/app/shipments` offers immediate advancement plus missing-tracking/exception/resume controls before a dispute exists. Controls require owner authentication, CSRF, merchant/demo scope, an expected version and request ID. Shipment changes do not rerun an existing dispute or overwrite past run evidence. DISPUTED order status is preserved.
+
+Both shop and merchant UI explicitly label simulation. Paused/invalid/future tracking cannot become usable delivery evidence; default behavior requires human review. A configurable missing-evidence policy and the complete inspectable evidence snapshot remain T05. Legacy orders retain their existing history and are not silently scheduled.
 
 Capture reserves one durable attempt before remote I/O. Callbacks/restarts after uncertainty use GET reconciliation rather than blind recapture. Payment validation checks order/capture completion, IDs, exact amount/currency and returned merchant identity when available. Final payment/tracking recording has one transactional winner across sessions. Stable PayPal request IDs separate create/capture operations.
 

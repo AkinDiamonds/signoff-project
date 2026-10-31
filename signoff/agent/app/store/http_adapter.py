@@ -12,18 +12,16 @@ from agent.app.store.models import OrderRecord, ShipmentRecord
 
 
 def _ensure_utc(dt: Any) -> datetime:
-    if dt is None:
-        return datetime.now(UTC)
     if isinstance(dt, str):
         try:
-            return datetime.fromisoformat(dt.replace("Z", "+00:00"))
-        except Exception:
-            return datetime.now(UTC)
+            dt = datetime.fromisoformat(dt.replace("Z", "+00:00"))
+        except ValueError:
+            raise StoreUnavailable('Store returned an invalid occurrence time') from None
     if isinstance(dt, datetime):
         if dt.tzinfo is None:
-            return dt.replace(tzinfo=UTC)
+            raise StoreUnavailable('Store occurrence time has no timezone')
         return dt.astimezone(UTC)
-    return datetime.now(UTC)
+    raise StoreUnavailable('Store occurrence time is missing or invalid')
 
 
 class HttpStoreAdapter:
@@ -88,6 +86,7 @@ class HttpStoreAdapter:
             created_at=_ensure_utc(data["created_at"]),
             shipments=shipments,
             buyer_prior_disputes=0,
+            tracking_unavailable_reason=data.get('tracking_unavailable_reason'),
         )
 
     def get_shipments(self, order_code: str) -> list[ShipmentRecord]:

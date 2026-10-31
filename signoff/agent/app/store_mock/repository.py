@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
-from agent.app.db.models import Order, TrackingEvent
+from agent.app.db.models import Order, SimulatedShipment, TrackingEvent
 from agent.app.domain.enums import OrderStatus, TrackingStatus
 from agent.app.store.base import StoreAmbiguous
 from agent.app.store.scope import OrderScope
@@ -53,7 +53,9 @@ def _scenario_for_order(order: Order) -> OrderRecord | None:
     )
 
 
-def _to_record(order: Order, events: list[TrackingEvent], buyer_prior_disputes: int | None) -> OrderRecord:
+def _to_record(
+    order: Order, events: list[TrackingEvent], buyer_prior_disputes: int | None, unavailable_reason: str | None = None
+) -> OrderRecord:
     scenario = _scenario_for_order(order)
     prior = buyer_prior_disputes
     if prior is None:
@@ -82,7 +84,27 @@ def _to_record(order: Order, events: list[TrackingEvent], buyer_prior_disputes: 
         shipments=shipments,
         buyer_prior_disputes=prior,
         scenario_id=scenario.scenario_id if scenario is not None else None,
+        tracking_unavailable_reason=unavailable_reason,
     )
+
+
+def tracking_evidence_events(session: Session, order: Order) -> tuple[list[TrackingEvent], str | None]:
+    """Current eligible evidence; historical tracking rows are never rewritten."""
+    events = list(session.scalars(select(TrackingEvent).where(
+        TrackingEvent.order_id == order.id
+    ).order_by(TrackingEvent.event_time)))
+    now = datetime.now(UTC)
+    created = _ensure_utc(order.created_at)
+    valid = [event for event in events if created <= _ensure_utc(event.event_time) <= now]
+    reason = None if len(valid) == len(events) else (
+        'Tracking contains early or future occurrence times; human review required.'
+    )
+    shipment = session.get(SimulatedShipment, order.id)
+    if shipment and shipment.mode == 'missing_tracking':
+        return [], 'Tracking was withheld for this simulated scenario; human review required.'
+    if shipment and shipment.mode == 'exception':
+        reason = 'The simulated shipment has an exception; human review required.'
+    return valid, reason
 
 
 def load_order_context(
@@ -100,11 +122,5 @@ def load_order_context(
     if order is None:
         return None
 
-    events = list(
-        session.scalars(
-            select(TrackingEvent)
-            .where(TrackingEvent.order_id == order.id)
-            .order_by(TrackingEvent.event_time)
-        ).all()
-    )
-    return _to_record(order, events, buyer_prior_disputes)
+    events, reason = tracking_evidence_events(session, order)
+    return _to_record(order, events, buyer_prior_disputes, reason)

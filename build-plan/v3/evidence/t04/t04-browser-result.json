@@ -1,0 +1,19 @@
+{
+  "transport": "native-https",
+  "localOnly": true,
+  "headers": [
+    {
+      "httpOnly": true,
+      "secure": true,
+      "partitioned": true,
+      "sameSiteNone": true,
+      "hostPrefix": true,
+      "domainAbsent": true
+    }
+  ],
+  "steps": [
+    "owner sign in, persistent manual stages to delivered, reload, terminal lock, missing tracking, resume, exception, no phone-width overflow"
+  ],
+  "chromium": "156.0.8078.4",
+  "result": "PASS"
+}

@@ -43,6 +43,7 @@ class OrderRecord:
     shipments: tuple[ShipmentRecord, ...]
     buyer_prior_disputes: int = 0
     scenario_id: str | None = None
+    tracking_unavailable_reason: str | None = None
 
     def __post_init__(self) -> None:
         if not self.order_code.strip():

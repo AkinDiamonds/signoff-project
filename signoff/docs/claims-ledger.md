@@ -4,6 +4,7 @@ Every claim in the README, Devpost text or video needs a row with proof. Review 
 
 | ID | Claim | Where it appears | Proof (test / demo step / link) | Status |
 |---|---|---|---|---|
+| CLAIM-SIMULATED-SHIPPING | New verified sandbox payments start persistent simulated shipments; scoped owner controls and the worker advance milestones | Merchant Shipments, shop order detail | `agent/tests/test_fulfillment.py`, `web/test/shipments.test.tsx`, `build-plan/v3/evidence/t04` | Verified locally; deployed observation pending |
 | CLAIM-AI-NO-MUTATING | The AI cannot call mutating PayPal endpoints | README, landing, video | import-linter contract + registry test (`agent/tests/test_architecture_guard.py`) | Verified |
 | CLAIM-NO-MUTATING-TOOL | The LLM is never given a write tool; its output is a schema-validated plan only | README, architecture docs | `agent/tests/test_architecture_guard.py::test_agent_tool_registry_contains_no_mutating_names`, `agent/tests/test_llm_proxy.py::test_unknown_or_mutating_tool_is_rejected` | Verified |
 | CLAIM-GATE-FAIL-CLOSED | Unknown or unexpected input to the gate fails closed (never ALLOW) | README, landing, video | `agent/tests/test_gate.py::test_rule_g0_00_unknown_action`, `::test_gate_aggregation_only_needs_approval` | Verified |
@@ -23,3 +24,7 @@ Every claim in the README, Devpost text or video needs a row with proof. Review 
 | CLAIM-JUDGE-DEMO-PANEL | Judges can run scenarios A-E from the demo panel, see the expected outcome, and reset only their own session | README, guide, video | `web/test/demo.test.tsx`, `e2e/specs/charter-demo.spec.ts` | Verified |
 | CLAIM-READONLY-ASSISTANT | The dashboard assistant cannot take actions and the LLM key never reaches the browser | README, landing, video | `agent/tests/test_llm_proxy.py::test_unknown_or_mutating_tool_is_rejected`, `::test_client_model_override_is_ignored`, production build scan with a canary `LLM_API_KEY` | Verified |
 | CLAIM-ACCESSIBLE-WIDGETS | Dashboard widgets show deadline urgency and over-limit usage without relying on colour alone | README, landing, video | `web/test/widgets.test.tsx`, `e2e/specs/widgets.spec.ts` (axe + screenshot tolerance) | Verified |
+
+## 2026-10-31 shipping increment
+
+Locally verified: new paid orders get persistent simulated shipments, worker schedules actual-time milestones, owner controls require authentication/CSRF/scoped versioned requests. Full suite 598 backend/185 frontend PASS; native local HTTPS controls/reload/phone-width check PASS. Explicit simulation source labels; no real carrier interaction. See build-plan/v3/evidence/t04. This does not prove fresh hosted PayPal purchase/dispute execution, physical Android, or the remaining T05 policy/provenance work.

@@ -17,14 +17,14 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from agent.app.db.models import Order, TrackingEvent
+from agent.app.db.models import Order
 from agent.app.db.session import get_db_session
 from agent.app.errors import AppError, NotFoundError
 from agent.app.settings import Settings
 from agent.app.shop.disputes import _find_dispute_for_transaction
 from agent.app.store.base import StoreAmbiguous
 from agent.app.store.scope import order_scope
-from agent.app.store_mock.repository import find_order_by_paypal_transaction_id
+from agent.app.store_mock.repository import find_order_by_paypal_transaction_id, tracking_evidence_events
 
 
 def _ensure_utc(dt: Any) -> datetime:
@@ -72,6 +72,7 @@ class StoreOrderResponse(BaseModel):
     status: str
     created_at: datetime
     items: list[Any]
+    tracking_unavailable_reason: str | None = None
 
 
 class ShipmentResponse(BaseModel):
@@ -122,6 +123,7 @@ def get_order_by_transaction(
         raise AppError("ORDER_AMBIGUOUS", "Multiple orders match this payment reference", status_code=409) from None
     if not order:
         raise NotFoundError(f"No order found for transaction ID '{transaction_id}'")
+    _events, unavailable_reason = tracking_evidence_events(db, order)
     return StoreOrderResponse(
         order_code=order.order_code,
         customer_email=order.customer_email,
@@ -130,6 +132,7 @@ def get_order_by_transaction(
         status=order.status,
         created_at=_ensure_utc(order.created_at),
         items=order.items or [],
+        tracking_unavailable_reason=unavailable_reason,
     )
 
 
@@ -146,13 +149,7 @@ def get_order_shipments(
     if not order:
         raise NotFoundError(f"No order found for order code '{order_code}'")
 
-    events = list(
-        db.scalars(
-            select(TrackingEvent)
-            .where(TrackingEvent.order_id == order.id)
-            .order_by(TrackingEvent.event_time.asc())
-        ).all()
-    )
+    events, _reason = tracking_evidence_events(db, order)
     return [
         ShipmentResponse(
             carrier=ev.carrier,

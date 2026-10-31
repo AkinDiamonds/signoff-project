@@ -69,6 +69,7 @@ export interface TrackingMilestone {
   tracking_number: string;
   status: string;
   event_time: string;
+  source?: 'simulated' | 'unknown';
 }
 
 export interface OrderDetail {
@@ -81,4 +82,7 @@ export interface OrderDetail {
   created_at: string;
   paypal_order_id?: string | null;
   paypal_capture_id?: string | null;
+  shipment_source?: 'simulated' | 'unknown';
+  shipment_mode?: string | null;
+  next_shipping_event_at?: string | null;
 }

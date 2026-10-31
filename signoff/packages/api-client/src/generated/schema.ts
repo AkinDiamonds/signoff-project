@@ -294,6 +294,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/fulfillment/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Shipments */
+        get: operations["list_shipments_api_fulfillment_orders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fulfillment/orders/{order_code}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Shipment Action */
+        post: operations["shipment_action_api_fulfillment_orders__order_code__actions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/integrations/check": {
         parameters: {
             query?: never;
@@ -1701,12 +1735,22 @@ export interface components {
             customer_email: string;
             /** Items */
             items: components["schemas"]["OrderItemResponse"][];
+            /** Next Shipping Event At */
+            next_shipping_event_at?: string | null;
             /** Order Code */
             order_code: string;
             /** Paypal Capture Id */
             paypal_capture_id?: string | null;
             /** Paypal Order Id */
             paypal_order_id?: string | null;
+            /** Shipment Mode */
+            shipment_mode?: string | null;
+            /**
+             * Shipment Source
+             * @default unknown
+             * @enum {string}
+             */
+            shipment_source: "simulated" | "unknown";
             /** Status */
             status: string;
             /** Tracking Events */
@@ -1959,6 +2003,21 @@ export interface components {
             /** Required */
             required: boolean;
         };
+        /** ShipmentAction */
+        ShipmentAction: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "advance" | "missing_tracking" | "exception" | "resume";
+            /** Base Version */
+            base_version: number;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+        };
         /**
          * ShipmentResponse
          * @description Tracking and delivery milestone event.
@@ -1979,6 +2038,46 @@ export interface components {
             status: string;
             /** Tracking Number */
             tracking_number: string;
+        };
+        /** ShipmentView */
+        ShipmentView: {
+            amount: components["schemas"]["Money-Output"];
+            /** Can Configure Scenario */
+            can_configure_scenario: boolean;
+            /**
+             * Carrier
+             * @default UPS
+             */
+            carrier: string;
+            /** Events */
+            events: components["schemas"]["TrackingEventResponse"][];
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "normal" | "missing_tracking" | "exception";
+            /** Next Event At */
+            next_event_at: string | null;
+            /** Order Code */
+            order_code: string;
+            /** Order Status */
+            order_status: string;
+            /**
+             * Shipment Id
+             * Format: uuid
+             */
+            shipment_id: string;
+            /**
+             * Source
+             * @default simulated
+             * @constant
+             */
+            source: "simulated";
+            stage: components["schemas"]["TrackingStatus"];
+            /** Tracking Number */
+            tracking_number: string;
+            /** Version */
+            version: number;
         };
         /**
          * StoreMessageResponse
@@ -2017,6 +2116,8 @@ export interface components {
             order_code: string;
             /** Status */
             status: string;
+            /** Tracking Unavailable Reason */
+            tracking_unavailable_reason?: string | null;
         };
         /**
          * StorePoliciesResponse
@@ -2111,11 +2212,23 @@ export interface components {
              * Format: date-time
              */
             event_time: string;
+            /**
+             * Source
+             * @default unknown
+             * @enum {string}
+             */
+            source: "simulated" | "unknown";
             /** Status */
             status: string;
             /** Tracking Number */
             tracking_number: string;
         };
+        /**
+         * TrackingStatus
+         * @description Mock store shipment tracking status.
+         * @enum {string}
+         */
+        TrackingStatus: "PRE_TRANSIT" | "IN_TRANSIT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "RETURNED" | "EXCEPTION";
         /** UnknownTimelineEvent */
         UnknownTimelineEvent: {
             /** Created At */
@@ -3804,6 +3917,219 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TimelineResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request not permitted */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    list_shipments_api_fulfillment_orders_get: {
+        parameters: {
+            query?: {
+                demo_session_id?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShipmentView"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request not permitted */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    shipment_action_api_fulfillment_orders__order_code__actions_post: {
+        parameters: {
+            query?: {
+                demo_session_id?: string | null;
+            };
+            header?: never;
+            path: {
+                order_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShipmentAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShipmentView"];
                 };
             };
             /** @description Bad Request */

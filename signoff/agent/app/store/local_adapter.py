@@ -6,27 +6,21 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from agent.app.db.models import Order, TrackingEvent
+from agent.app.db.models import Order
 from agent.app.domain.enums import TrackingStatus
 from agent.app.shop.disputes import _find_dispute_for_transaction
+from agent.app.store.base import StoreUnavailable
 from agent.app.store.models import OrderRecord, ShipmentRecord
 from agent.app.store.scope import OrderScope
-from agent.app.store_mock.repository import load_order_context
+from agent.app.store_mock.repository import load_order_context, tracking_evidence_events
 
 
 def _ensure_utc(dt: Any) -> datetime:
-    if dt is None:
-        return datetime.now(UTC)
-    if isinstance(dt, str):
-        try:
-            return datetime.fromisoformat(dt.replace("Z", "+00:00"))
-        except Exception:
-            return datetime.now(UTC)
     if isinstance(dt, datetime):
         if dt.tzinfo is None:
             return dt.replace(tzinfo=UTC)
         return dt.astimezone(UTC)
-    return datetime.now(UTC)
+    raise StoreUnavailable('Stored occurrence time is missing or invalid')
 
 
 class LocalStoreAdapter:
@@ -45,13 +39,7 @@ class LocalStoreAdapter:
         order = self._order(order_code)
         if order is None:
             return []
-        events = list(
-            self._session.scalars(
-                select(TrackingEvent)
-                .where(TrackingEvent.order_id == order.id)
-                .order_by(TrackingEvent.event_time.asc())
-            ).all()
-        )
+        events, _reason = tracking_evidence_events(self._session, order)
         return [
             ShipmentRecord(
                 carrier=e.carrier,

@@ -11,6 +11,7 @@ import { GuidePage } from '../features/site';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { LoginPage } from '../features/auth/LoginPage';
 import { RequireMerchant } from '../features/auth/RequireMerchant';
+import { ShipmentsPage } from '../features/fulfillment/ShipmentsPage';
 
 export const routes: RouteObject[] = [
   { path: 'login', element: <LoginPage /> },
@@ -31,6 +32,7 @@ export const routes: RouteObject[] = [
       { path: 'disputes', element: <DisputeListPage /> },
       { path: 'disputes/:id', element: <DisputeDetailPage /> },
       { path: 'policy', element: <CharterPage /> },
+      { path: 'shipments', element: <ShipmentsPage /> },
       { path: 'settings', element: <SettingsPage /> },
       // Compatibility aliases
       { path: 'charter', element: <CharterPage /> },

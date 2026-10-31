@@ -280,6 +280,12 @@ def build_evidence(
             strength=strength,
         )
 
+    if order.tracking_unavailable_reason:
+        return BuiltEvidence(
+            buildable=False, evidence_type=None, notes=None, tracking_info=(),
+            reason=order.tracking_unavailable_reason, strength=strength,
+        )
+
     if order.shipments and not shipments:
         return BuiltEvidence(
             buildable=False,

@@ -1,5 +1,6 @@
 """Owner sessions protect merchant APIs, survive restarts and require CSRF on writes."""
 
+import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -54,6 +55,22 @@ def test_hash_roundtrip_and_wrong_password():
     assert verify_password(PASSWORD, encoded)
     assert not verify_password("wrong", encoded)
     assert not verify_password(PASSWORD, "broken")
+
+
+def test_shipment_controls_require_owner_and_csrf(owner_app):
+    app, _db, _settings = owner_app
+    body = {'request_id': str(uuid.uuid4()), 'base_version': 0, 'action': 'advance'}
+    with TestClient(app) as client:
+        assert client.get('/api/fulfillment/orders').status_code == 401
+        assert client.post('/api/fulfillment/orders/UNKNOWN/actions', json=body).status_code == 401
+        csrf = sign_in(client).json()['csrf_token']
+        assert client.get('/api/fulfillment/orders').status_code == 200
+        assert client.post('/api/fulfillment/orders/UNKNOWN/actions', json=body).status_code == 403
+        assert client.post('/api/fulfillment/orders/UNKNOWN/actions', json=body,
+                           headers={'X-CSRF-Token': csrf}).status_code == 404
+        body['event_time'] = '2099-01-01T00:00:00Z'
+        assert client.post('/api/fulfillment/orders/UNKNOWN/actions', json=body,
+                           headers={'X-CSRF-Token': csrf}).status_code == 422
 
 
 def test_login_protects_reads_and_requires_csrf_for_writes(owner_app):

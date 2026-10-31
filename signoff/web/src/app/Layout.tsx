@@ -13,6 +13,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 const NAV_ITEMS = [
   { to: '/app', label: 'Dashboard' },
   { to: '/app/disputes', label: 'Disputes' },
+  { to: '/app/shipments', label: 'Shipments' },
   { to: '/app/policy', label: 'Policy Rules' },
   { to: '/app/settings', label: 'Settings' },
 ];

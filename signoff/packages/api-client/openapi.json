@@ -2143,6 +2143,18 @@
             "title": "Items",
             "type": "array"
           },
+          "next_shipping_event_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Shipping Event At"
+          },
           "order_code": {
             "title": "Order Code",
             "type": "string"
@@ -2168,6 +2180,26 @@
               }
             ],
             "title": "Paypal Order Id"
+          },
+          "shipment_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipment Mode"
+          },
+          "shipment_source": {
+            "default": "unknown",
+            "enum": [
+              "simulated",
+              "unknown"
+            ],
+            "title": "Shipment Source",
+            "type": "string"
           },
           "status": {
             "title": "Status",
@@ -2734,6 +2766,38 @@
         "title": "SessionView",
         "type": "object"
       },
+      "ShipmentAction": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "advance",
+              "missing_tracking",
+              "exception",
+              "resume"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "base_version": {
+            "minimum": 0.0,
+            "title": "Base Version",
+            "type": "integer"
+          },
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base_version",
+          "request_id",
+          "action"
+        ],
+        "title": "ShipmentAction",
+        "type": "object"
+      },
       "ShipmentResponse": {
         "description": "Tracking and delivery milestone event.",
         "properties": {
@@ -2774,6 +2838,95 @@
           "event_time"
         ],
         "title": "ShipmentResponse",
+        "type": "object"
+      },
+      "ShipmentView": {
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/Money-Output"
+          },
+          "can_configure_scenario": {
+            "title": "Can Configure Scenario",
+            "type": "boolean"
+          },
+          "carrier": {
+            "default": "UPS",
+            "title": "Carrier",
+            "type": "string"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/TrackingEventResponse"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "mode": {
+            "enum": [
+              "normal",
+              "missing_tracking",
+              "exception"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "next_event_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Event At"
+          },
+          "order_code": {
+            "title": "Order Code",
+            "type": "string"
+          },
+          "order_status": {
+            "title": "Order Status",
+            "type": "string"
+          },
+          "shipment_id": {
+            "format": "uuid",
+            "title": "Shipment Id",
+            "type": "string"
+          },
+          "source": {
+            "const": "simulated",
+            "default": "simulated",
+            "title": "Source",
+            "type": "string"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/TrackingStatus"
+          },
+          "tracking_number": {
+            "title": "Tracking Number",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "order_code",
+          "order_status",
+          "amount",
+          "shipment_id",
+          "tracking_number",
+          "stage",
+          "mode",
+          "version",
+          "next_event_at",
+          "can_configure_scenario",
+          "events"
+        ],
+        "title": "ShipmentView",
         "type": "object"
       },
       "StoreMessageResponse": {
@@ -2833,6 +2986,17 @@
           "status": {
             "title": "Status",
             "type": "string"
+          },
+          "tracking_unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tracking Unavailable Reason"
           }
         },
         "required": [
@@ -3058,6 +3222,15 @@
             "title": "Event Time",
             "type": "string"
           },
+          "source": {
+            "default": "unknown",
+            "enum": [
+              "simulated",
+              "unknown"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -3075,6 +3248,19 @@
         ],
         "title": "TrackingEventResponse",
         "type": "object"
+      },
+      "TrackingStatus": {
+        "description": "Mock store shipment tracking status.",
+        "enum": [
+          "PRE_TRANSIT",
+          "IN_TRANSIT",
+          "OUT_FOR_DELIVERY",
+          "DELIVERED",
+          "RETURNED",
+          "EXCEPTION"
+        ],
+        "title": "TrackingStatus",
+        "type": "string"
       },
       "UnknownTimelineEvent": {
         "properties": {
@@ -5436,6 +5622,299 @@
         "summary": "Get dispute timeline events",
         "tags": [
           "Timeline & Decisions"
+        ]
+      }
+    },
+    "/api/fulfillment/orders": {
+      "get": {
+        "operationId": "list_shipments_api_fulfillment_orders_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "demo_session_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Demo Session Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ShipmentView"
+                  },
+                  "title": "Response List Shipments Api Fulfillment Orders Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request not permitted"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "List Shipments",
+        "tags": [
+          "Simulated shipments"
+        ]
+      }
+    },
+    "/api/fulfillment/orders/{order_code}/actions": {
+      "post": {
+        "operationId": "shipment_action_api_fulfillment_orders__order_code__actions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_code",
+            "required": true,
+            "schema": {
+              "title": "Order Code",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "demo_session_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Demo Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipmentAction"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request not permitted"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Shipment Action",
+        "tags": [
+          "Simulated shipments"
         ]
       }
     },

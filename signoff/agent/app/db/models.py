@@ -404,6 +404,26 @@ class Order(Base):
     )
 
 
+class SimulatedShipment(Base):
+    """One durable, explicitly simulated shipping schedule per verified paid order."""
+
+    __tablename__ = "simulated_shipments"
+    order_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("orders.id"), primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), unique=True, default=uuid.uuid4, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False)
+    mode: Mapped[str] = mapped_column(String(24), nullable=False, default="normal")
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    tracking_number: Mapped[str] = mapped_column(String(100), nullable=False)
+    next_event_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    last_request_id: Mapped[uuid.UUID | None] = mapped_column(Uuid(as_uuid=True), nullable=True)
+    last_request_tag: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    __table_args__ = (
+        generate_enum_check_constraint("status", TrackingStatus),
+        CheckConstraint("mode IN ('normal','missing_tracking','exception')", name="shipment_mode"),
+        CheckConstraint("version >= 0", name="shipment_version"),
+    )
+
+
 class TrackingEvent(Base):
     """Shipment tracking milestone event for dispute evidence."""
 

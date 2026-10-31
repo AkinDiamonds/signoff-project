@@ -18,6 +18,7 @@ import signal
 import threading
 import time
 import uuid
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -27,6 +28,7 @@ from agent.app.db.models import Job
 from agent.app.db.release import prepare_production_schema
 from agent.app.db.session import get_session_factory
 from agent.app.domain.enums import JobKind, JobStatus
+from agent.app.fulfillment.service import advance_due_shipments
 from agent.app.integrations import observe
 from agent.app.queue import (
     HandlerRegistry,
@@ -42,7 +44,7 @@ from agent.app.queue import (
     release_job,
 )
 from agent.app.queue.wiring import build_registry
-from agent.app.settings import Settings
+from agent.app.settings import AppEnv, Settings
 
 logger = logging.getLogger(__name__)
 
@@ -292,6 +294,13 @@ class Worker:
                             presence.commit()
                     except Exception:
                         logger.warning("Could not persist worker presence")
+                    try:
+                        settings = Settings()
+                        merchant = settings.paypal_merchant_id or ('' if settings.app_env == AppEnv.prod else None)
+                        with self.session_factory() as shipping:
+                            advance_due_shipments(shipping, now=datetime.now(UTC), merchant_id=merchant)
+                    except Exception:
+                        logger.warning('Could not advance simulated shipping; will retry', exc_info=True)
                     next_presence = time.monotonic() + 10
                 if self.reconcile_interval and time.monotonic() >= next_reconcile:
                     self._enqueue_reconcile_if_idle()

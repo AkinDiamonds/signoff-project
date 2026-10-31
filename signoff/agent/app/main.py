@@ -16,6 +16,7 @@ from agent.app.agent.llm import build_llm_service
 from agent.app.api.approvals import router as approvals_router
 from agent.app.api.charter import router as charter_router
 from agent.app.api.disputes import router as disputes_router
+from agent.app.api.fulfillment import router as fulfillment_router
 from agent.app.api.kpis import router as kpis_router
 from agent.app.api.llm_proxy import router as llm_proxy_router
 from agent.app.api.store import router as store_router
@@ -167,6 +168,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     owner_access = [Depends(require_merchant)]
     app.include_router(auth_router)
     app.include_router(integrations_router, dependencies=owner_access)
+    app.include_router(fulfillment_router, dependencies=owner_access)
     app.include_router(webhooks_router)
     app.include_router(charter_router, dependencies=owner_access)
     app.include_router(kpis_router, dependencies=owner_access)

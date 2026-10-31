@@ -179,7 +179,7 @@ async def test_capture_order_success_schedules_mock_tracking(
     events = list(db_session.scalars(select(TrackingEvent).where(TrackingEvent.order_id == order.id)).all())
     assert len(events) == 1
     assert events[0].carrier == "UPS"
-    assert events[0].status == TrackingStatus.IN_TRANSIT.value
+    assert events[0].status == TrackingStatus.PRE_TRANSIT.value
 
 
 @pytest.mark.asyncio
@@ -363,7 +363,7 @@ async def test_reconcile_recovers_when_paypal_captured_but_local_write_failed(db
     # Tracking scheduled on recovery
     events = list(db_session.scalars(select(TrackingEvent).where(TrackingEvent.order_id == recovered.id)).all())
     assert len(events) == 1
-    assert events[0].status == TrackingStatus.IN_TRANSIT.value
+    assert events[0].status == TrackingStatus.PRE_TRANSIT.value
 
 
 # --- 7. Concurrent Capture ---

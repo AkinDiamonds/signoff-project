@@ -1,6 +1,7 @@
 """Pydantic schemas for storefront API contracts."""
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -83,6 +84,7 @@ class TrackingEventResponse(BaseModel):
     tracking_number: str
     status: str
     event_time: datetime
+    source: Literal['simulated', 'unknown'] = 'unknown'
 
 
 class OrderDetailResponse(BaseModel):
@@ -97,3 +99,6 @@ class OrderDetailResponse(BaseModel):
     created_at: datetime
     paypal_order_id: str | None = None
     paypal_capture_id: str | None = None
+    shipment_source: Literal['simulated', 'unknown'] = 'unknown'
+    shipment_mode: str | None = None
+    next_shipping_event_at: datetime | None = None
