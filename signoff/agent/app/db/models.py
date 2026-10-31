@@ -48,6 +48,36 @@ from agent.app.domain.enums import (
 JSONType = JSON().with_variant(JSONB, "postgresql")
 
 
+class OwnerSession(Base):
+    """Revocable owner session; the raw browser cookie is never stored."""
+
+    __tablename__ = "owner_sessions"
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    email: Mapped[str] = mapped_column(String(254), nullable=False)
+    credential_tag: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+
+
+class LoginAttempt(Base):
+    """Persist failed-attempt limits across API processes without storing login input."""
+
+    __tablename__ = "login_attempts"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    client_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+
+
+class IntegrationObservation(Base):
+    """Mutable readiness observations, separate from immutable financial decision history."""
+
+    __tablename__ = "integration_observations"
+    key: Mapped[str] = mapped_column(String(150), primary_key=True)
+    state: Mapped[str] = mapped_column(String(24), nullable=False)
+    checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    config_tag: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+
+
 class WebhookEvent(Base):
     """Raw PayPal webhook event log for signature verification and deduplication."""
 

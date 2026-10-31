@@ -90,4 +90,47 @@ Logs are local ignored files (`make-test-agent.log`, `make-test-web.log`, `build
 - No GitHub CI run, Docker rebuild, browser E2E rerun, Render deployment, physical Android push, real LLM request, PayPal mutation or end-to-end hosted checkout in this T01 checkpoint.
 - T00 still has explicitly unobserved protected/product/order/valid-approval states and missing deployed diagnostic/revision evidence; see its inventory. These do not make the old reported LLM defect a proven diagnosis.
 - T02 owner authentication and readiness starts next. T03–T17 remain unimplemented. Existing deployed app still runs the old release.
-- No commits/pushes made; preserve the working tree. Use START-HERE.md and the portable patch bundle for transfer rather than assuming a new checkout has these changes.
+- At initial T01 validation time there were no commits/pushes. The owner subsequently requested checkpoint pushes; baseline `07f1d7b` is now pushed to `origin/codex/signoff-v3`. Preserve any newer working-tree changes and prefer that branch over the earlier bundle.
+
+## Checkpoint pushes authorized by owner
+
+- Owner explicitly requested visible progress, durable tracking and checkpoint commits/pushes.
+- Created `codex/signoff-v3` from the existing checkout; no worktree created and main not modified.
+- Baseline `07f1d7b` pushed successfully and native Git verified the upstream. It contains the previous T01 changes and planning/handoff documents.
+- CI now also triggers on `codex/**` pushes so checkpoints can be checked remotely. Do not assume a queued/configured workflow passed; report actual status when available.
+
+## T02 — IMPLEMENTED locally; cross-site browser assertion OPEN
+
+### Code and user-visible changes
+
+- Owner login screen and protected merchant routes; Settings sign-out; no signup/email/recovery flow. Theme chooser no longer blocks first visits.
+- Server-configured email/scrypt credential, random opaque eight-hour session cookies, hashed session rows and durable failed-attempt limits. Authentication is mandatory in production, including when owner configuration is missing; local/stub defaults preserve existing development workflow unless explicitly enabled.
+- Production cookie requests HttpOnly/Secure/SameSite=None/Partitioned, without exposing it to JavaScript. CSRF required for merchant writes; cross-origin requests validated. Response cache controls protect private responses. Changing the password credential/email/approval secret invalidates old sessions; token values are not stored.
+- Owner-only readiness endpoints distinguish configuration from successful observation, failed and stale checks; verify PayPal authentication and store policies only on explicit user check. No paid LLM requests. Last verified webhook and persisted worker presence are separate evidence. Changed credentials invalidate old connection observations.
+- Replaced hardcoded connected badge, merchant identity, webhook address and false catch-path success in Settings. Policy link preserved; configurable missing-delivery behavior is not implemented yet.
+- New additive migration `d18e6c2a9001` adds owner_sessions, login_attempts and integration_observations. No existing order, policy, execution or ledger row is rewritten.
+- Removed the legacy production demo-token fallback; isolated tests/mocks use a separate explicit fixture capability and no longer inherit that build-time capability. The demo capability is not owner authentication. A pre-push scan detected a match to an already-committed fixture/default, not a newly injected server secret; changed source no longer carries that fallback.
+- OpenAPI/client regenerated; protected-route HTTP status contracts updated. Production mock-fetch build forbidden. Global no-referrer policy protects sensitive links.
+- Provision/reset instructions and release gates in OWNER-ACCESS.md; CLI via `make owner-password VENV_PY=.venv/Scripts/python.exe`. No real owner credentials provisioned or committed.
+
+### Verification
+
+| Check | Outcome |
+|---|---|
+| Guarded migration on dedicated local test DB | PASS; additive upgrade and existing migration round-trip suite executed. |
+| Backend make target | PASS: 500 tests, Ruff, strict mypy (98 source files), three import contracts. One existing Starlette/httpx deprecation warning. |
+| Frontend lint/tsc/Vitest | PASS: 178 tests across 30 files, no type errors. Includes anonymous redirect, rejected login, session-retention failure, CSRF transport and truthful check failure UI. |
+| Enum/client parity | PASS; generated contract matches exported spec. |
+| Both production builds | PASS using local API URL; existing large merchant bundle warning remains. |
+| Browser | PARTIAL/OPEN: actual local phone-width login screenshot; anonymous redirect and login reached protected Settings. Combined cookie metadata assertion failed twice. Reload/logout steps after assertion NOT RUN. |
+| Physical Android / Render deployment | NOT RUN. |
+
+### Exact browser blocker and next action
+
+The script failed at `!owner?.httpOnly || !owner.secure || !owner.partitionKey` after waiting for Settings and its worker section. It did not save the returned cookie metadata. A missing attribute, API reporting limitation, interception artifact or actual rejection has NOT been established as the cause. Do not invent one.
+
+First attempt used route.fetch; second forwarded via native HTTP to avoid the test client's cookie jar and used separate reserved HTTPS sites. Both used local ports 8042/5176 and fictional credentials with a separate local preview DB. No Render requests or financial mutations. Browser retries stopped/reported under AGENTS.md's two-failure instruction. Next diagnosis must collect safe attribute metadata and compare actual browser behavior without printing values or weakening assertions. The screenshot predates the final scrypt work-factor adjustment; it proves interface appearance, not final release authentication.
+
+Persistent screenshot/summary: `evidence/t02/`. Raw ignored files: `scratch/v3-audit/owner-browser.mjs`, `owner-browser.log`, `t02-agent-checkpoint.log`, `t02-web-final.log`, `t02-build.log`. Summaries above stand alone if scratch is absent.
+
+This checkpoint is on a feature branch and is not release-ready until the cookie assertion is resolved and Render owner settings/migration are prepared. Main/Render remain on the old release. Next product tasks after T02: T03 transaction/order matching, T04 automatic/manual simulated fulfilment, T05 evidence provenance/UI.

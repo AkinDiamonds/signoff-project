@@ -19,6 +19,8 @@ from agent.app.api.llm_proxy import router as llm_proxy_router
 from agent.app.api.store import router as store_router
 from agent.app.api.timeline import router as timeline_router
 from agent.app.approvals.service import DEMO_APPROVAL_LINKS
+from agent.app.auth import require_merchant
+from agent.app.auth import router as auth_router
 from agent.app.db.session import check_database_health, get_db_session
 from agent.app.errors import (
     ErrorEnvelope,
@@ -26,6 +28,7 @@ from agent.app.errors import (
     create_error_response,
     register_error_handlers,
 )
+from agent.app.integrations import router as integrations_router
 from agent.app.logging import set_correlation_id, setup_logging
 from agent.app.queue import get_queue_stats
 from agent.app.settings import AppEnv, PayPalEnv, Settings
@@ -92,6 +95,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     setup_logging()
 
     standard_responses: dict[int | str, dict[str, Any]] = {
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorEnvelope, "description": "Authentication required"},
+        status.HTTP_403_FORBIDDEN: {"model": ErrorEnvelope, "description": "Request not permitted"},
         status.HTTP_400_BAD_REQUEST: {
             "model": ErrorEnvelope,
             "description": "Bad Request",
@@ -150,14 +155,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_error_handlers(app)
 
     # Register routers
+    owner_access = [Depends(require_merchant)]
+    app.include_router(auth_router)
+    app.include_router(integrations_router, dependencies=owner_access)
     app.include_router(webhooks_router)
-    app.include_router(charter_router)
-    app.include_router(kpis_router)
-    app.include_router(timeline_router)
-    app.include_router(disputes_router)
-    app.include_router(approvals_router)
-    app.include_router(demo_router)
-    app.include_router(llm_proxy_router)
+    app.include_router(charter_router, dependencies=owner_access)
+    app.include_router(kpis_router, dependencies=owner_access)
+    app.include_router(timeline_router, dependencies=owner_access)
+    app.include_router(disputes_router, dependencies=owner_access)
+    app.include_router(approvals_router, dependencies=owner_access)
+    app.include_router(demo_router, dependencies=owner_access)
+    app.include_router(llm_proxy_router, dependencies=owner_access)
     app.include_router(shop_router)
     app.include_router(store_router)
 

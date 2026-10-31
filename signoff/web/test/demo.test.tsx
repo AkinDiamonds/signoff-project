@@ -114,7 +114,7 @@ describe('Demo panel (Step 27)', () => {
     });
     await waitForPanel();
 
-    expect(screen.getByTestId('demo-frozen-banner')).toBeTruthy();
+    expect(await screen.findByTestId('demo-frozen-banner')).toBeTruthy();
     expect(screen.getByTestId('demo-scenario-A')).toHaveProperty('disabled', true);
     expect(screen.getByTestId('demo-reset-button')).toHaveProperty('disabled', true);
   });

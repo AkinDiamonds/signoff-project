@@ -9,8 +9,11 @@ import { DemoPanel, JudgePoolPage } from '../features/demo';
 import { DashboardPage } from '../features/dashboard';
 import { GuidePage } from '../features/site';
 import { SettingsPage } from '../features/settings/SettingsPage';
+import { LoginPage } from '../features/auth/LoginPage';
+import { RequireMerchant } from '../features/auth/RequireMerchant';
 
 export const routes: RouteObject[] = [
+  { path: 'login', element: <LoginPage /> },
   // Standalone public marketing layout (no sidebar, no demo banners)
   {
     element: <MarketingLayout />,
@@ -22,7 +25,7 @@ export const routes: RouteObject[] = [
   // Authenticated merchant console layout (pinned fixed sidebar, independent scroll)
   {
     path: 'app',
-    element: <Layout />,
+    element: <RequireMerchant><Layout /></RequireMerchant>,
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'disputes', element: <DisputeListPage /> },
@@ -35,6 +38,6 @@ export const routes: RouteObject[] = [
       { path: 'pool', element: <JudgePoolPage /> },
     ],
   },
-  { path: 'approve/:token', element: <ApprovalPage /> },
+  { path: 'approve/:token', element: <RequireMerchant><ApprovalPage /></RequireMerchant> },
   { path: '*', element: <NotFoundPage /> },
 ];

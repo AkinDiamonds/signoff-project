@@ -26,6 +26,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from agent.app.db.models import Job
 from agent.app.db.session import get_session_factory
 from agent.app.domain.enums import JobKind, JobStatus
+from agent.app.integrations import observe
 from agent.app.queue import (
     HandlerRegistry,
     InvalidPayloadError,
@@ -280,7 +281,16 @@ class Worker:
         logger.info("Worker %s started (poll_interval=%.1fs)", self.worker_id, self.poll_interval)
         try:
             next_reconcile = time.monotonic()
+            next_presence = time.monotonic()
             while not self._stopping.is_set():
+                if time.monotonic() >= next_presence:
+                    try:
+                        with self.session_factory() as presence:
+                            observe(presence, f"worker:{self.worker_id}", "verified")
+                            presence.commit()
+                    except Exception:
+                        logger.warning("Could not persist worker presence")
+                    next_presence = time.monotonic() + 10
                 if self.reconcile_interval and time.monotonic() >= next_reconcile:
                     self._enqueue_reconcile_if_idle()
                     next_reconcile = time.monotonic() + self.reconcile_interval

@@ -87,7 +87,7 @@ describe('web shell', () => {
     await act(async () => {
       renderAt('/app/demo');
     });
-    const skip = screen.getByRole('link', { name: 'Skip to main content' });
+    const skip = await screen.findByRole('link', { name: 'Skip to main content' });
     expect(skip.getAttribute('href')).toBe('#main-content');
     expect(screen.getByRole('main').id).toBe('main-content');
     expect(screen.getByRole('navigation', { name: 'Main' })).toBeTruthy();

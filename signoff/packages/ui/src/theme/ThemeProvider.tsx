@@ -31,11 +31,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return localStorage.getItem(CUSTOM_KEY) || '#0F766E';
   });
 
-  const [isPickerOpen, setIsPickerOpen] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    const hasChosen = localStorage.getItem(FIRST_SEEN_KEY);
-    return !hasChosen; // Open on first visit if user hasn't chosen yet
-  });
+  // Appearance is opt-in; first visits and sign-in must never be blocked by a theme dialog.
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   useEffect(() => {
     applyTheme(preset, customColour);

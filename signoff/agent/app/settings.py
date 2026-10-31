@@ -41,6 +41,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
         frozen=True,
+        hide_input_in_errors=True,
     )
 
     # Core environment
@@ -78,6 +79,9 @@ class Settings(BaseSettings):
     allowed_origins: str = Field(default="http://localhost:5173", validation_alias="ALLOWED_ORIGINS")
     approval_token_secret: str = Field(default="", validation_alias="APPROVAL_TOKEN_SECRET")
     store_api_key: str = Field(default="", validation_alias="STORE_API_KEY")
+    merchant_email: str = Field(default="", validation_alias="MERCHANT_EMAIL")
+    merchant_password_hash: str = Field(default="", validation_alias="MERCHANT_PASSWORD_HASH", repr=False)
+    merchant_auth_enabled: bool = Field(default=False, validation_alias="MERCHANT_AUTH_ENABLED")
     demo_frozen: bool = Field(default=False, validation_alias="DEMO_FROZEN")
     demo_hold_disputes: bool = Field(
         default=False,
@@ -142,6 +146,11 @@ class Settings(BaseSettings):
                 raise ValueError("APPROVAL_TOKEN_SECRET must be at least 32 characters long in production")
 
         return self
+
+    @property
+    def merchant_auth_required(self) -> bool:
+        """Production merchant APIs can never disable owner authentication."""
+        return self.app_env == AppEnv.prod or self.merchant_auth_enabled
 
     @property
     def parsed_allowed_origins(self) -> list[str]:

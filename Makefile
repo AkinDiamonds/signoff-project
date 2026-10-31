@@ -1,4 +1,4 @@
-.PHONY: check prepare-test-db test-agent test-web test-types e2e e2e-stack e2e-smoke e2e-cross-smoke rehearse api-types dev stub docker-up docker-down docker-reset docker-logs
+.PHONY: check prepare-test-db owner-password test-agent test-web test-types e2e e2e-stack e2e-smoke e2e-cross-smoke rehearse api-types dev stub docker-up docker-down docker-reset docker-logs
 
 ifeq ($(OS),Windows_NT)
 # Run every recipe through Git Bash's sh so the commands below mean the same
@@ -37,6 +37,9 @@ check: test-agent test-web test-types
 
 prepare-test-db:
 	@PYTHONPATH="$(PY_PATH)" $(VENV_PY) -m scripts.prepare_test_database
+
+owner-password:
+	@PYTHONPATH="$(PY_PATH)" $(VENV_PY) -m scripts.owner_password
 
 test-agent:
 	@echo "Running agent lints and tests..."

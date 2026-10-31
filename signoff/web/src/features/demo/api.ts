@@ -1,3 +1,4 @@
+import { demoClaimToken as DEMO_CLAIM_TOKEN } from '../../app/demoConfig';
 import { useQuery } from '@tanstack/react-query';
 import type { components, paths } from '@signoff/api-client/generated';
 import { apiClient } from '../../app/api';
@@ -7,9 +8,7 @@ import type { ScenarioCreated } from './types';
 const SESSION_KEY = 'signoff.demo.session';
 const IDEMPOTENCY_PREFIX = 'signoff.demo.idempotency.';
 const IDEMPOTENCY_TTL_MS = 10 * 60 * 1000;
-// Must match DEMO_CLAIM_TOKEN on the API. The fallback keeps the bundled demo usable
-// when the build does not set a token (the local mock accepts the same value).
-const DEMO_CLAIM_TOKEN = import.meta.env.VITE_DEMO_CLAIM_TOKEN ?? 'demo-token-active';
+
 
 type ResetResponse = components['schemas']['ResetResponse'];
 type PoolPath = paths['/api/demo/pool']['get']['responses']['200']['content']['application/json'];

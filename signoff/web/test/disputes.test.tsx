@@ -67,12 +67,13 @@ describe('Disputes UI feature (Step 25)', () => {
   it('empty list displays empty state and links to demo page', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ items: [], next_cursor: null, total_count: 0 }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      )
+      vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+        if (url.includes('/api/disputes')) return new Response(JSON.stringify({ items: [], next_cursor: null, total_count: 0 }), {
+          status: 200, headers: { 'Content-Type': 'application/json' },
+        });
+        return mockFetch(input, options);
+      })
     );
 
     await act(async () => {

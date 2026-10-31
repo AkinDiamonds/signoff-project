@@ -11,6 +11,7 @@ import {
   statusFixture,
 } from '../../../fixtures/ui';
 import { ACTION_TYPES, DISPUTE_REASONS } from '../features/charter/types';
+import { MOCK_DEMO_CLAIM_TOKEN } from './demoConfig';
 
 type Charter = components['schemas']['CharterResponse'];
 type DisputeDetail = components['schemas']['DisputeDetailResponse'];
@@ -18,6 +19,7 @@ type DemoPool = components['schemas']['PoolResponse'];
 type DisputeReason = components['schemas']['DisputeReason'];
 
 const STATIC_FIXTURES: Record<string, unknown> = {
+  '/api/auth/session': { required: false, configured: false, authenticated: false, email: null, csrf_token: null, expires_at: null },
   '/api/status': statusFixture,
   '/api/kpis': kpisFixture,
   '/api/disputes': disputesFixture,
@@ -442,7 +444,7 @@ export const mockFetch: typeof fetch = async (input, init) => {
       const disputeId = claimMatch[1] ?? '';
       const reqHeaders = new Headers(init?.headers);
       const demoToken = reqHeaders.get('x-demo-token');
-      if (!demoToken || demoToken !== 'demo-token-active') {
+      if (!demoToken || demoToken !== MOCK_DEMO_CLAIM_TOKEN) {
         return envelope('NOT_FOUND', 'Claim endpoint is disabled or missing valid demo token', 404);
       }
       if (disputeId === 'PP-ALREADY-CLAIMED' || disputeId === 'PP-MOCK-POOL-3') {
