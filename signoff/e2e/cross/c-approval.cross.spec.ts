@@ -47,14 +47,15 @@ test('C: merchant approves an edited offer on a phone @full', async ({ browser, 
   await expect(second.getByTestId('outcome-invalid-link')).toBeVisible();
   await fresh.close();
 
-  // Refresh the local dispute snapshot, then let the buyer accept the offer (S9).
+  // Buyer offer responses belong to PayPal, outside the merchant product.
+  // The confirmed edited offer and single-use approval assertions above remain.
   await stub.emit(request, disputeId, ['CUSTOMER.DISPUTE.UPDATED']);
   const detail: { order_code: string } = await (await request.get(`${AGENT_URL}/api/disputes/${disputeId}`)).json();
   const shopContext = await browser.newContext({ baseURL: SHOP_URL });
   const shop = await shopContext.newPage();
   await shop.goto(`/orders/${detail.order_code}/dispute?email=${encodeURIComponent(BUYER_EMAIL)}`);
-  await expect(shop.getByTestId('portal-offer-card')).toBeVisible();
-  await shop.getByTestId('portal-accept-offer-btn').click();
-  await expect(shop.getByTestId('portal-offer-status')).toContainText('ACCEPTED');
+  await expect(shop.getByTestId('paypal-resolution-link')).toHaveAttribute('href', 'https://www.sandbox.paypal.com/disputes/');
+  await expect(shop.getByTestId('portal-offer-card')).toHaveCount(0);
+  await expect(shop.getByTestId('portal-accept-offer-btn')).toHaveCount(0);
   await shopContext.close();
 });
