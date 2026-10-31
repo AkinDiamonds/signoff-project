@@ -47,7 +47,7 @@ The owner authorizes releasing the tested compatible branch to `main`; existing 
 ## Current T04 checkpoint (2026-10-31)
 
 - Forward migration a64d9fb30004 adds shipment identity/version/schedule. New verified payments start PRE_TRANSIT; worker advances at one-minute intervals using actual timestamps. Owner `/app/shipments` controls progression and pauses; CSRF/scope/version/idempotency guards apply. Existing tracking/financial/run history is preserved. DISPUTED is never downgraded.
-- Full local validation: **598 backend**, Ruff/strict mypy/3 import contracts; **185 frontend**, ESLint/types; enum/client freshness; both builds; whitespace PASS. New PostgreSQL two-session concurrency and owner/CSRF checks included.
+- Full local validation: **600 backend**, Ruff/strict mypy/3 import contracts; **185 frontend**, ESLint/types; enum/client freshness; both builds; whitespace PASS. New PostgreSQL two-session concurrency and owner/CSRF checks included.
 - Native local HTTPS browser PASS: owner login, manual milestones to delivered, reload persistence, terminal lock, missing tracking, resume, exception, no 390px overflow. Evidence in evidence/t04. Desktop Chromium at phone viewport, not physical Android. No actual provider payment was created.
 - Paused/invalid/future tracking stops usable delivery evidence and requests human review. Configurable policy/provenance presentation stays T05. Existing legacy paid orders are intentionally not backfilled/scheduled.
 - Preview API was restarted from current source on 8042 (exec76181); Vite5176 remains owned. Browser fixture uses only signoff_test_preview and no external provider calls. Source push/main/deployment status must be read from the latest EXECUTION-LOG entry.

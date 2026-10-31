@@ -1,6 +1,6 @@
 # STATUS
 
-Current 2026-10-31 continuation: use [v3 handoff](../../build-plan/v3/START-HERE.md). T03 scoped capture resolution and T04 persistent simulated shipping implemented; 598 backend/185 frontend tests plus types/builds and native local HTTPS shipping controls pass. Next: shipping release observation, T05 evidence/policy, fresh provider journey. Provider/physical Android proof remains pending. Older phase history below is retained.
+Current 2026-10-31 continuation: use [v3 handoff](../../build-plan/v3/START-HERE.md). T03 scoped capture resolution and T04 persistent simulated shipping implemented; 600 backend/185 frontend tests plus types/builds and native local HTTPS shipping controls pass. Next: shipping release observation, T05 evidence/policy, fresh provider journey. Provider/physical Android proof remains pending. Older phase history below is retained.
 
 **Date:** 2026-10-22 · **Phase:** Build plan, steps 21–34 done → step 35 next · **Days to deadline:** 21 (Nov 12, 12:00 PT = 20:00 UTC)
 

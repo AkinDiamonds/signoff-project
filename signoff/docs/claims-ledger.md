@@ -27,4 +27,4 @@ Every claim in the README, Devpost text or video needs a row with proof. Review 
 
 ## 2026-10-31 shipping increment
 
-Locally verified: new paid orders get persistent simulated shipments, worker schedules actual-time milestones, owner controls require authentication/CSRF/scoped versioned requests. Full suite 598 backend/185 frontend PASS; native local HTTPS controls/reload/phone-width check PASS. Explicit simulation source labels; no real carrier interaction. See build-plan/v3/evidence/t04. This does not prove fresh hosted PayPal purchase/dispute execution, physical Android, or the remaining T05 policy/provenance work.
+Locally verified: new paid orders get persistent simulated shipments, worker schedules actual-time milestones, owner controls require authentication/CSRF/scoped versioned requests. Full suite 600 backend/185 frontend PASS; native local HTTPS controls/reload/phone-width check PASS. Explicit simulation source labels; no real carrier interaction. See build-plan/v3/evidence/t04. This does not prove fresh hosted PayPal purchase/dispute execution, physical Android, or the remaining T05 policy/provenance work.

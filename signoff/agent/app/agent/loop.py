@@ -243,6 +243,19 @@ async def run_agent_loop(
             fingerprint=current_fingerprint, human_needed=True, error=reason,
         )
 
+    # Explicit unsafe tracking cannot be bypassed by proposing a different action.
+    # Merchant-configurable missing-evidence policy is a separate release step.
+    if order_context is not None and order_context.tracking_unavailable_reason:
+        record_ledger_event(
+            session, dispute_id, TimelineEventKind.NO_ACTION,
+            {"reason": "tracking_requires_review", "message": order_context.tracking_unavailable_reason},
+        )
+        session.commit()
+        return AgentLoopResult(
+            status="no_action", run_id=effective_run_id, dispute_id=dispute_id,
+            fingerprint=current_fingerprint, human_needed=True, error="tracking_requires_review",
+        )
+
     # Screen dispute and context for content injection attempts (Step 18)
     injection_flag = (
         screen_dispute_and_context(paypal_dispute, order_context)

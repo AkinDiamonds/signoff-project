@@ -17,6 +17,7 @@ Per build-plan/steps/17-agent-loop.md:
 
 import ast
 import json
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -70,7 +71,32 @@ from agent.app.paypal.models import (
     MakeOfferOption,
 )
 from agent.app.store.base import StoreAmbiguous, StoreUnavailable
+from agent.app.store.local_adapter import LocalStoreAdapter
 from agent.app.store_mock.seed import seed_scenarios
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("reason", [DisputeReason.MERCHANDISE_OR_SERVICE_NOT_RECEIVED,
+                                   DisputeReason.MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED])
+async def test_unsafe_shipping_stops_before_model_or_execution(db_session, reason):
+    class UnsafeShippingStore(LocalStoreAdapter):
+        def find_order(self, transaction_id):
+            order = super().find_order(transaction_id)
+            assert order is not None
+            return replace(order, tracking_unavailable_reason="Simulated shipping requires human review.")
+
+    class NeverPlan:
+        async def generate(self, *args, **kwargs):
+            pytest.fail("Unsafe shipment evidence must stop before planning")
+
+    dispute = make_dispute(reason=reason)
+    result = await run_agent_loop(
+        db_session, dispute.dispute_id, dispute=dispute,
+        store_adapter=UnsafeShippingStore(db_session), llm_service=NeverPlan(),
+    )
+    assert result.human_needed and result.status == "no_action"
+    assert result.actions_count == 0 and not result.decisions
+    assert db_session.scalar(select(Job).where(Job.kind == JobKind.EXECUTE_DECISION.value)) is None
 
 
 @pytest.fixture

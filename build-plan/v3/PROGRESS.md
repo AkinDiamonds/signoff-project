@@ -19,6 +19,6 @@ Checkpoint branch: `codex/signoff-v3`. The owner has requested commits/pushes at
 
 Pushed product checkpoints: T01 `07f1d7b`; T02 code `20f24fb`; prior handoff `d491e61`. GitHub CI for both T02 code and prior handoff is confirmed successful. Earlier local results have not been rerun in the fresh workspace.
 
-Latest: 598 backend / 185 frontend tests, lint/types/import/parity/client freshness and both builds PASS. Native local HTTPS shipping controls PASS; phone viewport only. Earlier owner access on Render is verified; fresh shipping deployment observation is tracked in EXECUTION-LOG.md. See [shipping evidence](evidence/t04/README.md).
+Latest: 600 backend / 185 frontend tests, lint/types/import/parity/client freshness and both builds PASS. Native local HTTPS shipping controls PASS; phone viewport only. Earlier owner access on Render is verified; fresh shipping deployment observation is tracked in EXECUTION-LOG.md. See [shipping evidence](evidence/t04/README.md).
 
 Next: release/observe shipping increment, T05 evidence and policy, fresh sandbox purchase → PayPal Resolution Center dispute → webhook proof. Physical Android and later product steps remain pending.
