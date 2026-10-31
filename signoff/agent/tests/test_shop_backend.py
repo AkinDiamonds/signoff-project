@@ -227,6 +227,7 @@ async def test_capture_amount_mismatch_flags_order_and_prevents_shipment(db_sess
                             "captures": [
                                 {
                                     "id": "CAP-MISMATCH",
+                                    "status": "COMPLETED",
                                     "amount": {"value": "50.00", "currency_code": "USD"},
                                 }
                             ]
@@ -346,6 +347,7 @@ async def test_reconcile_recovers_when_paypal_captured_but_local_write_failed(db
                             "captures": [
                                 {
                                     "id": "CAP-RECON-SUCCESS",
+                                    "status": "COMPLETED",
                                     "amount": {"value": "38.00", "currency_code": "USD"},
                                 }
                             ]

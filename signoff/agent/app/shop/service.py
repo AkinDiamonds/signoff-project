@@ -14,6 +14,7 @@ from agent.app.domain.money import Money
 from agent.app.errors import AppError, NotFoundError
 from agent.app.paypal.orders_client import PayPalOrdersClient
 from agent.app.shop.catalog import get_product
+from agent.app.shop.payments import verified_capture_id
 from agent.app.shop.schemas import (
     CaptureOrderRequest,
     CaptureOrderResponse,
@@ -41,6 +42,22 @@ def _ensure_utc(dt: datetime) -> datetime:
     if dt.tzinfo is None:
         return dt.replace(tzinfo=UTC)
     return dt.astimezone(UTC)
+
+
+def _recorded_paypal_order_id(order: Order) -> str:
+    """Read the server's recorded link; a callback cannot create or replace it."""
+    identifiers = {
+        item["paypal_order_id"]
+        for item in (order.items or [])
+        if isinstance(item, dict)
+        and isinstance(item.get("paypal_order_id"), str)
+        and item["paypal_order_id"].strip()
+    }
+    if not identifiers:
+        raise AppError("MISSING_PAYPAL_ORDER_ID", "This order has no verified PayPal order link", status_code=422)
+    if len(identifiers) != 1:
+        raise AppError("PAYPAL_ORDER_MISMATCH", "This order has conflicting PayPal order links", status_code=422)
+    return str(next(iter(identifiers)))
 
 
 async def create_shop_order(
@@ -124,6 +141,10 @@ async def capture_shop_order(
     if order is None:
         raise NotFoundError(f"Order '{order_code}' not found")
 
+    paypal_order_id = _recorded_paypal_order_id(order)
+    if req and req.paypal_order_id is not None and req.paypal_order_id != paypal_order_id:
+        raise AppError("PAYPAL_ORDER_MISMATCH", "PayPal order does not match this checkout", status_code=422)
+
     # Idempotent return on double capture
     if order.status in (OrderStatus.PAID.value, OrderStatus.DELIVERED.value, OrderStatus.SHIPPED.value):
         tracking = session.scalar(select(TrackingEvent).where(TrackingEvent.order_id == order.id))
@@ -138,47 +159,11 @@ async def capture_shop_order(
     if order.status == OrderStatus.CANCELLED.value:
         raise AppError("ORDER_CANCELLED", "Cannot capture an expired or cancelled order", status_code=409)
 
-    # Determine PayPal order ID
-    paypal_order_id: str | None = None
-    if req and req.paypal_order_id:
-        paypal_order_id = req.paypal_order_id
-    elif order.items and isinstance(order.items, list) and len(order.items) > 0 and isinstance(order.items[0], dict):
-        raw_id = order.items[0].get("paypal_order_id")
-        if isinstance(raw_id, str):
-            paypal_order_id = raw_id
-
-    if not paypal_order_id:
-        raise AppError(
-            "MISSING_PAYPAL_ORDER_ID",
-            "PayPal order ID could not be determined for capture",
-            status_code=422,
-        )
-
     # Call PayPal capture
     paypal_data = await orders_client.capture_order(paypal_order_id)
-
-    # Verify captured amount against expected total
-    purchase_units = paypal_data.get("purchase_units", [])
-    captures = purchase_units[0].get("payments", {}).get("captures", []) if purchase_units else []
-    if captures:
-        captured_str = captures[0].get("amount", {}).get("value", "0.00")
-        captured_val = Decimal(captured_str)
-        capture_id = captures[0].get("id", f"STUB-CAPTURE-{order_code}")
-    else:
-        captured_val = order.amount
-        capture_id = f"STUB-CAPTURE-{order_code}"
-
-    if captured_val != order.amount:
-        # Amount differs from expected: flag order, nothing shipped
-        order.status = OrderStatus.PENDING.value
-        if order.items and isinstance(order.items[0], dict):
-            order.items = [{**order.items[0], "amount_mismatch_flag": True}, *order.items[1:]]
-        session.commit()
-        raise AppError(
-            "AMOUNT_MISMATCH",
-            f"Captured amount {captured_val} differs from expected order amount {order.amount}",
-            status_code=422,
-        )
+    capture_id = verified_capture_id(
+        paypal_data, order_id=paypal_order_id, amount=order.amount, currency=order.currency
+    )
 
     # Mark as PAID and schedule mock tracking according to scenario rules
     order.paypal_transaction_id = capture_id
@@ -282,13 +267,9 @@ async def reconcile_order(
     if order.status in resolved_statuses and order.paypal_transaction_id:
         return order
 
-    paypal_order_id: str | None = None
-    if order.items and isinstance(order.items, list) and len(order.items) > 0 and isinstance(order.items[0], dict):
-        raw_id = order.items[0].get("paypal_order_id")
-        if isinstance(raw_id, str):
-            paypal_order_id = raw_id
-
-    if not paypal_order_id:
+    try:
+        paypal_order_id = _recorded_paypal_order_id(order)
+    except AppError:
         return order
 
     try:
@@ -296,29 +277,25 @@ async def reconcile_order(
     except Exception:
         return order
 
-    if paypal_order.get("status") == "COMPLETED":
-        purchase_units = paypal_order.get("purchase_units", [])
-        captures = purchase_units[0].get("payments", {}).get("captures", []) if purchase_units else []
-        if captures:
-            captured_val = Decimal(captures[0]["amount"]["value"])
-            capture_id = captures[0]["id"]
-            if captured_val == order.amount:
-                order.paypal_transaction_id = capture_id
-                order.status = OrderStatus.PAID.value
-
-                existing_tracking = session.scalar(
-                    select(TrackingEvent.id).where(TrackingEvent.order_id == order.id)
-                )
-                if not existing_tracking:
-                    session.add(
-                        TrackingEvent(
-                            order_id=order.id,
-                            carrier="UPS",
-                            tracking_number=f"1Z999AA10{order.order_code}",
-                            status=TrackingStatus.IN_TRANSIT.value,
-                            event_time=datetime.now(UTC),
-                        )
-                    )
-                session.commit()
+    try:
+        capture_id = verified_capture_id(
+            paypal_order, order_id=paypal_order_id, amount=order.amount, currency=order.currency
+        )
+    except AppError:
+        return order
+    order.paypal_transaction_id = capture_id
+    order.status = OrderStatus.PAID.value
+    existing_tracking = session.scalar(select(TrackingEvent.id).where(TrackingEvent.order_id == order.id))
+    if not existing_tracking:
+        session.add(
+            TrackingEvent(
+                order_id=order.id,
+                carrier="UPS",
+                tracking_number=f"1Z999AA10{order.order_code}",
+                status=TrackingStatus.IN_TRANSIT.value,
+                event_time=datetime.now(UTC),
+            )
+        )
+    session.commit()
 
     return order
