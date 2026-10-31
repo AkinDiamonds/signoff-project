@@ -228,10 +228,9 @@ def _budget(request: Request) -> DailyBudget:
 
 
 def _provider(request: Request) -> LLMProvider | None:
-    provider = getattr(request.app.state, "assistant_provider", _SENTINEL)
-    if provider is _SENTINEL:
-        provider = build_provider(request.app.state.settings)
-        request.app.state.assistant_provider = provider
+    if not hasattr(request.app.state, "assistant_provider"):
+        request.app.state.assistant_provider = build_provider(request.app.state.settings)
+    provider: LLMProvider | None = request.app.state.assistant_provider
     return provider
 
 
@@ -359,7 +358,6 @@ async def _run_provider(
     messages: list[dict[str, str]],
 ) -> ProviderResponse:
     """Shared provider call: check budget, call provider, handle errors."""
-    settings = request.app.state.settings
     client_ip = request.client.host if request.client else "unknown"
     _limiter(request).check(client_ip)
 

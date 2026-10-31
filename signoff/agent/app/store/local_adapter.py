@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 from agent.app.db.models import Order, TrackingEvent
 from agent.app.domain.enums import TrackingStatus
 from agent.app.shop.disputes import _find_dispute_for_transaction
-from agent.app.store.base import StoreAdapter
 from agent.app.store.models import OrderRecord, ShipmentRecord
 from agent.app.store_mock.repository import load_order_context
 
@@ -62,7 +61,7 @@ class LocalStoreAdapter:
             for e in events
         ]
 
-    def get_messages(self, order_code: str) -> list[dict]:
+    def get_messages(self, order_code: str) -> list[dict[str, Any]]:
         """Retrieve buyer messages for an order."""
         order = self._session.scalar(select(Order).where(Order.order_code == order_code.strip()))
         if not order or not order.paypal_transaction_id:
@@ -76,7 +75,7 @@ class LocalStoreAdapter:
             if isinstance(m, dict) and str(m.get("posted_by", "BUYER")).upper() == "BUYER"
         ]
 
-    def get_policies(self) -> dict:
+    def get_policies(self) -> dict[str, Any]:
         """Retrieve merchant policies."""
         return {
             "return_window_days": 30,

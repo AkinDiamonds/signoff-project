@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  pull_request:
   push:
     branches: [main]
 
@@ -13,133 +14,62 @@ jobs:
     name: Secret Scan
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  agent:
-    name: Agent Service (Python)
+  verify:
+    name: Backend, frontend, types and build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: signoff
           POSTGRES_PASSWORD: signoff
-          POSTGRES_DB: signoff
-        ports:
-          - 5432:5432
+          POSTGRES_DB: signoff_test
+        ports: [5432:5432]
         options: >-
           --health-cmd pg_isready
           --health-interval 5s
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: postgresql+psycopg://signoff:signoff@localhost:5432/signoff
+      SIGNOFF_TEST_DATABASE_URL: postgresql+psycopg://signoff:signoff@localhost:5432/signoff_test
+      VITE_API_URL: http://localhost:8000
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version-file: ".python-version"
-          cache: "pip"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .[dev]
-
-      - name: Lint and Test Agent
-        run: |
-          make test-agent
-
-  web:
-    name: Web Frontend (Node)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
         with:
-          node-version-file: ".nvmrc"
-
-      - name: Install dependencies
-        run: |
-          npm ci
-
-      - name: Lint and Test Web
-        run: |
-          make test-web
-
-  types:
-    name: Type Checks
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+          version: '0.12.23'
+      - uses: actions/setup-node@v4
         with:
-          python-version-file: ".python-version"
-          cache: "pip"
-
-      - name: Install Python dependencies
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install .[dev]
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - name: Install Node dependencies
+          uv sync --frozen --extra dev
+          mkdir -p .venv/Scripts
+          ln -s ../bin/python .venv/Scripts/python.exe
+          npm ci --no-audit --no-fund
+      - name: Prepare disposable test database
+        run: make prepare-test-db VENV_PY=.venv/Scripts/python.exe
+      - name: Verify backend
+        run: make test-agent VENV_PY=.venv/Scripts/python.exe
+      - name: Verify frontend
+        run: make test-web
+      - name: Verify types and client freshness
+        run: make test-types VENV_PY=.venv/Scripts/python.exe
+      - name: Verify exported OpenAPI is current
         run: |
-          npm ci
-
-      - name: Check Types
-        run: |
-          make test-types
-
-  api-types-fresh:
-    name: API Types Freshness
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: ".python-version"
-          cache: "pip"
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .[dev]
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - name: Install Node dependencies
-        run: |
-          npm ci
-
-      - name: Verify API Types Freshness
-        run: |
-          make api-types
-          git diff --exit-code signoff/packages/api-client/src/generated/schema.ts
+          make api-types VENV_PY=.venv/Scripts/python.exe
+          git diff --exit-code -- signoff/packages/api-client/openapi.json signoff/packages/api-client/src/generated/schema.ts
+      - name: Build both frontends
+        run: npm run build

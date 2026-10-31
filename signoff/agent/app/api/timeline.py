@@ -176,7 +176,7 @@ async def get_dispute_timeline(
         limit=limit,
         cursor=cursor,
     )
-    return TimelineResponse(items=items, next_cursor=next_cursor)
+    return TimelineResponse.model_validate({"items": items, "next_cursor": next_cursor})
 
 
 @router.get(
@@ -197,4 +197,4 @@ async def get_dispute_decisions(
         limit=limit,
         cursor=cursor,
     )
-    return DecisionsResponse(items=items, next_cursor=next_cursor)
+    return DecisionsResponse.model_validate({"items": items, "next_cursor": next_cursor})

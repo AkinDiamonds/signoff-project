@@ -13,7 +13,6 @@ import {
   formatDisputeReason,
   radius,
   spacing,
-  typography,
 } from '@signoff/ui';
 import type { ColumnDef } from '@signoff/ui';
 import { ApiQueryError, useDisputeTimeline } from '../../app/queries';

@@ -13,7 +13,7 @@ JobHandlerAsync = Callable[[Job, Session], Coroutine[Any, Any, None]]
 JobHandler = JobHandlerSync | JobHandlerAsync
 
 
-def assert_exhaustive_job_kind(kind: JobKind) -> Never:
+def assert_exhaustive_job_kind(kind: Never) -> Never:
     """Type-check helper asserting all JobKind variants are handled."""
     assert_never(kind)
 

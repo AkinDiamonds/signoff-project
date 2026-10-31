@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { Link } from 'react-router';
-import { Banner, Card, ErrorState, Skeleton, colors, radius, spacing, typography } from '@signoff/ui';
+import { Banner, Card, ErrorState, Skeleton, colors, spacing, typography } from '@signoff/ui';
 import { useStatus } from '../../app/queries';
 import { PUBLIC_CLAIMS } from './claims';
 

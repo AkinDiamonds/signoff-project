@@ -93,7 +93,7 @@ export const DisputeListPage: React.FC = () => {
 
   const [displayedItems, setDisplayedItems] = useState<DisputeListItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [, setLastUpdated] = useState<Date | null>(null);
   const latestTimestampRef = useRef<number>(0);
 
   useEffect(() => {

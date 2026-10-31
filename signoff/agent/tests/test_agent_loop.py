@@ -35,7 +35,6 @@ from agent.app.agent.loop import (
     normalize_and_order_actions,
     run_agent_loop,
 )
-from agent.app.store.base import StoreUnavailable
 from agent.app.agent.prompts import (
     NON_ENGLISH_MARKER,
     TRUNCATION_MARKER,
@@ -70,6 +69,7 @@ from agent.app.paypal.models import (
     Link,
     MakeOfferOption,
 )
+from agent.app.store.base import StoreUnavailable
 from agent.app.store_mock.seed import seed_scenarios
 
 

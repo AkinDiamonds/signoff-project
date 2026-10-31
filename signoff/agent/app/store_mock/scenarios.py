@@ -5,13 +5,13 @@ personal data, and map onto the existing ``orders`` and ``tracking_events``
 tables (no schema change).
 """
 
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any
 
 from agent.app.domain.enums import OrderStatus, TrackingStatus
-from agent.app.store.models import MOCK_MERCHANT_ID, OrderRecord, ShipmentRecord
+from agent.app.store.models import MOCK_MERCHANT_ID as MOCK_MERCHANT_ID
+from agent.app.store.models import OrderRecord as OrderRecord
+from agent.app.store.models import ShipmentRecord as ShipmentRecord
 
 
 def _utc(year: int, month: int, day: int, hour: int = 12) -> datetime:

@@ -1,5 +1,6 @@
 """PayPal API models, contract parsers, and dispute fingerprinting."""
 
+from agent.app.domain.money import Money
 from agent.app.paypal.auth import PayPalAuth, get_paypal_debug_id
 from agent.app.paypal.fingerprint import Fingerprint, compute_dispute_fingerprint
 from agent.app.paypal.models import (
@@ -18,7 +19,6 @@ from agent.app.paypal.models import (
     ItemInfo,
     Link,
     MakeOfferOption,
-    Money,
     OAuthTokenResponse,
     ProvideEvidenceResponse,
     RefundDetails,

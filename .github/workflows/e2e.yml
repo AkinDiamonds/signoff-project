@@ -27,17 +27,20 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: "npm"
-      - name: Install dependencies
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.23'
+      - name: Install locked dependencies
         run: |
-          python -m venv .venv
-          .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install .[dev]
-          npm ci
+          uv sync --frozen --extra dev
+          mkdir -p .venv/Scripts
+          ln -s ../bin/python .venv/Scripts/python.exe
+          npm ci --no-audit --no-fund
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
       - name: Start stack and run smoke
         run: |
-          make e2e-stack
+          make e2e-stack VENV_PY=.venv/Scripts/python.exe
           make e2e-cross-smoke
       - name: Upload test artifacts
         if: failure()
@@ -64,16 +67,19 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: "npm"
-      - name: Install dependencies
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.23'
+      - name: Install locked dependencies
         run: |
-          python -m venv .venv
-          .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install .[dev]
-          npm ci
+          uv sync --frozen --extra dev
+          mkdir -p .venv/Scripts
+          ln -s ../bin/python .venv/Scripts/python.exe
+          npm ci --no-audit --no-fund
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
       - name: Start stack and run full suite
-        run: make e2e
+        run: make e2e VENV_PY=.venv/Scripts/python.exe
       - name: Upload test artifacts
         if: failure()
         uses: actions/upload-artifact@v4

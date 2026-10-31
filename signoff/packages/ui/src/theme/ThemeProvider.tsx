@@ -20,7 +20,10 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [preset, setPresetState] = useState<ThemePreset>(() => {
     if (typeof window === 'undefined') return 'light';
-    return (localStorage.getItem(STORAGE_KEY) as ThemePreset) || 'light';
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'light' || stored === 'dark' || stored === 'orange' || stored === 'green'
+      || stored === 'blue' || stored === 'lime' || stored === 'custom') return stored;
+    return 'light';
   });
 
   const [customColour, setCustomColourState] = useState<string>(() => {

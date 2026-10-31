@@ -7,7 +7,7 @@ from typing import Any
 import httpx
 
 from agent.app.domain.enums import OrderStatus, TrackingStatus
-from agent.app.store.base import StoreAdapter, StoreUnavailable
+from agent.app.store.base import StoreUnavailable
 from agent.app.store.models import OrderRecord, ShipmentRecord
 
 
@@ -110,7 +110,7 @@ class HttpStoreAdapter:
             )
         return results
 
-    def get_messages(self, order_code: str) -> list[dict]:
+    def get_messages(self, order_code: str) -> list[dict[str, Any]]:
         """Retrieve buyer messages for an order."""
         resp = self._get(f"/api/store/orders/{order_code.strip()}/messages")
         if resp.status_code == 404:
@@ -120,7 +120,7 @@ class HttpStoreAdapter:
         data = resp.json()
         return data if isinstance(data, list) else []
 
-    def get_policies(self) -> dict:
+    def get_policies(self) -> dict[str, Any]:
         """Retrieve merchant policies."""
         resp = self._get("/api/store/policies")
         if resp.status_code != 200:

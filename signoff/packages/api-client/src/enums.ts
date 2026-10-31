@@ -61,6 +61,7 @@ export type ApprovalResolution = (typeof APPROVAL_RESOLUTIONS)[number];
 export const TIMELINE_EVENT_KINDS = [
   'WEBHOOK_RECEIVED',
   'DISPUTE_SYNCED',
+  'DISPUTE_POOLED',
   'RUN_STARTED',
   'EVIDENCE_BUILT',
   'PLAN_PROPOSED',

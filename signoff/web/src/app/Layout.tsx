@@ -4,7 +4,6 @@ import {
   Banner,
   ThemePickerSheet,
   ThemeToggleButton,
-  colors,
   radius,
   spacing,
   typography,

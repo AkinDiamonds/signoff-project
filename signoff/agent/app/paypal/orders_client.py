@@ -124,7 +124,8 @@ class PayPalOrdersClient:
             logger.warning("PayPal order create failed: status=%s debug_id=%s msg=%s", resp.status_code, debug_id, msg)
             raise PayPalOrderError(message=msg, status_code=resp.status_code, debug_id=debug_id)
 
-        return resp.json()
+        data: dict[str, Any] = resp.json()
+        return data
 
     async def capture_order(self, order_id: str) -> dict[str, Any]:
         """Capture payment for an approved PayPal v2 order."""
@@ -161,7 +162,8 @@ class PayPalOrdersClient:
                 raise NotFoundError(f"PayPal order '{order_id}' not found")
             raise PayPalOrderError(message=msg, status_code=resp.status_code, debug_id=debug_id, error_code=issue)
 
-        return resp.json()
+        data: dict[str, Any] = resp.json()
+        return data
 
     async def get_order(self, order_id: str) -> dict[str, Any]:
         """Fetch status and details of a PayPal v2 order."""
@@ -187,4 +189,5 @@ class PayPalOrdersClient:
             msg = f"Order fetch failed with status {resp.status_code}"
             raise PayPalOrderError(message=msg, status_code=resp.status_code, debug_id=debug_id)
 
-        return resp.json()
+        data: dict[str, Any] = resp.json()
+        return data

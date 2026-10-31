@@ -9,7 +9,7 @@ import type {
 describe('Buyer Portal Type Contracts (Step 32)', () => {
   it('SupportedDisputeReason contains only supported reasons', () => {
     expectTypeOf<SupportedDisputeReason>().toEqualTypeOf<
-      'MERCHANDISE_OR_SERVICE_NOT_RECEIVED' | 'MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED'
+      'MERCHANDISE_OR_SERVICE_NOT_RECEIVED' | 'MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED' | 'OTHER'
     >();
 
     // Valid reasons
@@ -22,9 +22,9 @@ describe('Buyer Portal Type Contracts (Step 32)', () => {
     const _invalidReason1: SupportedDisputeReason = 'UNAUTHORISED';
     void _invalidReason1;
 
-    // @ts-expect-error - OTHER is not a supported dispute reason
-    const _invalidReason2: SupportedDisputeReason = 'OTHER';
-    void _invalidReason2;
+    // OTHER is accepted by the buyer API and requires human review by the agent.
+    const _otherReason: SupportedDisputeReason = 'OTHER';
+    void _otherReason;
   });
 
   it('CreateDisputePayload reason type contains only supported reasons', () => {

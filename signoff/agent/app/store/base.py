@@ -1,6 +1,6 @@
 """StoreAdapter Protocol and StoreUnavailable exception."""
 
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from agent.app.store.models import OrderRecord, ShipmentRecord
 
@@ -35,7 +35,7 @@ class StoreAdapter(Protocol):
         """
         ...
 
-    def get_messages(self, order_code: str) -> list[dict]:
+    def get_messages(self, order_code: str) -> list[dict[str, Any]]:
         """Retrieve buyer communication messages for an order.
 
         Returns:
@@ -46,7 +46,7 @@ class StoreAdapter(Protocol):
         """
         ...
 
-    def get_policies(self) -> dict:
+    def get_policies(self) -> dict[str, Any]:
         """Retrieve merchant policies for shipping, refunds, and return windows.
 
         Returns:

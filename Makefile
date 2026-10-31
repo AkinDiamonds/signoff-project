@@ -1,4 +1,4 @@
-.PHONY: check test-agent test-web test-types e2e e2e-stack e2e-smoke e2e-cross-smoke rehearse api-types dev stub docker-up docker-down docker-reset docker-logs
+.PHONY: check prepare-test-db test-agent test-web test-types e2e e2e-stack e2e-smoke e2e-cross-smoke rehearse api-types dev stub docker-up docker-down docker-reset docker-logs
 
 ifeq ($(OS),Windows_NT)
 # Run every recipe through Git Bash's sh so the commands below mean the same
@@ -35,19 +35,24 @@ check: test-agent test-web test-types
 	@$(VENV_PY) -c "import os; assert os.path.exists('LICENSE'), 'LICENSE missing'"
 	@echo "check: all checks passed."
 
+prepare-test-db:
+	@PYTHONPATH="$(PY_PATH)" $(VENV_PY) -m scripts.prepare_test_database
+
 test-agent:
 	@echo "Running agent lints and tests..."
 	@$(VENV_PY) -m ruff check signoff/agent signoff/scripts
+	@MYPYPATH=signoff $(VENV_PY) -m mypy --strict signoff/agent/app
+	@PYTHONPATH="$(PY_PATH)" $(VENV_PY) -c "from importlinter.cli import lint_imports_command; lint_imports_command()"
 	@$(VENV_PY) -m pytest
 
 test-web:
 	@echo "Running frontend and UI unit tests..."
 	@npx eslint .
-	@npx vitest run --exclude "**/*.test-d.ts"
+	@npx vitest run --maxWorkers=2 --minWorkers=1
 
 test-types:
 	@echo "Running compile-time type tests and enum parity checks..."
-	@npx vitest run signoff/packages/api-client/test/baseline.test-d.ts signoff/packages/ui/test/ui-types.test-d.ts
+	@npx tsc --noEmit
 	@$(VENV_PY) signoff/scripts/check_enum_parity.py
 	@node scripts/check-client-fresh.mjs
 

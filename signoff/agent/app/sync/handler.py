@@ -176,8 +176,7 @@ async def sync_dispute(
 
     # 4. Check existing record
     existing_record = session.get(Dispute, clean_id)
-    is_new = existing_record is None
-    fingerprint_changed = is_new or (existing_record.state_fingerprint != fp_str)
+    fingerprint_changed = existing_record is None or (existing_record.state_fingerprint != fp_str)
     if not fingerprint_changed:
         # Disputes pre-stored by the demo generator have never been synced: treat the first sync as a change.
         fingerprint_changed = session.scalar(
@@ -189,7 +188,7 @@ async def sync_dispute(
             .limit(1)
         ) is None
 
-    if is_new:
+    if existing_record is None:
         dispute_row = Dispute(
             id=clean_id,
             state_fingerprint=fp_str,

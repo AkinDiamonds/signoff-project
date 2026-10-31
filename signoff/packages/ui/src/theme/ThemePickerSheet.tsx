@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useTheme } from './ThemeProvider';
-import { THEMES, ThemePreset } from './themes';
+import { ThemePreset } from './themes';
 
 export const ThemePickerSheet: React.FC = () => {
   const { preset, customColour, setTheme, isPickerOpen, closePicker } = useTheme();

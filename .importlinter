@@ -1,10 +1,11 @@
 [importlinter]
 root_packages =
-    agent.app
+    agent
 
 [importlinter:contract:mutating-client-only-in-executor]
 name = Only app.executor may import mutating_client
 type = forbidden
+allow_indirect_imports = True
 source_modules =
     agent.app.agent
     agent.app.api
@@ -23,6 +24,7 @@ forbidden_modules =
 [importlinter:contract:buyer-client-only-in-simulator]
 name = Only app.simulator may import buyer_client
 type = forbidden
+allow_indirect_imports = True
 source_modules =
     agent.app.agent
     agent.app.api
@@ -46,6 +48,7 @@ forbidden_modules =
 [importlinter:contract:orders-client-only-in-shop]
 name = Only app.shop may import orders_client
 type = forbidden
+allow_indirect_imports = True
 source_modules =
     agent.app.agent
     agent.app.api

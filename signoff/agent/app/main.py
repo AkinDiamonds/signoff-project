@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from agent.app.agent.llm import build_llm_service
-from agent.app.approvals.service import DEMO_APPROVAL_LINKS
 from agent.app.api.approvals import router as approvals_router
 from agent.app.api.charter import router as charter_router
 from agent.app.api.disputes import router as disputes_router
@@ -19,6 +18,7 @@ from agent.app.api.kpis import router as kpis_router
 from agent.app.api.llm_proxy import router as llm_proxy_router
 from agent.app.api.store import router as store_router
 from agent.app.api.timeline import router as timeline_router
+from agent.app.approvals.service import DEMO_APPROVAL_LINKS
 from agent.app.db.session import check_database_health, get_db_session
 from agent.app.errors import (
     ErrorEnvelope,

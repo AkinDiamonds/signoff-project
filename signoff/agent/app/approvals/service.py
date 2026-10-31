@@ -29,6 +29,7 @@ from agent.app.approvals.schemas import (
     ApproveResolveRequest,
     DenyResolveRequest,
     DisputeCardSummary,
+    EditMoneySchema,
     EditResolveRequest,
     ResolveRequest,
     ResolveResponse,
@@ -268,7 +269,7 @@ def build_approval_card_response(
         notes=escaped_notes,
         dispute=DisputeCardSummary(
             id=approval.dispute_id,
-            amount={"value": dispute_amount_val, "currency_code": dispute_currency},
+            amount=EditMoneySchema(value=dispute_amount_val, currency_code=dispute_currency),
             reason=dispute_reason,
             status=dispute_status,
             seller_response_due_date=seller_due,
@@ -347,7 +348,7 @@ def resolve_approval(
     raw_notes = getattr(request, "notes", None) or getattr(request, "reason", None)
 
     # 4. Handle resolution based on action
-    if isinstance(request, DenyResolveRequest) or request.action == "DENY":
+    if isinstance(request, DenyResolveRequest):
         approval.resolution = ApprovalResolution.DENY.value
         approval.resolved_at = now_dt
         approval.notes = raw_notes
@@ -386,7 +387,7 @@ def resolve_approval(
             executed=False,
         )
 
-    if isinstance(request, ApproveResolveRequest) or request.action == "APPROVE":
+    if isinstance(request, ApproveResolveRequest):
         # Reconstruct original GateDecision to evaluate waiver rules
         gate_dec = reconstruct_decision(
             verdict=Verdict(decision.verdict),
@@ -451,7 +452,7 @@ def resolve_approval(
             executed=True,
         )
 
-    if isinstance(request, EditResolveRequest) or request.action == "EDIT":
+    if isinstance(request, EditResolveRequest):
         # Validate edit fields per Step 19
         if request.amount is not None:
             try:
@@ -462,7 +463,8 @@ def resolve_approval(
             if dec_val <= Decimal("0.00"):
                 raise EditValidationError("Edited amount must be strictly positive and non-negative")
 
-            if dec_val.as_tuple().exponent < -2:
+            exponent = dec_val.as_tuple().exponent
+            if isinstance(exponent, int) and exponent < -2:
                 raise EditValidationError("Edited amount has too many decimal places; maximum 2 allowed")
 
             if db_dispute is not None and dec_val > db_dispute.amount:
@@ -472,6 +474,7 @@ def resolve_approval(
         orig_payload = dict(decision.action_payload or {})
         orig_action_type = ActionType(decision.action_type)
 
+        edited_action: MakeOffer | SendMessage
         if orig_action_type == ActionType.MAKE_OFFER:
             new_amount = (
                 Money(value=Decimal(request.amount.value), currency_code=request.amount.currency_code)

@@ -156,8 +156,8 @@ async def list_disputes(
         order_col = Dispute.amount.desc() if sort_direction == "desc" else Dispute.amount.asc()
         query = query.order_by(order_col, Dispute.id.asc())
     else:  # created_at
-        order_col = Dispute.created_at.desc() if sort_direction == "desc" else Dispute.created_at.asc()
-        query = query.order_by(order_col, Dispute.id.asc())
+        created_order_col = Dispute.created_at.desc() if sort_direction == "desc" else Dispute.created_at.asc()
+        query = query.order_by(created_order_col, Dispute.id.asc())
 
     offset = _decode_cursor(cursor) if cursor else 0
 

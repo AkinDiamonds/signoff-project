@@ -54,7 +54,7 @@ CATALOG_FIXTURES: tuple[CatalogItem, ...] = (
 
 def _ensure_products_table(session: Session) -> None:
     if session.bind is not None:
-        Base.metadata.create_all(session.bind, tables=[Product.__table__], checkfirst=True)
+        Base.metadata.tables[Product.__tablename__].create(session.bind, checkfirst=True)
 
 
 def seed_catalog(session: Session) -> int:

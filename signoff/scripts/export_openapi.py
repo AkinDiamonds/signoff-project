@@ -16,7 +16,7 @@ from agent.app.main import create_app
 from agent.app.settings import AppEnv, Settings
 
 
-def export_openapi() -> Path:
+def export_openapi(output_file: Path | None = None) -> Path:
     """Generate and write deterministic OpenAPI schema."""
     settings = Settings(
         app_env=AppEnv.test,
@@ -27,9 +27,8 @@ def export_openapi() -> Path:
     app = create_app(settings)
     openapi_schema = app.openapi()
 
-    output_dir = repo_root / "packages" / "api-client"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_file = output_dir / "openapi.json"
+    output_file = output_file or repo_root / "packages" / "api-client" / "openapi.json"
+    output_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Deterministic serialization (sorted keys, consistent indentation, trailing newline)
     serialized = json.dumps(openapi_schema, indent=2, sort_keys=True) + "\n"

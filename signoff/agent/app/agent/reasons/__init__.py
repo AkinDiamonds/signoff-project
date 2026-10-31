@@ -13,6 +13,7 @@ from typing import Any
 from agent.app.agent.evidence import (
     NOT_RECEIVED_REASON,
     BuiltEvidence,
+    EvidenceStrength,
     build_evidence,
     score_evidence,
 )
@@ -105,7 +106,7 @@ def build_evidence_for(
     return support.builder(order, transaction_id=transaction_id)
 
 
-def _unknown_strength(order: OrderRecord | None):
+def _unknown_strength(order: OrderRecord | None) -> EvidenceStrength:
     return score_evidence(
         order,
         shipments=[],

@@ -432,7 +432,7 @@ async def run_agent_loop(
         # Check: model names a mutating tool (e.g. refund, cancel, accept_dispute_claim)
         raw_type = (
             action_schema.action_type.value
-            if hasattr(action_schema.action_type, "value")
+            if isinstance(action_schema.action_type, ActionType)
             else str(action_schema.action_type)
         )
         if raw_type.lower() in MUTATING_TOOL_NAMES:

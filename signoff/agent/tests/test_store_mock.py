@@ -115,6 +115,7 @@ def test_bind_order_idempotent(session: Session, monkeypatch):
 
     # Running again is idempotent
     bind_order("TX-REAL-99887766", "A")
-    total_orders = session.scalar(select(func.count()).select_from(Order).where(Order.paypal_transaction_id == "TX-REAL-99887766"))
+    total_orders = session.scalar(
+        select(func.count()).select_from(Order).where(Order.paypal_transaction_id == "TX-REAL-99887766")
+    )
     assert total_orders == 1
-

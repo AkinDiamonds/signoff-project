@@ -2,12 +2,13 @@
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, Header, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import func, select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session
 
 from agent.app.db.models import Decision, DemoPool, DemoSession, Dispute, Job
@@ -97,7 +98,7 @@ def get_pool(
         label = pool_row.scenario_label
         if not label and dispute:
             label = f"{reason.replace('_', ' ').capitalize()} dispute"
-        verdict, rule_id = latest_decisions.get(pool_row.dispute_id, (None, None))
+        latest_verdict, latest_rule_id = latest_decisions.get(pool_row.dispute_id, (None, None))
         items.append(
             DemoPoolDisputeItem(
                 dispute_id=pool_row.dispute_id,
@@ -108,8 +109,8 @@ def get_pool(
                 created_at=pool_row.created_at,
                 seller_response_due_date=due_date,
                 claimed_at=pool_row.claimed_at,
-                latest_verdict=verdict,
-                latest_rule_id=rule_id,
+                latest_verdict=latest_verdict,
+                latest_rule_id=latest_rule_id,
             )
         )
     return items
@@ -153,7 +154,7 @@ def claim_dispute(
         .where(DemoPool.dispute_id == clean_id, DemoPool.state == "pooled")
         .values(state="claimed", claimed_at=now)
     )
-    result = db.execute(stmt)
+    result = cast(CursorResult[Any], db.execute(stmt))
     if result.rowcount == 0:
         db.refresh(pool_row)
         claimed_at_str = pool_row.claimed_at.isoformat() if pool_row.claimed_at else None
@@ -213,7 +214,7 @@ async def create_scenario(
     cache = request.app.state.demo_idempotency
     cache_key = (session.id, scenario_id, idempotency_key) if idempotency_key else None
     if cache_key is not None and cache_key in cache:
-        return cache[cache_key]
+        return ScenarioCreated.model_validate(cache[cache_key])
 
     client_ip = request.client.host if request.client else "unknown"
     request.app.state.demo_quotas.consume(session.id, client_ip, datetime.now(UTC))

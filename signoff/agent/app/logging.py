@@ -25,7 +25,7 @@ _old_factory = logging.getLogRecordFactory()
 
 def _correlation_record_factory(*args: Any, **kwargs: Any) -> logging.LogRecord:
     record = _old_factory(*args, **kwargs)
-    record.correlation_id = get_correlation_id()  # type: ignore[attr-defined]
+    record.correlation_id = get_correlation_id()
     return record
 
 

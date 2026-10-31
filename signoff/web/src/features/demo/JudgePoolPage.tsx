@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
   Button,
-  Card,
   EmptyState,
   ErrorState,
   Money,

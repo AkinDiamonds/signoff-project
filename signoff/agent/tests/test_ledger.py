@@ -12,6 +12,7 @@ Per build-plan/steps/14-ledger.md:
 """
 
 import uuid
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -21,7 +22,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from agent.app.db.base import Base
-from agent.app.db.models import Charter, Dispute, LedgerEvent
+from agent.app.db.models import Charter, Decision, Dispute, LedgerEvent
 from agent.app.db.session import get_db_session
 from agent.app.db.triggers import install_append_only_triggers
 from agent.app.domain.actions import ProvideEvidence
@@ -410,8 +411,9 @@ def test_replay_matches_stored_decision(db_session: Session) -> None:
     # ProvideEvidence on amount 150 (<= max dispute 200, evidence type PROOF_OF_DELIVERY)
     # Evaluates to ALLOW (G7-01)
     action = ProvideEvidence(evidence_type="PROOF_OF_DELIVERY")
-    dec = record_decision(
-        session=db_session,
+    # Replay a decision made before the fixed fixture deadline, not on today's date.
+    dec = Decision(
+        created_at=datetime(2026, 10, 10, 12, tzinfo=UTC),
         dispute_id=dispute_id,
         action_type=ActionType.PROVIDE_EVIDENCE,
         action_payload=action.model_dump(mode="json"),
@@ -422,6 +424,7 @@ def test_replay_matches_stored_decision(db_session: Session) -> None:
         dispute_fingerprint=dispute.state_fingerprint,
         charter_version=1,
     )
+    db_session.add(dec)
     db_session.commit()
 
     result = replay_single_decision(db_session, dec)
