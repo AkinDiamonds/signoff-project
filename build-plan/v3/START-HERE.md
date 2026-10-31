@@ -12,9 +12,9 @@ The owner authorizes releasing the tested compatible branch to `main`; existing 
 
 - Working branch `codex/signoff-v3`. Original main/base `fd9c2b7` is a verified ancestor; main can be fast-forwarded without rewriting history.
 - Pushed/confirmed: T01 `07f1d7b`, T02 owner code `20f24fb`, native HTTPS proof `077af41`, capture validation `54fbf66`, shared resolver `279ae85`.
-- New released commits: `d247d09` durable payment intents/IDs/recovery; `3239bb9` production migration startup; `e2fe052` PayPal-only public buyer journey; `c395bd6` fresh-CI PostgreSQL readiness; `aac671a` final buyer-offer test handoff; `fac224f` narrow header; **`1c772d7` latest confirmed main source/workflow checkpoint**. Both main and codex/signoff-v3 were native remote-confirmed at 1c772d7; later handoff/evidence-only commits may follow on codex/signoff-v3 without changing main application source.
+- New released commits: `d247d09` durable payment intents/IDs/recovery; `3239bb9` production migration startup; `e2fe052` PayPal-only public buyer journey; `c395bd6` fresh-CI PostgreSQL readiness; `aac671a` final buyer-offer test handoff; `fac224f` narrow header; **`1930967` latest confirmed main source/workflow checkpoint** (T04 shipping plus unsafe-tracking stop; prior release 1c772d7). Both main and codex/signoff-v3 were native remote-confirmed at 1c772d7; later handoff/evidence-only commits may follow on codex/signoff-v3 without changing main application source.
 - CI observed success for `20f24fb`, `d491e61`, `a128575`, `077af41`, `54fbf66`. Diagnostic-only `88b2b7c` run cancelled. Later CI is not assumed passed.
-- **Final main CI confirmed:** 1c772d7 standard CI run 41233591393 and full E2E run 41233591407 both completed/success. All 12 remote browser cases pass. Source checkout is clean before this final handoff/evidence-only commit; only those intentional document/artifact changes are staged here. No uncommitted product source or secrets.
+- **Final main CI confirmed:** 1930967 standard CI run 41237185691 and full E2E run 41237185727 both completed/success. All 12 remote browser cases pass. Previous 1c772d7 workflows also passed. Source checkout is clean before this final handoff/evidence-only commit; only those intentional document/artifact changes are staged here. No uncommitted product source or secrets.
 
 ## Implemented and verified
 
@@ -24,7 +24,7 @@ The owner authorizes releasing the tested compatible branch to `main`; existing 
 - One shared agent/merchant resolver considers all transactions, prefers seller references, accepts only store-known fallbacks and rejects duplicate/conflicting mappings. Ambiguous/unavailable context stops for human review. T03 legacy scoping/canonical aliases are implemented in 618ed19; real hosted purchase correlation still needs proof.
 - Buyer dispute forms/replies removed from public routes; old URLs show an external PayPal handoff. Legacy API fixtures require APP_ENV=test plus PAYPAL_ENV=stub. Demo/direct-capture controls require explicit local DEV stub mode, never production. Production webhook processing does not wait for a judge claim; deterministic signing limits are unchanged.
 - Production API lifespan and worker startup serialize forward Alembic upgrades under a PostgreSQL advisory lock. Startup fails closed on migration failure. Revisions: owner tables `d18e6c2a9001`, nullable checkout references/intent `e42b7d910002`, expanded existing ledger kind constraint `f53c8ea20003`. No financial rows rewritten/deleted.
-- Latest local checkpoint: **578 backend tests**, Ruff, strict mypy, 3 import contracts PASS; **179 frontend tests**, ESLint/TypeScript PASS; enum/client freshness PASS; both production builds PASS. Existing Starlette/httpx deprecation and merchant bundle-size warnings remain. See log files summarized in EXECUTION-LOG.
+- Latest local checkpoint: **600 backend tests**, Ruff, strict mypy, 3 import contracts PASS; **185 frontend tests**, ESLint/TypeScript PASS; enum/client freshness PASS; both production builds PASS. Existing Starlette/httpx deprecation and merchant bundle-size warnings remain. See log files summarized in EXECUTION-LOG.
 
 ## Browser limits and release verification
 
@@ -51,3 +51,9 @@ The owner authorizes releasing the tested compatible branch to `main`; existing 
 - Native local HTTPS browser PASS: owner login, manual milestones to delivered, reload persistence, terminal lock, missing tracking, resume, exception, no 390px overflow. Evidence in evidence/t04. Desktop Chromium at phone viewport, not physical Android. No actual provider payment was created.
 - Paused/invalid/future tracking stops usable delivery evidence and requests human review. Configurable policy/provenance presentation stays T05. Existing legacy paid orders are intentionally not backfilled/scheduled.
 - Preview API was restarted from current source on 8042 (exec76181); Vite5176 remains owned. Browser fixture uses only signoff_test_preview and no external provider calls. Source push/main/deployment status must be read from the latest EXECUTION-LOG entry.
+
+### T04 release observed
+
+- Source main and codex/signoff-v3 remote-confirmed at 1930967eab74ed0e6b51eb9d0313bcbf94b1cfae before this handoff-only commit. Authorized fast-forward, no Render config changes. Branch CI 41236978982, main CI 41237185691 and main full E2E 41237185727 all completed/success (12/12 browser cases).
+- New API OpenAPI/shipping read, merchant and shop shipping bundles observed on Render. Actual owner login/reload/cookie/CSRF/logout checks and shipping page/API/no-overflow PASS; report/screenshot in evidence/t04. Fresh worker heartbeat verified. No new paid shipments exist yet (authenticated list200/count 0); auto/manual milestone proof remains local until a fresh hosted sandbox purchase. PayPal/LLM only configured, no fresh full provider journey claimed.
+- Next: T05 inspectable saved evidence/provenance and merchant missing-evidence policy. Keep buyer dispute creation exclusively in PayPal Resolution Center. Physical Android/push remains pending.

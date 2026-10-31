@@ -1,6 +1,6 @@
 # Incremental merchant release — 2026-10-31
 
-This release reached the existing Render services through authorized fast-forward pushes to `main` (latest confirmed checkpoint 1c772d7). Owner authentication, worker presence, separate shop PayPal handoff and narrow layout were observed live; [safe evidence](evidence/release-2026-10-31/README.md). It is not a claim that T04–T17 or the full product journey is complete. The owner installed login variables securely before the source rollout.
+This release reached the existing Render services through authorized fast-forward pushes to `main` (latest confirmed checkpoint 1930967). Owner authentication, worker presence, separate shop PayPal handoff and narrow layout were observed live; [safe evidence](evidence/release-2026-10-31/README.md). It is not a claim that T04–T17 or the full product journey is complete. The owner installed login variables securely before the source rollout.
 
 ## Product journey
 
@@ -50,3 +50,7 @@ The first full local attempt was interrupted after diagnosing inherited demo hol
 Visible hooks and the fixture amount were corrected without removing assertions. Local full browser retries stopped under the repository two-failure rule. Those corrected browser cases need an observed CI/deployed result; do not describe them as locally passed. Full backend/frontend/lint/type/build outcomes are recorded in EXECUTION-LOG.md.
 
 Remote follow-up: all 12 browser tests passed at fac224f, including the edited merchant phone approval and PayPal buyer handoff. The workflow cleanup then failed because setup-python requested an unused pip cache directory; removed that obsolete setting in 1c772d7. **Final 1c772d7 standard CI and full E2E workflows both completed/success** (runs 41233591393 and 41233591407). Local browser retry limits/failure history remain accurately recorded.
+
+## Shipping rollout observed
+
+Source 1930967: branch CI 41236978982, main CI 41237185691 and main E2E 41237185727 all successful (12 browser cases). Existing Render auto-deploy served new API/merchant/shop shipping surfaces. Real owner login/cookie/reload/CSRF/logout, shipping GET 200 and 390px page PASS. Fresh worker presence verified. Shipping list is empty until a new verified payment; actual deployed milestones/full provider journey remain unproven. [Safe shipping evidence](evidence/t04/README.md).
