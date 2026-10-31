@@ -45,6 +45,8 @@ const ShopHeader: React.FC = () => {
           margin: '0 auto',
           padding: '16px 20px',
           display: 'flex',
+          flexWrap: 'wrap',
+          gap: '12px',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
@@ -68,7 +70,7 @@ const ShopHeader: React.FC = () => {
           </div>
         </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
           <Link
             to="/"
             testId="shop-nav-catalog-link"
