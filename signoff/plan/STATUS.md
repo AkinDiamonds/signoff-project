@@ -58,6 +58,7 @@ Planning update (2026-10-31): Owner requested a detailed product-completion plan
 3. Live rehearsal (`make rehearse`) once sandbox credentials are in `.env`.
 
 ## Blockers
+- V3 T02 resumed in fresh cloud workspace: matching Chromium binaries absent; two browser launches failed before navigation. Retries stopped/reported. Original cookie metadata assertion remains unknown. See `build-plan/v3/START-HERE.md` (repository root) for exact setup and next action; no product cookie fix or deployment claimed.
 - None.
 - S8-S14 spike answers can be validated incrementally during steps 21, 23, 34.
 - The evidence builder's carrier allowlist (`UPS`, `USPS`, `FEDEX`, `DHL`) is conservative and fails closed. Confirm the accepted carrier values against the PayPal evidence schema before the live rehearsal; the in-repo fixtures do not include a provide-evidence request body.

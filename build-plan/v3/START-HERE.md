@@ -8,6 +8,19 @@ Complete the existing product and prove it on Render. Single merchant account; n
 
 ## Current state
 
+### Resume update — 2026-10-31, fresh cloud workspace
+
+- Branch `codex/signoff-v3` checked out at confirmed remote `d491e61`. No unfamiliar local changes existed. A diagnostic-preparation checkpoint follows this entry; identify its SHA with `git log -1`. Latest pushed **product code** remains `20f24fb`.
+- GitHub CI is now observed **success** for both `20f24fb` (run 41211299897) and `d491e61` (run 41211594512). These results do not prove cross-site cookies.
+- Locked dependency sync passed with `UV_CACHE_DIR=$PWD/work/uv-cache uv sync --frozen --extra dev`; default cache failed because it is read-only. Network commands need the execution tool's additional network permission; ordinary Git fetch could not reach the proxy, network-enabled fetch succeeded.
+- Existing local `signoff-postgres` was verified. Created fresh disposable `signoff_test_preview` and `signoff_test_v3`; only preview was migrated to head with the guarded helper. Inherited DATABASE_URL was never used for test/migration operations.
+- Fresh source API preview runs at 8042 in production cookie mode using fictional configuration and the preview DB. Vite serves current source at 5176 with the reserved HTTPS API URL and mocks off. Sessions: backend exec 98403, frontend exec 52666. No worker started, provider checks requested, or Render mutation performed.
+- **Browser launches failed twice before a page opened:** default headless-shell executable absent; full Chromium executable also absent. Stopped browser retries under `signoff/AGENTS.md`. There is no new cookie metadata, screenshot, or behavioral result. The old assertion's root cause is still UNKNOWN.
+- Portable preview/probe sources now live in `evidence/t02/diagnostics/`; ignored working copies/logs are under `work/`. The probe captures attribute booleans and whitelisted cookie metadata only, retains the full cookie assertion, and includes reload/CSRF/logout checks. It has NOT executed past browser launch.
+- **Next concrete step:** install matching Chromium (`npx playwright install chromium`, network-enabled), then resume the stopped probe after the owner has received this report. See evidence README for exact fixture commands. Do not treat missing executables as a cookie diagnosis or advance to T03/deployment yet.
+- Local test/lint/type/build suites were not rerun during this blocked diagnostic attempt. No production source change. Before checkpoint commit, only handoff/evidence documents and portable diagnostic sources are changed; use Git status for current uncommitted state.
+- Targeted diagnostic JavaScript ESLint, Node syntax check and Git whitespace check passed (exit 0). No browser assertion ran.
+
 - Original base `fd9c2b7472612bfe935144b860359a937f07fb37`. The owner now authorizes checkpoint commits/pushes. Continue on `codex/signoff-v3`; inspect Git log/status and remote before proceeding. Render deployment is a separate release step.
 - Confirmed pushed code checkpoints: baseline `07f1d7b`; owner access/readiness `20f24fb`. Latest source CI was observed in progress, not passed: https://github.com/AkinDiamonds/signoff-project/actions/runs/41211299897 . Tracking-only commits may follow; inspect actual branch head.
 - T00 read-only deployed audit: 39 route/viewport loads, 21 overflow findings. Inventory: `audit/page-inventory.md`, `audit/interaction-inventory.csv`. Other states remain unobserved; do not repeat safe route screenshots unless changed.

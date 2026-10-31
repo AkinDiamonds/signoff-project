@@ -15,6 +15,8 @@ This is the progress board. Verified outcomes are in EXECUTION-LOG.md; product c
 
 Checkpoint branch: `codex/signoff-v3`. The owner has requested commits/pushes at verified milestones. Keep checkpoint SHA/push/CI status in EXECUTION-LOG.md. Show browser screenshots as user-facing features become available, and label local versus deployed evidence.
 
-Pushed: T01 `07f1d7b`; T02 code `20f24fb`. Local checks pass; remote CI result is pending observation.
+Pushed product checkpoints: T01 `07f1d7b`; T02 code `20f24fb`; prior handoff `d491e61`. GitHub CI for both T02 code and prior handoff is confirmed successful. Earlier local results have not been rerun in the fresh workspace.
+
+Fresh-workspace diagnostic preparation: current source preview recreated on 8042/5176, isolated preview DB migrated. Both browser launch attempts failed because matching Chromium executables are absent, before any page or cookie observation. Browser retries stopped and reported under the repository rule. Portable probe/setup sources are in `evidence/t02/diagnostics/`; install Chromium before the next authorized diagnostic attempt. Original cookie assertion remains unresolved.
 
 Next: diagnose the browser cookie assertion before calling T02 complete. Then T03 payment/order correlation, T04 automatic simulated fulfilment, and T05 evidence presentation. No T02 Render rollout has been performed or verified.
