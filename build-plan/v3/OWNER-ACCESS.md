@@ -4,7 +4,7 @@ Single configured merchant; no registration, email service, or password-recovery
 
 ## Before deploying this checkpoint
 
-This is feature-branch work, not a deployed release. Do not merge/deploy until the cross-site browser cookie assertion in EXECUTION-LOG is resolved and the owner settings below are supplied securely in Render.
+This is feature-branch work, not a deployed release. The cross-site browser cookie assertion is now resolved on real local HTTPS (see evidence/t02). Before rollout, the owner settings below must be supplied securely in Render and the complete compatible release/migration/rollback prepared.
 
 1. Generate a password credential locally using the new source:
 
@@ -16,7 +16,7 @@ This is feature-branch work, not a deployed release. Do not merge/deploy until t
 2. Configure `MERCHANT_EMAIL` and `MERCHANT_PASSWORD_HASH` securely on the API service. Keep the existing `APPROVAL_TOKEN_SECRET` stable and at least 32 characters; session/CSRF/credential tags derive purpose-specific HMACs from it. No SMTP service is needed. Passwords must have 12–1024 characters.
 3. `APP_ENV=prod` always protects merchant APIs even if `MERCHANT_AUTH_ENABLED=false`. Missing owner configuration leaves access locked; sign-in returns a safe unavailable state. Non-production local/stub workflows retain their current behavior unless `MERCHANT_AUTH_ENABLED=true` is set.
 4. Apply additive Alembic revision `d18e6c2a9001` once against the intended Render DB as part of the approved release. It adds owner sessions, failed sign-in attempts and readiness observations; it does not rewrite orders, policies or financial history. Do not run the disposable-test-DB helper against Render.
-5. Deploy compatible API/worker/frontend versions. Check exact `ALLOWED_ORIGINS`, `VITE_API_URL`, `PUBLIC_BASE_URL`, and HTTPS. The merchant fetch wrapper includes credentials and CSRF headers; the API uses HttpOnly Secure SameSite=None Partitioned cookies in production for separate Render sites. Current Chromium attribute verification is unresolved: do not assume unit-test flags prove browser support.
+5. Deploy compatible API/worker/frontend versions. Check exact `ALLOWED_ORIGINS`, `VITE_API_URL`, `PUBLIC_BASE_URL`, and HTTPS. The merchant fetch wrapper includes credentials and CSRF headers; the API uses HttpOnly Secure SameSite=None Partitioned cookies in production for separate Render sites. Chromium cookie attributes and full session/logout behavior passed on separate real local HTTPS sites; deployed Android/Render verification is still required.
 6. Verify login, reload, CSRF-protected action, logout, expiry and browser cookie behavior on Android Chrome before calling owner access deployed-ready. The existing PayPal signing gate remains independent of session authentication.
 
 ## Administrative reset

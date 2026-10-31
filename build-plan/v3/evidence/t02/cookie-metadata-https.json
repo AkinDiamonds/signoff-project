@@ -1,0 +1,47 @@
+{
+  "transport": "native-https",
+  "localOnly": true,
+  "headers": [
+    {
+      "httpOnly": true,
+      "secure": true,
+      "partitioned": true,
+      "sameSiteNone": true,
+      "hostPrefix": true,
+      "domainAbsent": true
+    }
+  ],
+  "steps": [
+    "anonymous redirect",
+    "login and retained session",
+    "authenticated reload",
+    "logout without CSRF denied",
+    "CSRF-protected UI logout",
+    "access denied after logout"
+  ],
+  "chromium": "156.0.8078.4",
+  "cookies": [
+    {
+      "name": "__Host-signoff_session",
+      "domain": "api.signoff-api.test",
+      "path": "/",
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None",
+      "partitionKey": "https://signoff.test"
+    }
+  ],
+  "cdpCookies": [
+    {
+      "name": "__Host-signoff_session",
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None",
+      "partitionKey": {
+        "topLevelSite": "https://signoff.test",
+        "hasCrossSiteAncestor": true
+      }
+    }
+  ],
+  "result": "PASS"
+}

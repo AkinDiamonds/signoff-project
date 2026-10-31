@@ -1,4 +1,12 @@
-# T02 visual checkpoint — local only
+# T02 owner access — verified on local HTTPS
+
+**Current result: PASS locally**, using native HTTPS on two separate reserved sites. No Render or physical Android verification claimed. [Safe metadata](cookie-metadata-https.json) and [phone-width Settings screenshot](settings-mobile-https.png).
+
+The old failure is reproduced in [fulfillment metadata](cookie-metadata-route-fulfill.json): HttpOnly/Secure/SameSite=None are present, but the partition key is absent. The same application source and Chromium version over native HTTPS report `partitionKey=https://signoff.test` in Playwright and `hasCrossSiteAncestor=true` in CDP. This isolates the observed problem to response fulfillment, rather than the production cookie code. The precise Chromium internals behind fulfillment's behavior are not claimed.
+
+Native HTTPS run passed: anonymous redirect, UI login, retained session, all cookie assertions, authenticated reload, no-CSRF logout rejected with 403, UI logout returned 204, then protected API denied with 401 and protected navigation redirected to login. The assertion was preserved, no session injected, and no browser privacy setting disabled. The locally generated certificate was trusted by its SPKI only; the proxy bypass applied only to the two loopback fixture hostnames.
+
+The sections below preserve the original failure history and preparation limits; they are superseded by this observed result.
 
 ![Owner sign-in at a 390-pixel mobile viewport](login-mobile.png)
 
@@ -10,7 +18,7 @@ This screenshot shows the actual local React sign-in screen in desktop Chromium 
 - Browser sign-in proceeds to the actual authenticated Settings page and its background-worker section using fictional credentials and a separate disposable local DB.
 - Unit/integration tests cover authentication, CSRF, session expiry/revocation/restart, rate limits, unavailable provisioning, observed/stale readiness, and failed connection checks. See the execution log for counts.
 
-## Unresolved browser assertion
+## Original browser assertion (now diagnosed)
 
 The browser script failed twice at the assertion checking `httpOnly`, `secure`, and `partitionKey` from `context.cookies(...)`. It reached Settings before this assertion. Cookie metadata was not saved, so no specific missing flag or root cause has been established. Do not claim the cookie is unsafe or claim cross-site verification passed based on this output alone.
 
@@ -33,14 +41,16 @@ After the stopped-attempt report, prepare and run from repository root:
 ```bash
 mkdir -p work
 UV_CACHE_DIR="$PWD/work/uv-cache" uv sync --frozen --extra dev
-npx playwright install chromium
+PLAYWRIGHT_BROWSERS_PATH="$PWD/work/browsers" npx playwright install chromium
+openssl req -x509 -newkey rsa:2048 -nodes -keyout work/preview-key.pem -out work/preview-cert.pem -days 2 -subj '/CN=merchant.signoff.test' -addext 'subjectAltName=DNS:merchant.signoff.test,DNS:api.signoff-api.test'
+chmod 600 work/preview-key.pem
 # Verify the existing local PostgreSQL first. Create the disposable preview DB
 # only if absent; never run against inherited DATABASE_URL.
 SIGNOFF_TEST_DATABASE_URL=postgresql+psycopg://signoff:signoff@localhost:5432/signoff_test_preview make prepare-test-db VENV_PY=.venv/Scripts/python.exe
 # Separate terminals; skip starts if these exact owned previews still run.
 PYTHONPATH=signoff:signoff/agent .venv/Scripts/python.exe build-plan/v3/evidence/t02/diagnostics/owner_preview.py
-VITE_API_URL=https://api.signoff-api.test VITE_MOCK_API=false npm exec --workspace=@signoff/web vite -- --host 127.0.0.1 --port 5176 --strictPort
-node build-plan/v3/evidence/t02/diagnostics/owner-browser.mjs
+VITE_API_URL=https://api.signoff-api.test:8443 VITE_MOCK_API=false npm exec --workspace=@signoff/web vite -- --host 127.0.0.1 --port 5176 --strictPort
+PLAYWRIGHT_BROWSERS_PATH="$PWD/work/browsers" node build-plan/v3/evidence/t02/diagnostics/owner-browser.mjs
 ```
 
-Use network-enabled execution where needed; do not remove the session-cookie assertion. The script writes only safe metadata to `work/cookie-metadata.json` and local screenshots to `work/`. Browser assertions and exact partition-key expectation remain unverified. Stop on the retry limit and preserve failures.
+Use network-enabled execution where needed; do not remove the session-cookie assertion. The script writes only safe metadata to `work/cookie-metadata.json` and local screenshots to `work/`. HTTPS is the default; real TLS requests are forwarded to the local API/Vite without response fulfillment. Exact partition key and behavioral assertions are verified by the committed successful report. Stop on the retry limit and preserve failures.

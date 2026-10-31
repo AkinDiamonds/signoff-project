@@ -6,7 +6,7 @@ This is the progress board. Verified outcomes are in EXECUTION-LOG.md; product c
 |---|---|---|
 | T00 audit | PARTIAL | 39 deployed page/viewport observations recorded; hosted order/valid approval/provider diagnostics still unobserved. |
 | T01 engineering baseline | PASS locally | 489 backend + 169 frontend tests; lint/types/import contracts/parity/builds pass. |
-| T02 owner access and readiness | IMPLEMENTED; BROWSER CHECK OPEN | Email/password screen and server protection; durable sessions, CSRF/rate limits, observed readiness. Unit/integration checks pass; cross-site cookie metadata assertion unresolved. [Local screenshot](evidence/t02/README.md). |
+| T02 owner access and readiness | PASS locally; deployment pending | Owner access/readiness plus real HTTPS cross-site cookie/session/reload/CSRF/logout verification. Route-fulfillment fixture caused the prior metadata failure; native HTTPS passes unchanged cookie assertions. [Evidence](evidence/t02/README.md). |
 | T03–T05 commerce and evidence | TODO | Payment/order mapping, automatic simulated fulfilment and inspectable evidence. |
 | T06–T08 agent and approvals | TODO | Reliable plans, verified execution, durable phone approvals. |
 | T09–T10 notifications | TODO | Toasts, inbox and Android web push. |
@@ -19,4 +19,6 @@ Pushed product checkpoints: T01 `07f1d7b`; T02 code `20f24fb`; prior handoff `d4
 
 Fresh-workspace diagnostic preparation: current source preview recreated on 8042/5176, isolated preview DB migrated. Both browser launch attempts failed because matching Chromium executables are absent, before any page or cookie observation. Browser retries stopped and reported under the repository rule. Portable probe/setup sources are in `evidence/t02/diagnostics/`; install Chromium before the next authorized diagnostic attempt. Original cookie assertion remains unresolved.
 
-Next: diagnose the browser cookie assertion before calling T02 complete. Then T03 payment/order correlation, T04 automatic simulated fulfilment, and T05 evidence presentation. No T02 Render rollout has been performed or verified.
+Latest: matching Chromium installed; real local HTTPS probe PASS. Backend 500 tests, frontend 178 tests, lint/types/import/parity reverified. See execution log for builds and exact failure history. No physical Android or Render evidence claimed.
+
+Next: T03 payment/order correlation and capture validation, T04 automatic simulated fulfilment, and T05 evidence presentation. No T02 Render rollout has been performed or verified.

@@ -6,7 +6,21 @@ Read this file first, then `02-owner-decisions.md` and the latest entry in `EXEC
 
 Complete the existing product and prove it on Render. Single merchant account; normal product UX; owner email/password login; no signup, recovery or email service. Simulated shipping advances automatically with labeled manual sandbox controls. Missing delivery defaults to human review and is merchant-configurable. Valid actions run autonomously within deterministic signing limits. Include toasts, persistent inbox and opt-in Android Chrome push. Keep PayPal sandbox-only and simulated tracking truthful.
 
-## Current state
+## Current authoritative resume — T02 browser verification passed locally
+
+- Branch `codex/signoff-v3`; latest confirmed pushed diagnostic checkpoint `88b2b7c`, followed by tracking commit `a128575`. Product code checkpoint `20f24fb`. New T02 evidence/native HTTPS fixture and scratch lint exclusion are being checkpointed; use Git status/log and remote to identify that checkpoint.
+- **T02 cookie diagnosis resolved locally:** route fulfillment reproduced `partitionKey: null` despite all Set-Cookie attributes being present. Real local HTTPS with the same current app source produced the expected partition key in BOTH Playwright and CDP. No production cookie/auth change required. The old fulfillment fixture was the source of the observed failure; do not use it to verify CHIPS.
+- Chromium 156.0.8078.4 installed in `work/browsers` using Playwright 1.64.1. Native fixture uses two separate HTTPS sites on port 8443, trusts only its generated local certificate's SPKI, and bypasses the runtime proxy only for those loopback fixture hosts. No browser privacy flag disabled. Safe reports and screenshot are committed under `evidence/t02/`.
+- Browser PASS: anonymous redirect; UI login; retained session; HttpOnly/Secure/SameSite=None/Partitioned cookie with correct merchant partition; authenticated reload; no-CSRF logout 403; UI logout 204; protected API 401 and login redirect afterward.
+- Current checkout checks: backend 500 tests, Ruff, strict mypy, three import contracts PASS; frontend 178 tests/ESLint/tsc PASS; enum/client freshness and BOTH production builds PASS. Initial web lint caught downloaded browser vendor JS in `work/`; exclude scratch assets, then rerun passed. Existing merchant bundle-size warning and Starlette/httpx deprecation remain.
+- Separate disposable local DBs: preview `signoff_test_preview` and tests `signoff_test_v3`, both migrated via guarded helper. Never use inherited DATABASE_URL for test/reset/migration operations.
+- Running current-source previews: API port 8042 exec 76279/PID 4881; Vite port 5176 exec 74599, API URL `https://api.signoff-api.test:8443`. Both use fictional fixture configuration; no worker or provider requests. Native TLS 8443 server runs only during probe and is closed afterward.
+- Reproduce with `PLAYWRIGHT_BROWSERS_PATH=$PWD/work/browsers node build-plan/v3/evidence/t02/diagnostics/owner-browser.mjs` after certificate/setup commands in evidence README. HTTPS is now default. `SIGNOFF_BROWSER_TRANSPORT=route-fulfill` is only a historical control; do not weaken its assertion or claim it passes.
+- **Next active implementation: T03** in `00-execution-plan.md`. Inspect shop capture/create/reconcile, PayPal Orders client and shared order resolution. Current capture trusts caller-supplied order IDs, fabricates capture success when captures are missing, and does not validate currency/status. Add parser/failure tests first. Preserve deterministic gate/executor/ledger invariants.
+- GitHub CI for `20f24fb` and `d491e61` confirmed successful; later checkpoint CI must be observed, never assumed.
+- Render rollout, production owner provisioning, physical Android, hosted PayPal/LLM journey and T03–T17 remain unverified/unimplemented. T02 local browser PASS is not deployed proof. No merge, deployment, live credential provisioning or cloud configuration change performed.
+
+## Historical handoff (superseded by the resume above)
 
 ### Resume update — 2026-10-31, fresh cloud workspace
 

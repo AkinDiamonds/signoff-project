@@ -74,6 +74,7 @@ Thumbs.db
 
 # Local temporary / scratch files
 scratch/
+work/
 tmp/
 *.tmp
 

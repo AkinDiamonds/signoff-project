@@ -10,6 +10,7 @@ export default tseslint.config(
       '**/build/**',
       'signoff/packages/api-client/src/generated/**',
       '**/.venv/**',
+      'work/**', // Local diagnostics, dependency caches and browser binaries.
     ],
   },
   js.configs.recommended,

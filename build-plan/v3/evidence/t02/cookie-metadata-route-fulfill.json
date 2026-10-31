@@ -1,0 +1,31 @@
+{
+  "chromium": "156.0.8078.4",
+  "localOnly": true,
+  "headers": [
+    {
+      "httpOnly": true,
+      "secure": true,
+      "partitioned": true,
+      "sameSiteNone": true,
+      "hostPrefix": true,
+      "domainAbsent": true
+    }
+  ],
+  "steps": [
+    "anonymous redirect",
+    "login and retained session"
+  ],
+  "cookies": [
+    {
+      "name": "__Host-signoff_session",
+      "domain": "api.signoff-api.test",
+      "path": "/",
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None",
+      "partitionKey": null
+    }
+  ],
+  "result": "FAIL",
+  "transport": "route-fulfill"
+}

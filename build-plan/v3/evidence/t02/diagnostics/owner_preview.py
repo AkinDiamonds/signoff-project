@@ -17,7 +17,7 @@ os.environ.update(
     APPROVAL_TOKEN_SECRET='fictional-preview-session-key-over-32-characters',
     STORE_API_KEY='fictional-preview-store',
     MERCHANT_EMAIL='owner@example.test', MERCHANT_PASSWORD_HASH=hash_password(password),
-    ALLOWED_ORIGINS='https://merchant.signoff.test',
+    ALLOWED_ORIGINS='https://merchant.signoff.test,https://merchant.signoff.test:8443',
     WEB_BASE_URL='https://merchant.signoff.test',
     PUBLIC_BASE_URL='https://api.signoff-api.test',
 )
