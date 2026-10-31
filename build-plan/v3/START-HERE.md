@@ -9,6 +9,7 @@ Complete the existing product and prove it on Render. Single merchant account; n
 ## Current state
 
 - Original base `fd9c2b7472612bfe935144b860359a937f07fb37`. The owner now authorizes checkpoint commits/pushes. Continue on `codex/signoff-v3`; inspect Git log/status and remote before proceeding. Render deployment is a separate release step.
+- Confirmed pushed code checkpoints: baseline `07f1d7b`; owner access/readiness `20f24fb`. Latest source CI was observed in progress, not passed: https://github.com/AkinDiamonds/signoff-project/actions/runs/41211299897 . Tracking-only commits may follow; inspect actual branch head.
 - T00 read-only deployed audit: 39 route/viewport loads, 21 overflow findings. Inventory: `audit/page-inventory.md`, `audit/interaction-inventory.csv`. Other states remain unobserved; do not repeat safe route screenshots unless changed.
 - T01 local baseline is COMPLETE: 489 backend tests, 169 frontend tests, lint, strict Python/TS typing, three import contracts, enum parity, generated client freshness and both builds pass. CI is configured but not run on GitHub. Details/results in the latest execution-log entry.
 - T02 code is implemented: owner login, durable hashed sessions, server auth/CSRF/rate limits, truthful Settings/readiness, worker presence. See OWNER-ACCESS.md and latest execution-log entry. New API/TS contracts and migration `d18e6c2a9001` are included. No registration, email provider or recovery.
@@ -50,4 +51,4 @@ First fetch/check out the latest pushed `codex/signoff-v3` checkpoint; see the e
 
 ## Copy into a new session
 
-> Continue implementing Signoff from the current working tree. Read build-plan/v3/START-HERE.md, 02-owner-decisions.md and the latest EXECUTION-LOG.md entry, then repository instructions. Resume the active task rather than replanning or repeating the completed audit. Preserve all changes. Verify claims against files and test outputs. Update this handoff before stopping; distinguish local work from actual Render deployment. Do not omit agreed features or invent passing results.
+> Continue AkinDiamonds/signoff-project on branch codex/signoff-v3 (code checkpoint 20f24fb or newer). Preserve local changes; if this is a fresh checkout, fetch/check out that branch before looking for the handoff. Read build-plan/v3/START-HERE.md, 02-owner-decisions.md and the latest EXECUTION-LOG.md entry plus repository instructions. Resume T02 cookie diagnosis, not the completed baseline/audit. Verify facts against files and outputs. Keep the progress board/handoff updated, show screenshots, and push commits at checkpoints as authorized. Never claim Render deployment or browser verification that hasn't happened.

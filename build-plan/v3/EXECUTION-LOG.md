@@ -133,4 +133,11 @@ First attempt used route.fetch; second forwarded via native HTTP to avoid the te
 
 Persistent screenshot/summary: `evidence/t02/`. Raw ignored files: `scratch/v3-audit/owner-browser.mjs`, `owner-browser.log`, `t02-agent-checkpoint.log`, `t02-web-final.log`, `t02-build.log`. Summaries above stand alone if scratch is absent.
 
-This checkpoint is on a feature branch and is not release-ready until the cookie assertion is resolved and Render owner settings/migration are prepared. Main/Render remain on the old release. Next product tasks after T02: T03 transaction/order matching, T04 automatic/manual simulated fulfilment, T05 evidence provenance/UI.
+This checkpoint is on a feature branch and is not release-ready until the cookie assertion is resolved and Render owner settings/migration are prepared. No main merge or Render deployment was initiated; hosted revisions have not been re-verified. Next product tasks after T02: T03 transaction/order matching, T04 automatic/manual simulated fulfilment, T05 evidence provenance/UI.
+
+### T02 push confirmation
+
+- Commit `20f24fb2e3ecfe93d2e6002710275df9cd3f4e48` (`feat: add protected owner access and observed integration status`) pushed successfully to `origin/codex/signoff-v3`; native `git ls-remote` confirmed that exact SHA.
+- GitHub Actions run https://github.com/AkinDiamonds/signoff-project/actions/runs/41211299897 was observed `in_progress` with no conclusion. Do not report remote CI as passed. A following tracking-only commit can trigger a newer run; check the latest branch head/run before reporting status.
+- Local checkpoint suite: 500 backend / 178 frontend tests, lint/types/import/parity and both builds PASS. Combined browser cookie attribute assertion remains unresolved, unchanged and not suppressed.
+- Readable visual evidence is committed under `build-plan/v3/evidence/t02/`; screenshot is local phone-width Chromium, not Render or a physical Android phone.

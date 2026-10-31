@@ -15,4 +15,6 @@ This is the progress board. Verified outcomes are in EXECUTION-LOG.md; product c
 
 Checkpoint branch: `codex/signoff-v3`. The owner has requested commits/pushes at verified milestones. Keep checkpoint SHA/push/CI status in EXECUTION-LOG.md. Show browser screenshots as user-facing features become available, and label local versus deployed evidence.
 
-Next: diagnose the browser cookie assertion before calling T02 complete. Then T03 payment/order correlation, T04 automatic simulated fulfilment, and T05 evidence presentation. No T02 changes are deployed to Render yet.
+Pushed: T01 `07f1d7b`; T02 code `20f24fb`. Local checks pass; remote CI result is pending observation.
+
+Next: diagnose the browser cookie assertion before calling T02 complete. Then T03 payment/order correlation, T04 automatic simulated fulfilment, and T05 evidence presentation. No T02 Render rollout has been performed or verified.
