@@ -22,6 +22,8 @@ from agent.app.db.session import get_db_session
 from agent.app.errors import AppError, NotFoundError
 from agent.app.settings import Settings
 from agent.app.shop.disputes import _find_dispute_for_transaction
+from agent.app.store.base import StoreAmbiguous
+from agent.app.store_mock.repository import find_order_by_paypal_transaction_id
 
 
 def _ensure_utc(dt: Any) -> datetime:
@@ -112,9 +114,10 @@ def get_order_by_transaction(
     db: Annotated[Session, Depends(get_db_session)],
 ) -> StoreOrderResponse:
     """Retrieve an order by PayPal transaction ID."""
-    order = db.scalar(
-        select(Order).where(Order.paypal_transaction_id == transaction_id.strip())
-    )
+    try:
+        order = find_order_by_paypal_transaction_id(db, transaction_id)
+    except StoreAmbiguous:
+        raise AppError("ORDER_AMBIGUOUS", "Multiple orders match this payment reference", status_code=409) from None
     if not order:
         raise NotFoundError(f"No order found for transaction ID '{transaction_id}'")
     return StoreOrderResponse(

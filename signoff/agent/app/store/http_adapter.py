@@ -7,7 +7,7 @@ from typing import Any
 import httpx
 
 from agent.app.domain.enums import OrderStatus, TrackingStatus
-from agent.app.store.base import StoreUnavailable
+from agent.app.store.base import StoreAmbiguous, StoreUnavailable
 from agent.app.store.models import OrderRecord, ShipmentRecord
 
 
@@ -66,6 +66,8 @@ class HttpStoreAdapter:
         resp = self._get(f"/api/store/orders/by-transaction/{transaction_id.strip()}")
         if resp.status_code == 404:
             return None
+        if resp.status_code == 409:
+            raise StoreAmbiguous("Store reported multiple orders for this payment reference")
         if resp.status_code != 200:
             raise StoreUnavailable(f"Unexpected response status {resp.status_code}")
 

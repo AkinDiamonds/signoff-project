@@ -1140,6 +1140,12 @@ export interface components {
             latest_verdict?: components["schemas"]["Verdict"] | null;
             /** Order Code */
             order_code?: string | null;
+            /**
+             * Order Resolution
+             * @default not_found
+             * @enum {string}
+             */
+            order_resolution: "found" | "not_found" | "ambiguous" | "unavailable";
             reason: components["schemas"]["DisputeReason"];
             /** Seller Response Due Date */
             seller_response_due_date?: string | null;
@@ -1174,6 +1180,12 @@ export interface components {
             latest_verdict?: components["schemas"]["Verdict"] | null;
             /** Order Code */
             order_code?: string | null;
+            /**
+             * Order Resolution
+             * @default not_found
+             * @enum {string}
+             */
+            order_resolution: "found" | "not_found" | "ambiguous" | "unavailable";
             reason: components["schemas"]["DisputeReason"];
             /** Seller Response Due Date */
             seller_response_due_date?: string | null;

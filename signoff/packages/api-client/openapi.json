@@ -1018,6 +1018,17 @@
             ],
             "title": "Order Code"
           },
+          "order_resolution": {
+            "default": "not_found",
+            "enum": [
+              "found",
+              "not_found",
+              "ambiguous",
+              "unavailable"
+            ],
+            "title": "Order Resolution",
+            "type": "string"
+          },
           "reason": {
             "$ref": "#/components/schemas/DisputeReason"
           },
@@ -1110,6 +1121,17 @@
               }
             ],
             "title": "Order Code"
+          },
+          "order_resolution": {
+            "default": "not_found",
+            "enum": [
+              "found",
+              "not_found",
+              "ambiguous",
+              "unavailable"
+            ],
+            "title": "Order Resolution",
+            "type": "string"
           },
           "reason": {
             "$ref": "#/components/schemas/DisputeReason"

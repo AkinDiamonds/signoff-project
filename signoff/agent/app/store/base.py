@@ -9,6 +9,10 @@ class StoreUnavailable(Exception):
     """Raised when an external or local store service cannot be reached."""
 
 
+class StoreAmbiguous(Exception):
+    """A transaction links to multiple orders; selecting the first is unsafe."""
+
+
 @runtime_checkable
 class StoreAdapter(Protocol):
     """Synchronous interface for retrieving store orders, tracking, and policies."""

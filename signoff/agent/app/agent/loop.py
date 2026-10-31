@@ -43,8 +43,9 @@ from agent.app.policy.charter import get_or_seed_charter, to_charter_response
 from agent.app.policy.gate import GateDecision, GateInput, HistoryFlags, evaluate_gate
 from agent.app.queue.payloads import ExecuteDecisionPayload
 from agent.app.queue.queue import enqueue_job
-from agent.app.store.base import StoreAdapter, StoreUnavailable
+from agent.app.store.base import StoreAdapter
 from agent.app.store.local_adapter import LocalStoreAdapter
+from agent.app.store.resolution import resolve_disputed_order
 
 logger = logging.getLogger(__name__)
 
@@ -218,42 +219,25 @@ async def run_agent_loop(
             human_needed=True,
         )
 
-    # Context gathering: load store order context if transaction available
-    tx_id: str | None = None
+    # Agent and merchant screens use the same seller-first, all-transaction
+    # resolution. Ambiguity is a human-review outcome, never an arbitrary match.
     transactions = getattr(paypal_dispute, "disputed_transactions", None) or []
-    if transactions:
-        tx_id = getattr(transactions[0], "seller_transaction_id", None)
-
     adapter = store_adapter or LocalStoreAdapter(session)
-    order_context = None
-    if tx_id:
-        try:
-            order_context = adapter.find_order(tx_id)
-        except StoreUnavailable as exc:
-            logger.error(
-                "Store adapter unavailable for dispute %s (txn %s): %s. Failing closed to human review.",
-                dispute_id,
-                tx_id,
-                exc,
-            )
-            record_ledger_event(
-                session,
-                dispute_id,
-                TimelineEventKind.NO_ACTION,
-                {
-                    "reason": "store_unavailable",
-                    "message": f"Store service unavailable: {exc}. Human review required.",
-                },
-            )
-            session.commit()
-            return AgentLoopResult(
-                status="no_action",
-                run_id=effective_run_id,
-                dispute_id=dispute_id,
-                fingerprint=current_fingerprint,
-                human_needed=True,
-                error=str(exc),
-            )
+    resolution = resolve_disputed_order(transactions, adapter.find_order)
+    tx_id = resolution.transaction_id
+    order_context = resolution.order
+    if resolution.status in {"ambiguous", "unavailable"}:
+        reason = "order_ambiguous" if resolution.status == "ambiguous" else "store_unavailable"
+        message = "Order evidence could not be resolved safely. Human review required."
+        record_ledger_event(
+            session, dispute_id, TimelineEventKind.NO_ACTION,
+            {"reason": reason, "message": message},
+        )
+        session.commit()
+        return AgentLoopResult(
+            status="no_action", run_id=effective_run_id, dispute_id=dispute_id,
+            fingerprint=current_fingerprint, human_needed=True, error=reason,
+        )
 
     # Screen dispute and context for content injection attempts (Step 18)
     injection_flag = (

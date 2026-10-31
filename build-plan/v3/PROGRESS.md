@@ -7,7 +7,7 @@ This is the progress board. Verified outcomes are in EXECUTION-LOG.md; product c
 | T00 audit | PARTIAL | 39 deployed page/viewport observations recorded; hosted order/valid approval/provider diagnostics still unobserved. |
 | T01 engineering baseline | PASS locally | 489 backend + 169 frontend tests; lint/types/import contracts/parity/builds pass. |
 | T02 owner access and readiness | PASS locally; deployment pending | Owner access/readiness plus real HTTPS cross-site cookie/session/reload/CSRF/logout verification. Route-fulfillment fixture caused the prior metadata failure; native HTTPS passes unchanged cookie assertions. [Evidence](evidence/t02/README.md). |
-| T03 commerce | IN PROGRESS | Fail-closed capture and GET reconciliation validation implemented; durable explicit identifiers/intents, shared resolution and hosted purchase proof remain. |
+| T03 commerce | IN PROGRESS | Capture/reconciliation validation and shared unambiguous agent/UI resolution implemented. Durable identifiers/intents, merchant scoping, request idempotency and hosted proof remain. |
 | T04–T05 fulfilment and evidence | TODO | Automatic simulated fulfilment and inspectable evidence. |
 | T06–T08 agent and approvals | TODO | Reliable plans, verified execution, durable phone approvals. |
 | T09–T10 notifications | TODO | Toasts, inbox and Android web push. |

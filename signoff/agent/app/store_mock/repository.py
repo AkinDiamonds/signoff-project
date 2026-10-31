@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from agent.app.db.models import Order, TrackingEvent
 from agent.app.domain.enums import OrderStatus, TrackingStatus
+from agent.app.store.base import StoreAmbiguous
 from agent.app.store_mock.scenarios import (
     SCENARIOS,
     SCENARIOS_BY_TRANSACTION_ID,
@@ -25,7 +26,12 @@ def find_order_by_paypal_transaction_id(session: Session, transaction_id: str | 
     """Look up an order by PayPal transaction id; blank or unknown ids return None."""
     if not transaction_id or not transaction_id.strip():
         return None
-    return session.scalar(select(Order).where(Order.paypal_transaction_id == transaction_id.strip()))
+    matches = list(session.scalars(
+        select(Order).where(Order.paypal_transaction_id == transaction_id.strip()).limit(2)
+    ))
+    if len(matches) > 1:
+        raise StoreAmbiguous("Multiple orders have the same PayPal transaction reference")
+    return matches[0] if matches else None
 
 
 def _scenario_for_order(order: Order) -> OrderRecord | None:

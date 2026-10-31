@@ -33,6 +33,7 @@ export const disputesFixture = {
       latest_rule_id: 'G2-01',
       latest_verdict: 'ALLOW',
       order_code: 'ORD0000001',
+      order_resolution: 'found',
       seller_response_due_date: '2026-10-26T09:00:00Z',
     },
     {
@@ -46,6 +47,7 @@ export const disputesFixture = {
       latest_rule_id: 'G1-02',
       latest_verdict: 'NEEDS_APPROVAL',
       order_code: 'ORD0000002',
+      order_resolution: 'found',
       seller_response_due_date: null,
     },
   ],
@@ -64,6 +66,7 @@ export const disputeDetailFixture: DisputeDetail = {
   latest_rule_id: 'G2-01',
   latest_verdict: 'ALLOW',
   order_code: 'ORD0000001',
+  order_resolution: 'found',
   seller_response_due_date: '2026-10-26T09:00:00Z',
   snapshot: {
     buyer_message: 'Package did not arrive on time. <script>alert("xss")</script>',
@@ -88,6 +91,7 @@ export const disputeDetailNeedsApprovalFixture: DisputeDetail = {
   latest_rule_id: 'G1-02',
   latest_verdict: 'NEEDS_APPROVAL',
   order_code: 'ORD0000002',
+  order_resolution: 'found',
   seller_response_due_date: null,
   snapshot: {
     buyer_message: 'I would like a partial refund since the item arrived damaged.',
@@ -105,6 +109,7 @@ export const disputeDetailInProgressFixture: DisputeDetail = {
   latest_rule_id: null,
   latest_verdict: null,
   order_code: 'ORD0000003',
+  order_resolution: 'found',
   seller_response_due_date: null,
   snapshot: {
     buyer_message: 'Where is my order? Please check.',

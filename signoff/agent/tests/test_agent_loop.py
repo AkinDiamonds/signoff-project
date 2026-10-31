@@ -69,7 +69,7 @@ from agent.app.paypal.models import (
     Link,
     MakeOfferOption,
 )
-from agent.app.store.base import StoreUnavailable
+from agent.app.store.base import StoreAmbiguous, StoreUnavailable
 from agent.app.store_mock.seed import seed_scenarios
 
 
@@ -621,11 +621,12 @@ def test_agent_package_has_no_mutating_client_imports():
 
 
 @pytest.mark.asyncio
-async def test_store_unavailable_fails_closed_to_human_review(db_session: Session):
-    """StoreUnavailable causes agent run to fail closed: stop and request human review."""
+@pytest.mark.parametrize("failure", [StoreUnavailable, StoreAmbiguous])
+async def test_store_unavailable_fails_closed_to_human_review(db_session: Session, failure):
+    """Unavailable or ambiguous evidence stops before planning or execution."""
     class BrokenStoreAdapter:
         def find_order(self, transaction_id: str):
-            raise StoreUnavailable("Store network connection timeout")
+            raise failure("Order resolution failed")
 
         def get_shipments(self, order_code: str):
             raise StoreUnavailable("Store network connection timeout")

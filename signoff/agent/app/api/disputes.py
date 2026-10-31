@@ -19,12 +19,14 @@ from sqlalchemy import case, select
 from sqlalchemy.orm import Session
 
 from agent.app.approvals.service import DEMO_APPROVAL_LINKS
-from agent.app.db.models import Decision, Dispute, Order
+from agent.app.db.models import Decision, Dispute
 from agent.app.db.session import get_db_session
 from agent.app.domain.enums import DisputeReason, DisputeStatus, Verdict
 from agent.app.domain.money import Money
 from agent.app.errors import NotFoundError
 from agent.app.settings import Settings
+from agent.app.store.resolution import ResolutionStatus, resolve_disputed_order
+from agent.app.store_mock.repository import find_order_by_paypal_transaction_id
 
 router = APIRouter(prefix="/api/disputes", tags=["Disputes"])
 
@@ -43,6 +45,7 @@ class DisputeListItem(BaseModel):
     latest_verdict: Verdict | None = None
     latest_rule_id: str | None = None
     order_code: str | None = None
+    order_resolution: ResolutionStatus = "not_found"
 
 
 class DisputesResponse(BaseModel):
@@ -69,6 +72,7 @@ class DisputeDetailResponse(BaseModel):
     latest_rule_id: str | None = None
     order_code: str | None = None
     approval_url: str | None = None
+    order_resolution: ResolutionStatus = "not_found"
 
 
 def _encode_cursor(offset: int) -> str:
@@ -183,39 +187,16 @@ async def list_disputes(
             if dec.dispute_id not in latest_decisions:
                 latest_decisions[dec.dispute_id] = dec
 
-    # Pre-fetch linked order codes via transaction IDs
-    transaction_ids = []
-    for d in paged_disputes:
-        txs = (d.snapshot or {}).get("disputed_transactions", [])
-        for tx in txs:
-            tid = tx.get("buyer_transaction_id") or tx.get("seller_transaction_id")
-            if tid:
-                transaction_ids.append(tid)
-
-    order_code_by_tx: dict[str, str] = {}
-    if transaction_ids:
-        orders = list(
-            db_session.scalars(
-                select(Order).where(Order.paypal_transaction_id.in_(transaction_ids))
-            ).all()
-        )
-        for o in orders:
-            if o.paypal_transaction_id:
-                order_code_by_tx[o.paypal_transaction_id] = o.order_code
-
     items: list[DisputeListItem] = []
     for d in paged_disputes:
         latest_dec = latest_decisions.get(d.id)
         latest_verdict = Verdict(latest_dec.verdict) if latest_dec else None
         latest_rule_id = latest_dec.rule_id if latest_dec else None
 
-        # Resolve order code
-        order_code = None
-        for tx in (d.snapshot or {}).get("disputed_transactions", []):
-            tid = tx.get("buyer_transaction_id") or tx.get("seller_transaction_id")
-            if tid and tid in order_code_by_tx:
-                order_code = order_code_by_tx[tid]
-                break
+        resolution = resolve_disputed_order(
+            (d.snapshot or {}).get("disputed_transactions"),
+            lambda identifier: find_order_by_paypal_transaction_id(db_session, identifier),
+        )
 
         items.append(
             DisputeListItem(
@@ -229,7 +210,8 @@ async def list_disputes(
                 updated_at=d.updated_at,
                 latest_verdict=latest_verdict,
                 latest_rule_id=latest_rule_id,
-                order_code=order_code,
+                order_code=resolution.order.order_code if resolution.order else None,
+                order_resolution=resolution.status,
             )
         )
 
@@ -268,17 +250,10 @@ async def get_dispute_by_id(
     latest_verdict = Verdict(latest_dec.verdict) if latest_dec else None
     latest_rule_id = latest_dec.rule_id if latest_dec else None
 
-    # Resolve linked order
-    order_code = None
-    for tx in (dispute.snapshot or {}).get("disputed_transactions", []):
-        tid = tx.get("buyer_transaction_id") or tx.get("seller_transaction_id")
-        if tid:
-            order = db_session.scalar(
-                select(Order).where(Order.paypal_transaction_id == tid).limit(1)
-            )
-            if order:
-                order_code = order.order_code
-                break
+    resolution = resolve_disputed_order(
+        (dispute.snapshot or {}).get("disputed_transactions"),
+        lambda identifier: find_order_by_paypal_transaction_id(db_session, identifier),
+    )
 
     approval_url = None
     settings = getattr(request.app.state, "settings", None) if hasattr(request, "app") else Settings()
@@ -306,6 +281,7 @@ async def get_dispute_by_id(
         updated_at=dispute.updated_at,
         latest_verdict=latest_verdict,
         latest_rule_id=latest_rule_id,
-        order_code=order_code,
+        order_code=resolution.order.order_code if resolution.order else None,
+        order_resolution=resolution.status,
         approval_url=approval_url,
     )
