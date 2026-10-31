@@ -95,3 +95,5 @@ class OrderDetailResponse(BaseModel):
     items: list[OrderItemResponse]
     tracking_events: list[TrackingEventResponse]
     created_at: datetime
+    paypal_order_id: str | None = None
+    paypal_capture_id: str | None = None

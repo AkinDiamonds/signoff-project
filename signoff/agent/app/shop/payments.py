@@ -29,8 +29,13 @@ class _Payments(_Boundary):
     captures: list[_Capture] = Field(min_length=1, max_length=1)
 
 
+class _Payee(_Boundary):
+    merchant_id: str | None = None
+
+
 class _Unit(_Boundary):
     payments: _Payments
+    payee: _Payee | None = None
 
 
 class _CompletedOrder(_Boundary):
@@ -42,7 +47,7 @@ class _CompletedOrder(_Boundary):
 
 
 def verified_capture_id(
-    payload: object, *, order_id: str, amount: Decimal, currency: str
+    payload: object, *, order_id: str, amount: Decimal, currency: str, merchant_id: str
 ) -> str:
     """Return a real response's capture ID only after validating all payment proof.
 
@@ -57,7 +62,10 @@ def verified_capture_id(
         ) from None
     if completed.id != order_id:
         raise AppError("PAYPAL_ORDER_MISMATCH", "PayPal payment does not match this order", status_code=422)
-    capture = completed.purchase_units[0].payments.captures[0]
+    unit = completed.purchase_units[0]
+    if unit.payee is not None and unit.payee.merchant_id is not None and unit.payee.merchant_id != merchant_id:
+        raise AppError("MERCHANT_MISMATCH", "Payment recipient does not match this merchant", status_code=422)
+    capture = unit.payments.captures[0]
     if capture.amount.currency_code != currency:
         raise AppError("CURRENCY_MISMATCH", "Payment currency does not match this order", status_code=422)
     if Decimal(capture.amount.value) != amount:

@@ -7,6 +7,7 @@ The agent and policy packages must never import this module.
 import logging
 from decimal import Decimal
 from typing import Any
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 import httpx
 
@@ -109,6 +110,9 @@ class PayPalOrdersClient:
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
             "Prefer": "return=representation",
+            "PayPal-Request-Id": (
+                str(uuid5(NAMESPACE_URL, f"signoff:create:{reference_id}")) if reference_id else str(uuid4())
+            ),
         }
 
         try:
@@ -137,6 +141,7 @@ class PayPalOrdersClient:
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
             "Prefer": "return=representation",
+            "PayPal-Request-Id": str(uuid5(NAMESPACE_URL, f"signoff:capture:{order_id}")),
         }
 
         try:
