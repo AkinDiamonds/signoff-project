@@ -23,6 +23,7 @@ from agent.app.errors import AppError, NotFoundError
 from agent.app.settings import Settings
 from agent.app.shop.disputes import _find_dispute_for_transaction
 from agent.app.store.base import StoreAmbiguous
+from agent.app.store.scope import order_scope
 from agent.app.store_mock.repository import find_order_by_paypal_transaction_id
 
 
@@ -111,11 +112,12 @@ STATIC_POLICIES = StorePoliciesResponse()
 @router.get("/orders/by-transaction/{transaction_id}", response_model=StoreOrderResponse)
 def get_order_by_transaction(
     transaction_id: str,
+    request: Request,
     db: Annotated[Session, Depends(get_db_session)],
 ) -> StoreOrderResponse:
     """Retrieve an order by PayPal transaction ID."""
     try:
-        order = find_order_by_paypal_transaction_id(db, transaction_id)
+        order = find_order_by_paypal_transaction_id(db, transaction_id, scope=order_scope(request.app.state.settings))
     except StoreAmbiguous:
         raise AppError("ORDER_AMBIGUOUS", "Multiple orders match this payment reference", status_code=409) from None
     if not order:
@@ -134,10 +136,13 @@ def get_order_by_transaction(
 @router.get("/orders/{order_code}/shipments", response_model=list[ShipmentResponse])
 def get_order_shipments(
     order_code: str,
+    request: Request,
     db: Annotated[Session, Depends(get_db_session)],
 ) -> list[ShipmentResponse]:
     """Retrieve shipment tracking events for an order ordered by event_time."""
-    order = db.scalar(select(Order).where(Order.order_code == order_code.strip()))
+    order = db.scalar(select(Order).where(
+        Order.order_code == order_code.strip(), *order_scope(request.app.state.settings).predicates()
+    ))
     if not order:
         raise NotFoundError(f"No order found for order code '{order_code}'")
 
@@ -163,10 +168,13 @@ def get_order_shipments(
 @router.get("/orders/{order_code}/messages", response_model=list[StoreMessageResponse])
 def get_order_messages(
     order_code: str,
+    request: Request,
     db: Annotated[Session, Depends(get_db_session)],
 ) -> list[StoreMessageResponse]:
     """Retrieve buyer messages for an order from dispute records, or empty list if none."""
-    order = db.scalar(select(Order).where(Order.order_code == order_code.strip()))
+    order = db.scalar(select(Order).where(
+        Order.order_code == order_code.strip(), *order_scope(request.app.state.settings).predicates()
+    ))
     if not order or not order.paypal_transaction_id:
         return []
 

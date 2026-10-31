@@ -13,7 +13,7 @@ from agent.app.domain.enums import OrderStatus, TrackingStatus
 from agent.app.domain.money import Money
 from agent.app.errors import AppError, NotFoundError
 from agent.app.paypal.orders_client import PayPalOrdersClient
-from agent.app.settings import PayPalEnv, Settings
+from agent.app.settings import AppEnv, PayPalEnv, Settings
 from agent.app.shop.catalog import get_product
 from agent.app.shop.payments import verified_capture_id
 from agent.app.shop.schemas import (
@@ -150,7 +150,8 @@ async def create_shop_order(
         currency="USD",
         status=OrderStatus.PENDING.value,
         items=order_items_payload,
-        demo_session_id=req.demo_session_id,
+        # Ordinary deployed checkout cannot assign itself to another demo scope.
+        demo_session_id=req.demo_session_id if settings.app_env != AppEnv.prod else None,
         created_at=datetime.now(UTC),
     )
     session.add(order)

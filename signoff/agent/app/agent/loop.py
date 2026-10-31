@@ -43,9 +43,11 @@ from agent.app.policy.charter import get_or_seed_charter, to_charter_response
 from agent.app.policy.gate import GateDecision, GateInput, HistoryFlags, evaluate_gate
 from agent.app.queue.payloads import ExecuteDecisionPayload
 from agent.app.queue.queue import enqueue_job
+from agent.app.settings import Settings
 from agent.app.store.base import StoreAdapter
 from agent.app.store.local_adapter import LocalStoreAdapter
 from agent.app.store.resolution import resolve_disputed_order
+from agent.app.store.scope import order_scope
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +224,9 @@ async def run_agent_loop(
     # Agent and merchant screens use the same seller-first, all-transaction
     # resolution. Ambiguity is a human-review outcome, never an arbitrary match.
     transactions = getattr(paypal_dispute, "disputed_transactions", None) or []
-    adapter = store_adapter or LocalStoreAdapter(session)
+    stored_dispute = session.get(DBDispute, dispute_id)
+    scope = order_scope(Settings(), stored_dispute.demo_session_id if stored_dispute else None)
+    adapter = store_adapter or LocalStoreAdapter(session, scope=scope)
     resolution = resolve_disputed_order(transactions, adapter.find_order)
     tx_id = resolution.transaction_id
     order_context = resolution.order

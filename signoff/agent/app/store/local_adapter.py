@@ -10,6 +10,7 @@ from agent.app.db.models import Order, TrackingEvent
 from agent.app.domain.enums import TrackingStatus
 from agent.app.shop.disputes import _find_dispute_for_transaction
 from agent.app.store.models import OrderRecord, ShipmentRecord
+from agent.app.store.scope import OrderScope
 from agent.app.store_mock.repository import load_order_context
 
 
@@ -31,16 +32,17 @@ def _ensure_utc(dt: Any) -> datetime:
 class LocalStoreAdapter:
     """StoreAdapter implementation backed by local database session."""
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, *, scope: OrderScope | None = None) -> None:
         self._session = session
+        self._scope = scope
 
     def find_order(self, transaction_id: str) -> OrderRecord | None:
         """Find an order by PayPal transaction ID, with shipments included."""
-        return load_order_context(self._session, transaction_id)
+        return load_order_context(self._session, transaction_id, scope=self._scope)
 
     def get_shipments(self, order_code: str) -> list[ShipmentRecord]:
         """Retrieve tracking shipment events for an order code."""
-        order = self._session.scalar(select(Order).where(Order.order_code == order_code.strip()))
+        order = self._order(order_code)
         if order is None:
             return []
         events = list(
@@ -63,7 +65,7 @@ class LocalStoreAdapter:
 
     def get_messages(self, order_code: str) -> list[dict[str, Any]]:
         """Retrieve buyer messages for an order."""
-        order = self._session.scalar(select(Order).where(Order.order_code == order_code.strip()))
+        order = self._order(order_code)
         if not order or not order.paypal_transaction_id:
             return []
         dispute = _find_dispute_for_transaction(self._session, order.paypal_transaction_id)
@@ -84,3 +86,9 @@ class LocalStoreAdapter:
             "return_policy": "Items must be returned in original condition within 30 days of delivery.",
             "cancellation_policy": "Orders may be cancelled before shipment tracking is generated.",
         }
+
+    def _order(self, code: str) -> Order | None:
+        query = select(Order).where(Order.order_code == code.strip())
+        if self._scope is not None:
+            query = query.where(*self._scope.predicates())
+        return self._session.scalar(query)

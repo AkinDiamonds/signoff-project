@@ -139,3 +139,66 @@ def test_http_store_preserves_ambiguity_instead_of_returning_a_match():
     with pytest.raises(StoreAmbiguous):
         adapter.find_order("DUPLICATE")
     client.close()
+
+
+@pytest.mark.parametrize('chosen_demo', [None, 'chosen-demo'])
+def test_merchant_resolution_does_not_mix_other_merchants_or_demo_sessions(chosen_demo):
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        for code, merchant, demo in [
+            ('CORRECT', 'MERCHANT-A', chosen_demo),
+            ('OTHER-MERCHANT', 'MERCHANT-B', None),
+            ('OTHER-DEMO', 'MERCHANT-A', 'different-demo'),
+        ]:
+            session.add(Order(
+                order_code=code, merchant_id=merchant, demo_session_id=demo,
+                customer_email='buyer@example.test', paypal_transaction_id='SHARED-CAPTURE',
+                amount=Decimal('21.00'), currency='USD', status='PAID', items=[], created_at=datetime.now(UTC),
+            ))
+        session.add(Dispute(
+            id='PP-SCOPED', state_fingerprint='fp', status='OPEN',
+            reason='MERCHANDISE_OR_SERVICE_NOT_RECEIVED', amount=Decimal('21.00'), currency='USD',
+            snapshot={
+                'disputed_transactions': [{'seller_transaction_id': 'SHARED-CAPTURE'}],
+                'messages': [{'posted_by': 'BUYER', 'time_posted': datetime.now(UTC).isoformat(),
+                              'content': 'Private order message'}],
+            },
+            demo_session_id=chosen_demo,
+        ))
+        session.commit()
+        app = create_app(Settings(paypal_merchant_id='MERCHANT-A', store_api_key='fictional-key'))
+        app.dependency_overrides[get_db_session] = lambda: session
+        with TestClient(app) as client:
+            detail = client.get('/api/disputes/PP-SCOPED').json()
+            listing = client.get('/api/disputes').json()['items'][0]
+            for view in (detail, listing):
+                assert view['order_resolution'] == 'found'
+                assert view['order_code'] == 'CORRECT'
+            for route in ('shipments', 'messages'):
+                response = client.get(
+                    f'/api/store/orders/OTHER-MERCHANT/{route}', headers={'X-Store-Key': 'fictional-key'}
+                )
+                if route == 'messages':
+                    assert response.status_code == 200 and response.json() == []
+                else:
+                    assert response.status_code == 404
+    engine.dispose()
+
+
+def test_verified_capture_reference_does_not_accept_conflicting_legacy_alias():
+    engine = create_engine('sqlite://')
+    Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        session.add(Order(
+            order_code='CANONICAL', merchant_id='MERCHANT-A', customer_email='buyer@example.test',
+            paypal_transaction_id='OLD-UNVERIFIED-ALIAS', paypal_capture_id='VERIFIED-CAPTURE',
+            amount=Decimal('21.00'), currency='USD', status='PAID', items=[], created_at=datetime.now(UTC),
+        ))
+        session.commit()
+        adapter = LocalStoreAdapter(session)
+        record = adapter.find_order('VERIFIED-CAPTURE')
+        assert record.order_code == 'CANONICAL'
+        assert record.paypal_transaction_id == 'VERIFIED-CAPTURE'
+        assert adapter.find_order('OLD-UNVERIFIED-ALIAS') is None
+    engine.dispose()

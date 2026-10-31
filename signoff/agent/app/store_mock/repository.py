@@ -2,12 +2,13 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from agent.app.db.models import Order, TrackingEvent
 from agent.app.domain.enums import OrderStatus, TrackingStatus
 from agent.app.store.base import StoreAmbiguous
+from agent.app.store.scope import OrderScope
 from agent.app.store_mock.scenarios import (
     SCENARIOS,
     SCENARIOS_BY_TRANSACTION_ID,
@@ -22,13 +23,20 @@ def _ensure_utc(value: datetime) -> datetime:
     return value.astimezone(UTC)
 
 
-def find_order_by_paypal_transaction_id(session: Session, transaction_id: str | None) -> Order | None:
+def find_order_by_paypal_transaction_id(
+    session: Session, transaction_id: str | None, *, scope: OrderScope | None = None
+) -> Order | None:
     """Look up an order by PayPal transaction id; blank or unknown ids return None."""
     if not transaction_id or not transaction_id.strip():
         return None
-    matches = list(session.scalars(
-        select(Order).where(Order.paypal_transaction_id == transaction_id.strip()).limit(2)
+    reference = transaction_id.strip()
+    query = select(Order).where(or_(
+        Order.paypal_capture_id == reference,
+        and_(Order.paypal_capture_id.is_(None), Order.paypal_transaction_id == reference),
     ))
+    if scope is not None:
+        query = query.where(*scope.predicates())
+    matches = list(session.scalars(query.limit(2)))
     if len(matches) > 1:
         raise StoreAmbiguous("Multiple orders have the same PayPal transaction reference")
     return matches[0] if matches else None
@@ -36,7 +44,7 @@ def find_order_by_paypal_transaction_id(session: Session, transaction_id: str | 
 
 def _scenario_for_order(order: Order) -> OrderRecord | None:
     """Match a seeded scenario by transaction id, or by pooled order-code prefix."""
-    scenario = SCENARIOS_BY_TRANSACTION_ID.get(order.paypal_transaction_id or "")
+    scenario = SCENARIOS_BY_TRANSACTION_ID.get(order.paypal_capture_id or order.paypal_transaction_id or "")
     if scenario is not None:
         return scenario
     return next(
@@ -64,7 +72,7 @@ def _to_record(order: Order, events: list[TrackingEvent], buyer_prior_disputes: 
     )
     return OrderRecord(
         order_code=order.order_code,
-        paypal_transaction_id=order.paypal_transaction_id,
+        paypal_transaction_id=order.paypal_capture_id or order.paypal_transaction_id,
         customer_email=order.customer_email,
         amount=order.amount,
         currency=order.currency,
@@ -82,12 +90,13 @@ def load_order_context(
     transaction_id: str | None,
     *,
     buyer_prior_disputes: int | None = None,
+    scope: OrderScope | None = None,
 ) -> OrderRecord | None:
     """Load an order and its shipments, or None when the transaction is unknown.
 
     ``buyer_prior_disputes`` overrides the seeded scenario value when supplied.
     """
-    order = find_order_by_paypal_transaction_id(session, transaction_id)
+    order = find_order_by_paypal_transaction_id(session, transaction_id, scope=scope)
     if order is None:
         return None
 

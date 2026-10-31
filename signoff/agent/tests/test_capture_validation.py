@@ -18,6 +18,7 @@ from agent.app.db.models import Order, TrackingEvent
 from agent.app.errors import AppError, UpstreamUnavailableError
 from agent.app.paypal.auth import PayPalAuth
 from agent.app.paypal.orders_client import PayPalOrdersClient
+from agent.app.settings import AppEnv, Settings
 from agent.app.shop.catalog import seed_catalog
 from agent.app.shop.schemas import CaptureOrderRequest, CreateOrderRequest, OrderItemRequest
 from agent.app.shop.service import capture_shop_order, create_shop_order, reconcile_order
@@ -354,3 +355,20 @@ def test_concurrent_recovery_creates_only_one_tracking_event(tmp_path):
     with Session(engine) as session:
         assert len(session.scalars(select(TrackingEvent)).all()) == 1
     engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_production_checkout_cannot_assign_a_demo_scope(pending_order, monkeypatch):
+    session, _ = pending_order
+    seed_catalog(session)
+    session.commit()
+    settings = Settings(paypal_merchant_id='MERCHANT-A').model_copy(update={'app_env': AppEnv.prod})
+    monkeypatch.setattr('agent.app.shop.service.Settings', lambda: settings)
+    client = AsyncMock(spec=PayPalOrdersClient)
+    client.create_order.return_value = {'id': 'SERVER-ORDER'}
+    created = await create_shop_order(session, CreateOrderRequest(
+        customer_email='scoped@example.test', demo_session_id='another-demo',
+        items=[OrderItemRequest(sku='CND-LAV-01', quantity=1)],
+    ), client)
+    order = session.scalar(select(Order).where(Order.order_code == created.order_code))
+    assert order.merchant_id == 'MERCHANT-A' and order.demo_session_id is None

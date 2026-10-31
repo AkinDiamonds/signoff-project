@@ -11,6 +11,7 @@ Per plan/04-frontend-spec.md and Step 21:
 
 import base64
 from datetime import datetime
+from functools import partial
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -26,6 +27,7 @@ from agent.app.domain.money import Money
 from agent.app.errors import NotFoundError
 from agent.app.settings import Settings
 from agent.app.store.resolution import ResolutionStatus, resolve_disputed_order
+from agent.app.store.scope import order_scope
 from agent.app.store_mock.repository import find_order_by_paypal_transaction_id
 
 router = APIRouter(prefix="/api/disputes", tags=["Disputes"])
@@ -106,6 +108,7 @@ def _decode_cursor(cursor_str: str) -> int:
     ),
 )
 async def list_disputes(
+    request: Request,
     db_session: Annotated[Session, Depends(get_db_session)],
     status_filter: Annotated[DisputeStatus | None, Query(alias="status", description="Filter by status")] = None,
     reason_filter: Annotated[DisputeReason | None, Query(alias="reason", description="Filter by reason")] = None,
@@ -189,13 +192,14 @@ async def list_disputes(
 
     items: list[DisputeListItem] = []
     for d in paged_disputes:
+        scope = order_scope(request.app.state.settings, d.demo_session_id)
         latest_dec = latest_decisions.get(d.id)
         latest_verdict = Verdict(latest_dec.verdict) if latest_dec else None
         latest_rule_id = latest_dec.rule_id if latest_dec else None
 
         resolution = resolve_disputed_order(
             (d.snapshot or {}).get("disputed_transactions"),
-            lambda identifier: find_order_by_paypal_transaction_id(db_session, identifier),
+            partial(find_order_by_paypal_transaction_id, db_session, scope=scope),
         )
 
         items.append(
@@ -250,9 +254,10 @@ async def get_dispute_by_id(
     latest_verdict = Verdict(latest_dec.verdict) if latest_dec else None
     latest_rule_id = latest_dec.rule_id if latest_dec else None
 
+    scope = order_scope(request.app.state.settings, dispute.demo_session_id)
     resolution = resolve_disputed_order(
         (dispute.snapshot or {}).get("disputed_transactions"),
-        lambda identifier: find_order_by_paypal_transaction_id(db_session, identifier),
+        lambda identifier: find_order_by_paypal_transaction_id(db_session, identifier, scope=scope),
     )
 
     approval_url = None
