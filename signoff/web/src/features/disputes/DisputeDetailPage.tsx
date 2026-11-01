@@ -130,9 +130,7 @@ export const DisputeDetailPage: React.FC = () => {
   );
   const isAgentRunning =
     displayedDispute.status === 'WAITING_FOR_SELLER_RESPONSE' &&
-    (!displayedDispute.latest_verdict ||
-      displayedDispute.latest_verdict === 'NEEDS_APPROVAL' ||
-      !hasGateDecided);
+    !displayedDispute.latest_verdict && !hasGateDecided;
 
   const shouldTruncateMessage = rawBuyerMessage && rawBuyerMessage.length > 200;
   const messageToDisplay =
@@ -241,7 +239,7 @@ export const DisputeDetailPage: React.FC = () => {
               Agent actively analyzing PayPal dispute
             </strong>
             <div style={{ fontSize: '12px', color: '#115E59' }}>
-              Correlating carrier delivery logs and checking merchant signing limits.
+              Gathering available order evidence and checking merchant signing limits.
             </div>
           </div>
         </div>
@@ -482,10 +480,10 @@ export const DisputeDetailPage: React.FC = () => {
             </div>
 
             {/* Approval Action Button */}
-            {(displayedDispute.latest_verdict === 'NEEDS_APPROVAL' || displayedDispute.approval_url) && (
+            {displayedDispute.approval_url && (
               <div style={{ marginTop: spacing[1] }}>
                 <a
-                  href={displayedDispute.approval_url ?? `/approve/mock-${displayedDispute.id.toLowerCase()}`}
+                  href={displayedDispute.approval_url}
                   data-testid="open-approval-card-button"
                   style={{
                     display: 'block',
@@ -502,9 +500,12 @@ export const DisputeDetailPage: React.FC = () => {
                     transition: 'background-color 0.15s ease',
                   }}
                 >
-                  Review & Approve Defense &rarr;
+                  Review proposed action &rarr;
                 </a>
               </div>
+            )}
+            {displayedDispute.latest_verdict === 'NEEDS_APPROVAL' && !displayedDispute.approval_url && (
+              <p role="status">No current approval card is available. It may have expired, been resolved, or become stale.</p>
             )}
           </section>
 

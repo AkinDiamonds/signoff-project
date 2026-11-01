@@ -118,10 +118,12 @@ export function useDisputeTimeline(id: string, options?: { refetchInterval?: num
   });
 }
 
-export function useApprovalCard(token: string) {
+export function useApprovalCard(token: string, ownerCard = false) {
   return useQuery<ApprovalCardResponse, ApiQueryError>({
-    queryKey: ['approval-card', token],
-    queryFn: async (): Promise<ApprovalCardResponse> => unwrap(apiClient.getApprovalCard(token)),
+    queryKey: ['approval-card', ownerCard, token],
+    queryFn: async (): Promise<ApprovalCardResponse> => ownerCard
+      ? unwrap(apiClient.request<ApprovalCardResponse>('/api/approvals/cards/{approval_id}', { params: { path: { approval_id: token } } }))
+      : unwrap(apiClient.getApprovalCard(token)),
     enabled: Boolean(token),
     retry: false,
   });
@@ -129,6 +131,8 @@ export function useApprovalCard(token: string) {
 
 export type ResolveApprovalBody = Parameters<typeof apiClient.resolveApproval>[1];
 
-export async function resolveApprovalCall(token: string, body: ResolveApprovalBody) {
-  return unwrap(apiClient.resolveApproval(token, body));
+export async function resolveApprovalCall(token: string, body: ResolveApprovalBody, ownerCard = false) {
+  return ownerCard
+    ? unwrap(apiClient.request('/api/approvals/cards/{approval_id}/resolve', { method: 'POST', params: { path: { approval_id: token } }, body }))
+    : unwrap(apiClient.resolveApproval(token, body));
 }

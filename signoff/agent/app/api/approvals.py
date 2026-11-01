@@ -2,6 +2,7 @@
 
 import logging
 import time
+import uuid
 from collections import defaultdict
 from datetime import UTC, datetime
 from typing import Annotated
@@ -12,8 +13,10 @@ from sqlalchemy.orm import Session
 from agent.app.approvals.schemas import ApprovalCardResponse, ResolveRequest, ResolveResponse
 from agent.app.approvals.service import (
     build_approval_card_response,
+    get_approval_by_id,
     get_approval_by_token,
     resolve_approval,
+    resolve_approval_by_id,
 )
 from agent.app.db.session import get_db_session
 from agent.app.errors import RateLimitedError
@@ -44,6 +47,20 @@ def check_rate_limit(request: Request) -> None:
 
     valid_timestamps.append(now_time)
     _request_history[client_ip] = valid_timestamps
+
+
+@router.get("/cards/{approval_id}", response_model=ApprovalCardResponse)
+def get_owner_approval_card(
+    approval_id: uuid.UUID, db_session: Annotated[Session, Depends(get_db_session)],
+) -> ApprovalCardResponse:
+    return build_approval_card_response(db_session, get_approval_by_id(db_session, approval_id))
+
+
+@router.post("/cards/{approval_id}/resolve", response_model=ResolveResponse)
+def resolve_owner_approval_card(
+    approval_id: uuid.UUID, body: ResolveRequest, db_session: Annotated[Session, Depends(get_db_session)],
+) -> ResolveResponse:
+    return resolve_approval_by_id(db_session, approval_id, body)
 
 
 @router.get(

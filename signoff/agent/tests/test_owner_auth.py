@@ -73,6 +73,19 @@ def test_shipment_controls_require_owner_and_csrf(owner_app):
                            headers={'X-CSRF-Token': csrf}).status_code == 422
 
 
+def test_durable_approval_cards_require_owner_and_csrf(owner_app):
+    app, _db, _settings = owner_app
+    path = f"/api/approvals/cards/{uuid.uuid4()}"
+    with TestClient(app) as client:
+        assert client.get(path).status_code == 401
+        assert client.post(path + '/resolve', json={'action': 'APPROVE'}).status_code == 401
+        csrf = sign_in(client).json()['csrf_token']
+        assert client.get(path).status_code == 404
+        assert client.post(path + '/resolve', json={'action': 'APPROVE'}).status_code == 403
+        assert client.post(path + '/resolve', json={'action': 'APPROVE'},
+                           headers={'X-CSRF-Token': csrf}).status_code == 404
+
+
 def test_login_protects_reads_and_requires_csrf_for_writes(owner_app):
     app, db, _ = owner_app
     with TestClient(app) as client:

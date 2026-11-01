@@ -31,6 +31,7 @@ export const routes: RouteObject[] = [
       { index: true, element: <DashboardPage /> },
       { path: 'disputes', element: <DisputeListPage /> },
       { path: 'disputes/:id', element: <DisputeDetailPage /> },
+      { path: 'approvals/:approvalId', element: <ApprovalPage /> },
       { path: 'policy', element: <CharterPage /> },
       { path: 'shipments', element: <ShipmentsPage /> },
       { path: 'settings', element: <SettingsPage /> },

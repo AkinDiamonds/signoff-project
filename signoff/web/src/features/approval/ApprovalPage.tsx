@@ -34,7 +34,9 @@ function isMoneyAmount(value: unknown): value is MoneyAmount {
 }
 
 export const ApprovalPage: React.FC = () => {
-  const { token = '' } = useParams<{ token: string }>();
+  const { token: linkToken = '', approvalId } = useParams<{ token: string; approvalId: string }>();
+  const token = approvalId ?? linkToken;
+  const ownerCard = Boolean(approvalId);
 
   // Ensure no-referrer policy is active on the page
   useEffect(() => {
@@ -47,7 +49,7 @@ export const ApprovalPage: React.FC = () => {
     }
   }, []);
 
-  const cardQuery = useApprovalCard(token);
+  const cardQuery = useApprovalCard(token, ownerCard);
 
   const [outcome, setOutcome] = useState<ApprovalOutcome | null>(null);
   const [outcomeMessage, setOutcomeMessage] = useState<string>('');
@@ -99,7 +101,7 @@ export const ApprovalPage: React.FC = () => {
     isSubmittingRef.current = true;
     setIsSubmitting(true);
     try {
-      await resolveApprovalCall(token, { action: 'APPROVE' });
+      await resolveApprovalCall(token, { action: 'APPROVE' }, ownerCard);
       setOutcome('APPROVED');
       setOutcomeMessage('Action approved and scheduled for execution.');
       try {
@@ -123,7 +125,7 @@ export const ApprovalPage: React.FC = () => {
       await resolveApprovalCall(token, {
         action: 'DENY',
         ...(denyReason.trim() ? { reason: denyReason.trim() } : {}),
-      });
+      }, ownerCard);
       setOutcome('DENIED');
       setOutcomeMessage('Proposed action was denied. No changes were made.');
       try {
@@ -182,7 +184,7 @@ export const ApprovalPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const body = buildEditResolveRequest(payload);
-      await resolveApprovalCall(token, body);
+      await resolveApprovalCall(token, body, ownerCard);
       setOutcome('APPROVED');
       setOutcomeMessage('Edited action approved and submitted for execution.');
       try {

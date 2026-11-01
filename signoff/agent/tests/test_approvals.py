@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from agent.app.approvals import (
     ApprovalCardResponse,
@@ -37,6 +38,7 @@ from agent.app.approvals import (
     resolve_approval,
 )
 from agent.app.approvals.schemas import ActionMoneySchema
+from agent.app.approvals.service import get_approval_by_id, resolve_approval_by_id
 from agent.app.db.base import Base
 from agent.app.db.models import Approval, Decision, Job
 from agent.app.db.models import Dispute as DBDispute
@@ -66,7 +68,7 @@ FIXTURES_DIR = Path(__file__).resolve().parents[2] / "fixtures" / "paypal"
 @pytest.fixture
 def db_session() -> Iterator[Session]:
     """In-memory SQLite database session."""
-    engine = create_engine("sqlite:///:memory:")
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Base.metadata.create_all(engine)
     session_factory = sessionmaker(bind=engine)
     session = session_factory()
@@ -134,6 +136,51 @@ def setup_pending_approval(db_session: Session, sample_dispute: Dispute):
 # ---------------------------------------------------------------------------
 # 1. Token entropy and hash-at-rest checks
 # ---------------------------------------------------------------------------
+
+
+def test_owner_card_survives_new_api_process_without_raw_token(db_session, setup_pending_approval):
+    from fastapi.testclient import TestClient
+
+    from agent.app.db.session import get_db_session
+    from agent.app.main import create_app
+    from agent.app.settings import Settings
+
+    approval, token, _decision, dispute = setup_pending_approval
+    approval.expires_at = datetime.now(UTC) + timedelta(days=1)
+    db_session.commit()
+    for _ in range(2):
+        app = create_app(Settings(demo_show_approval_links=False))
+        app.dependency_overrides[get_db_session] = lambda: db_session
+        with TestClient(app) as client:
+            detail = client.get(f"/api/disputes/{dispute.id}").json()
+            assert detail["approval_url"] == f"/app/approvals/{approval.id}"
+            card = client.get(f"/api/approvals/cards/{approval.id}")
+            assert card.status_code == 200 and card.json()["id"] == str(approval.id)
+            assert token not in card.text and token not in str(detail)
+    approval.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+    db_session.commit()
+    assert client.get(f"/api/disputes/{dispute.id}").json()["approval_url"] is None
+
+
+def test_owner_card_approve_uses_same_one_time_resolution(db_session, setup_pending_approval):
+    approval, token, _decision, _dispute = setup_pending_approval
+    now = datetime(2026, 10, 6, 12, tzinfo=UTC)
+    assert get_approval_by_id(db_session, approval.id, now).id == approval.id
+    result = resolve_approval_by_id(db_session, approval.id, ApproveResolveRequest(action="APPROVE"), now)
+    assert result.resolution == ApprovalResolution.APPROVE
+    with pytest.raises(ConflictResolvedError):
+        resolve_approval(db_session, token, ApproveResolveRequest(action="APPROVE"), now)
+
+
+def test_owner_card_refuses_stale_and_expired_decisions(db_session, setup_pending_approval):
+    approval, _token, _decision, dispute = setup_pending_approval
+    now = datetime(2026, 10, 6, 12, tzinfo=UTC)
+    with pytest.raises(TokenInvalidError):
+        get_approval_by_id(db_session, approval.id, now + timedelta(days=10))
+    dispute.state_fingerprint = "changed-fingerprint"
+    db_session.commit()
+    with pytest.raises(ConflictStaleError):
+        resolve_approval_by_id(db_session, approval.id, ApproveResolveRequest(action="APPROVE"), now)
 
 
 def test_token_entropy_and_hash_at_rest(db_session, setup_pending_approval):

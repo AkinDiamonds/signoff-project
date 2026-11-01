@@ -27,6 +27,24 @@ describe('Approval card feature (Step 26)', () => {
     vi.stubGlobal('fetch', mockFetch);
   });
 
+  it('loads a durable owner card and resolves using its authenticated API route', async () => {
+    const cardId = 'bb9b1426-179f-41b5-ab4c-0796922012a1';
+    const requests: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes(`/api/approvals/cards/${cardId}`)) {
+        requests.push(`${options?.method ?? 'GET'} ${url}`);
+        return mockFetch(url.replace(`/cards/${cardId}`, '/durable-owner-card'), options);
+      }
+      return mockFetch(input, options);
+    }));
+    renderAt(`/app/approvals/${cardId}`);
+    await waitFor(() => expect(screen.getByTestId('approval-approve-button')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('approval-approve-button'));
+    await waitFor(() => expect(requests.some(value => value.includes('POST') && value.endsWith('/resolve'))).toBe(true));
+    expect(requests.filter(value => value.startsWith('POST'))).toHaveLength(1);
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
   });

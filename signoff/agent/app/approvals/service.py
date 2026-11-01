@@ -23,6 +23,7 @@ from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.elements import ColumnElement
 
 from agent.app.approvals.schemas import (
     ApprovalCardResponse,
@@ -286,6 +287,29 @@ def resolve_approval(
     request: ResolveRequest,
     now: datetime | None = None,
 ) -> ResolveResponse:
+    return _resolve_approval(session, Approval.token_hash == hash_token(raw_token), request, now)
+
+
+def get_approval_by_id(session: Session, approval_id: uuid.UUID, now: datetime | None = None) -> Approval:
+    """Owner-authenticated access to durable cards; IDs are not bearer tokens."""
+    now_dt = _as_utc(now) if now is not None else datetime.now(UTC)
+    approval = session.get(Approval, approval_id)
+    if (approval is None or _as_utc(approval.expires_at) <= now_dt
+            or approval.resolution != ApprovalResolution.PENDING.value):
+        raise TokenInvalidError()
+    return approval
+
+
+def resolve_approval_by_id(
+    session: Session, approval_id: uuid.UUID, request: ResolveRequest, now: datetime | None = None,
+) -> ResolveResponse:
+    """Uses exactly the token route's locks, expiry, freshness and waiver checks."""
+    return _resolve_approval(session, Approval.id == approval_id, request, now)
+
+
+def _resolve_approval(
+    session: Session, lookup: ColumnElement[bool], request: ResolveRequest, now: datetime | None,
+) -> ResolveResponse:
     """Resolve an approval card with approve, deny, or edit.
 
     Enforces:
@@ -296,14 +320,13 @@ def resolve_approval(
     - Deny records decision and stops.
     """
     now_dt = _as_utc(now) if now is not None else datetime.now(UTC)
-    token_hash_val = hash_token(raw_token)
 
     # 1. Lock the approval row to serialize concurrent resolves
-    stmt = select(Approval).where(Approval.token_hash == token_hash_val).with_for_update()
+    stmt = select(Approval).where(lookup).with_for_update()
     approval = session.scalar(stmt)
 
     if approval is None:
-        logger.warning("Approval resolve failed: token_not_found (hash=%s)", token_hash_val[:8])
+        logger.warning("Approval resolve failed: card_not_found")
         raise TokenInvalidError()
 
     if _as_utc(approval.expires_at) <= now_dt:

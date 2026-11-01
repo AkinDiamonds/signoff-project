@@ -111,7 +111,7 @@ export function renderTimelineEventContent(event: KnownTimelineEvent): {
     case 'APPROVAL_REQUESTED':
       return {
         title: 'Human approval requested',
-        details: 'Dispatched approval notification to merchant.',
+        details: 'Approval card created; waiting for merchant review.',
       };
     case 'APPROVAL_RESOLVED':
       return {

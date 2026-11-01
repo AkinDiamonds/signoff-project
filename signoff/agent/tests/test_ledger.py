@@ -41,6 +41,15 @@ from agent.app.settings import AppEnv, Settings
 from scripts.replay_decisions import replay_single_decision
 
 
+def test_plan_timeline_displays_actions_without_rewriting_ledger(db_session):
+    event = record_ledger_event(db_session, "PP-PLAN-ACTIONS", TimelineEventKind.PLAN_PROPOSED,
+                                {"action_types": ["PROVIDE_EVIDENCE", "SEND_MESSAGE"], "count": 2})
+    db_session.commit()
+    items, _ = get_timeline_events(db_session, "PP-PLAN-ACTIONS")
+    assert items[0]["action_type"] == "PROVIDE_EVIDENCE, SEND_MESSAGE"
+    assert event.payload == {"action_types": ["PROVIDE_EVIDENCE", "SEND_MESSAGE"], "count": 2}
+
+
 @pytest.fixture
 def db_session() -> Session:
     engine = create_engine(

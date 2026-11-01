@@ -114,7 +114,7 @@ describe('Disputes UI feature (Step 25)', () => {
     expect(injectedScripts).toHaveLength(0);
   });
 
-  it('shows in-progress state when agent is still analyzing', async () => {
+  it('does not claim active analysis or invent an approval link while waiting for approval', async () => {
     await act(async () => {
       renderAt('/app/disputes/PP-D-1002');
     });
@@ -123,7 +123,9 @@ describe('Disputes UI feature (Step 25)', () => {
       expect(screen.getByTestId('dispute-detail-id').textContent).toContain('PP-D-1002');
     });
 
-    expect(screen.getByTestId('agent-in-progress-banner')).toBeTruthy();
+    expect(screen.queryByTestId('agent-in-progress-banner')).toBeNull();
+    const approvalLink = screen.queryByTestId('open-approval-card-button');
+    expect(approvalLink?.getAttribute('href') ?? '').not.toContain('/approve/mock-');
   });
 
   it('unknown dispute shows not-found state with link back to list', async () => {

@@ -193,7 +193,10 @@ def get_timeline_events(
         elif kind == TimelineEventKind.EVIDENCE_BUILT.value:
             event_dict["evidence_strength"] = sanitized_payload.get("evidence_strength", "medium")
         elif kind == TimelineEventKind.PLAN_PROPOSED.value:
-            event_dict["action_type"] = sanitized_payload.get("action_type", "")
+            actions = sanitized_payload.get("action_types", [])
+            event_dict["action_type"] = sanitized_payload.get("action_type") or ", ".join(
+                action for action in actions if isinstance(action, str)
+            )
         elif kind == TimelineEventKind.GATE_DECIDED.value:
             event_dict["verdict"] = sanitized_payload.get("verdict", "")
             event_dict["rule_id"] = sanitized_payload.get("rule_id", "")

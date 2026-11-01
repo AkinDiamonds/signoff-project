@@ -10,7 +10,7 @@ Per plan/04-frontend-spec.md and Step 21:
 """
 
 import base64
-from datetime import datetime
+from datetime import UTC, datetime
 from functools import partial
 from typing import Annotated, Any
 
@@ -20,12 +20,12 @@ from sqlalchemy import case, select
 from sqlalchemy.orm import Session
 
 from agent.app.approvals.service import DEMO_APPROVAL_LINKS
-from agent.app.db.models import Decision, Dispute
+from agent.app.db.models import Approval, Decision, Dispute
 from agent.app.db.session import get_db_session
-from agent.app.domain.enums import DisputeReason, DisputeStatus, Verdict
+from agent.app.domain.enums import ApprovalResolution, DisputeReason, DisputeStatus, Verdict
 from agent.app.domain.money import Money
 from agent.app.errors import NotFoundError
-from agent.app.settings import Settings
+from agent.app.settings import AppEnv, Settings
 from agent.app.store.resolution import ResolutionStatus, resolve_disputed_order
 from agent.app.store.scope import order_scope
 from agent.app.store_mock.repository import find_order_by_paypal_transaction_id
@@ -261,8 +261,19 @@ async def get_dispute_by_id(
     )
 
     approval_url = None
+    pending_approval = db_session.scalar(
+        select(Approval).join(Decision, Approval.decision_id == Decision.id).where(
+            Approval.dispute_id == dispute.id,
+            Approval.resolution == ApprovalResolution.PENDING.value,
+            Approval.expires_at > datetime.now(UTC),
+            Decision.dispute_fingerprint == dispute.state_fingerprint,
+        ).order_by(Approval.created_at.desc(), Approval.id.desc()).limit(1)
+    )
+    if pending_approval is not None:
+        approval_url = f"/app/approvals/{pending_approval.id}"
     settings = getattr(request.app.state, "settings", None) if hasattr(request, "app") else Settings()
-    if settings and settings.demo_show_approval_links:
+    if (approval_url is None and settings and settings.app_env != AppEnv.prod
+            and settings.demo_show_approval_links):
         demo_links = (
             getattr(request.app.state, "demo_approval_links", None)
             if hasattr(request, "app")
