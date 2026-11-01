@@ -10,7 +10,7 @@ This is the progress board. Verified outcomes are in EXECUTION-LOG.md; product c
 | T03 commerce | IMPLEMENTED; hosted proof pending | Durable IDs/intents, exact capture/payee validation, stable request IDs, concurrent/restart recovery and shared resolver. Merchant/demo scope and canonical alias checks complete in 618ed19; real hosted purchase proof stays open. |
 | T04 simulated fulfilment | PASS locally; deployed surface verified | Persistent automatic/manual stages, pauses, safe timestamps, scoped owner controls and reload/concurrency checks. |
 | T05 evidence | PARTIAL; saved model-run snapshots deployed | Inspectable immutable model-run evidence; pre-model exit snapshots, refresh and merchant missing-evidence policy remain. |
-| T06–T08 agent and approvals | TODO | Reliable plans, verified execution, durable phone approvals. |
+| T06–T08 agent and approvals | PARTIAL | Durable owner approval access, grounded model evidence, strict output checks and stale-policy guard shipped; full re-gating, failure UX, concurrency and provider proof remain. |
 | T09–T10 notifications | TODO | Toasts, inbox and Android web push. |
 | T11–T13 product/mobile validation | TODO | Accurate dashboard, coherent mobile flows and complete regression suite. |
 | T14–T17 Render release and proof | INITIAL RELEASE OBSERVED; full journey pending | Main auto-deploy used. Deployed owner access, worker presence, PayPal-only buyer handoff and 390px shop layout observed. Fresh actual purchase/dispute/model/execution and physical-phone proof remain. |
@@ -22,3 +22,5 @@ Pushed product checkpoints: T01 `07f1d7b`; T02 code `20f24fb`; prior handoff `d4
 Latest: 600 backend / 185 frontend tests, lint/types/import/parity/client freshness and both builds PASS. Native local HTTPS shipping controls PASS; phone viewport only. Earlier owner access on Render is verified; shipping page/authenticated API and both new UI bundles observed on Render. Main 1930967 CI and full E2E PASS (12/12). See [shipping evidence](evidence/t04/README.md).
 
 Next: T05 evidence and policy, fresh sandbox purchase → PayPal Resolution Center dispute → webhook proof. Physical Android and later product steps remain pending.
+
+Latest source main ddab492; CI and full E2E passed. Policy setting is deployed; exact serving revision for the subsequent backend-only model update is not independently verified. Full UI/copy and notification/push work remain open.

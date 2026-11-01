@@ -87,3 +87,7 @@ A following guard stops a queued decision before PayPal access when the active s
 ### Model-safety continuation
 
 Owner-authorized override resolved the test blocker. Main 748cff2 is deployed; Render showed missing-delivery policy default HUMAN_REVIEW, without modifying it. Local cross-app 12/12 and main policy-release E2E passed. A subsequent model-safety checkpoint forces evidence actions to use recorded evidence, validates money without coercion, rejects truncation, provides generated schemas to model/repair and redacts unknown field names. Full local backend 625 passed before the final focused redaction check; current focused tests and final sequential cross-app 12/12 passed. See EXECUTION-LOG for push/CI/release state. Actual hosted LLM/provider execution, rest of T06/T07, UI/copy, notifications and Android remain open.
+
+### Latest model safety release
+
+Main ddab492 is remote-confirmed; standard CI 41354968018 and full E2E 41354967949 passed. Existing Render owner/worker/shop health passed, but this backend-only change has no exposed build identifier; exact serving revision not independently proven. Workspace real provider returned two valid uncached fictional-case plans. Existing PP-R-MYR-10195637 approval predates evidence grounding and has no saved snapshot; it was not retroactively changed or verified. Next: pre-model evidence snapshots/refresh, provider failure UX, T07 fresh-policy concurrency/provider proof, notifications/inbox/push and complete UI/copy/mobile work.
