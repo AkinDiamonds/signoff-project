@@ -57,3 +57,7 @@ The owner authorizes releasing the tested compatible branch to `main`; existing 
 - Source main and codex/signoff-v3 remote-confirmed at 1930967eab74ed0e6b51eb9d0313bcbf94b1cfae before this handoff-only commit. Authorized fast-forward, no Render config changes. Branch CI 41236978982, main CI 41237185691 and main full E2E 41237185727 all completed/success (12/12 browser cases).
 - New API OpenAPI/shipping read, merchant and shop shipping bundles observed on Render. Actual owner login/reload/cookie/CSRF/logout checks and shipping page/API/no-overflow PASS; report/screenshot in evidence/t04. Fresh worker heartbeat verified. No new paid shipments exist yet (authenticated list200/count 0); auto/manual milestone proof remains local until a fresh hosted sandbox purchase. PayPal/LLM only configured, no fresh full provider journey claimed.
 - Next: T05 inspectable saved evidence/provenance and merchant missing-evidence policy. Keep buyer dispute creation exclusively in PayPal Resolution Center. Physical Android/push remains pending.
+
+### Approval-link fix, 2026-11-01
+
+Main f87e538 is deployed and the existing PP-R-MYR-10195637 approval card opened successfully on Render without resolving it. Durable owner-only card IDs replace the broken mock fallback; original token links remain supported. Local 605 backend/186 frontend tests, types/builds, branch CI pass. See EXECUTION-LOG. Next: user can review the pending action; continue T05 evidence provenance/policy and end-to-end provider proof.
