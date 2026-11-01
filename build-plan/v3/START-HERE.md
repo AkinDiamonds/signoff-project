@@ -69,3 +69,5 @@ Evidence panel no longer fabricates high strength, delivery, carrier or matching
 ### Saved evidence increment
 
 New model runs persist one append-only evidence snapshot (migration b75e0ac40005); same-run changed evidence fails closed. Merchant dispute details load saved snapshots with source labels, record IDs, score components and submission previews. Legacy runs and pre-model exits have no fabricated snapshot. Local 607 backend/187 frontend checks and isolated PostgreSQL migration/trigger checks passed. See EXECUTION-LOG for release state; missing-evidence policy and pre-model-exit snapshots remain next.
+
+Saved-evidence source 712b14f was pushed to main and observed on Render; existing dispute PP-R-MYR-10195637 correctly shows no saved snapshot (the run predates this feature). Main E2E 41351211424 passed all 12 cases. Main CI 41351211495 also completed/success. No approval or PayPal mutation performed. Next: configurable missing-evidence policy plus pre-model-exit snapshots/refresh and fresh hosted proof.

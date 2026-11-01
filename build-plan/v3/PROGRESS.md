@@ -9,7 +9,7 @@ This is the progress board. Verified outcomes are in EXECUTION-LOG.md; product c
 | T02 owner access and readiness | PASS locally and on Render desktop Chromium | Owner login/session/reload, Secure/HttpOnly/Partitioned cookie, CSRF rejection, logout/denied access and fresh worker heartbeat verified. Physical Android remains pending. [Deployed evidence](evidence/release-2026-10-31/README.md). |
 | T03 commerce | IMPLEMENTED; hosted proof pending | Durable IDs/intents, exact capture/payee validation, stable request IDs, concurrent/restart recovery and shared resolver. Merchant/demo scope and canonical alias checks complete in 618ed19; real hosted purchase proof stays open. |
 | T04 simulated fulfilment | PASS locally; deployed surface verified | Persistent automatic/manual stages, pauses, safe timestamps, scoped owner controls and reload/concurrency checks. |
-| T05 evidence | NEXT | Inspectable snapshots/provenance and merchant missing-evidence policy. |
+| T05 evidence | PARTIAL; saved model-run snapshots deployed | Inspectable immutable model-run evidence; pre-model exit snapshots, refresh and merchant missing-evidence policy remain. |
 | T06–T08 agent and approvals | TODO | Reliable plans, verified execution, durable phone approvals. |
 | T09–T10 notifications | TODO | Toasts, inbox and Android web push. |
 | T11–T13 product/mobile validation | TODO | Accurate dashboard, coherent mobile flows and complete regression suite. |
