@@ -1508,6 +1508,191 @@
         "title": "EvidenceBuiltTimelineEvent",
         "type": "object"
       },
+      "EvidenceSnapshotData": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "buildable": {
+            "title": "Buildable",
+            "type": "boolean"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/SnapshotComponent"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "evidence_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Type"
+          },
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "milestones": {
+            "items": {
+              "$ref": "#/components/schemas/SnapshotMilestone"
+            },
+            "title": "Milestones",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "order_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Code"
+          },
+          "order_created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Created At"
+          },
+          "payment_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Reference"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strength"
+          },
+          "version": {
+            "const": 1,
+            "default": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "order_code",
+          "payment_reference",
+          "order_created_at",
+          "amount",
+          "currency",
+          "items",
+          "milestones",
+          "buildable",
+          "evidence_type",
+          "notes",
+          "explanation",
+          "score",
+          "strength",
+          "components"
+        ],
+        "title": "EvidenceSnapshotData",
+        "type": "object"
+      },
+      "EvidenceSnapshotResponse": {
+        "properties": {
+          "captured_at": {
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "content_hash": {
+            "title": "Content Hash",
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSnapshotData"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "captured_at",
+          "content_hash",
+          "evidence"
+        ],
+        "title": "EvidenceSnapshotResponse",
+        "type": "object"
+      },
       "ExecutionConfirmedTimelineEvent": {
         "properties": {
           "created_at": {
@@ -2822,6 +3007,17 @@
             ],
             "title": "Payload"
           },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -2927,6 +3123,79 @@
           "events"
         ],
         "title": "ShipmentView",
+        "type": "object"
+      },
+      "SnapshotComponent": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "points": {
+            "title": "Points",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "points",
+          "detail"
+        ],
+        "title": "SnapshotComponent",
+        "type": "object"
+      },
+      "SnapshotMilestone": {
+        "properties": {
+          "carrier": {
+            "title": "Carrier",
+            "type": "string"
+          },
+          "event_time": {
+            "format": "date-time",
+            "title": "Event Time",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "simulated",
+              "unknown"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "tracking_number": {
+            "title": "Tracking Number",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "carrier",
+          "tracking_number",
+          "status",
+          "event_time",
+          "source"
+        ],
+        "title": "SnapshotMilestone",
         "type": "object"
       },
       "StoreMessageResponse": {
@@ -5742,6 +6011,132 @@
         "summary": "Get dispute gate decisions",
         "tags": [
           "Timeline & Decisions"
+        ]
+      }
+    },
+    "/api/disputes/{id}/evidence": {
+      "get": {
+        "operationId": "get_evidence_snapshots_api_disputes__id__evidence_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EvidenceSnapshotResponse"
+                  },
+                  "title": "Response Get Evidence Snapshots Api Disputes  Id  Evidence Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request not permitted"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or Stale Data"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation Failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate Limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable or Frozen"
+          }
+        },
+        "summary": "Get Evidence Snapshots",
+        "tags": [
+          "Disputes"
         ]
       }
     },

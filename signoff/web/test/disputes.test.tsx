@@ -114,6 +114,30 @@ describe('Disputes UI feature (Step 25)', () => {
     expect(injectedScripts).toHaveLength(0);
   });
 
+  it('shows the saved run evidence and labels simulated tracking', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes('/api/disputes/PP-D-1001/evidence')) {
+        return new Response(JSON.stringify([{
+          run_id: 'run-example', captured_at: '2026-10-31T20:00:00Z', content_hash: 'abc',
+          evidence: { version: 1, order_code: 'SIG-EXAMPLE', payment_reference: 'CAPTURE-EXAMPLE',
+            order_created_at: '2026-10-31T19:00:00Z', amount: '24.00', currency: 'USD', items: ['Item'],
+            milestones: [{ carrier: 'UPS', tracking_number: 'SIM123', status: 'IN_TRANSIT',
+              event_time: '2026-10-31T19:30:00Z', source: 'simulated' }],
+            buildable: true, evidence_type: 'PROOF_OF_FULFILLMENT', notes: 'Recorded order notes',
+            explanation: 'Tracking present', score: 40, strength: 'MEDIUM',
+            components: [{ name: 'Tracking', points: 40, detail: 'Tracking recorded' }] },
+        }]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return mockFetch(input, options);
+    }));
+    await act(async () => { renderAt('/app/disputes/PP-D-1001'); });
+    await waitFor(() => expect(screen.getByText(/run-example/)).toBeTruthy());
+    expect(screen.getByText(/IN_TRANSIT.*simulated.*SIM123/)).toBeTruthy();
+    expect(screen.getByText(/Tracking: 40.*Tracking recorded/)).toBeTruthy();
+    expect(screen.getByText(/Submission preview: PROOF_OF_FULFILLMENT/)).toBeTruthy();
+  });
+
   it('does not claim active analysis or invent an approval link while waiting for approval', async () => {
     await act(async () => {
       renderAt('/app/disputes/PP-D-1002');

@@ -90,6 +90,7 @@ def test_login_protects_reads_and_requires_csrf_for_writes(owner_app):
     app, db, _ = owner_app
     with TestClient(app) as client:
         assert client.get("/api/disputes").status_code == 401
+        assert client.get("/api/disputes/example/evidence").status_code == 401
         assert client.get("/api/integrations/status").status_code == 401
         response = sign_in(client)
         assert "HttpOnly" in response.headers["set-cookie"]

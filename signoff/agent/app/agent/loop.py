@@ -18,6 +18,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from agent.app.agent.evidence_snapshot import build_snapshot
 from agent.app.agent.llm import LLMFailure, LLMFailureKind, LLMService
 from agent.app.agent.prompts import PROMPT_VERSION, build_agent_prompt
 from agent.app.agent.reasons import (
@@ -31,7 +32,7 @@ from agent.app.agent.schemas import AgentPlan
 from agent.app.agent.screener import screen_dispute_and_context
 from agent.app.agent.tools import READ_TOOL_NAMES, get_dispute_tool
 from agent.app.approvals import create_approval
-from agent.app.db.models import AgentRun, Decision, Execution
+from agent.app.db.models import AgentRun, Decision, EvidenceSnapshot, Execution
 from agent.app.db.models import Dispute as DBDispute
 from agent.app.domain.actions import BaseProposedAction, compute_action_hash
 from agent.app.domain.enums import ActionType, ExecutionStatus, JobKind, TimelineEventKind, Verdict
@@ -320,6 +321,15 @@ async def run_agent_loop(
     model_str = getattr(getattr(llm_service, "provider", None), "model", None) or "default-model"
 
     existing_run = session.get(AgentRun, effective_run_id)
+    snapshot_payload, snapshot_hash = build_snapshot(order_context, evidence)
+    prior_snapshot = session.get(EvidenceSnapshot, effective_run_id) if existing_run is not None else None
+    if prior_snapshot is not None and prior_snapshot.content_hash != snapshot_hash:
+        record_ledger_event(session, dispute_id, TimelineEventKind.NO_ACTION, {
+            "reason": "evidence_changed", "message": "Evidence changed since this run began; human review required.",
+        })
+        session.commit()
+        return AgentLoopResult(status="no_action", run_id=effective_run_id, dispute_id=dispute_id,
+                               fingerprint=current_fingerprint, human_needed=True, error="evidence_changed")
     if existing_run is None:
         agent_run = AgentRun(
             id=effective_run_id,
@@ -330,6 +340,9 @@ async def run_agent_loop(
             cache_hit=False,
         )
         session.add(agent_run)
+        session.flush()
+        session.add(EvidenceSnapshot(run_id=effective_run_id, dispute_id=dispute_id, content_hash=snapshot_hash,
+                                     captured_at=now_dt, payload=snapshot_payload))
     else:
         agent_run = existing_run
         agent_run.input_hash = input_hash

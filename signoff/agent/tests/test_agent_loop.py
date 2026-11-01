@@ -48,7 +48,7 @@ from agent.app.agent.schemas import (
     MakeOfferActionSchema,
 )
 from agent.app.db.base import Base
-from agent.app.db.models import AgentRun, Decision, Job
+from agent.app.db.models import AgentRun, Decision, EvidenceSnapshot, Job
 from agent.app.db.triggers import install_append_only_triggers
 from agent.app.domain.actions import ProvideEvidence, SendMessage
 from agent.app.domain.enums import (
@@ -513,6 +513,40 @@ async def test_crash_retry_reuses_same_run_id(db_session: Session):
     ).scalars().all()
     assert len(runs) == 1
     assert runs[0].id == first_run_id
+
+
+@pytest.mark.asyncio
+async def test_evidence_snapshot_survives_retry_and_changed_tracking_stops_run(db_session: Session):
+    from dataclasses import replace
+
+    from agent.app.store.local_adapter import LocalStoreAdapter
+
+    class ChangingStore(LocalStoreAdapter):
+        changed = False
+
+        def find_order(self, transaction_id):
+            order = super().find_order(transaction_id)
+            if order and self.changed:
+                return replace(order, shipments=())
+            return order
+
+    store = ChangingStore(db_session)
+    dispute = make_dispute()
+    service = make_llm_service([ProviderResponse('{"actions": []}'), ProviderResponse('{"actions": []}')])
+    first = await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute, llm_service=service,
+                                 store_adapter=store)
+    snapshot = db_session.get(EvidenceSnapshot, first.run_id)
+    assert snapshot is not None
+    original_payload = snapshot.payload.copy()
+    assert snapshot.payload['order_code'] and 'customer_email' not in snapshot.payload
+    second = await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute, llm_service=service,
+                                  store_adapter=store)
+    assert second.run_id == first.run_id and db_session.get(EvidenceSnapshot, first.run_id).payload == original_payload
+    store.changed = True
+    third = await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute, llm_service=service,
+                                 store_adapter=store)
+    assert third.human_needed and third.error == 'evidence_changed'
+    assert db_session.get(EvidenceSnapshot, first.run_id).payload == original_payload
 
 
 # ==============================================================================

@@ -22,6 +22,7 @@ class ShipmentRecord:
     status: TrackingStatus
     event_time: datetime
     payload: dict[str, Any] | None = None
+    source_id: str | None = None
 
     def __post_init__(self) -> None:
         if self.event_time.tzinfo is None:

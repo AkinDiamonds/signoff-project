@@ -19,8 +19,9 @@ from pydantic import BaseModel
 from sqlalchemy import case, select
 from sqlalchemy.orm import Session
 
+from agent.app.agent.evidence_snapshot import EvidenceSnapshotData
 from agent.app.approvals.service import DEMO_APPROVAL_LINKS
-from agent.app.db.models import Approval, Decision, Dispute
+from agent.app.db.models import Approval, Decision, Dispute, EvidenceSnapshot
 from agent.app.db.session import get_db_session
 from agent.app.domain.enums import ApprovalResolution, DisputeReason, DisputeStatus, Verdict
 from agent.app.domain.money import Money
@@ -75,6 +76,25 @@ class DisputeDetailResponse(BaseModel):
     order_code: str | None = None
     approval_url: str | None = None
     order_resolution: ResolutionStatus = "not_found"
+
+
+class EvidenceSnapshotResponse(BaseModel):
+    run_id: str
+    captured_at: datetime
+    content_hash: str
+    evidence: EvidenceSnapshotData
+
+
+@router.get("/{id}/evidence", response_model=list[EvidenceSnapshotResponse])
+def get_evidence_snapshots(
+    id: str, db_session: Annotated[Session, Depends(get_db_session)],
+) -> list[EvidenceSnapshotResponse]:
+    if db_session.get(Dispute, id) is None:
+        raise NotFoundError(f"Dispute '{id}' not found")
+    rows = db_session.scalars(select(EvidenceSnapshot).where(EvidenceSnapshot.dispute_id == id)
+                              .order_by(EvidenceSnapshot.captured_at.desc()).limit(50))
+    return [EvidenceSnapshotResponse(run_id=str(row.run_id), captured_at=row.captured_at,
+            content_hash=row.content_hash, evidence=EvidenceSnapshotData.model_validate(row.payload)) for row in rows]
 
 
 def _encode_cursor(offset: int) -> str:

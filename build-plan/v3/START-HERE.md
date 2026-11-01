@@ -65,3 +65,7 @@ Main f87e538 is deployed and the existing PP-R-MYR-10195637 approval card opened
 ### T05 in progress
 
 Evidence panel no longer fabricates high strength, delivery, carrier or matching-postcode claims. Frontend 186 tests and types pass. Durable per-run snapshots, evidence provenance and missing-evidence policy still need implementation. This incremental checkpoint is on the working branch and has not been deployed.
+
+### Saved evidence increment
+
+New model runs persist one append-only evidence snapshot (migration b75e0ac40005); same-run changed evidence fails closed. Merchant dispute details load saved snapshots with source labels, record IDs, score components and submission previews. Legacy runs and pre-model exits have no fabricated snapshot. Local 607 backend/187 frontend checks and isolated PostgreSQL migration/trigger checks passed. See EXECUTION-LOG for release state; missing-evidence policy and pre-model-exit snapshots remain next.

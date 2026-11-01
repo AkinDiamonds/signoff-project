@@ -47,6 +47,7 @@ class LocalStoreAdapter:
                 status=TrackingStatus(e.status),
                 event_time=_ensure_utc(e.event_time),
                 payload=e.payload if isinstance(e.payload, dict) else None,
+                source_id=str(e.id),
             )
             for e in events
         ]

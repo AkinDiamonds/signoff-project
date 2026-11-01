@@ -236,6 +236,17 @@ class AgentRun(Base):
     )
 
 
+class EvidenceSnapshot(Base):
+    """Evidence captured once for an agent run; never reconstruct historical runs."""
+
+    __tablename__ = "evidence_snapshots"
+    run_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("agent_runs.id"), primary_key=True)
+    dispute_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONType, nullable=False)
+
+
 class Decision(Base):
     """Deterministic gate evaluation record (APPEND-ONLY via database trigger).
 

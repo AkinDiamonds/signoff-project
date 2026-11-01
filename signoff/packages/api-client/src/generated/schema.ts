@@ -308,6 +308,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/disputes/{id}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Evidence Snapshots */
+        get: operations["get_evidence_snapshots_api_disputes__id__evidence_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/disputes/{id}/timeline": {
         parameters: {
             query?: never;
@@ -1426,6 +1443,56 @@ export interface components {
             /** Sequence Number */
             sequence_number: number;
         };
+        /** EvidenceSnapshotData */
+        EvidenceSnapshotData: {
+            /** Amount */
+            amount: string | null;
+            /** Buildable */
+            buildable: boolean;
+            /** Components */
+            components: components["schemas"]["SnapshotComponent"][];
+            /** Currency */
+            currency: string | null;
+            /** Evidence Type */
+            evidence_type: string | null;
+            /** Explanation */
+            explanation: string;
+            /** Items */
+            items: string[];
+            /** Milestones */
+            milestones: components["schemas"]["SnapshotMilestone"][];
+            /** Notes */
+            notes: string | null;
+            /** Order Code */
+            order_code: string | null;
+            /** Order Created At */
+            order_created_at: string | null;
+            /** Payment Reference */
+            payment_reference: string | null;
+            /** Score */
+            score: number | null;
+            /** Strength */
+            strength: string | null;
+            /**
+             * Version
+             * @default 1
+             * @constant
+             */
+            version: 1;
+        };
+        /** EvidenceSnapshotResponse */
+        EvidenceSnapshotResponse: {
+            /**
+             * Captured At
+             * Format: date-time
+             */
+            captured_at: string;
+            /** Content Hash */
+            content_hash: string;
+            evidence: components["schemas"]["EvidenceSnapshotData"];
+            /** Run Id */
+            run_id: string;
+        };
         /** ExecutionConfirmedTimelineEvent */
         ExecutionConfirmedTimelineEvent: {
             /** Created At */
@@ -2068,6 +2135,8 @@ export interface components {
             payload?: {
                 [key: string]: unknown;
             } | null;
+            /** Source Id */
+            source_id?: string | null;
             /** Status */
             status: string;
             /** Tracking Number */
@@ -2112,6 +2181,36 @@ export interface components {
             tracking_number: string;
             /** Version */
             version: number;
+        };
+        /** SnapshotComponent */
+        SnapshotComponent: {
+            /** Detail */
+            detail: string;
+            /** Name */
+            name: string;
+            /** Points */
+            points: number;
+        };
+        /** SnapshotMilestone */
+        SnapshotMilestone: {
+            /** Carrier */
+            carrier: string;
+            /**
+             * Event Time
+             * Format: date-time
+             */
+            event_time: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "simulated" | "unknown";
+            /** Source Id */
+            source_id: string | null;
+            /** Status */
+            status: string;
+            /** Tracking Number */
+            tracking_number: string;
         };
         /**
          * StoreMessageResponse
@@ -4053,6 +4152,109 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DecisionsResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request not permitted */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict or Stale Data */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Validation Failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate Limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable or Frozen */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_evidence_snapshots_api_disputes__id__evidence_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidenceSnapshotResponse"][];
                 };
             };
             /** @description Bad Request */

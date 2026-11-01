@@ -297,3 +297,11 @@ This checkpoint is on a feature branch and is not release-ready until the cookie
 
 - Removed unsupported high-strength, delivered, carrier and matching-postcode claims from the merchant evidence panel when data is absent. The panel now displays only recorded values or marks them unavailable.
 - Frontend suite: 186 passed; TypeScript, enum parity and generated client freshness passed. Durable per-run evidence snapshots, policy configuration and full T05 remain outstanding; this is not deployed yet.
+
+## T05 saved evidence increment — 2026-11-01
+
+- Migration b75e0ac40005 adds one append-only evidence snapshot per new model run. Snapshots contain order/payment references, amount/items, tracking record IDs/source/times, evidence eligibility/notes, score and explanatory components. No historical evidence is backfilled. PostgreSQL rejects UPDATE/DELETE; a dedicated local migrated-PostgreSQL test verifies both.
+- Snapshot is created with the run. Retries compare a stable content hash; changed evidence stops for human review instead of rewriting the prior snapshot. Legacy runs without snapshots remain unavailable. Early exits before a model run (such as store outage or unsafe tracking) still surface through the existing audit ledger and do not produce a snapshot.
+- Merchant-only dispute evidence endpoint and page show saved runs and distinguish simulated tracking and submission preview from PayPal confirmation. Existing disputes with no snapshot are labeled accordingly. No evidence is submitted by this feature.
+- Final local checks: 607 backend tests, Ruff, strict mypy, import contracts; 187 frontend tests, ESLint, type/client/enum freshness; PostgreSQL migration and trigger test; both production builds. A first frontend run failed when a test mock returned an object where the endpoint requires an array; response validation now fails visibly instead of crashing and the rerun passed. New screenshot-specific UI test passed after final wording changes.
+- This is the saved-evidence increment, not the complete T05 policy: missing-evidence merchant configuration, snapshots for pre-model exits, explicit refresh/re-evaluation and fresh hosted end-to-end proof remain. Existing provider/gate/executor semantics are unchanged.

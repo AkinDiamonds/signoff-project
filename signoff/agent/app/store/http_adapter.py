@@ -107,6 +107,7 @@ class HttpStoreAdapter:
                     status=TrackingStatus(s["status"]),
                     event_time=_ensure_utc(s["event_time"]),
                     payload=s.get("payload") if isinstance(s.get("payload"), dict) else None,
+                    source_id=s.get("source_id") if isinstance(s.get("source_id"), str) else None,
                 )
             )
         return results

@@ -14,7 +14,7 @@ import {
   spacing,
   typography,
 } from '@signoff/ui';
-import { useDispute, useDisputeTimeline } from '../../app/queries';
+import { useDispute, useDisputeTimeline, useEvidenceSnapshots } from '../../app/queries';
 import { DecisionTimeline } from './timeline';
 import type { DisputeDetail } from './types';
 
@@ -28,6 +28,7 @@ export const DisputeDetailPage: React.FC = () => {
 
   const disputeQuery = useDispute(disputeId, { refetchInterval: 5000 });
   const timelineQuery = useDisputeTimeline(disputeId, { refetchInterval: 5000 });
+  const evidenceQuery = useEvidenceSnapshots(disputeId);
 
   const [displayedDispute, setDisplayedDispute] = useState<DisputeDetail | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -370,6 +371,27 @@ export const DisputeDetailPage: React.FC = () => {
               </div>
             </div>
 
+            {evidenceQuery.isPending && <p role="status">Loading saved evidence…</p>}
+            {evidenceQuery.isError && <p role="alert">Saved evidence could not be loaded. Try refreshing.</p>}
+            {evidenceQuery.data?.length === 0 && <p>No saved evidence snapshot is available for this dispute.</p>}
+            {evidenceQuery.data?.map(snapshot => <details key={snapshot.run_id} open={evidenceQuery.data?.[0] === snapshot}>
+              <summary>Run {snapshot.run_id} · {new Date(snapshot.captured_at).toLocaleString()}</summary>
+              <p>Order: {snapshot.evidence.order_code ?? 'Not found'} · Payment: {snapshot.evidence.payment_reference ?? 'Unavailable'}</p>
+              {snapshot.evidence.amount && <p>Order total: {snapshot.evidence.currency} {snapshot.evidence.amount}</p>}
+              {snapshot.evidence.items.length > 0 && <p>Items: {snapshot.evidence.items.join(', ')}</p>}
+              <p>Evidence strength: {snapshot.evidence.strength ?? 'Unavailable'}{snapshot.evidence.score != null ? ` (${snapshot.evidence.score}/100)` : ''}</p>
+              <ul>{snapshot.evidence.components.map(component => <li key={component.name}>{component.name}: {component.points} — {component.detail}</li>)}</ul>
+              <p>{snapshot.evidence.explanation}</p>
+              <p>{snapshot.evidence.buildable ? `Submission preview: ${snapshot.evidence.evidence_type}` : 'No evidence submission prepared.'}</p>
+              {snapshot.evidence.notes && <p>{snapshot.evidence.notes}</p>}
+              {snapshot.evidence.milestones.length > 0 && <><h3>Recorded tracking</h3><ul>
+                {snapshot.evidence.milestones.map((event, index) => <li key={`${event.event_time}-${index}`}>
+                  {event.status} · {new Date(event.event_time).toLocaleString()} · {event.source} · {event.carrier} {event.tracking_number}
+                  {event.source_id && <> · Record {event.source_id}</>}
+                </li>)}
+              </ul></>}
+              <p>Gathered for this run. Check the audit trail for submission and PayPal confirmation.</p>
+            </details>)}
             {rawEvidence ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>

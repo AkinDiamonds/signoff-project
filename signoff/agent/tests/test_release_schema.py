@@ -7,7 +7,8 @@ from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
 from agent.app.db.models import Order
@@ -41,6 +42,27 @@ def test_concurrent_forward_release_checks_preserve_order_data():
         finally:
             session.delete(row)
             session.commit()
+    engine.dispose()
+
+
+def test_evidence_snapshot_is_append_only_in_migrated_postgres():
+    engine = create_engine(Settings().database_url)
+    identifier = uuid.uuid4()
+    with engine.connect() as conn:
+        transaction = conn.begin()
+        try:
+            conn.execute(text("INSERT INTO agent_runs (id, dispute_id, model, prompt_version, input_hash, cache_hit) "
+                              "VALUES (:id, 'PP-FICTIONAL', 'test', 'test', 'test', false)"), {'id': identifier})
+            conn.execute(text("INSERT INTO evidence_snapshots (run_id, dispute_id, content_hash, captured_at, payload) "
+                              "VALUES (:id, 'PP-FICTIONAL', 'hash', now(), '{}')"), {'id': identifier})
+            for sql in ("UPDATE evidence_snapshots SET content_hash='modified' WHERE run_id=:id",
+                        "DELETE FROM evidence_snapshots WHERE run_id=:id"):
+                savepoint = conn.begin_nested()
+                with pytest.raises(DBAPIError, match='append-only'):
+                    conn.execute(text(sql), {'id': identifier})
+                savepoint.rollback()
+        finally:
+            transaction.rollback()
     engine.dispose()
 
 

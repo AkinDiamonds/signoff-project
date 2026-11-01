@@ -87,6 +87,7 @@ export type DisputeDetailResponse = components['schemas']['DisputeDetailResponse
   approval_url?: string | null;
 };
 export type TimelineResponse = components['schemas']['TimelineResponse'];
+export type EvidenceSnapshotResponse = components['schemas']['EvidenceSnapshotResponse'];
 export type ApprovalCardResponse = components['schemas']['ApprovalCardResponse'];
 
 export type DisputesQuery = NonNullable<
@@ -115,6 +116,20 @@ export function useDisputeTimeline(id: string, options?: { refetchInterval?: num
     queryFn: async (): Promise<TimelineResponse> => unwrap(apiClient.getDisputeTimeline(id)),
     enabled: Boolean(id),
     ...(options?.refetchInterval !== undefined ? { refetchInterval: options.refetchInterval } : {}),
+  });
+}
+
+export function useEvidenceSnapshots(id: string) {
+  return useQuery<EvidenceSnapshotResponse[], ApiQueryError>({
+    queryKey: ['dispute-evidence', id],
+    queryFn: async () => {
+      const data = await unwrap(apiClient.request<EvidenceSnapshotResponse[]>('/api/disputes/{id}/evidence', {
+        params: { path: { id } },
+      }));
+      if (!Array.isArray(data)) throw new ApiQueryError('Invalid evidence response', null);
+      return data;
+    },
+    enabled: Boolean(id), retry: false,
   });
 }
 

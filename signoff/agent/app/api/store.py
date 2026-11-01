@@ -85,6 +85,7 @@ class ShipmentResponse(BaseModel):
     status: str
     event_time: datetime
     payload: dict[str, Any] | None = None
+    source_id: str | None = None
 
 
 class StoreMessageResponse(BaseModel):
@@ -157,6 +158,7 @@ def get_order_shipments(
             status=ev.status,
             event_time=_ensure_utc(ev.event_time),
             payload=ev.payload,
+            source_id=str(ev.id),
         )
         for ev in events
     ]

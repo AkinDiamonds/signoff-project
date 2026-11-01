@@ -69,6 +69,7 @@ def _to_record(
             status=TrackingStatus(event.status),
             event_time=_ensure_utc(event.event_time),
             payload=event.payload if isinstance(event.payload, dict) else None,
+            source_id=str(event.id),
         )
         for event in events
     )
