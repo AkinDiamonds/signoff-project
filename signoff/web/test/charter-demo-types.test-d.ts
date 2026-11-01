@@ -23,6 +23,7 @@ describe('charter and demo type contracts', () => {
       repeatDisputerThreshold: '2',
       autoProvideEvidence: true,
       autoSendMessage: true,
+      missingDeliveryPolicy: 'HUMAN_REVIEW',
       neverAutoReasons: [],
       neverAutoActions: ['APPEAL'],
     };

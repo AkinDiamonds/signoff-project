@@ -3,6 +3,7 @@ import {
   approvalUrl,
   createBuyerDispute,
   createShopOrder,
+  deliverSimulatedOrder,
   hasKind,
   waitForTimeline,
 } from './helpers/agent';
@@ -40,6 +41,7 @@ test('security: tampered order body cannot change the server total @full', async
 
 test('security: buyer message renders as inert text on detail and approval pages @full', async ({ page, request, session }) => {
   const orderCode = await createShopOrder(request, session.id, [{ sku: 'GIFT-SET-01', quantity: 3 }]);
+  await deliverSimulatedOrder(request, orderCode, session.id);
   const disputeId = await createBuyerDispute(request, orderCode, XSS, '180.00');
   await stub.emit(request, disputeId, ['CUSTOMER.DISPUTE.CREATED']);
   await waitForTimeline(request, disputeId, (events) => hasKind(events, 'APPROVAL_REQUESTED'));

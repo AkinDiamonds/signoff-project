@@ -1045,6 +1045,12 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Missing Delivery Policy
+             * @default HUMAN_REVIEW
+             * @enum {string}
+             */
+            missing_delivery_policy: "HUMAN_REVIEW" | "GATED_SETTLEMENT";
             /** Never Auto Actions */
             never_auto_actions?: components["schemas"]["ActionType"][];
             /** Never Auto Reasons */
@@ -2407,6 +2413,12 @@ export interface components {
              * @description The charter version this update is based on
              */
             base_version: number;
+            /**
+             * Missing Delivery Policy
+             * @default HUMAN_REVIEW
+             * @enum {string}
+             */
+            missing_delivery_policy: "HUMAN_REVIEW" | "GATED_SETTLEMENT";
             /** Never Auto Actions */
             never_auto_actions?: components["schemas"]["ActionType"][];
             /** Never Auto Reasons */

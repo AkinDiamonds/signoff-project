@@ -527,7 +527,8 @@ async def test_evidence_snapshot_survives_retry_and_changed_tracking_stops_run(d
         def find_order(self, transaction_id):
             order = super().find_order(transaction_id)
             if order and self.changed:
-                return replace(order, shipments=())
+                changed = replace(order.shipments[0], tracking_number=order.shipments[0].tracking_number + 'X')
+                return replace(order, shipments=(changed,))
             return order
 
     store = ChangingStore(db_session)
@@ -547,6 +548,66 @@ async def test_evidence_snapshot_survives_retry_and_changed_tracking_stops_run(d
                                  store_adapter=store)
     assert third.human_needed and third.error == 'evidence_changed'
     assert db_session.get(EvidenceSnapshot, first.run_id).payload == original_payload
+
+
+@pytest.mark.asyncio
+async def test_missing_delivery_policy_defaults_to_review_and_opt_in_respects_gate(db_session: Session):
+    from dataclasses import replace
+
+    from agent.app.policy.charter import DEFAULT_CHARTER_DATA
+    from agent.app.store.local_adapter import LocalStoreAdapter
+    from agent.app.store.models import MISSING_TRACKING_REASON
+
+    class MissingTracking(LocalStoreAdapter):
+        def find_order(self, transaction_id):
+            order = super().find_order(transaction_id)
+            return replace(order, shipments=(), tracking_unavailable_reason=MISSING_TRACKING_REASON) if order else None
+
+    dispute = make_dispute(
+        allowed_options=AllowedResponseOptions(make_offer=MakeOfferOption(offer_types=['REFUND'])),
+        links=[Link(href='...', rel='provide_evidence', method='POST'),
+               Link(href='...', rel='make_offer', method='POST')],
+    )
+    plan = json.dumps({'actions': [
+        {'action_type': 'PROVIDE_EVIDENCE', 'notes': 'No delivery proof'},
+        {'action_type': 'MAKE_OFFER', 'amount': {'currency_code': 'USD', 'value': '50.00'}},
+    ]})
+    store = MissingTracking(db_session)
+    service = make_llm_service([ProviderResponse(plan)])
+    default_result = await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute,
+                                          store_adapter=store, llm_service=service)
+    assert default_result.human_needed and default_result.actions_count == 0
+    assert db_session.scalar(select(Job).where(Job.kind == JobKind.EXECUTE_DECISION.value)) is None
+    chosen = DEFAULT_CHARTER_DATA.model_copy(update={'missing_delivery_policy': 'GATED_SETTLEMENT'})
+    chosen_result = await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute,
+                                        store_adapter=store, llm_service=service, charter_obj=chosen)
+    assert len(chosen_result.decisions) == 1
+    decision = db_session.scalar(select(Decision).where(Decision.dispute_id == dispute.dispute_id))
+    assert decision is not None and decision.action_type == ActionType.MAKE_OFFER.value
+    assert chosen_result.decisions[0].verdict == Verdict.NEEDS_APPROVAL
+    assert db_session.scalar(select(Job).where(Job.kind == JobKind.EXECUTE_DECISION.value)) is None
+
+
+@pytest.mark.asyncio
+async def test_missing_delivery_without_settlement_proposal_remains_in_review(db_session: Session):
+    from dataclasses import replace
+
+    from agent.app.policy.charter import DEFAULT_CHARTER_DATA
+    from agent.app.store.local_adapter import LocalStoreAdapter
+
+    class MissingTracking(LocalStoreAdapter):
+        def find_order(self, transaction_id):
+            order = super().find_order(transaction_id)
+            return replace(order, shipments=()) if order else None
+
+    dispute = make_dispute()
+    service = make_llm_service([ProviderResponse('{"actions": []}')])
+    chosen = DEFAULT_CHARTER_DATA.model_copy(update={'missing_delivery_policy': 'GATED_SETTLEMENT'})
+    result = await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute,
+                                  store_adapter=MissingTracking(db_session), llm_service=service, charter_obj=chosen)
+    assert result.human_needed and result.actions_count == 0
+    events, _ = get_timeline_events(db_session, dispute.dispute_id)
+    assert any(event['kind'] == 'NO_ACTION' and event['reason'] == 'tracking_requires_review' for event in events)
 
 
 # ==============================================================================

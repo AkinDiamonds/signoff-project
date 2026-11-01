@@ -160,7 +160,9 @@ export function renderTimelineEventContent(event: KnownTimelineEvent): {
     case 'NO_ACTION':
       return {
         title: 'No action taken',
-        details: `Reason: ${event.reason}`,
+        details: event.reason === 'tracking_requires_review'
+          ? 'Delivery evidence is missing or unsafe. Human review is required.'
+          : `Reason: ${event.reason}`,
       };
     case 'RUN_FAILED':
       return {

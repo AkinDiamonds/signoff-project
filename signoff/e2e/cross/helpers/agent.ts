@@ -108,6 +108,22 @@ export async function createShopOrder(
   return created.order_code;
 }
 
+export async function deliverSimulatedOrder(request: APIRequestContext, orderCode: string, sessionId: string): Promise<void> {
+  const scope = `?demo_session_id=${encodeURIComponent(sessionId)}`;
+  for (let step = 0; step < 3; step += 1) {
+    const response = await request.get(`${AGENT_URL}/api/fulfillment/orders${scope}`);
+    expect(response.status()).toBe(200);
+    const shipments: components['schemas']['ShipmentView'][] = await response.json();
+    const shipment = shipments.find(item => item.order_code === orderCode);
+    expect(shipment).toBeDefined();
+    if (!shipment || shipment.stage === 'DELIVERED') return;
+    const result = await request.post(`${AGENT_URL}/api/fulfillment/orders/${orderCode}/actions${scope}`, {
+      data: { base_version: shipment.version, request_id: crypto.randomUUID(), action: 'advance' },
+    });
+    expect(result.status(), await result.text()).toBe(200);
+  }
+}
+
 export async function createBuyerDispute(
   request: APIRequestContext,
   orderCode: string,

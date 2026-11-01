@@ -71,3 +71,11 @@ Evidence panel no longer fabricates high strength, delivery, carrier or matching
 New model runs persist one append-only evidence snapshot (migration b75e0ac40005); same-run changed evidence fails closed. Merchant dispute details load saved snapshots with source labels, record IDs, score components and submission previews. Legacy runs and pre-model exits have no fabricated snapshot. Local 607 backend/187 frontend checks and isolated PostgreSQL migration/trigger checks passed. See EXECUTION-LOG for release state; missing-evidence policy and pre-model-exit snapshots remain next.
 
 Saved-evidence source 712b14f was pushed to main and observed on Render; existing dispute PP-R-MYR-10195637 correctly shows no saved snapshot (the run predates this feature). Main E2E 41351211424 passed all 12 cases. Main CI 41351211495 also completed/success. No approval or PayPal mutation performed. Next: configurable missing-evidence policy plus pre-model-exit snapshots/refresh and fresh hosted proof.
+
+### Uncommitted missing-delivery policy; verification stopped
+
+Policy and settings UI changes are uncommitted. Focused policy tests passed (28). `make test-web` failed twice (corrected lint issue, then unhandled Vitest typecheck error with 188 tests passing), triggering signoff/AGENTS.md's explicit two-failure stop rule. Concurrent backend run: 611 passed/1 failed because legacy scenario B walking path expects automatic execution despite new default human review. No deployment; main remains 712b14f. See latest EXECUTION-LOG for details and preserve all local edits.
+
+### Missing-delivery policy continuation
+
+The owner explicitly overrode the two-failure stop rule for this task. Missing-delivery policy and review UI are implemented; default human review, optional settlement-only processing through existing gate, with unsafe/unknown evidence always reviewed. Full local frontend 188 and backend 612 tests passed before final focused 30 policy/loop tests; full local cross-app retry 12/12 passed after correcting fictional scenario setup. See latest EXECUTION-LOG for release status. Revalidation of current policy immediately before execution is still a T07 requirement, as are remaining provider, notification, UI/copy, Android and end-to-end work.

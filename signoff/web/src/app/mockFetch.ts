@@ -186,6 +186,8 @@ function applyCharterUpdate(base: Charter, body: Record<string, unknown>, versio
         : base.auto_provide_evidence,
     auto_send_message:
       typeof body.auto_send_message === 'boolean' ? body.auto_send_message : base.auto_send_message,
+    missing_delivery_policy: body.missing_delivery_policy === 'GATED_SETTLEMENT'
+      ? 'GATED_SETTLEMENT' : 'HUMAN_REVIEW',
     never_auto_reasons: reasons ?? base.never_auto_reasons ?? [],
     never_auto_actions: actions ?? base.never_auto_actions ?? [],
   };

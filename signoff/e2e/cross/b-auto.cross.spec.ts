@@ -8,14 +8,17 @@ interface Kpis {
   share_auto_resolved: number | null;
 }
 
-test('B: small dispute auto-handled without approval @smoke @full', async ({ page, request, session }) => {
+test('B: in-transit dispute requires review by default @smoke @full', async ({ page, request, session }) => {
   const before: Kpis = await (await request.get(`${AGENT_URL}/api/kpis`)).json();
 
   const { disputeId } = await createScenario(request, 'B', session.id);
   await stub.emit(request, disputeId, ['CUSTOMER.DISPUTE.CREATED']);
-  const items = await waitForTimeline(request, disputeId, (events) => hasKind(events, 'EXECUTION_CONFIRMED'));
+  const items = await waitForTimeline(request, disputeId, (events) =>
+    events.some(event => event.kind === 'NO_ACTION' && 'reason' in event && event.reason === 'tracking_requires_review'));
 
   expect(hasKind(items, 'APPROVAL_REQUESTED')).toBe(false);
+  expect(hasKind(items, 'EXECUTION_INTENDED')).toBe(false);
+  expect(hasKind(items, 'EXECUTION_CONFIRMED')).toBe(false);
 
   const after: Kpis = await (await request.get(`${AGENT_URL}/api/kpis`)).json();
   expect(after.open_disputes).toBeGreaterThan(before.open_disputes);
@@ -30,4 +33,7 @@ test('B: small dispute auto-handled without approval @smoke @full', async ({ pag
   await expect(page.getByTestId('kpi-autonomous-share')).toHaveText(
     after.share_auto_resolved === null ? '—' : `${Math.round(after.share_auto_resolved * 100)}%`
   );
+  await page.goto(`/app/disputes/${disputeId}`);
+  await expect(page.getByText('Delivery evidence needs your review')).toBeVisible();
+  await expect(page.getByTestId('agent-in-progress-banner')).toHaveCount(0);
 });

@@ -13,7 +13,7 @@ import logging
 import uuid
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 from sqlalchemy import select
@@ -86,6 +86,7 @@ class CharterData(BaseModel):
     repeat_disputer_threshold: int = Field(default=2, ge=0)
     auto_provide_evidence: bool = True
     auto_send_message: bool = True
+    missing_delivery_policy: Literal["HUMAN_REVIEW", "GATED_SETTLEMENT"] = "HUMAN_REVIEW"
 
     @field_validator("never_auto_reasons", mode="after")
     @classmethod

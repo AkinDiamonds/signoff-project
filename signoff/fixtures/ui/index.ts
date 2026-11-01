@@ -243,6 +243,7 @@ export const charterFixture = {
   repeat_disputer_threshold: 2,
   auto_provide_evidence: true,
   auto_send_message: true,
+  missing_delivery_policy: 'HUMAN_REVIEW',
 } satisfies Charter;
 
 export const charterHistoryFixture = [charterFixture] satisfies Charter[];

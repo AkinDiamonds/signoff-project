@@ -33,6 +33,7 @@ export interface CharterFormValues {
   repeatDisputerThreshold: string;
   autoProvideEvidence: boolean;
   autoSendMessage: boolean;
+  missingDeliveryPolicy: 'HUMAN_REVIEW' | 'GATED_SETTLEMENT';
   neverAutoReasons: DisputeReason[];
   neverAutoActions: ActionType[];
 }
@@ -73,6 +74,7 @@ export function toFormValues(charter: Charter): CharterFormValues {
     repeatDisputerThreshold: String(charter.repeat_disputer_threshold),
     autoProvideEvidence: charter.auto_provide_evidence,
     autoSendMessage: charter.auto_send_message,
+    missingDeliveryPolicy: charter.missing_delivery_policy ?? 'HUMAN_REVIEW',
     neverAutoReasons: [...(charter.never_auto_reasons ?? [])],
     neverAutoActions: [...(charter.never_auto_actions ?? [])],
   };
@@ -114,6 +116,7 @@ export function buildCharterUpdate(
       repeat_disputer_threshold: Number(threshold),
       auto_provide_evidence: values.autoProvideEvidence,
       auto_send_message: values.autoSendMessage,
+      missing_delivery_policy: values.missingDeliveryPolicy,
       never_auto_reasons: values.neverAutoReasons,
       never_auto_actions: values.neverAutoActions,
       base_version: baseVersion,

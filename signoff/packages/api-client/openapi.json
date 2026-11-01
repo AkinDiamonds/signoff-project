@@ -527,6 +527,15 @@
             "title": "Created At",
             "type": "string"
           },
+          "missing_delivery_policy": {
+            "default": "HUMAN_REVIEW",
+            "enum": [
+              "HUMAN_REVIEW",
+              "GATED_SETTLEMENT"
+            ],
+            "title": "Missing Delivery Policy",
+            "type": "string"
+          },
           "never_auto_actions": {
             "items": {
               "$ref": "#/components/schemas/ActionType"
@@ -3601,6 +3610,15 @@
             "description": "The charter version this update is based on",
             "title": "Base Version",
             "type": "integer"
+          },
+          "missing_delivery_policy": {
+            "default": "HUMAN_REVIEW",
+            "enum": [
+              "HUMAN_REVIEW",
+              "GATED_SETTLEMENT"
+            ],
+            "title": "Missing Delivery Policy",
+            "type": "string"
           },
           "never_auto_actions": {
             "items": {

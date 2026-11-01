@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from agent.app.db.models import Order, SimulatedShipment, TrackingEvent
 from agent.app.domain.enums import OrderStatus, TrackingStatus
 from agent.app.store.base import StoreAmbiguous
+from agent.app.store.models import MISSING_TRACKING_REASON
 from agent.app.store.scope import OrderScope
 from agent.app.store_mock.scenarios import (
     SCENARIOS,
@@ -102,7 +103,7 @@ def tracking_evidence_events(session: Session, order: Order) -> tuple[list[Track
     )
     shipment = session.get(SimulatedShipment, order.id)
     if shipment and shipment.mode == 'missing_tracking':
-        return [], 'Tracking was withheld for this simulated scenario; human review required.'
+        return [], MISSING_TRACKING_REASON
     if shipment and shipment.mode == 'exception':
         reason = 'The simulated shipment has an exception; human review required.'
     return valid, reason

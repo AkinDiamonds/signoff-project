@@ -106,6 +106,20 @@ describe('Charter page (Step 27)', () => {
     });
   });
 
+  it('saves the missing-delivery choice and retains it after reload', async () => {
+    const view = renderAt('/app/charter');
+    await waitForLoaded();
+    const choice = screen.getByTestId<HTMLSelectElement>('charter-missing-delivery-policy');
+    expect(choice.value).toBe('HUMAN_REVIEW');
+    fireEvent.change(choice, { target: { value: 'GATED_SETTLEMENT' } });
+    fireEvent.click(screen.getByTestId('charter-save-button'));
+    await waitFor(() => expect(screen.getByTestId('charter-save-success')).toBeTruthy());
+    view.unmount();
+    renderAt('/app/charter');
+    await waitFor(() => expect(screen.getByTestId<HTMLSelectElement>('charter-missing-delivery-policy').value)
+      .toBe('GATED_SETTLEMENT'));
+  });
+
   it('shows the newer version on a conflict instead of overwriting it', async () => {
     await act(async () => {
       renderAt('/app/charter');

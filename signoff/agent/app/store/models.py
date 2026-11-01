@@ -11,6 +11,7 @@ from typing import Any
 from agent.app.domain.enums import OrderStatus, TrackingStatus
 
 MOCK_MERCHANT_ID = "MOCK-MERCHANT-001"
+MISSING_TRACKING_REASON = 'Tracking was withheld for this simulated scenario; human review required.'
 
 
 @dataclass(frozen=True, slots=True)

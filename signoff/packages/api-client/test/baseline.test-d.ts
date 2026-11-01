@@ -250,6 +250,7 @@ describe('Type Testing Catalog (types-testing.md)', () => {
       repeat_disputer_threshold: 2,
       auto_provide_evidence: true,
       auto_send_message: true,
+      missing_delivery_policy: 'HUMAN_REVIEW',
       created_at: '2026-10-12T00:00:00Z',
     };
     assertType<CharterResponse>(validResponse);
@@ -264,6 +265,7 @@ describe('Type Testing Catalog (types-testing.md)', () => {
       repeat_disputer_threshold: 3,
       auto_provide_evidence: false,
       auto_send_message: true,
+      missing_delivery_policy: 'HUMAN_REVIEW',
     };
     assertType<UpdateCharterRequest>(validRequest);
 

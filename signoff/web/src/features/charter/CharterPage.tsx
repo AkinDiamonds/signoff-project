@@ -445,6 +445,19 @@ export const CharterPage: React.FC = () => {
             </label>
           </div>
 
+          <label style={{ display: 'grid', gap: 6, maxWidth: 560 }}>
+            When delivery evidence is missing
+            <select data-testid="charter-missing-delivery-policy" value={values.missingDeliveryPolicy}
+              onChange={event => patch({ missingDeliveryPolicy: event.target.value === 'GATED_SETTLEMENT'
+                ? 'GATED_SETTLEMENT' : 'HUMAN_REVIEW' })}>
+              <option value="HUMAN_REVIEW">Require human review</option>
+              <option value="GATED_SETTLEMENT">Allow settlement within signing limits</option>
+            </select>
+            <span style={{ fontSize: 13, color: '#52605a' }}>
+              Settlement actions remain subject to PayPal rules and your signing limits. Invalid tracking or an unknown order still requires review.
+            </span>
+          </label>
+
           {/* Exclusion rules */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2], marginTop: spacing[1] }}>
             <CheckboxGroup<DisputeReason>

@@ -5,6 +5,7 @@ import {
   createBuyerDispute,
   createScenario,
   createShopOrder,
+  deliverSimulatedOrder,
   getTimeline,
   hasKind,
   waitForTimeline,
@@ -37,6 +38,7 @@ test('resilience: the poller syncs a dispute with no webhook @full', async ({ re
 
 test('resilience: LLM failure records RUN_FAILED and executes nothing @full', async ({ page, request, session }) => {
   const orderCode = await createShopOrder(request, session.id, [{ sku: 'CND-CED-03', quantity: 1 }]);
+  await deliverSimulatedOrder(request, orderCode, session.id);
   const orderResponse = await request.get(
     `${AGENT_URL}/api/shop/orders/${orderCode}?email=${encodeURIComponent(BUYER_EMAIL)}`
   );

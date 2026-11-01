@@ -42,6 +42,7 @@ from agent.app.paypal.models import Dispute, parse_dispute
 from agent.app.paypal.read_client import PayPalReadClient
 from agent.app.policy.charter import get_or_seed_charter, to_charter_response
 from agent.app.policy.gate import GateDecision, GateInput, HistoryFlags, evaluate_gate
+from agent.app.policy.missing_evidence import evaluate_missing_delivery
 from agent.app.queue.payloads import ExecuteDecisionPayload
 from agent.app.queue.queue import enqueue_job
 from agent.app.settings import Settings
@@ -244,12 +245,19 @@ async def run_agent_loop(
             fingerprint=current_fingerprint, human_needed=True, error=reason,
         )
 
-    # Explicit unsafe tracking cannot be bypassed by proposing a different action.
-    # Merchant-configurable missing-evidence policy is a separate release step.
-    if order_context is not None and order_context.tracking_unavailable_reason:
+    charter_entity = charter_obj
+    if charter_entity is None:
+        charter_entity = to_charter_response(get_or_seed_charter(session, merchant_id="default"))
+    missing_mode = 'normal'
+    if reason_val == 'MERCHANDISE_OR_SERVICE_NOT_RECEIVED':
+        missing_mode = evaluate_missing_delivery(order_context, charter_entity.missing_delivery_policy, now_dt)
+    elif order_context is not None and order_context.tracking_unavailable_reason:
+        missing_mode = 'review'
+    if missing_mode == 'review':
         record_ledger_event(
             session, dispute_id, TimelineEventKind.NO_ACTION,
-            {"reason": "tracking_requires_review", "message": order_context.tracking_unavailable_reason},
+            {"reason": "tracking_requires_review",
+             "message": "Delivery evidence is missing or unsafe; human review required."},
         )
         session.commit()
         return AgentLoopResult(
@@ -389,7 +397,8 @@ async def run_agent_loop(
                 session,
                 dispute_id,
                 TimelineEventKind.NO_ACTION,
-                {"reason": "empty_plan", "message": "Model returned an empty plan"},
+                {"reason": "tracking_requires_review" if missing_mode == 'settlement_only' else "empty_plan",
+                 "message": "Model returned an empty plan"},
             )
             session.commit()
             return AgentLoopResult(
@@ -397,6 +406,7 @@ async def run_agent_loop(
                 run_id=effective_run_id,
                 dispute_id=dispute_id,
                 fingerprint=current_fingerprint,
+                human_needed=missing_mode == 'settlement_only',
             )
 
         agent_run.error = llm_outcome.message
@@ -413,6 +423,7 @@ async def run_agent_loop(
             dispute_id=dispute_id,
             fingerprint=current_fingerprint,
             error=llm_outcome.message,
+            human_needed=True,
         )
 
     # Successful LLM response
@@ -427,7 +438,8 @@ async def run_agent_loop(
             session,
             dispute_id,
             TimelineEventKind.NO_ACTION,
-            {"reason": "empty_plan", "message": "No actions proposed in plan"},
+            {"reason": "tracking_requires_review" if missing_mode == 'settlement_only' else "empty_plan",
+             "message": "No actions proposed in plan"},
         )
         session.commit()
         return AgentLoopResult(
@@ -435,6 +447,7 @@ async def run_agent_loop(
             run_id=effective_run_id,
             dispute_id=dispute_id,
             fingerprint=current_fingerprint,
+            human_needed=missing_mode == 'settlement_only',
         )
 
     # Validate individual actions against edge cases
@@ -459,6 +472,12 @@ async def run_agent_loop(
         # Convert to domain action
         domain_action = action_schema.to_domain()
 
+        if missing_mode == 'settlement_only' and domain_action.action_type not in (
+            ActionType.MAKE_OFFER, ActionType.ACCEPT_CLAIM
+        ):
+            logger.info("Only gated settlement actions are permitted without delivery evidence")
+            continue
+
         # Check: action not applicable to dispute reason or status
         if not is_action_applicable_to_reason(domain_action.action_type, dispute_reason, dispute_status):
             logger.warning(
@@ -477,8 +496,8 @@ async def run_agent_loop(
             dispute_id,
             TimelineEventKind.NO_ACTION,
             {
-                "reason": "all_actions_rejected",
-                "message": "All proposed actions were rejected as inapplicable or mutating",
+                "reason": "tracking_requires_review" if missing_mode == 'settlement_only' else "all_actions_rejected",
+                "message": "All proposed actions were rejected as inapplicable, unsafe, or mutating",
             },
         )
         session.commit()
@@ -487,6 +506,7 @@ async def run_agent_loop(
             run_id=effective_run_id,
             dispute_id=dispute_id,
             fingerprint=current_fingerprint,
+            human_needed=missing_mode == 'settlement_only',
         )
 
     # Deduplicate and order actions: evidence before message
@@ -512,11 +532,6 @@ async def run_agent_loop(
         )
 
     # Load active charter
-    charter_entity = charter_obj
-    if charter_entity is None:
-        db_charter = get_or_seed_charter(session, merchant_id="default")
-        charter_entity = to_charter_response(db_charter)
-
     # History flags
     buyer_history = count_buyer_disputes(
         session,

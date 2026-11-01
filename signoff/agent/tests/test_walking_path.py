@@ -113,14 +113,17 @@ async def test_scenario_a_end_to_end_walking_path(db_session: Session):
 
 @pytest.mark.asyncio
 async def test_scenario_b_end_to_end_walking_path(db_session: Session):
-    """Scenario B: $38 not-received inside charter limits, auto-handled, confirmed, full ledger chain."""
+    """Scenario B: in-transit tracking requires human review and no automatic action."""
     result = await run_scenario("B", db_session=db_session)
     assert result.success
     assert result.scenario_id == "B"
     assert result.dispute_id == "PP-SCENARIO-B"
-    assert result.verdict == Verdict.ALLOW.value
-    assert result.execution_status == ExecutionStatus.CONFIRMED.value
-    assert TimelineEventKind.EXECUTION_CONFIRMED.value in result.timeline_event_kinds
+    assert result.verdict == "HUMAN_REVIEW"
+    assert result.rule_id == "tracking_requires_review"
+    assert result.execution_status == "NOT_STARTED"
+    assert TimelineEventKind.NO_ACTION.value in result.timeline_event_kinds
+    assert TimelineEventKind.EXECUTION_INTENDED.value not in result.timeline_event_kinds
+    assert TimelineEventKind.EXECUTION_CONFIRMED.value not in result.timeline_event_kinds
 
 
 # --- 2. KPI Calculation & Edge Case Tests ---

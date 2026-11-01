@@ -16,7 +16,7 @@ import {
 } from '@signoff/ui';
 import { useDispute, useDisputeTimeline, useEvidenceSnapshots } from '../../app/queries';
 import { DecisionTimeline } from './timeline';
-import type { DisputeDetail } from './types';
+import type { ApiTimelineEvent, DisputeDetail } from './types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -129,9 +129,15 @@ export const DisputeDetailPage: React.FC = () => {
       (ev) => 'kind' in ev && (ev.kind === 'GATE_DECIDED' || ev.kind === 'EXECUTION_CONFIRMED')
     )
   );
+  const latestRunState = timelineQuery.data?.items?.filter(event =>
+    ['RUN_STARTED', 'NO_ACTION', 'RUN_FAILED', 'GATE_DECIDED', 'EXECUTION_CONFIRMED'].includes(event.kind)
+  ).reduce<ApiTimelineEvent | undefined>((latest, event) =>
+    !latest || event.sequence_number > latest.sequence_number ? event : latest, undefined);
+  const needsDeliveryReview = latestRunState?.kind === 'NO_ACTION' && 'reason' in latestRunState &&
+    latestRunState.reason === 'tracking_requires_review';
   const isAgentRunning =
     displayedDispute.status === 'WAITING_FOR_SELLER_RESPONSE' &&
-    !displayedDispute.latest_verdict && !hasGateDecided;
+    !displayedDispute.latest_verdict && !hasGateDecided && latestRunState?.kind === 'RUN_STARTED';
 
   const shouldTruncateMessage = rawBuyerMessage && rawBuyerMessage.length > 200;
   const messageToDisplay =
@@ -213,6 +219,10 @@ export const DisputeDetailPage: React.FC = () => {
       </div>
 
       {/* Agent Active Banner (Only if actively evaluating) */}
+      {needsDeliveryReview && <div role="status" style={{ padding: 16, borderRadius: radius.card, background: '#fff7ed', color: '#7c2d12' }}>
+        <strong>Delivery evidence needs your review</strong>
+        <p style={{ marginBottom: 0 }}>Delivery proof is missing or unsafe. No automatic action was taken.</p>
+      </div>}
       {isAgentRunning && (
         <div
           data-testid="agent-in-progress-banner"
