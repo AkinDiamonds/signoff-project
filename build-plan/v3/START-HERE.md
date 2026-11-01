@@ -83,3 +83,7 @@ The owner explicitly overrode the two-failure stop rule for this task. Missing-d
 ### Signing-policy freshness increment
 
 A following guard stops a queued decision before PayPal access when the active signing-policy version changed or is unavailable, recording a merchant-visible review event. Full local backend 616, frontend 188, types/builds and cross-app 12/12 passed. Guard checkpoint CI/release status follows in latest log. PostgreSQL race verification and full fresh PayPal re-gating remain T07; do not claim full plan completion.
+
+### Model-safety continuation
+
+Owner-authorized override resolved the test blocker. Main 748cff2 is deployed; Render showed missing-delivery policy default HUMAN_REVIEW, without modifying it. Local cross-app 12/12 and main policy-release E2E passed. A subsequent model-safety checkpoint forces evidence actions to use recorded evidence, validates money without coercion, rejects truncation, provides generated schemas to model/repair and redacts unknown field names. Full local backend 625 passed before the final focused redaction check; current focused tests and final sequential cross-app 12/12 passed. See EXECUTION-LOG for push/CI/release state. Actual hosted LLM/provider execution, rest of T06/T07, UI/copy, notifications and Android remain open.

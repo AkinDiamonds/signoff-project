@@ -12,7 +12,7 @@ import json
 from agent.app.agent.evidence import BuiltEvidence
 from agent.app.paypal.models import Dispute
 
-PROMPT_VERSION = "2026-10-29.1"
+PROMPT_VERSION = "2026-11-01.2"
 MAX_BUYER_TEXT_LENGTH = 500
 TRUNCATION_MARKER = "... [TRUNCATED]"
 NON_ENGLISH_MARKER = "... [TRUNCATED - NON-ENGLISH]"

@@ -1,6 +1,7 @@
 """Failure matrix, cache labeling, budget race, and provider tests for the LLM layer."""
 
 import asyncio
+import json
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -192,7 +193,7 @@ async def test_extra_fields_are_rejected_and_typed():
 
     assert isinstance(result, LLMFailure)
     assert result.kind == LLMFailureKind.extra_fields
-    assert "unexpected" in result.message
+    assert "outside the schema" in result.message
     assert fake.calls == 2
 
 
@@ -205,6 +206,33 @@ async def test_empty_plan_is_typed_and_not_repaired():
     assert isinstance(result, LLMFailure)
     assert result.kind == LLMFailureKind.empty_plan
     assert fake.calls == 1
+
+
+@pytest.mark.asyncio
+async def test_truncated_but_valid_json_is_repaired_before_use():
+    service, fake, _, _ = await make_service([
+        ProviderResponse(VALID_JSON, finish_reason='length'), ProviderResponse(VALID_JSON, finish_reason='stop'),
+    ])
+    result = await service.generate(PROMPT, input_hash='truncated', prompt_version='v1', schema=Plan)
+    assert isinstance(result, LLMPlanResult)
+    assert fake.calls == 2 and result.attempts == 2
+
+
+@pytest.mark.asyncio
+async def test_provider_and_repair_receive_the_actual_validation_schema():
+    service, fake, _, _ = await make_service([ProviderResponse('not json'), ProviderResponse(VALID_JSON)])
+    result = await service.generate(PROMPT, input_hash='schema', prompt_version='v1', schema=Plan)
+    assert isinstance(result, LLMPlanResult) and fake.calls == 2
+    expected = json.dumps(Plan.model_json_schema(), sort_keys=True, separators=(',', ':'))
+    assert expected in fake.messages[0][0]['content']
+    assert expected in fake.messages[1][0]['content']
+
+
+def test_invalid_model_field_names_are_not_echoed_in_diagnostics():
+    value = '{"actions":[{"action_type":"PROVIDE_EVIDENCE","PRIVATE_BUYER_TEXT_123":"value"}]}'
+    result = parse_plan(value, None, Plan)
+    assert isinstance(result, LLMFailure)
+    assert 'PRIVATE_BUYER_TEXT_123' not in result.message
 
 
 @pytest.mark.asyncio

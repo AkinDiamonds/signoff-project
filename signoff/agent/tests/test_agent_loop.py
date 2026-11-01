@@ -180,6 +180,34 @@ def make_llm_service(responses: list[ProviderResponse | Exception]) -> LLMServic
 # ==============================================================================
 
 
+@pytest.mark.parametrize('amount', [1, True, '1.234', '1e2'])
+def test_model_money_must_be_a_decimal_string_with_at_most_two_places(amount):
+    raw = {'actions': [{'action_type': 'MAKE_OFFER', 'amount': {'currency_code': 'USD', 'value': amount}}]}
+    with pytest.raises(ValidationError):
+        AgentPlan.model_validate(raw)
+
+
+def test_model_currency_must_not_be_silently_changed():
+    raw = {'actions': [{'action_type': 'MAKE_OFFER', 'amount': {'currency_code': 'usd', 'value': '1.00'}}]}
+    with pytest.raises(ValidationError):
+        AgentPlan.model_validate(raw)
+
+
+@pytest.mark.asyncio
+async def test_model_cannot_invent_evidence_notes_or_tracking(db_session: Session):
+    dispute = make_dispute()
+    plan = json.dumps({'actions': [{'action_type': 'PROVIDE_EVIDENCE', 'notes': 'FORGED DELIVERY',
+                                    'tracking_info': [{'carrier': 'UPS', 'tracking_number': 'FORGED123'}]}]})
+    result = await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute,
+                                  llm_service=make_llm_service([ProviderResponse(plan)]))
+    assert result.status == 'completed'
+    decision = db_session.scalar(select(Decision).where(Decision.dispute_id == dispute.dispute_id,
+                                                         Decision.action_type == ActionType.PROVIDE_EVIDENCE.value))
+    assert decision is not None
+    assert 'FORGED' not in json.dumps(decision.action_payload)
+    assert decision.action_payload['tracking_info'][0]['tracking_number'] == '1Z999AA10123456784'
+
+
 def test_schema_rejects_unknown_action_type():
     raw = {"actions": [{"action_type": "DO_SOMETHING_UNKNOWN"}]}
     with pytest.raises(ValidationError):

@@ -18,6 +18,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from agent.app.agent.evidence import to_provide_evidence
 from agent.app.agent.evidence_snapshot import build_snapshot
 from agent.app.agent.llm import LLMFailure, LLMFailureKind, LLMService
 from agent.app.agent.prompts import PROMPT_VERSION, build_agent_prompt
@@ -471,6 +472,13 @@ async def run_agent_loop(
 
         # Convert to domain action
         domain_action = action_schema.to_domain()
+
+        if domain_action.action_type == ActionType.PROVIDE_EVIDENCE:
+            verified_evidence = to_provide_evidence(evidence) if evidence is not None else None
+            if verified_evidence is None:
+                logger.warning("Evidence proposal rejected because verified evidence is unavailable")
+                continue
+            domain_action = verified_evidence
 
         if missing_mode == 'settlement_only' and domain_action.action_type not in (
             ActionType.MAKE_OFFER, ActionType.ACCEPT_CLAIM

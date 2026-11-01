@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
-from typing import Protocol
+from typing import Any, Protocol
 from urllib.parse import urlparse
 
 import httpx
@@ -215,6 +215,8 @@ def parse_plan(
     _require_strict_schema(schema)
     if finish_reason == "content_filter":
         return LLMFailure(LLMFailureKind.refusal, "The model refused to produce a plan.")
+    if finish_reason == "length":
+        return LLMFailure(LLMFailureKind.invalid_schema, "The model response was truncated before completion.")
 
     text = (content or "").strip()
     if not text:
@@ -233,13 +235,28 @@ def parse_plan(
     try:
         plan = schema.model_validate(raw)
     except ValidationError as exc:
-        extra = sorted({str(err["loc"][-1]) for err in exc.errors() if err["type"] == "extra_forbidden"})
-        if extra:
-            return LLMFailure(
-                LLMFailureKind.extra_fields,
-                f"The model returned fields outside the schema: {', '.join(extra)}.",
-            )
-        paths = sorted({".".join(str(part) for part in err["loc"]) for err in exc.errors()})
+        allowed: set[str] = set()
+
+        def collect_schema_names(value: Any) -> None:
+            if isinstance(value, dict):
+                properties = value.get("properties")
+                if isinstance(properties, dict):
+                    allowed.update(properties)
+                discriminator = value.get("discriminator")
+                if isinstance(discriminator, dict) and isinstance(discriminator.get("mapping"), dict):
+                    allowed.update(discriminator["mapping"])
+                for child in value.values():
+                    collect_schema_names(child)
+            elif isinstance(value, list):
+                for child in value:
+                    collect_schema_names(child)
+
+        collect_schema_names(schema.model_json_schema())
+        paths = sorted({".".join(str(part) if isinstance(part, int) or part in allowed else "<field>"
+                                 for part in err["loc"]) for err in exc.errors()})
+        if any(err["type"] == "extra_forbidden" for err in exc.errors()):
+            return LLMFailure(LLMFailureKind.extra_fields,
+                              f"The model returned fields outside the schema: {', '.join(paths)}.")
         return LLMFailure(
             LLMFailureKind.invalid_schema,
             f"The model response did not match the schema: {', '.join(paths)}.",
@@ -334,8 +351,9 @@ class LLMService:
                 "No LLM provider is configured. Use cached reasoning or an approval.",
             )
 
+        validation_schema = json.dumps(schema.model_json_schema(), sort_keys=True, separators=(',', ':'))
         messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": f"{SYSTEM_PROMPT}\nRequired JSON Schema: {validation_schema}"},
             {"role": "user", "content": prompt},
         ]
         attempts = 0

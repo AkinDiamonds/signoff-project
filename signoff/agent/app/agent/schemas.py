@@ -29,33 +29,30 @@ class ActionMoneySchema(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    currency_code: str = Field(default="USD", description="3-letter ISO currency code")
-    value: str = Field(..., description="Decimal string representation of the amount, e.g. '25.00'")
+    currency_code: str = Field(default="USD", pattern=r"^[A-Z]{3}$", description="3-letter uppercase currency code")
+    value: str = Field(..., pattern=r"^(?:0|[1-9]\d*)(?:\.\d{1,2})?$",
+                       description="Strictly positive decimal string with at most two places, e.g. '25.00'")
 
     @field_validator("currency_code")
     @classmethod
     def validate_currency_code(cls, v: str) -> str:
-        clean = v.strip().upper()
-        if not re.match(r"^[A-Z]{3}$", clean):
+        if not re.fullmatch(r"[A-Z]{3}", v):
             raise ValueError(f"Currency code must be exactly three uppercase letters, got {v!r}")
-        return clean
+        return v
 
     @field_validator("value", mode="before")
     @classmethod
     def validate_value(cls, v: Any) -> str:
         if isinstance(v, float):
             raise ValueError("JSON floats are rejected for money values; must be a decimal string")
-        if isinstance(v, int):
-            d = Decimal(str(v))
-        elif isinstance(v, str):
-            try:
-                d = Decimal(v.strip())
-            except InvalidOperation as exc:
-                raise ValueError(f"Invalid decimal string: {v!r}") from exc
-        elif isinstance(v, Decimal):
-            d = v
-        else:
+        if not isinstance(v, str):
             raise ValueError(f"Money value must arrive as a decimal string, got {type(v).__name__}")
+        if not re.fullmatch(r"(?:0|[1-9]\d*)(?:\.\d{1,2})?", v):
+            raise ValueError("Money value must be a decimal string with at most two decimal places")
+        try:
+            d = Decimal(v)
+        except InvalidOperation as exc:
+            raise ValueError(f"Invalid decimal string: {v!r}") from exc
 
         if not d.is_finite():
             raise ValueError(f"Money value must be finite, got {d}")
