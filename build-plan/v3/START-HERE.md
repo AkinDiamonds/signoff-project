@@ -61,3 +61,7 @@ The owner authorizes releasing the tested compatible branch to `main`; existing 
 ### Approval-link fix, 2026-11-01
 
 Main f87e538 is deployed and the existing PP-R-MYR-10195637 approval card opened successfully on Render without resolving it. Durable owner-only card IDs replace the broken mock fallback; original token links remain supported. Local 605 backend/186 frontend tests, types/builds, branch CI pass. See EXECUTION-LOG. Next: user can review the pending action; continue T05 evidence provenance/policy and end-to-end provider proof.
+
+### T05 in progress
+
+Evidence panel no longer fabricates high strength, delivery, carrier or matching-postcode claims. Frontend 186 tests and types pass. Durable per-run snapshots, evidence provenance and missing-evidence policy still need implementation. This incremental checkpoint is on the working branch and has not been deployed.

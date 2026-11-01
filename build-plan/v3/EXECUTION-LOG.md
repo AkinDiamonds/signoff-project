@@ -292,3 +292,8 @@ This checkpoint is on a feature branch and is not release-ready until the cookie
 - Source f87e538 adds owner-authenticated durable approval card access by database ID, reusing existing locked resolution, expiry, freshness, and gate checks. The detail page no longer invents mock links or claims active analysis after the gate; timeline displays proposed action types and no longer claims notification delivery.
 - Local checks: 605 backend, 186 frontend, types and both builds pass. Branch CI 41349569873 passed; main fast-forwarded to f87e538 and auto-deployed. Render browser verification opened the existing dispute's actual review card, with its pending PROVIDE_EVIDENCE action and G5-01 visible through the API; no approval or PayPal mutation was performed.
 - Initial backend run had one test fixture SQLite thread-affinity failure; corrected the fixture for TestClient and focused 39 tests plus full 605 passed. Fresh full PayPal execution, evidence provenance, and physical Android remain pending.
+
+## T05 evidence work started
+
+- Removed unsupported high-strength, delivered, carrier and matching-postcode claims from the merchant evidence panel when data is absent. The panel now displays only recorded values or marks them unavailable.
+- Frontend suite: 186 passed; TypeScript, enum parity and generated client freshness passed. Durable per-run evidence snapshots, policy configuration and full T05 remain outstanding; this is not deployed yet.

@@ -348,10 +348,10 @@ export const DisputeDetailPage: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
-                Evidence & Carrier Proof
+                Evidence
               </h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '12px', color: '#6B7280' }}>Confidence:</span>
+                <span style={{ fontSize: '12px', color: '#6B7280' }}>Evidence strength:</span>
                 <span
                   data-testid="evidence-strength-badge"
                   style={{
@@ -365,7 +365,7 @@ export const DisputeDetailPage: React.FC = () => {
                     border: '1px solid #A7F3D0',
                   }}
                 >
-                  {evidenceStrength ?? 'HIGH'}
+                  {evidenceStrength ?? 'Unavailable'}
                 </span>
               </div>
             </div>
@@ -374,14 +374,14 @@ export const DisputeDetailPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>
                   <span style={{ fontWeight: 600, color: '#111827' }}>
-                    Carrier Tracking Proof
+                    Recorded tracking
                   </span>
                   <span style={{ color: '#6B7280' }}>
-                    {rawEvidence.delivered_at ? new Date(String(rawEvidence.delivered_at)).toLocaleDateString() : 'Delivered'}
+                    {rawEvidence.delivered_at ? new Date(String(rawEvidence.delivered_at)).toLocaleDateString() : 'Delivery date unavailable'}
                   </span>
                 </div>
                 <div style={{ color: '#4B5563', lineHeight: 1.5 }}>
-                  Proof of package delivery matching buyer destination postal code (carrier: {String(rawEvidence.carrier ?? 'Demo carrier')}, status: {String(rawEvidence.status ?? 'Delivered')}).
+                  Carrier: {String(rawEvidence.carrier ?? 'Unavailable')}; status: {String(rawEvidence.status ?? 'Unavailable')}.
                 </div>
               </div>
             ) : (
