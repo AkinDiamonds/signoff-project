@@ -79,3 +79,7 @@ Policy and settings UI changes are uncommitted. Focused policy tests passed (28)
 ### Missing-delivery policy continuation
 
 The owner explicitly overrode the two-failure stop rule for this task. Missing-delivery policy and review UI are implemented; default human review, optional settlement-only processing through existing gate, with unsafe/unknown evidence always reviewed. Full local frontend 188 and backend 612 tests passed before final focused 30 policy/loop tests; full local cross-app retry 12/12 passed after correcting fictional scenario setup. See latest EXECUTION-LOG for release status. Revalidation of current policy immediately before execution is still a T07 requirement, as are remaining provider, notification, UI/copy, Android and end-to-end work.
+
+### Signing-policy freshness increment
+
+A following guard stops a queued decision before PayPal access when the active signing-policy version changed or is unavailable, recording a merchant-visible review event. Full local backend 616, frontend 188, types/builds and cross-app 12/12 passed. Guard checkpoint CI/release status follows in latest log. PostgreSQL race verification and full fresh PayPal re-gating remain T07; do not claim full plan completion.

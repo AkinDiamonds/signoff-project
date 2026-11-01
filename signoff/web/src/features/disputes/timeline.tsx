@@ -162,6 +162,8 @@ export function renderTimelineEventContent(event: KnownTimelineEvent): {
         title: 'No action taken',
         details: event.reason === 'tracking_requires_review'
           ? 'Delivery evidence is missing or unsafe. Human review is required.'
+          : event.reason === 'signing_policy_changed'
+            ? 'Signing limits changed or are unavailable. No action was sent; review is required.'
           : `Reason: ${event.reason}`,
       };
     case 'RUN_FAILED':

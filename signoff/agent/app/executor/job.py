@@ -7,10 +7,11 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from agent.app.db.models import Decision, Job
+from agent.app.db.models import Charter, Decision, Job
 from agent.app.domain.actions import parse_action_from_stored
-from agent.app.domain.enums import Verdict
+from agent.app.domain.enums import TimelineEventKind, Verdict
 from agent.app.executor.executor import execute_decision
+from agent.app.ledger.service import record_ledger_event
 from agent.app.paypal.mutating_client import PayPalMutatingClient
 from agent.app.paypal.read_client import PayPalReadClient
 from agent.app.policy.gate import reconstruct_decision
@@ -59,6 +60,21 @@ async def handle_execute_decision_job(
             dec_row.id,
             dec_row.verdict,
         )
+        return
+
+    # Keep the active charter locked until execution records its intent. An old
+    # decision is never silently sent after the merchant changes signing limits.
+    charter = session.scalar(
+        select(Charter).where(Charter.merchant_id == 'default', Charter.is_active.is_(True))
+        .order_by(Charter.version.desc()).with_for_update()
+    )
+    if charter is None or charter.version != dec_row.charter_version:
+        record_ledger_event(session, dec_row.dispute_id, TimelineEventKind.NO_ACTION, {
+            'reason': 'signing_policy_changed',
+            'message': 'Signing limits changed or are unavailable. Review and re-evaluate before execution.',
+            'decision_id': str(dec_row.id),
+        })
+        session.commit()
         return
 
     action = parse_action_from_stored(dec_row.action_type, dec_row.action_payload)

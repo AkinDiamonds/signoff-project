@@ -39,9 +39,9 @@ from agent.app.domain.enums import (
 from agent.app.main import create_app
 from agent.app.paypal.models import parse_dispute
 from agent.app.paypal.mutating_client import MutatingResult
-from agent.app.policy.charter import get_or_seed_charter
+from agent.app.policy.charter import UpdateCharterRequest, get_or_seed_charter, update_charter
 from agent.app.queue import enqueue_job
-from agent.app.queue.payloads import SyncDisputePayload
+from agent.app.queue.payloads import ExecuteDecisionPayload, SyncDisputePayload
 from agent.app.queue.wiring import build_registry
 from agent.app.settings import AppEnv, PayPalEnv, Settings
 from agent.app.store_mock.seed import seed_scenarios
@@ -64,6 +64,41 @@ def test_db():
         get_or_seed_charter(session)
         session.commit()
     return engine, session_factory
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('policy_state', ['changed', 'missing'])
+async def test_queued_action_stops_if_signing_policy_is_changed_or_missing(test_db, monkeypatch, policy_state):
+    from agent.app.executor.job import handle_execute_decision_job
+
+    _, session_factory = test_db
+    execute = AsyncMock()
+    monkeypatch.setattr('agent.app.executor.job.execute_decision', execute)
+    with session_factory() as session:
+        current = get_or_seed_charter(session)
+        decision = Decision(
+            dispute_id='PP-STALE-POLICY', action_type='MAKE_OFFER',
+            action_payload={'action_type': 'MAKE_OFFER', 'amount': {'currency_code': 'USD', 'value': '10.00'},
+                            'offer_type': 'REFUND'},
+            verdict='ALLOW', rule_id='G7-01', reason='Allowed under previous signing limits',
+            action_hash='fictional-hash', dispute_fingerprint='fictional-fingerprint',
+            charter_version=current.version, also_triggered=[],
+        )
+        session.add(decision)
+        session.flush()
+        job = enqueue_job(session, JobKind.EXECUTE_DECISION,
+                          ExecuteDecisionPayload(decision_id=str(decision.id), dispute_id=decision.dispute_id))
+        if policy_state == 'changed':
+            updated = UpdateCharterRequest.model_validate({**current.config, 'base_version': current.version})
+            update_charter(session, updated)
+        else:
+            current.is_active = False
+        session.commit()
+        await handle_execute_decision_job(job, session, read_client=MagicMock(), mutating_client=MagicMock())
+        execute.assert_not_awaited()
+        events = session.scalars(select(LedgerEvent).where(LedgerEvent.dispute_id == decision.dispute_id)).all()
+        assert any(event.event_kind == TimelineEventKind.NO_ACTION.value and
+                   event.payload.get('reason') == 'signing_policy_changed' for event in events)
 
 
 def test_worker_loop_full_pipeline(test_db):
