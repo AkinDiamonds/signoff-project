@@ -6,6 +6,48 @@ import { PhoneNotifications } from '../src/features/settings/PhoneNotifications'
 
 afterEach(() => vi.unstubAllGlobals());
 
+it('tests local display only after a tap and reports browser state without exposing keys', async () => {
+  const showNotification = vi.fn(async () => undefined);
+  const getNotifications = vi.fn(async () => [{}]);
+  const registration = { active: {}, update: vi.fn(), showNotification, getNotifications,
+    pushManager: { getSubscription: async () => ({ options: { applicationServerKey: new Uint8Array([1, 2, 3]).buffer } }) } };
+  Object.defineProperty(navigator, 'serviceWorker', { configurable: true,
+    value: { getRegistration: async () => registration, controller: {} } });
+  vi.stubGlobal('PushManager', function () {});
+  vi.stubGlobal('Notification', { permission: 'granted' });
+  const fetchMock = vi.fn(async () => new Response(JSON.stringify({ available: true, public_key: 'AQID',
+    pending_deliveries: 0, failed_deliveries: 0 }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+  vi.stubGlobal('fetch', fetchMock);
+  const view = render(<PhoneNotifications />);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Disable phone notifications' })).toBeTruthy());
+  expect(showNotification).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Test local notification display' }));
+  await waitFor(() => expect(screen.getByText(/browser reports a local test notification/)).toBeTruthy());
+  expect(screen.getByText(/Subscription key matches/)).toBeTruthy();
+  expect(getNotifications).toHaveBeenCalledWith({ tag: 'signoff-local-display-test' });
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  view.unmount();
+  Reflect.deleteProperty(navigator, 'serviceWorker');
+});
+
+it('does not display a local test when permission is blocked', async () => {
+  const showNotification = vi.fn();
+  const registration = { active: {}, update: vi.fn(), showNotification,
+    pushManager: { getSubscription: async () => null } };
+  Object.defineProperty(navigator, 'serviceWorker', { configurable: true,
+    value: { getRegistration: async () => registration } });
+  vi.stubGlobal('PushManager', function () {});
+  vi.stubGlobal('Notification', { permission: 'denied' });
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ available: true, public_key: 'AQID',
+    pending_deliveries: 0, failed_deliveries: 0 }), { status: 200, headers: { 'Content-Type': 'application/json' } })));
+  const view = render(<PhoneNotifications />);
+  fireEvent.click(screen.getByRole('button', { name: 'Test local notification display' }));
+  await waitFor(() => expect(screen.getByText(/requires notification permission/)).toBeTruthy());
+  expect(showNotification).not.toHaveBeenCalled();
+  view.unmount();
+  Reflect.deleteProperty(navigator, 'serviceWorker');
+});
+
 it('never requests permission on load and explains unsupported devices', async () => {
   const requestPermission = vi.fn();
   vi.stubGlobal('Notification', { permission: 'default', requestPermission });

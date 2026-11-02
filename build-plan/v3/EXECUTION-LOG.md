@@ -1,5 +1,10 @@
 # Execution log
 
+### Local phone display diagnosis — 2026-11-02
+
+- Added an explicit local notification display test in Settings. It uses the active service worker and reports whether the browser retains the tagged notification, alongside permission, worker/update/controller and subscription-key match status. It sends no server request and exposes no endpoint or key. Browser retention does not prove visible display or remote push receipt.
+- Focused phone notification component tests: 5 passed, including blocked permission; targeted ESLint, web TypeScript and `git diff --check` passed. Full suites were not rerun. Physical phone display, remote delivery, click-through and opt-out remain unverified; executor confirmation remains paused and historical approvals were not replayed.
+
 ## Starting state
 
 - Checkout HEAD: `fd9c2b7472612bfe935144b860359a937f07fb37`.

@@ -25,6 +25,7 @@ export const PhoneNotifications: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [testDispute, setTestDispute] = useState('');
+  const [diagnostic, setDiagnostic] = useState('');
   useEffect(() => {
     let disposed = false;
     void unwrap(apiClient.request<Config>('/api/push/config')).then(async value => {
@@ -111,6 +112,38 @@ export const PhoneNotifications: React.FC = () => {
       setMessage('Could not queue the phone test. Check the dispute ID, device opt-in and connection; wait a minute before retrying.');
     } finally { setBusy(false); }
   };
+  const testLocalDisplay = async () => {
+    if (!supported || busy) return;
+    setBusy(true); setMessage(''); setDiagnostic('');
+    try {
+      const registration = await navigator.serviceWorker.getRegistration('/');
+      if (!registration?.active) {
+        setMessage('No active notification worker was found. Enable notifications and try again.');
+        return;
+      }
+      const subscription = await registration.pushManager.getSubscription();
+      const currentKey = subscription?.options?.applicationServerKey;
+      const expectedKey = config?.public_key ? applicationKey(config.public_key) : null;
+      const keyState = !subscription ? 'No subscription' : !currentKey || !expectedKey ? 'Subscription key unavailable'
+        : new Uint8Array(currentKey).length === expectedKey.length
+          && new Uint8Array(currentKey).every((value, index) => value === expectedKey[index]) ? 'Subscription key matches' : 'Subscription key differs';
+      setDiagnostic(`Worker active; update ${registration.waiting ? 'waiting' : registration.installing ? 'installing' : 'not pending'}; page ${navigator.serviceWorker.controller ? 'controlled' : 'not controlled'}; permission ${Notification.permission}; ${keyState}.`);
+      if (Notification.permission !== 'granted') {
+        setMessage('Local display test requires notification permission. Check this site’s notification settings.');
+        return;
+      }
+      const tag = 'signoff-local-display-test';
+      await registration.showNotification('Signoff local display test', {
+        body: 'This test stays on this device and does not check remote delivery.', tag,
+      });
+      const notifications = await registration.getNotifications({ tag });
+      setMessage(notifications.length
+        ? 'The browser reports a local test notification. Check the notification tray; this does not prove it was visible or that remote push arrived.'
+        : 'The browser did not report the local test notification. Check site and Android notification settings.');
+    } catch {
+      setMessage('Could not complete the local display test. Check site and Android notification settings.');
+    } finally { setBusy(false); }
+  };
   return <section aria-label="Phone notifications" style={{ background: '#fff', border: '1px solid #dce5df', borderRadius: 12, padding: 20 }}>
     <h2 style={{ marginTop: 0 }}>Phone notifications</h2>
     <p>Receive a generic review reminder when this site is in the background. Opening it never approves an action.</p>
@@ -123,6 +156,11 @@ export const PhoneNotifications: React.FC = () => {
       {' '}Push delivery is separate from dispute execution.</p>}
     {enabled ? <Button disabled={busy} onClick={() => { void disable(); }}>Disable phone notifications</Button>
       : <Button disabled={!supported || !config?.available || busy} onClick={() => { void enable(); }}>Enable phone notifications</Button>}
+    {supported && <div style={{ marginTop: 16 }}>
+      <p>Test whether this device can display a local notification. This does not send a push or change a dispute.</p>
+      <Button disabled={busy} onClick={() => { void testLocalDisplay(); }}>Test local notification display</Button>
+      {diagnostic && <p>{diagnostic}</p>}
+    </div>}
     {enabled && <div style={{ display: 'grid', gap: 10, marginTop: 16 }}>
       <label>Dispute ID for phone delivery check<input value={testDispute} onChange={event => setTestDispute(event.target.value)}
         style={{ display: 'block', boxSizing: 'border-box', maxWidth: '100%', minHeight: 44 }} /></label>
