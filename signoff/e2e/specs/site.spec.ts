@@ -48,7 +48,7 @@ test.describe('Product site and judge guide', () => {
     // Resource links
     await expect(page.getByTestId('guide-link-repo')).toBeVisible();
     await expect(page.getByTestId('guide-link-license')).toBeVisible();
-    await expect(page.getByTestId('guide-link-video')).toBeVisible();
+    await expect(page.getByText('Video walkthrough not available yet')).toBeVisible();
   });
 
   test('all internal navigation links resolve without 404', async ({ page }) => {

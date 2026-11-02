@@ -184,13 +184,16 @@ export const DisputeDetailPage: React.FC = () => {
   const plainReason = formatDisputeReason(displayedDispute.reason);
   const approvalState = displayedDispute.latest_approval_resolution;
   const executionState = displayedDispute.latest_execution_status;
-  const reviewLabel = approvalState === 'PENDING' ? 'Your review is needed'
+  const reviewLabel = approvalState === undefined ? 'Status unavailable'
+    : approvalState === 'PENDING' ? displayedDispute.approval_url ? 'Your review is needed' : 'Review link unavailable'
     : approvalState === 'APPROVE' || approvalState === 'EDIT' ? 'Approval saved'
     : approvalState === 'DENY' ? 'You declined the proposal'
     : approvalState === 'EXPIRED' ? 'Approval expired'
     : latestRunState?.kind === 'RUN_FAILED' ? 'Analysis could not finish'
     : 'No review is pending';
-  const actionLabel = executionState === 'INTENDED' ? 'Preparing to send; result uncertain'
+  const actionLabel = executionState === undefined ? 'Status unavailable'
+    : executionState === 'QUEUED' ? 'Waiting to be sent'
+    : executionState === 'INTENDED' ? 'Preparing to send; result uncertain'
     : executionState === 'SENT' ? 'Sent; PayPal result uncertain'
     : executionState === 'CONFIRMED' ? 'Recorded as confirmed'
     : executionState === 'FAILED' ? 'Recorded as failed'
@@ -242,7 +245,7 @@ export const DisputeDetailPage: React.FC = () => {
               {plainReason}
             </h1>
           </div>
-          <div style={{ fontSize: '14px', color: '#6B7280' }}>
+          <div style={{ fontSize: '14px', color: '#4B5563' }}>
             <strong style={{ color: '#111827' }}>
               <Money money={displayedDispute.amount} testId="detail-header-amount" />
             </strong>
@@ -257,7 +260,7 @@ export const DisputeDetailPage: React.FC = () => {
         {lastUpdated && (
           <div
             data-testid="detail-stale-indicator"
-            style={{ fontSize: '12px', color: '#6B7280', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ fontSize: '12px', color: '#4B5563', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <span
               style={{
@@ -367,7 +370,7 @@ export const DisputeDetailPage: React.FC = () => {
                 style={{
                   fontSize: '11px',
                   fontWeight: 600,
-                  color: '#6B7280',
+                  color: '#4B5563',
                   backgroundColor: '#F3F4F6',
                   padding: '2px 8px',
                   borderRadius: '4px',
@@ -416,7 +419,7 @@ export const DisputeDetailPage: React.FC = () => {
                 )}
               </div>
             ) : (
-              <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>
+              <p style={{ margin: 0, fontSize: '13px', color: '#4B5563' }}>
                 No textual statement submitted with this PayPal dispute.
               </p>
             )}
@@ -440,7 +443,7 @@ export const DisputeDetailPage: React.FC = () => {
                 Evidence
               </h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '12px', color: '#6B7280' }}>Evidence strength:</span>
+                <span style={{ fontSize: '12px', color: '#4B5563' }}>Evidence strength:</span>
                 <span
                   data-testid="evidence-strength-badge"
                   style={{
@@ -492,7 +495,7 @@ export const DisputeDetailPage: React.FC = () => {
                   <span style={{ fontWeight: 600, color: '#111827' }}>
                     Recorded tracking
                   </span>
-                  <span style={{ color: '#6B7280' }}>
+                  <span style={{ color: '#4B5563' }}>
                     {rawEvidence.delivered_at ? new Date(String(rawEvidence.delivered_at)).toLocaleDateString() : 'Delivery date unavailable'}
                   </span>
                 </div>
@@ -501,7 +504,7 @@ export const DisputeDetailPage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div style={{ color: '#6B7280', fontSize: '13px' }}>
+              <div style={{ color: '#4B5563', fontSize: '13px' }}>
                 No external evidence package has been correlated for this dispute yet.
               </div>
             )}
@@ -524,7 +527,7 @@ export const DisputeDetailPage: React.FC = () => {
               <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
                 Audit Trail & History
               </h2>
-              <span style={{ fontSize: '11px', color: '#9CA3AF' }}>Immutable Ledger</span>
+              <span style={{ fontSize: '11px', color: '#4B5563' }}>History</span>
             </div>
 
             {timelineQuery.isPending && (
@@ -565,18 +568,18 @@ export const DisputeDetailPage: React.FC = () => {
             }}
           >
             <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
-              Resolution & Gate Evaluation
+              Proposed action and signing limits
             </h2>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${colors.border}` }}>
-              <span style={{ fontSize: '13px', color: '#6B7280' }}>Gate Verdict:</span>
+              <span style={{ fontSize: '13px', color: '#4B5563' }}>Review decision:</span>
               {displayedDispute.latest_verdict
                 ? <StatusBadge status={displayedDispute.latest_verdict} testId="detail-verdict-chip" />
                 : <span data-testid="detail-verdict-chip">Not recorded</span>}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${colors.border}` }}>
-              <span style={{ fontSize: '13px', color: '#6B7280' }}>Matching Policy Rule:</span>
+              <span style={{ fontSize: '13px', color: '#4B5563' }}>Signing rule:</span>
               <span
                 title={ruleExplanation}
                 style={{
@@ -629,28 +632,28 @@ export const DisputeDetailPage: React.FC = () => {
               }}
             >
               <div>
-                <dt style={{ color: '#6B7280', fontWeight: 500 }}>Disputed Amount</dt>
+                <dt style={{ color: '#4B5563', fontWeight: 500 }}>Disputed Amount</dt>
                 <dd style={{ margin: '2px 0 0', fontWeight: 700, fontSize: '15px', color: '#111827' }}>
                   <Money money={displayedDispute.amount} testId="detail-amount" />
                 </dd>
               </div>
 
               <div>
-                <dt style={{ color: '#6B7280', fontWeight: 500 }}>Store Order Reference</dt>
+                <dt style={{ color: '#4B5563', fontWeight: 500 }}>Store Order Reference</dt>
                 <dd style={{ margin: '2px 0 0', color: '#111827', fontWeight: 600 }}>
                   {displayedDispute.order_code ?? '—'}
                 </dd>
               </div>
 
               <div>
-                <dt style={{ color: '#6B7280', fontWeight: 500 }}>PayPal Response Due Date</dt>
+                <dt style={{ color: '#4B5563', fontWeight: 500 }}>PayPal Response Due Date</dt>
                 <dd style={{ margin: '2px 0 0' }}>
                   <Deadline dueAt={displayedDispute.seller_response_due_date ?? null} />
                 </dd>
               </div>
 
               <div>
-                <dt style={{ color: '#6B7280', fontWeight: 500 }}>PayPal Dispute ID</dt>
+                <dt style={{ color: '#4B5563', fontWeight: 500 }}>PayPal Dispute ID</dt>
                 <dd style={{ margin: '2px 0 0', fontFamily: 'monospace', color: '#4B5563' }}>
                   {displayedDispute.id}
                 </dd>

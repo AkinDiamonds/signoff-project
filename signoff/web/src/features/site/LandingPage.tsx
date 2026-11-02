@@ -88,9 +88,8 @@ export const LandingPage: React.FC = () => {
             fontWeight: 400,
           }}
         >
-          Without it: a dispute arrives, you have 10 days to gather evidence, and missing the deadline
-          costs you the money automatically. With Signoff: the agent prepares the response, your rules
-          decide what it can do on its own, and it asks you before anything bigger.
+          When a dispute arrives, Signoff gathers available order information and proposes a response.
+          Your signing limits determine which actions need your review. Check each case for its PayPal deadline.
         </p>
 
         {/* Action CTAs */}
@@ -159,7 +158,7 @@ export const LandingPage: React.FC = () => {
         <p
           style={{
             fontSize: '13px',
-            color: '#6B7280',
+            color: '#BFC8D5',
             margin: '8px 0 0',
           }}
         >
@@ -198,7 +197,7 @@ export const LandingPage: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
             gap: spacing[2],
           }}
         >
@@ -214,13 +213,13 @@ export const LandingPage: React.FC = () => {
             }}
           >
             <div style={{ fontSize: '32px', fontWeight: 800, color: '#2DD4BF' }}>
-              10 days
+              Your deadline
             </div>
             <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
               Strict Seller Deadline
             </h3>
             <p style={{ margin: 0, fontSize: '14px', color: '#9CA3AF', lineHeight: 1.5 }}>
-              PayPal gives merchants exactly 10 days to respond. If you miss it, the buyer is awarded the full dispute automatically.
+              PayPal provides a response deadline for each dispute. Check the date on the case and respond in time.
             </p>
           </div>
 
@@ -279,14 +278,14 @@ export const LandingPage: React.FC = () => {
             You set the limit. The rule is hard.
           </h2>
           <p style={{ margin: 0, fontSize: '15px', color: '#9CA3AF', lineHeight: 1.6 }}>
-            The AI engine can draft defense packages, pull tracking receipts, and recommend actions. But a deterministic code gate prevents any money from moving unless your policy authorizes it.
+            Signoff can gather available evidence and recommend actions. Your signing limits determine when a proposed action needs your review.
           </p>
         </div>
 
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
             gap: spacing[2],
           }}
         >
@@ -338,7 +337,7 @@ export const LandingPage: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
             gap: spacing[2],
           }}
         >
@@ -358,7 +357,7 @@ export const LandingPage: React.FC = () => {
               The agent gathers your evidence
             </h3>
             <p style={{ margin: 0, fontSize: '13px', color: '#9CA3AF', lineHeight: 1.5 }}>
-              Order history, carrier tracking, and proof of delivery to the buyer's postal code are correlated automatically.
+              Available order and simulated shipping records help you review the evidence for a dispute.
             </p>
           </div>
 
@@ -378,7 +377,7 @@ export const LandingPage: React.FC = () => {
               It acts, or it asks you
             </h3>
             <p style={{ margin: 0, fontSize: '13px', color: '#9CA3AF', lineHeight: 1.5 }}>
-              Under limit: submitted directly to PayPal before the deadline. Over limit: sends a one-tap magic link for your approval.
+              Actions within your limits may be sent when the other rules allow them. Actions needing review wait for your decision.
             </p>
           </div>
         </div>
@@ -414,7 +413,7 @@ export const LandingPage: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
             gap: spacing[2],
           }}
         >
@@ -431,6 +430,8 @@ export const LandingPage: React.FC = () => {
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 gap: '8px',
+                minWidth: 0,
+                overflowWrap: 'anywhere',
               }}
             >
               <div>
@@ -455,7 +456,7 @@ export const LandingPage: React.FC = () => {
                   {claim.statement}
                 </p>
               </div>
-              <div style={{ fontSize: '11px', color: '#6B7280', borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '6px' }}>
+              <div style={{ fontSize: '11px', color: '#BFC8D5', borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '6px' }}>
                 Proof: <span style={{ fontFamily: 'monospace', color: '#9CA3AF' }}>{claim.proof}</span>
               </div>
             </article>
@@ -483,7 +484,7 @@ export const LandingPage: React.FC = () => {
           )}
 
           {status.isSuccess && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', color: colors.ink }}>
               {status.data.demoFrozen && <Banner variant="frozen" />}
               {status.data.llmMode === 'CACHED' && <Banner variant="cached" />}
               <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '8px 16px', margin: 0, fontSize: '13px' }}>

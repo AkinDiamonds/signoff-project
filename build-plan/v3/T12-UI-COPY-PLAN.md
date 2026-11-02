@@ -2,6 +2,10 @@
 
 Implementation status: the first merchant dispute-detail and shell slice is coded locally. The full audited page inventory, mobile browser checks, accessibility and hosted acceptance remain to be completed before T12 can be closed.
 
+## Removal and control decisions, 2 November 2026
+
+The misleading always-on “Live Sync” label and localhost port suffix were removed in the prior release. In this pass the duplicate clickable dispute table row was removed because it nested a link inside a keyboard-activated row; the dispute link remains the control. The placeholder video link was removed and replaced with an honest unavailable label; the license link now points to the repository's license. No approval, buyer reply, evidence, signing limits, push or Studio capability was removed. The rest of the original interaction inventory has not yet been individually classified or exercised.
+
 This plan is for a first-time small seller checking disputes on a phone. The seller should be able to answer, in order: **What needs me now? Why? What will happen if I act? Did anything actually get sent?** The first design pass covers the merchant dispute journey and uses calm, plain language. The owner selected the **white and cobalt** visual direction and wants **PayPal status, Signoff review state, and action delivery state always visible near the top** of dispute detail.
 
 ## Screen order

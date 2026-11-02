@@ -1373,7 +1373,8 @@ export interface components {
             /** Id */
             id: string;
             latest_approval_resolution?: components["schemas"]["ApprovalResolution"] | null;
-            latest_execution_status?: components["schemas"]["ExecutionStatus"] | null;
+            /** Latest Execution Status */
+            latest_execution_status?: components["schemas"]["ExecutionStatus"] | "QUEUED" | null;
             /** Latest Rule Id */
             latest_rule_id?: string | null;
             latest_verdict?: components["schemas"]["Verdict"] | null;

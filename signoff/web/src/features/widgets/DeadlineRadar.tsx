@@ -75,7 +75,7 @@ export const DeadlineRadar: React.FC<DeadlineRadarProps> = ({ items, now = new D
               aria-label={`${item.id}, ${item.currency} ${formatCents(item.amountCents)}, ${label.label}`}
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
                 gap: spacing[1],
                 alignItems: 'center',
                 padding: spacing[1],

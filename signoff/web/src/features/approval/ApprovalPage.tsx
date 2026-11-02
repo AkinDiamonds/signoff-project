@@ -227,7 +227,7 @@ export const ApprovalPage: React.FC = () => {
 
   if (cardQuery.isPending) {
     return (
-      <div style={{ maxWidth: '520px', width: '100%', margin: '0 auto', padding: spacing[2] }}>
+      <div style={{ maxWidth: '520px', width: '100%', boxSizing: 'border-box', margin: '0 auto', padding: spacing[2] }}>
         <Card testId="approval-loading-card">
           <div role="status" aria-label="Loading approval details" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
             <Skeleton height="28px" width="60%" />
@@ -248,7 +248,7 @@ export const ApprovalPage: React.FC = () => {
 
     if (isInvalid) {
       return (
-        <div style={{ maxWidth: '520px', width: '100%', margin: '0 auto', padding: spacing[2] }}>
+        <div style={{ maxWidth: '520px', width: '100%', boxSizing: 'border-box', margin: '0 auto', padding: spacing[2] }}>
           <EmptyState
             testId="outcome-invalid-link"
             title="Invalid approval link"
@@ -276,7 +276,7 @@ export const ApprovalPage: React.FC = () => {
     }
 
     return (
-      <div style={{ maxWidth: '520px', width: '100%', margin: '0 auto', padding: spacing[2] }}>
+      <div style={{ maxWidth: '520px', width: '100%', boxSizing: 'border-box', margin: '0 auto', padding: spacing[2] }}>
         <ErrorState
           testId="approval-error-state"
           message={error.message}
@@ -300,7 +300,7 @@ export const ApprovalPage: React.FC = () => {
     };
 
     return (
-      <div style={{ maxWidth: '520px', width: '100%', margin: '0 auto', padding: spacing[2] }}>
+      <div style={{ maxWidth: '520px', width: '100%', boxSizing: 'border-box', margin: '0 auto', padding: spacing[2] }}>
         <Card testId={`outcome-${outcome.toLowerCase().replace(/_/g, '-')}`}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2], textAlign: 'center', padding: `${spacing[2]} 0` }}>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -377,6 +377,7 @@ export const ApprovalPage: React.FC = () => {
       style={{
         maxWidth: '520px',
         width: '100%',
+        boxSizing: 'border-box',
         margin: '0 auto',
         padding: spacing[2],
         display: 'flex',

@@ -13,9 +13,9 @@ const badgeColors = {
 
 export const colors = {
   // Brand accents — teal kept for brand mark, active nav indicator only
-  brandPrimary: '#0F766E', // Calm teal
-  brandHover: '#115E59',
-  brandSurface: '#F0FDFA',
+  brandPrimary: '#1648D8',
+  brandHover: '#1239AA',
+  brandSurface: '#EEF2FF',
 
   // Neutrals — Shopify Polaris measured values
   appBackground: '#F1F1F1', // Area behind cards (screenshot 02-orders-list)
@@ -27,11 +27,11 @@ export const colors = {
   inkMuted: '#616161', // Text secondary: helper text, column headers
 
   // Actions — Shopify near-black button, blue link
-  actionPrimary: '#303030', // The main button (near-black)
+  actionPrimary: '#1648D8',
   actionPrimaryText: '#FFFFFF',
   linkInteractive: '#005BD3', // Links inside tables
   // Semantic aliases used by feature pages
-  primaryAction: '#303030',
+  primaryAction: '#1648D8',
   interactive: '#005BD3',
 
   // Badge semantic tokens — Shopify success/attention/critical palette

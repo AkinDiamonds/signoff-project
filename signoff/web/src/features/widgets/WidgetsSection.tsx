@@ -30,7 +30,7 @@ export const WidgetsSection: React.FC<WidgetsSectionProps> = ({ disputes, charte
   return (
     <section aria-label="Custom widgets" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
       <h2 style={{ margin: 0, fontSize: '18px' }}>Custom widgets</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: spacing[2] }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: spacing[2] }}>
         <Card title="Decision Timeline" testId="widget-decision-timeline">
           <DecisionTimelineWidget items={timelineItems} />
         </Card>

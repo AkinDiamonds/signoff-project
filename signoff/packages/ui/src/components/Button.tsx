@@ -36,6 +36,7 @@ export const Button: React.FC<ButtonProps> = ({
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
+        minHeight: 44,
         padding: `8px ${spacing[2]}`,
         borderRadius: '6px',
         fontSize: '14px',

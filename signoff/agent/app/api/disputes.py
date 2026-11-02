@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 from agent.app.agent.evidence_snapshot import EvidenceSnapshotData, build_snapshot
 from agent.app.agent.reasons import build_evidence_for
 from agent.app.agent.reasons.history import count_buyer_disputes
-from agent.app.approvals.service import DEMO_APPROVAL_LINKS
+from agent.app.approvals.service import DEMO_APPROVAL_LINKS, build_approval_card_response
 from agent.app.db.models import Approval, Decision, Dispute, EvidenceSnapshot, Execution, ReviewEvidenceSnapshot
 from agent.app.db.session import get_db_session
 from agent.app.domain.enums import ApprovalResolution, DisputeReason, DisputeStatus, ExecutionStatus, Verdict
@@ -82,7 +82,7 @@ class DisputeDetailResponse(BaseModel):
     order_code: str | None = None
     approval_url: str | None = None
     latest_approval_resolution: ApprovalResolution | None = None
-    latest_execution_status: ExecutionStatus | None = None
+    latest_execution_status: ExecutionStatus | Literal["QUEUED"] | None = None
     order_resolution: ResolutionStatus = "not_found"
 
 
@@ -338,12 +338,16 @@ async def get_dispute_by_id(
         select(Approval).where(Approval.dispute_id == id)
         .order_by(Approval.created_at.desc(), Approval.id.desc()).limit(1)
     )
-    execution_query = select(Execution).where(Execution.dispute_id == id)
+    execution_state = None
     if latest_approval is not None:
-        execution_query = execution_query.where(Execution.decision_id == latest_approval.decision_id)
-    latest_execution = db_session.scalar(
-        execution_query.order_by(Execution.created_at.desc(), Execution.id.desc()).limit(1)
-    )
+        state = build_approval_card_response(db_session, latest_approval).execution_state.upper()
+        execution_state = None if state == "NOT_RECORDED" else state
+    else:
+        latest_execution = db_session.scalar(
+            select(Execution).where(Execution.dispute_id == id)
+            .order_by(Execution.created_at.desc(), Execution.id.desc()).limit(1)
+        )
+        execution_state = latest_execution.status if latest_execution else None
 
     scope = order_scope(request.app.state.settings, dispute.demo_session_id)
     resolution = resolve_disputed_order(
@@ -392,5 +396,6 @@ async def get_dispute_by_id(
         order_resolution=resolution.status,
         approval_url=approval_url,
         latest_approval_resolution=ApprovalResolution(latest_approval.resolution) if latest_approval else None,
-        latest_execution_status=ExecutionStatus(latest_execution.status) if latest_execution else None,
+        latest_execution_status=("QUEUED" if execution_state == "QUEUED" else
+                                 ExecutionStatus(execution_state) if execution_state else None),
     )

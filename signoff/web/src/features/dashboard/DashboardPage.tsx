@@ -194,7 +194,7 @@ export const DashboardPage: React.FC = () => {
                 height: '36px',
                 borderRadius: '8px',
                 backgroundColor: '#FEF3C7',
-                color: '#D97706',
+                color: '#92400E',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -217,7 +217,7 @@ export const DashboardPage: React.FC = () => {
             to="/app/disputes"
             style={{
               padding: '8px 16px',
-              backgroundColor: '#D97706',
+              backgroundColor: '#92400E',
               color: '#FFFFFF',
               borderRadius: radius.control,
               fontSize: '13px',
@@ -243,7 +243,7 @@ export const DashboardPage: React.FC = () => {
           }}
         >
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
-          <span>All PayPal disputes are currently within auto-defense limits. No manual signoffs pending.</span>
+          <span>No reviews are currently shown in this list.</span>
         </div>
       )}
 
@@ -252,7 +252,7 @@ export const DashboardPage: React.FC = () => {
         aria-label="Dispute metrics"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
           backgroundColor: '#FFFFFF',
           borderRadius: radius.card,
           border: `1px solid ${colors.border}`,
@@ -261,43 +261,43 @@ export const DashboardPage: React.FC = () => {
         }}
       >
         <div data-testid="kpi-card-open" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Open Disputes
           </div>
           <div data-testid="kpi-open-disputes" style={{ fontSize: '26px', fontWeight: 700, color: '#111827', margin: '4px 0 2px' }}>
             {kpis.open_disputes}
           </div>
-          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Awaiting response or review</div>
+          <div style={{ fontSize: '12px', color: '#4B5563' }}>Awaiting response or review</div>
         </div>
 
         <div data-testid="kpi-card-risk" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             At Risk
           </div>
           <div style={{ fontSize: '26px', fontWeight: 700, color: '#111827', margin: '4px 0 2px' }}>
             <Money testId="kpi-dollars-at-risk" money={{ value: kpis.dollars_at_risk, currency_code: 'USD' }} />
           </div>
-          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Active disputed volume</div>
+          <div style={{ fontSize: '12px', color: '#4B5563' }}>Active disputed volume</div>
         </div>
 
         <div data-testid="kpi-card-recovered" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Seller-favour disputes
           </div>
           <div style={{ fontSize: '26px', fontWeight: 700, color: '#059669', margin: '4px 0 2px' }}>
             <Money testId="kpi-recovered" money={{ value: kpis.recovered, currency_code: 'USD' }} />
           </div>
-          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Disputed USD amounts with known outcomes</div>
+          <div style={{ fontSize: '12px', color: '#4B5563' }}>Disputed USD amounts with known outcomes</div>
         </div>
 
         <div style={{ padding: '16px 20px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Auto-resolution share
           </div>
           <div style={{ fontSize: '26px', fontWeight: 700, color: '#0F766E', margin: '4px 0 2px' }}>
             <span data-testid="kpi-autonomous-share">{values.share}</span>
           </div>
-          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Estimated time saved: {values.hours}</div>
+          <div style={{ fontSize: '12px', color: '#4B5563' }}>Estimated time saved: {values.hours}</div>
         </div>
       </section>
 
@@ -313,7 +313,7 @@ export const DashboardPage: React.FC = () => {
           <span data-testid="kpi-hours-saved">{values.hours}</span>
         </span>
       </div>
-      <p data-testid="kpi-assumption" style={{ margin: 0, fontSize: '12px', color: '#6B7280' }}>
+      <p data-testid="kpi-assumption" style={{ margin: 0, fontSize: '12px', color: '#4B5563' }}>
         Estimated hours saved assumes {kpis.assumed_minutes_per_dispute} minutes per closed dispute.
         {kpis.non_usd_open_disputes > 0
           ? ` ${kpis.non_usd_open_disputes} open dispute(s) in other currencies are excluded from USD sums.`

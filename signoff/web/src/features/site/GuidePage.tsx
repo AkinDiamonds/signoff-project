@@ -12,7 +12,7 @@ const SERIF_STACK = `'Newsreader', 'Instrument Serif', 'Playfair Display', Georg
 
 export const GuidePage: React.FC = () => {
   return (
-    <div data-testid="guide-page" style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
+    <div data-testid="guide-page" style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], background: '#fff', color: colors.ink, padding: spacing[2] }}>
       {/* Persistent Audience View Switcher */}
       <ViewSwitcher initialView="merchant" />
 
@@ -72,7 +72,7 @@ export const GuidePage: React.FC = () => {
         </a>
         <span style={{ color: colors.borderStrong }}>•</span>
         <a
-          href="/LICENSE"
+          href="https://github.com/AkinDiamonds/signoff-project/blob/main/LICENSE"
           target="_blank"
           rel="noreferrer"
           data-testid="guide-link-license"
@@ -89,23 +89,7 @@ export const GuidePage: React.FC = () => {
           MIT Open Source License ↗
         </a>
         <span style={{ color: colors.borderStrong }}>•</span>
-        <a
-          href="https://www.youtube.com/watch?v=signoff-demo"
-          target="_blank"
-          rel="noreferrer"
-          data-testid="guide-link-video"
-          style={{
-            color: colors.brandPrimary,
-            fontSize: '13px',
-            fontWeight: 600,
-            textDecoration: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-          }}
-        >
-          Video Walkthrough ↗
-        </a>
+        <span style={{ color: colors.inkMuted, fontSize: '13px' }}>Video walkthrough not available yet</span>
       </section>
 
       {/* Numbered 5-Step Evaluation Path */}
@@ -248,7 +232,7 @@ export const GuidePage: React.FC = () => {
           What is real
         </h2>
 
-        <div style={{ overflowX: 'auto', border: `1px solid ${colors.border}`, borderRadius: '8px' }}>
+        <div role="region" aria-label="Real and simulated features" tabIndex={0} style={{ overflowX: 'auto', border: `1px solid ${colors.border}`, borderRadius: '8px' }}>
           <table
             data-testid="real-simulated-table"
             style={{
@@ -277,8 +261,8 @@ export const GuidePage: React.FC = () => {
                 },
                 {
                   component: 'Evidence (tracking, delivery)',
-                  real: 'Real carrier tracking schemas and delivery timestamps',
-                  simulated: '—',
+                  real: 'Available order information',
+                  simulated: 'Demo shipment and tracking events',
                   proof: 'agent/tests/test_evidence.py',
                 },
                 {

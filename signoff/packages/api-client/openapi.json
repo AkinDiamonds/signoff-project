@@ -1021,9 +1021,14 @@
                 "$ref": "#/components/schemas/ExecutionStatus"
               },
               {
+                "const": "QUEUED",
+                "type": "string"
+              },
+              {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Latest Execution Status"
           },
           "latest_rule_id": {
             "anyOf": [

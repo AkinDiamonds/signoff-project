@@ -40,7 +40,7 @@ from agent.app.approvals import (
 from agent.app.approvals.schemas import ActionMoneySchema
 from agent.app.approvals.service import get_approval_by_id, resolve_approval_by_id
 from agent.app.db.base import Base
-from agent.app.db.models import Approval, Decision, Job
+from agent.app.db.models import Approval, Decision, Execution, Job
 from agent.app.db.models import Dispute as DBDispute
 from agent.app.domain.actions import MakeOffer
 from agent.app.domain.enums import (
@@ -175,7 +175,12 @@ def test_owner_card_approve_uses_same_one_time_resolution(db_session, setup_pend
 
 
 def test_owner_history_survives_phone_refresh_after_resolution_and_expiry(db_session, setup_pending_approval):
+    from fastapi.testclient import TestClient
+
     from agent.app.approvals.service import build_approval_card_response
+    from agent.app.db.session import get_db_session
+    from agent.app.main import create_app
+    from agent.app.settings import Settings
 
     approval, _token, _decision, _dispute = setup_pending_approval
     now = datetime(2026, 10, 6, 12, tzinfo=UTC)
@@ -187,6 +192,17 @@ def test_owner_history_survives_phone_refresh_after_resolution_and_expiry(db_ses
     assert card.resolution == 'APPROVE'
     assert card.execution_state == 'queued'
     assert card.server_now
+    app = create_app(Settings(demo_show_approval_links=False))
+    app.dependency_overrides[get_db_session] = lambda: db_session
+    with TestClient(app) as client:
+        detail = client.get(f'/api/disputes/{approval.dispute_id}').json()
+        assert detail['latest_approval_resolution'] == 'APPROVE'
+        assert detail['latest_execution_status'] == 'QUEUED'
+        assert result.decision_id is not None
+        db_session.add(Execution(decision_id=result.decision_id, dispute_id=approval.dispute_id,
+                                 status='SENT', request_hash='test-hash'))
+        db_session.commit()
+        assert client.get(f'/api/disputes/{approval.dispute_id}').json()['latest_execution_status'] == 'SENT'
     with pytest.raises(ConflictResolvedError):
         resolve_approval_by_id(db_session, approval.id, ApproveResolveRequest(action='APPROVE'), now)
 

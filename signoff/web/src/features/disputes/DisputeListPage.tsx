@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import {
   Button,
   Card,
@@ -63,7 +63,6 @@ function formatDueInfo(dueAt: string | null | undefined): { relative: string; ab
 
 export const DisputeListPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
 
   // Parse filters from URL, falling back to defaults on invalid input
   const filters = useMemo(() => parseDisputeFilters(searchParams), [searchParams]);
@@ -474,7 +473,6 @@ export const DisputeListPage: React.FC = () => {
             rowTestId={(item) => `dispute-row-${item.id}`}
             tableTestId="disputes-table"
             caption="All store disputes"
-            onRowClick={(item) => navigate(`/app/disputes/${item.id}`)}
           />
 
           <div

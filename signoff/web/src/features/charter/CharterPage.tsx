@@ -156,7 +156,7 @@ const CheckboxGroup = <T extends string>({
     <legend style={{ fontWeight: typography.fontWeightSemibold, fontSize: typography.fontSizeSmall, color: colors.ink, padding: '0 4px' }}>
       {legend}
     </legend>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px', marginTop: spacing[1] }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '8px', marginTop: spacing[1] }}>
       {options.map((option) => (
         <label
           key={option}
@@ -349,14 +349,15 @@ export const CharterPage: React.FC = () => {
       )}
 
       {/* Settings Form */}
-      <Card title="Autonomous signing authority" testId="charter-form">
+      <Card title="Signing limits" testId="charter-form">
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+          <p style={{ margin: 0 }}>Set the amounts Signoff may handle without asking you. Other rules and PayPal's current options still apply.</p>
           {/* Row 1: Refund without asking, up to */}
           <SettingRow
             id="charter-auto-offer"
-            label="Refund without asking, up to"
+            label="Offer a refund without asking, up to"
             legacyAriaLabel="Auto-offer maximum (USD)"
-            helper="Disputes up to this amount will be refunded automatically when evidence warrants it."
+            helper="Signoff may offer up to this amount without asking when the other rules allow it. An offer is not a completed refund."
             value={values.autoOfferMax}
             {...(errors.autoOfferMax ? { error: errors.autoOfferMax } : {})}
             onChange={(value) => patch({ autoOfferMax: value })}
@@ -367,7 +368,7 @@ export const CharterPage: React.FC = () => {
             id="charter-auto-accept"
             label="Accept a claim without asking, up to"
             legacyAriaLabel="Auto-accept maximum (USD)"
-            helper="Buyer claims up to this amount will be conceded without requesting human review."
+            helper="Signoff may accept a buyer's claim up to this amount when the other rules allow it. Accepting concedes the claim."
             value={values.autoAcceptMax}
             {...(errors.autoAcceptMax ? { error: errors.autoAcceptMax } : {})}
             onChange={(value) => patch({ autoAcceptMax: value })}

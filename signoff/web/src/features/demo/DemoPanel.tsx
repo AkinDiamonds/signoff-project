@@ -156,7 +156,7 @@ export const DemoPanel: React.FC = () => {
         data-testid="demo-scenario-card"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
           gap: spacing[2],
         }}
       >

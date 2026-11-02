@@ -48,10 +48,17 @@ export const MarketingLayout: React.FC = () => {
           background-color: #115E59;
           transform: translateY(-1px);
         }
+        @media (max-width: 700px) {
+          .marketing-header { height: auto !important; padding: 12px 16px !important; flex-wrap: wrap; gap: 12px; position: static !important; }
+          .marketing-nav { flex-wrap: wrap; gap: 8px 16px !important; }
+          .marketing-nav-link, .marketing-cta-button { min-height: 44px; display: inline-flex; align-items: center; }
+          .marketing-footer-links { flex-wrap: wrap; justify-content: center; }
+        }
       `}</style>
 
       {/* Global Marketing Topbar */}
       <header
+        className="marketing-header"
         style={{
           height: '64px',
           display: 'flex',
@@ -110,7 +117,7 @@ export const MarketingLayout: React.FC = () => {
           </span>
         </Link>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
+        <nav className="marketing-nav" aria-label="Main" style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
           <a href="#features" className="marketing-nav-link">
             Features
           </a>
@@ -139,7 +146,7 @@ export const MarketingLayout: React.FC = () => {
           borderTop: '1px solid rgba(255, 255, 255, 0.08)',
           backgroundColor: '#07090D',
           padding: '40px 32px 32px',
-          color: '#6B7280',
+          color: '#BFC8D5',
           fontSize: '13px',
           display: 'flex',
           flexDirection: 'column',
@@ -147,7 +154,7 @@ export const MarketingLayout: React.FC = () => {
           gap: '16px',
         }}
       >
-        <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+        <div className="marketing-footer-links" style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
           <Link to="/app" style={{ color: '#9CA3AF', textDecoration: 'none' }}>
             Merchant App
           </Link>
@@ -161,7 +168,7 @@ export const MarketingLayout: React.FC = () => {
             GitHub
           </a>
           <span>&bull;</span>
-          <span>PayPal Sandbox Verified</span>
+          <span>PayPal sandbox demo</span>
         </div>
         <p style={{ margin: 0 }}>
           Signoff &bull; Automated PayPal dispute defense within merchant signing limits.
