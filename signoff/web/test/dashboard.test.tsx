@@ -53,6 +53,10 @@ describe('Dashboard and read-only assistant (Step 28)', () => {
     expect(screen.getByTestId('kpi-assumption').textContent).toContain('20 minutes per closed dispute');
     expect(screen.getByTestId('dashboard-dispute-row-PP-D-1001')).toBeTruthy();
     expect(screen.getByTestId('dashboard-dispute-row-PP-D-1002')).toBeTruthy();
+    const list = screen.getByTestId('dashboard-disputes-card');
+    expect(list.compareDocumentPosition(screen.getByTestId('kpi-card-open')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const rows = list.querySelectorAll('tbody tr');
+    expect(rows[0]?.getAttribute('data-testid')).toBe('dashboard-dispute-row-PP-D-1001');
   });
 
   it('offers a plain dispute list and a loadable Studio workspace', async () => {

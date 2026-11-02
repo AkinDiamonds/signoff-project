@@ -66,7 +66,10 @@ export const DashboardPage: React.FC = () => {
     ).length;
   }, [disputes]);
 
-  const recentDisputes = useMemo(() => disputes.slice(0, 5), [disputes]);
+  const recentDisputes = useMemo(() => [...disputes]
+    .filter(dispute => dispute.status !== 'RESOLVED')
+    .sort((a, b) => (a.seller_response_due_date ?? '9999').localeCompare(b.seller_response_due_date ?? '9999'))
+    .slice(0, 5), [disputes]);
 
   const columns = useMemo<ColumnDef<DisputeItem>[]>(
     () => [
@@ -247,6 +250,66 @@ export const DashboardPage: React.FC = () => {
         </div>
       )}
 
+      {/* Operational Recent Disputes Queue */}
+      <section
+        aria-label="Recent disputes"
+        data-testid="dashboard-disputes-card"
+        style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: radius.card,
+          border: `1px solid ${colors.border}`,
+          padding: spacing[3],
+          display: 'flex',
+          flexDirection: 'column',
+          gap: spacing[2],
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
+            Open disputes by deadline
+          </h2>
+          <Link
+            to="/app/disputes"
+            style={{
+              fontSize: '13px',
+              color: '#0F766E',
+              textDecoration: 'none',
+              fontWeight: 600,
+            }}
+          >
+            All Disputes &rarr;
+          </Link>
+        </div>
+
+        {disputesQuery.isPending && <Skeleton height="140px" />}
+
+        {disputesQuery.isError && (
+          <ErrorState
+            testId="dashboard-disputes-error"
+            message={errorText(disputesQuery.error)}
+            onRetry={() => void disputesQuery.refetch()}
+          />
+        )}
+
+        {disputesQuery.data && recentDisputes.length === 0 && (
+          <EmptyState
+            title="No open disputes shown"
+            description="New disputes will appear here when they are available."
+          />
+        )}
+
+        {recentDisputes.length > 0 && (
+          <DataTable
+            columns={columns}
+            data={recentDisputes}
+            keyExtractor={(d) => d.id}
+            rowTestId={(d) => `dashboard-dispute-row-${d.id}`}
+            tableTestId="dashboard-disputes-table"
+            caption="Recent store disputes"
+          />
+        )}
+      </section>
+
       {/* Clean Metrics Strip (Replaces AI Card Fatigue) */}
       <section
         aria-label="Dispute metrics"
@@ -346,66 +409,6 @@ export const DashboardPage: React.FC = () => {
         <div style={{ backgroundColor: '#FFFFFF', borderRadius: radius.card, border: `1px solid ${colors.border}`, padding: spacing[2] }}>
           <StudioEmbed data={studioData} />
         </div>
-      </section>
-
-      {/* Operational Recent Disputes Queue */}
-      <section
-        aria-label="Recent disputes"
-        data-testid="dashboard-disputes-card"
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: radius.card,
-          border: `1px solid ${colors.border}`,
-          padding: spacing[3],
-          display: 'flex',
-          flexDirection: 'column',
-          gap: spacing[2],
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
-            Recent Disputes Queue
-          </h2>
-          <Link
-            to="/app/disputes"
-            style={{
-              fontSize: '13px',
-              color: '#0F766E',
-              textDecoration: 'none',
-              fontWeight: 600,
-            }}
-          >
-            All Disputes &rarr;
-          </Link>
-        </div>
-
-        {disputesQuery.isPending && <Skeleton height="140px" />}
-
-        {disputesQuery.isError && (
-          <ErrorState
-            testId="dashboard-disputes-error"
-            message={errorText(disputesQuery.error)}
-            onRetry={() => void disputesQuery.refetch()}
-          />
-        )}
-
-        {disputesQuery.data && disputes.length === 0 && (
-          <EmptyState
-            title="No disputes pending"
-            description="PayPal dispute queue is currently clean. Incoming dispute webhooks will appear here in real time."
-          />
-        )}
-
-        {recentDisputes.length > 0 && (
-          <DataTable
-            columns={columns}
-            data={recentDisputes}
-            keyExtractor={(d) => d.id}
-            rowTestId={(d) => `dashboard-dispute-row-${d.id}`}
-            tableTestId="dashboard-disputes-table"
-            caption="Recent store disputes"
-          />
-        )}
       </section>
 
       {/* Integrated Assistant & Widgets Section (Test Compatible) */}
