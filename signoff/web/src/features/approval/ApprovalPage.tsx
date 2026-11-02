@@ -313,7 +313,8 @@ export const ApprovalPage: React.FC = () => {
               {outcomeMessage}
             </p>
             {ownerCard && <p role="status">Execution record: {card?.execution_state ?? 'not_recorded'}.
-              {' '}A saved approval is separate from PayPal submission.</p>}
+              {' '}A saved approval is separate from PayPal submission.
+              {card?.execution_state === 'confirmed' && ' A recorded confirmation does not independently prove the PayPal action or outcome.'}</p>}
             {card && <Link to={`/app/disputes/${encodeURIComponent(card.dispute_id)}`}>View current dispute and audit history</Link>}
 
             {outcome === 'OUTCOME_UNKNOWN' && (

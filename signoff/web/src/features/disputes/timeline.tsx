@@ -130,8 +130,8 @@ export function renderTimelineEventContent(event: KnownTimelineEvent): {
       };
     case 'EXECUTION_CONFIRMED':
       return {
-        title: 'Execution confirmed',
-        details: `Action confirmed by PayPal (external ID: ${event.external_id}).`,
+        title: 'Confirmation recorded',
+        details: 'Signoff recorded a confirmation. The PayPal action and outcome require independent verification.',
       };
     case 'EXECUTION_FAILED':
       return {
@@ -281,6 +281,10 @@ export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events, reve
               {content.details && (
                 <div style={{ fontSize: typography.fontSizeSmall, color: colors.ink }}>{content.details}</div>
               )}
+              <details style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
+                <summary>Audit reference</summary>
+                <span>Event {item.id} · Sequence {seqNum}</span>
+              </details>
             </div>
           </li>
         );

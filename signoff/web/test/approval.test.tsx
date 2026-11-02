@@ -68,6 +68,23 @@ describe('Approval card feature (Step 26)', () => {
     expect(requests.filter(value => value.startsWith('POST'))).toHaveLength(1);
   });
 
+  it('distinguishes a recorded confirmation from independent PayPal proof', async () => {
+    const cardId = 'bb9b1426-179f-41b5-ab4c-0796922012a1';
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes(`/api/approvals/cards/${cardId}`)) {
+        const response = await mockFetch(url.replace(`/cards/${cardId}`, '/durable-owner-card'), options);
+        const card: unknown = await response.json();
+        if (typeof card !== 'object' || card === null) throw new Error('Expected approval card');
+        return new Response(JSON.stringify({ ...card, resolution: 'APPROVE', execution_state: 'confirmed' }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return mockFetch(input, options);
+    }));
+    renderAt(`/app/approvals/${cardId}`);
+    await waitFor(() => expect(screen.getByText(/does not independently prove the PayPal action/)).toBeTruthy());
+  });
+
   it.each([
     ['PROVIDE_EVIDENCE', { notes: 'Simulated shipment information' }, 'submit evidence'],
     ['SEND_MESSAGE', { message: 'We are reviewing your case.' }, 'send a message'],

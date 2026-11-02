@@ -147,7 +147,7 @@ const TIMELINE_TITLES: Record<string, string> = {
   APPROVAL_RESOLVED: 'Approval resolved',
   EXECUTION_INTENDED: 'Execution intended',
   EXECUTION_SENT: 'Execution sent',
-  EXECUTION_CONFIRMED: 'Execution confirmed',
+  EXECUTION_CONFIRMED: 'Confirmation recorded',
   EXECUTION_FAILED: 'Execution failed',
   INJECTION_FLAGGED: 'Injection flagged',
   NO_ACTION: 'No action taken',

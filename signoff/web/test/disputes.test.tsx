@@ -211,6 +211,16 @@ describe('Disputes UI feature (Step 25)', () => {
     expect(screen.getByText(/No action was proposed by this run/)).toBeTruthy();
   });
 
+  it('does not present a recorded confirmation as independent PayPal proof', () => {
+    const event: ApiTimelineEvent = { id: 'ledger-123', dispute_id: 'PP-D-1001', sequence_number: 1,
+      kind: 'EXECUTION_CONFIRMED', external_id: '', created_at: '2026-10-31T20:00:00Z', is_truncated: false };
+    render(<DecisionTimeline events={[event]} />);
+    expect(screen.getByText('Confirmation recorded')).toBeTruthy();
+    expect(screen.getByText(/require independent verification/)).toBeTruthy();
+    expect(screen.queryByText(/confirmed by PayPal/)).toBeNull();
+    expect(screen.getByText(/ledger-123/)).toBeTruthy();
+  });
+
   it('finds a newer failed run on a later timeline page', async () => {
     const requested: string[] = [];
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
