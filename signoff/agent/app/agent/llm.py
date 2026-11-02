@@ -69,6 +69,15 @@ REPAIRABLE_FAILURES: frozenset[LLMFailureKind] = frozenset(
     }
 )
 
+# Custom validator codes can contain arbitrary text. Only publish known codes;
+# neither rejected input nor Pydantic's raw message/context belongs in the audit.
+SAFE_VALIDATION_TYPES = frozenset({
+    "missing", "string_type", "string_pattern_mismatch", "union_tag_invalid",
+    "union_tag_not_found", "extra_forbidden", "value_error", "literal_error",
+    "model_type", "dict_type", "list_type", "int_type", "bool_type",
+})
+MAX_VALIDATION_DIAGNOSTICS = 10
+
 
 @dataclass(frozen=True)
 class ProviderResponse:
@@ -256,14 +265,24 @@ def parse_plan(
                     collect_schema_names(child)
 
         collect_schema_names(schema.model_json_schema())
-        paths = sorted({".".join(str(part) if isinstance(part, int) or part in allowed else "<field>"
-                                 for part in err["loc"]) for err in exc.errors()})
-        if any(err["type"] == "extra_forbidden" for err in exc.errors()):
+        errors = exc.errors(include_input=False, include_context=False, include_url=False)
+        diagnostics = sorted({
+            (
+                ".".join(str(part) if isinstance(part, int) or part in allowed else "<field>"
+                         for part in err["loc"]),
+                err["type"] if err["type"] in SAFE_VALIDATION_TYPES else "validation_error",
+            )
+            for err in errors
+        })
+        details = ", ".join(f"{path} ({kind})" for path, kind in diagnostics[:MAX_VALIDATION_DIAGNOSTICS])
+        if len(diagnostics) > MAX_VALIDATION_DIAGNOSTICS:
+            details += ", additional validation errors omitted"
+        if any(err["type"] == "extra_forbidden" for err in errors):
             return LLMFailure(LLMFailureKind.extra_fields,
-                              f"The model returned fields outside the schema: {', '.join(paths)}.")
+                              f"The model returned fields outside the schema: {details}.")
         return LLMFailure(
             LLMFailureKind.invalid_schema,
-            f"The model response did not match the schema: {', '.join(paths)}.",
+            f"The model response did not match the schema: {details}.",
         )
 
     actions = getattr(plan, "actions", None)

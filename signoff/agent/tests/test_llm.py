@@ -96,6 +96,44 @@ async def make_service(
 
 
 @pytest.mark.asyncio
+async def test_multi_action_diagnostics_preserve_safe_types_after_repair():
+    from agent.app.agent.schemas import AgentPlan
+
+    # Synthetic reproduction, not a captured hosted-provider incident.
+    invalid = json.dumps({"actions": [
+        {"action_type": "MAKE_OFFER", "amount": {"value": 25.0}},
+        {"action_type": "PRIVATE_ACTION_CANARY", "PRIVATE_FIELD_CANARY": "PRIVATE_VALUE_CANARY"},
+    ]})
+    service, fake, cache, _ = await make_service([ProviderResponse(invalid), ProviderResponse(invalid)])
+    result = await service.generate(PROMPT, input_hash="diagnostic", prompt_version="v1", schema=AgentPlan)
+
+    assert isinstance(result, LLMFailure)
+    assert result.attempts == 2
+    assert "actions.0.MAKE_OFFER.amount.value (value_error)" in result.message
+    assert "actions.1 (union_tag_invalid)" in result.message
+    assert "PRIVATE_" not in result.message
+    assert cache.get("v1", "diagnostic", AgentPlan) is None
+    assert fake.calls == 2
+
+
+def test_multi_action_diagnostics_are_bounded_and_redacted():
+    from agent.app.agent.schemas import AgentPlan
+
+    invalid = json.dumps({"actions": [
+        {"action_type": "SEND_MESSAGE", f"PRIVATE_FIELD_CANARY_{index}": "PRIVATE_VALUE_CANARY"}
+        for index in range(30)
+    ]})
+    result = parse_plan(invalid, None, AgentPlan)
+
+    assert isinstance(result, LLMFailure)
+    assert "extra_forbidden" in result.message
+    assert "PRIVATE_" not in result.message
+    assert len(result.message) < 1500
+    assert result.message.count("(extra_forbidden)") <= 10
+    assert "additional validation errors omitted" in result.message
+
+
+@pytest.mark.asyncio
 async def test_success_returns_validated_plan_and_is_not_cached_labelled():
     service, fake, _, _ = await make_service([ProviderResponse(VALID_JSON)])
 
