@@ -26,6 +26,7 @@ export const PhoneNotifications: React.FC = () => {
   const [message, setMessage] = useState('');
   const [testDispute, setTestDispute] = useState('');
   const [diagnostic, setDiagnostic] = useState('');
+  const [localResult, setLocalResult] = useState('');
   useEffect(() => {
     let disposed = false;
     void unwrap(apiClient.request<Config>('/api/push/config')).then(async value => {
@@ -114,11 +115,12 @@ export const PhoneNotifications: React.FC = () => {
   };
   const testLocalDisplay = async () => {
     if (!supported || busy) return;
-    setBusy(true); setMessage(''); setDiagnostic('');
+    setBusy(true); setLocalResult('Checking local notification display…'); setDiagnostic('');
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       const registration = await navigator.serviceWorker.getRegistration('/');
       if (!registration?.active) {
-        setMessage('No active notification worker was found. Enable notifications and try again.');
+        setLocalResult('No active notification worker was found. Enable notifications and try again.');
         return;
       }
       const subscription = await registration.pushManager.getSubscription();
@@ -129,20 +131,29 @@ export const PhoneNotifications: React.FC = () => {
           && new Uint8Array(currentKey).every((value, index) => value === expectedKey[index]) ? 'Subscription key matches' : 'Subscription key differs';
       setDiagnostic(`Worker active; update ${registration.waiting ? 'waiting' : registration.installing ? 'installing' : 'not pending'}; page ${navigator.serviceWorker.controller ? 'controlled' : 'not controlled'}; permission ${Notification.permission}; ${keyState}.`);
       if (Notification.permission !== 'granted') {
-        setMessage('Local display test requires notification permission. Check this site’s notification settings.');
+        setLocalResult('Local display test requires notification permission. Check this site’s notification settings.');
         return;
       }
       const tag = 'signoff-local-display-test';
-      await registration.showNotification('Signoff local display test', {
-        body: 'This test stays on this device and does not check remote delivery.', tag,
+      const timeout = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('display_timeout')), 8000);
       });
-      const notifications = await registration.getNotifications({ tag });
-      setMessage(notifications.length
-        ? 'The browser reports a local test notification. Check the notification tray; this does not prove it was visible or that remote push arrived.'
-        : 'The browser did not report the local test notification. Check site and Android notification settings.');
-    } catch {
-      setMessage('Could not complete the local display test. Check site and Android notification settings.');
-    } finally { setBusy(false); }
+      const options: NotificationOptions & { renotify: boolean } = {
+        body: 'This test stays on this device and does not check remote delivery.', tag,
+        icon: '/icon-192.png', renotify: true, silent: false,
+      };
+      await Promise.race([registration.showNotification('Signoff local display test', options), timeout]);
+      const notifications = await Promise.race([registration.getNotifications({ tag }), timeout]);
+      setLocalResult(notifications.length
+        ? 'The browser reports a local test notification. If the tray is empty, check Android Settings → Apps → Chrome → Notifications → Sites → signoff-web.onrender.com. Browser permission alone does not confirm this Android site channel is enabled.'
+        : 'The browser did not retain the local test notification. Check the site channel under Android Settings → Apps → Chrome → Notifications.');
+    } catch (error) {
+      setLocalResult(error instanceof Error && error.message === 'display_timeout'
+        ? 'The browser did not finish the local display test within 8 seconds. Remote delivery cannot be verified until local display works.'
+        : error instanceof DOMException && error.name === 'NotAllowedError'
+          ? 'The browser refused local notification display. Check browser permission and Android’s Chrome site notification channel.'
+          : 'The browser could not complete the local display test. Check Android’s Chrome site notification channel.');
+    } finally { clearTimeout(timer); setBusy(false); }
   };
   return <section aria-label="Phone notifications" style={{ background: '#fff', border: '1px solid #dce5df', borderRadius: 12, padding: 20 }}>
     <h2 style={{ marginTop: 0 }}>Phone notifications</h2>
@@ -160,6 +171,7 @@ export const PhoneNotifications: React.FC = () => {
       <p>Test whether this device can display a local notification. This does not send a push or change a dispute.</p>
       <Button disabled={busy} onClick={() => { void testLocalDisplay(); }}>Test local notification display</Button>
       {diagnostic && <p>{diagnostic}</p>}
+      {localResult && <p role="status">Local display result: {localResult}</p>}
     </div>}
     {enabled && <div style={{ display: 'grid', gap: 10, marginTop: 16 }}>
       <label>Dispute ID for phone delivery check<input value={testDispute} onChange={event => setTestDispute(event.target.value)}

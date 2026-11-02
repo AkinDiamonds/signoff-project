@@ -10,7 +10,7 @@ it('tests local display only after a tap and reports browser state without expos
   const showNotification = vi.fn(async () => undefined);
   const getNotifications = vi.fn(async () => [{}]);
   const registration = { active: {}, update: vi.fn(), showNotification, getNotifications,
-    pushManager: { getSubscription: async () => ({ options: { applicationServerKey: new Uint8Array([1, 2, 3]).buffer } }) } };
+    pushManager: { getSubscription: async () => ({ endpoint: 'fictional', options: { applicationServerKey: new Uint8Array([1, 2, 3]).buffer } }) } };
   Object.defineProperty(navigator, 'serviceWorker', { configurable: true,
     value: { getRegistration: async () => registration, controller: {} } });
   vi.stubGlobal('PushManager', function () {});
@@ -26,6 +26,29 @@ it('tests local display only after a tap and reports browser state without expos
   expect(screen.getByText(/Subscription key matches/)).toBeTruthy();
   expect(getNotifications).toHaveBeenCalledWith({ tag: 'signoff-local-display-test' });
   expect(fetchMock).toHaveBeenCalledTimes(1);
+  expect(showNotification).toHaveBeenCalledWith('Signoff local display test', expect.objectContaining({ renotify: true, silent: false }));
+  fireEvent.change(screen.getByRole('textbox'), { target: { value: 'PP-FICTIONAL' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Send phone test' }));
+  await waitFor(() => expect(screen.getByText(/Phone test queued/)).toBeTruthy());
+  expect(screen.getByText(/browser reports a local test notification/)).toBeTruthy();
+  view.unmount();
+  Reflect.deleteProperty(navigator, 'serviceWorker');
+});
+
+it('reports local display refusal without exposing browser error details', async () => {
+  const registration = { active: {}, update: vi.fn(),
+    showNotification: vi.fn(async () => { throw new DOMException('private diagnostic', 'NotAllowedError'); }),
+    pushManager: { getSubscription: async () => null } };
+  Object.defineProperty(navigator, 'serviceWorker', { configurable: true,
+    value: { getRegistration: async () => registration } });
+  vi.stubGlobal('PushManager', function () {});
+  vi.stubGlobal('Notification', { permission: 'granted' });
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ available: true, public_key: 'AQID',
+    pending_deliveries: 0, failed_deliveries: 0 }), { status: 200, headers: { 'Content-Type': 'application/json' } })));
+  const view = render(<PhoneNotifications />);
+  fireEvent.click(screen.getByRole('button', { name: 'Test local notification display' }));
+  await waitFor(() => expect(screen.getByText(/browser refused local notification display/)).toBeTruthy());
+  expect(screen.queryByText(/private diagnostic/)).toBeNull();
   view.unmount();
   Reflect.deleteProperty(navigator, 'serviceWorker');
 });
