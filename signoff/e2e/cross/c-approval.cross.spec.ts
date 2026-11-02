@@ -24,6 +24,12 @@ test('C: unchanged approval reaches the stub provider once @full', async ({ page
   const items = await waitForTimeline(request, disputeId, (events) => hasKind(events, 'EXECUTION_CONFIRMED'));
   expect(items.filter(item => item.kind === 'EXECUTION_INTENDED')).toHaveLength(1);
   expect((await stub.state(request)).disputes[disputeId]?.offer).toBeTruthy();
+  await page.goto(`/app/disputes/${disputeId}`);
+  await expect(page.getByTestId('decision-timeline')).toContainText('Approval resolved');
+  await expect(page.getByTestId('decision-timeline')).toContainText('Confirmation recorded');
+  await page.reload();
+  await expect(page.getByTestId('decision-timeline')).toContainText('Approval resolved');
+  await expect(page.getByTestId('decision-timeline')).toContainText('Confirmation recorded');
 });
 
 test('C: merchant approves an edited offer on a phone @full', async ({ browser, page, request, session }) => {

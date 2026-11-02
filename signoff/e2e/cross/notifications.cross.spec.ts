@@ -33,4 +33,7 @@ test('inbox persists new dispute and review notifications @full', async ({ page,
   await expect(review.getByRole('button', { name: 'Mark unread' })).toBeVisible();
   await review.getByRole('link', { name: 'View dispute' }).click();
   await expect(page.getByTestId('dispute-detail-id')).toContainText(disputeId);
+  await expect(page.getByText('Delivery evidence needs your review')).toBeVisible();
+  await page.goBack();
+  await expect(review.getByRole('button', { name: 'Mark unread' })).toBeVisible();
 });

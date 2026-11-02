@@ -56,6 +56,12 @@ test('resilience: LLM failure records RUN_FAILED and executes nothing @full', as
   await session.applyTo(page);
   await page.goto(`/app/disputes/${disputeId}`);
   await expect(page.getByTestId('decision-timeline')).toContainText('Run failed');
+  await expect(page.getByText('Analysis needs your review')).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('Analysis needs your review')).toBeVisible();
+  await page.goto('/app/disputes');
+  await page.goBack();
+  await expect(page.getByText('Analysis needs your review')).toBeVisible();
 });
 
 test('resilience: kill switch blocks scenarios and charter edits @smoke @full', async ({ page, request }) => {

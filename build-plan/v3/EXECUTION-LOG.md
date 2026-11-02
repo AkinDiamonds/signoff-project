@@ -1,5 +1,12 @@
 # Execution log
 
+### T11 targeted reconciliation — 2026-11-02
+
+- Main eb0ae1e CI 41484986743 and E2E 41484986979 succeeded; API, worker, web and shop reported that revision live and API readiness passed. A read-only hosted query found the two historical approvals' dispute still has two decisions and zero execution rows; no historical action was replayed.
+- Corrected misleading timeline copy that presented Signoff's confirmation status as independent PayPal confirmation. Approval history now includes the same qualification for recorded confirmations. Timeline entries expose their ledger event ID and sequence via an expandable audit reference; ordering and execution semantics are unchanged.
+- Five focused isolated stub-browser cases passed: automatic evidence, delivery review and dashboard, approval, persistent inbox, and failed run; refresh/back checks cover review, failure and inbox. An initial attempt failed before application startup because the requested Chromium binary was absent; after installing the matching Playwright browser in ignored work storage, the four cases passed. The subsequent failure case passed separately. UI tests: 43 passed; targeted ESLint, web TypeScript and whitespace passed. No live PayPal action was performed.
+- Hosted authenticated cross-view comparisons and actual action-specific PayPal outcome proof remain open; T07 confirmation changes are paused. T11 is not marked complete solely on stub scenarios or recorded confirmation. Owner reported phone notifications work; background/click/opt-out evidence remains separate.
+
 ### T11 dashboard and audit corrections — 2026-11-02
 
 - Gate decisions and recorded execution confirmation cannot establish that an action caused resolution under the paused T07 confirmation semantics. The KPI API now returns unavailable for auto-resolution attribution. Seller/buyer-favour USD disputed totals require an explicit outcome code; unknown outcomes and allowed refunds do not count. These totals are disputed amounts, not proof of cash transferred.

@@ -17,6 +17,11 @@ test('A: evidence submitted and execution confirmed @smoke @full', async ({ page
   await expect(page.getByTestId('decision-timeline')).toBeVisible();
   await expect(page.getByTestId('evidence-strength-badge')).toBeVisible();
   await expect(page.getByTestId('detail-verdict-chip')).toContainText('Allow');
+  await expect(page.getByTestId('decision-timeline')).toContainText('Confirmation recorded');
+  await expect(page.getByTestId('decision-timeline')).toContainText('require independent verification');
+  await page.reload();
+  await expect(page.getByTestId('detail-verdict-chip')).toContainText('Allow');
+  await expect(page.getByTestId('decision-timeline')).toContainText('Confirmation recorded');
 
   const state = await stub.state(request);
   expect(state.disputes[disputeId]?.evidences).toHaveLength(1);
