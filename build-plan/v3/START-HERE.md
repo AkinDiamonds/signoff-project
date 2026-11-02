@@ -1,5 +1,7 @@
 # Resume Signoff
 
+**Latest checkpoint: read [NEXT-SESSION.md](NEXT-SESSION.md) first.** Application `3222069` is live on all four services; main CI and 14-case E2E pass. Push configuration/software are deployed, but the owner reports no phone notification even with Chrome foreground. Continue the concrete device-display versus remote-arrival diagnosis there. Executor confirmation remains paused and the two historical approvals must not be replayed. Older release details below are historical.
+
 Read applicable AGENTS instructions, this handoff, `02-owner-decisions.md`, latest `EXECUTION-LOG.md`, `PROGRESS.md`, then only the active task section of `00-execution-plan.md` and its relevant code. Preserve local work; no resets, force-pushes or worktrees.
 
 ## Product journey and authorization

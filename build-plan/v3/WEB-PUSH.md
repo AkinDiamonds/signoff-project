@@ -2,7 +2,7 @@
 
 ## Current release
 
-Feature checkpoint `186694a` is on main and Render API/worker/merchant/shop report that exact revision live. Branch CI `41433637902` and main standard CI `41434110074` passed; main E2E `41434110278` had 12 passed/2 failed approval outcome cases. A presentation fix passed the two affected isolated stub browser cases and awaits its own deployment. API is ready, schema is `e08b3df70008`, worker is current, owner routes are protected and push assets/controls are observed served.
+Application `3222069` is live on API/worker/merchant/shop. Branch CI `41437506615`, main CI `41438273810` and main E2E `41438273843` passed (680 backend tests, 14 browser cases). The bearer-outcome presentation fix, PNG icons, worker v2 and high-urgency/topic support are deployed. API is ready, schema is `e08b3df70008`, worker is current, owner routes are protected and actual push assets/controls were checked. The prior 186694a browser failure is retained in the log, not the current passing result. See NEXT-SESSION.md for the active phone failure.
 
 Executor confirmation changes remain paused by owner instruction. A recorded CONFIRMED status is not independent proof of an action-specific PayPal receipt. Do not replay uncertain or historical approved actions to test deployment.
 
@@ -41,7 +41,7 @@ Previous application code can ignore the added tables and read the inbox. Roll b
 
 ## Physical Android acceptance — phone display not proven
 
-Owner reported installation failure and no visible notification. FCM accepted two first-attempt phone tests, but that is not proof of display, correct click-through or opt-out. An active subscription remains recorded. Device/browser and Android/Chrome channel details are pending. PNG icon and worker-update compatibility changes are prepared separately; do not label those changes proof that delivery now works.
+Owner on Hot 30i/Android 12/standalone Chrome reports installation failure and no visible alert, including after the compatibility release and with Chrome foreground. FCM accepts the tests, but this is not proof of display, correct click-through or opt-out. Chrome's global Allow notifications switch is ON; per-site/device display still needs diagnosis. An active subscription remains recorded. PNG icons/worker updates are deployed; they have not established physical success. The exact served worker creates a native browser notification in an isolated full Chromium check with permission granted and a protocol-injected payload; that bypasses FCM and does not prove Android receipt.
 
 1. After the feature release is live, sign in on Android Chrome over HTTPS and open Settings.
 2. Tap Enable phone notifications; grant permission deliberately. Do not infer permission from desktop tests.
