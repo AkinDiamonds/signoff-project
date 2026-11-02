@@ -46,6 +46,9 @@ class Settings(BaseSettings):
 
     # Core environment
     app_env: AppEnv = Field(default=AppEnv.local, validation_alias="APP_ENV")
+    web_push_vapid_public_key: str = Field(default="", validation_alias="WEB_PUSH_VAPID_PUBLIC_KEY")
+    web_push_vapid_private_key: str = Field(default="", validation_alias="WEB_PUSH_VAPID_PRIVATE_KEY", repr=False)
+    web_push_vapid_subject: str = Field(default="", validation_alias="WEB_PUSH_VAPID_SUBJECT")
 
     # PayPal configuration
     paypal_env: PayPalEnv = Field(default=PayPalEnv.sandbox, validation_alias="PAYPAL_ENV")

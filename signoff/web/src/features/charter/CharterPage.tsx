@@ -11,6 +11,7 @@ import {
   radius,
   spacing,
   typography,
+  toast,
 } from '@signoff/ui';
 import { ApiQueryError } from '../../app/queries';
 import { fetchLatestCharter, useCharter, useCharterHistory, useUpdateCharter } from './api';
@@ -256,7 +257,9 @@ export const CharterPage: React.FC = () => {
         setInitialValues(nextVals);
         setBaseVersion(saved.version);
         setSavedVersion(saved.version);
+        toast('Signing limits saved.');
       } catch (error) {
+        toast('Signing limits could not be saved. Review the form and try again.', 'error');
         if (error instanceof ApiQueryError && error.status === 409) {
           try {
             setNewerCharter(await fetchLatestCharter());

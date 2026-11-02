@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { PageHeader, Button, colors, radius, spacing, useTheme } from '@signoff/ui';
+import { PageHeader, Button, colors, radius, spacing, useTheme, toast } from '@signoff/ui';
+import { PhoneNotifications } from './PhoneNotifications';
 import type { components } from '@signoff/api-client/generated';
 import { apiClient } from '../../app/api';
 import { unwrap } from '../../app/queries';
@@ -52,7 +53,8 @@ export const SettingsPage: React.FC = () => {
       const result = await unwrap(apiClient.request<IntegrationStatus>('/api/integrations/check', { method: 'POST', timeoutMs: 30_000 }));
       client.setQueryData(['integrations'], result);
       setMessage('Checks finished. Review the results below.');
-    } catch (failure) { setError(failure instanceof Error ? failure.message : 'Connection checks could not be completed.'); }
+      toast('Connection checks finished. Review the results.');
+    } catch (failure) { setError(failure instanceof Error ? failure.message : 'Connection checks could not be completed.'); toast('Connection checks could not be completed.', 'error'); }
     finally { setChecking(false); }
   };
   const logout = async () => {
@@ -104,6 +106,7 @@ export const SettingsPage: React.FC = () => {
         <h2 style={{ marginTop: 0, fontSize: 18 }}>Appearance</h2>
         <Button onClick={theme.openPicker}>Choose a theme</Button>
       </section>
+      <PhoneNotifications />
     </div>
   );
 };

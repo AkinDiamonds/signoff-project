@@ -11,7 +11,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, ErrorState, Money, Skeleton } from '@signoff/ui';
+import { Button, ErrorState, Money, Skeleton, toast } from '@signoff/ui';
 import { captureShopOrder, createShopOrder, getDemoSessionId } from '../api';
 import { useCart } from '../CartContext';
 import { Link, useRouter } from '../router';
@@ -116,9 +116,11 @@ export const CheckoutPage: React.FC = () => {
       await captureShopOrder(orderCode, {
         paypal_order_id: paypalOrderId,
       });
+      toast('Sandbox payment captured and order saved.');
       clearCart();
       navigate(`/confirmation/${orderCode}`);
     } catch (err: unknown) {
+      toast('Payment could not be confirmed. Check the order before retrying.', 'error');
       setError(err instanceof Error ? err.message : 'Capture failed. Please try again.');
       setCapturing(false);
       setStatusMessage(null);

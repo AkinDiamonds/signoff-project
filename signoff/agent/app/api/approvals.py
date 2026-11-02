@@ -53,7 +53,7 @@ def check_rate_limit(request: Request) -> None:
 def get_owner_approval_card(
     approval_id: uuid.UUID, db_session: Annotated[Session, Depends(get_db_session)],
 ) -> ApprovalCardResponse:
-    return build_approval_card_response(db_session, get_approval_by_id(db_session, approval_id))
+    return build_approval_card_response(db_session, get_approval_by_id(db_session, approval_id, include_history=True))
 
 
 @router.post("/cards/{approval_id}/resolve", response_model=ResolveResponse)

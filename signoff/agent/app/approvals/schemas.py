@@ -134,6 +134,8 @@ class ApprovalCardResponse(BaseModel):
     dispute: DisputeCardSummary
     created_at: str
     resolved_at: str | None = None
+    server_now: str = ""
+    execution_state: str = "not_recorded"
 
 
 class ResolveResponse(BaseModel):

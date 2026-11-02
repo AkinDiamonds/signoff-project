@@ -260,6 +260,23 @@ def build_approval_card_response(
     # Escape notes on output
     escaped_notes = html.escape(approval.notes) if approval.notes else None
 
+    from agent.app.db.models import Execution, Job, LedgerEvent
+
+    resolved_event = session.scalar(select(LedgerEvent).where(
+        LedgerEvent.dispute_id == approval.dispute_id,
+        LedgerEvent.event_kind == TimelineEventKind.APPROVAL_RESOLVED.value,
+        LedgerEvent.payload['approval_id'].as_string() == str(approval.id),
+    ).order_by(LedgerEvent.sequence_number.desc()).limit(1))
+    resolved_id = (resolved_event.payload or {}).get('decision_id') if resolved_event else None
+    target_id = uuid.UUID(resolved_id) if isinstance(resolved_id, str) else decision.id
+    execution = session.scalar(select(Execution).where(Execution.decision_id == target_id))
+    job = session.scalar(select(Job).where(
+        Job.kind == JobKind.EXECUTE_DECISION.value,
+        Job.payload['decision_id'].as_string() == str(target_id),
+    ).order_by(Job.created_at.desc()).limit(1))
+    execution_state = execution.status.lower() if execution else (
+        'queued' if job and job.status in ('PENDING', 'RUNNING') else 'not_recorded'
+    )
     return ApprovalCardResponse(
         id=str(approval.id),
         decision_id=str(decision.id),
@@ -284,6 +301,8 @@ def build_approval_card_response(
         ),
         created_at=approval.created_at.isoformat(),
         resolved_at=approval.resolved_at.isoformat() if approval.resolved_at else None,
+        server_now=datetime.now(UTC).isoformat(),
+        execution_state=execution_state,
     )
 
 
@@ -296,12 +315,13 @@ def resolve_approval(
     return _resolve_approval(session, Approval.token_hash == hash_token(raw_token), request, now)
 
 
-def get_approval_by_id(session: Session, approval_id: uuid.UUID, now: datetime | None = None) -> Approval:
+def get_approval_by_id(session: Session, approval_id: uuid.UUID, now: datetime | None = None,
+                       *, include_history: bool = False) -> Approval:
     """Owner-authenticated access to durable cards; IDs are not bearer tokens."""
     now_dt = _as_utc(now) if now is not None else datetime.now(UTC)
     approval = session.get(Approval, approval_id)
-    if (approval is None or _as_utc(approval.expires_at) <= now_dt
-            or approval.resolution != ApprovalResolution.PENDING.value):
+    if approval is None or (not include_history and (
+            _as_utc(approval.expires_at) <= now_dt or approval.resolution != ApprovalResolution.PENDING.value)):
         raise TokenInvalidError()
     return approval
 

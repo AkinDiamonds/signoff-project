@@ -503,8 +503,8 @@ class Notification(Base):
     demo_session_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     kind: Mapped[str] = mapped_column(String(40), nullable=False)
     dedupe_key: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
-    source_event_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey('ledger_events.id'), nullable=False
+    source_event_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey('ledger_events.id'), nullable=True
     )
     message: Mapped[str] = mapped_column(String(240), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -521,6 +521,42 @@ class NotificationOutbox(Base):
     state: Mapped[str] = mapped_column(String(24), default='pending', nullable=False)
     attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class PushSubscription(Base):
+    """One explicitly opted-in owner device; endpoint and keys are private."""
+
+    __tablename__ = "push_subscriptions"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    endpoint_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    endpoint: Mapped[str] = mapped_column(Text, nullable=False)
+    p256dh: Mapped[str] = mapped_column(String(128), nullable=False)
+    auth: Mapped[str] = mapped_column(String(64), nullable=False)
+    vapid_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class PushDelivery(Base):
+    """Leased destination attempts. A delivery receipt is not an approval."""
+
+    __tablename__ = "push_deliveries"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    notification_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey('notifications.id'), nullable=False
+    )
+    subscription_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey('push_subscriptions.id'), nullable=False
+    )
+    state: Mapped[str] = mapped_column(String(24), default='pending', nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lease_token: Mapped[uuid.UUID | None] = mapped_column(Uuid(as_uuid=True), nullable=True)
+    last_error: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    __table_args__ = (UniqueConstraint('notification_id', 'subscription_id', name='uq_push_destination'),)
 
 
 class LedgerEvent(Base):

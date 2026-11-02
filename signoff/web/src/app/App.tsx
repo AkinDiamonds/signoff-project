@@ -1,7 +1,7 @@
 import React from 'react';
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { RouterProvider, type DataRouter } from 'react-router';
-import { ThemeProvider } from '@signoff/ui';
+import { ThemeProvider, ToastProvider } from '@signoff/ui';
 
 export interface AppProps {
   router: DataRouter;
@@ -11,7 +11,7 @@ export interface AppProps {
 export const App: React.FC<AppProps> = ({ router, queryClient }) => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <RouterProvider router={router} />
+      <ToastProvider><RouterProvider router={router} /></ToastProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

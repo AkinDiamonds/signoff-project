@@ -14,3 +14,4 @@ export * from './components/PageHeader';
 export * from './components/DataTable';
 export * from './mappings';
 export * from './theme';
+export * from './components/Toast';

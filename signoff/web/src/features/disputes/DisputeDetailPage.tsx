@@ -13,6 +13,7 @@ import {
   radius,
   spacing,
   typography,
+  toast,
 } from '@signoff/ui';
 import { useDispute, useDisputeTimeline, useEvidenceSnapshots, unwrap } from '../../app/queries';
 import { apiClient } from '../../app/api';
@@ -26,6 +27,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export const DisputeDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const disputeId = id ?? '';
+  const copyDisputeLink = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/app/disputes/${encodeURIComponent(disputeId)}`);
+      toast('Dispute link copied.');
+    } catch {
+      toast('Could not copy the link. Copy the address from your browser instead.', 'error');
+    }
+  };
 
   const disputeQuery = useDispute(disputeId, { refetchInterval: 5000 });
   const timelineQuery = useDisputeTimeline(disputeId, { refetchInterval: 5000 });
@@ -50,11 +59,13 @@ export const DisputeDetailPage: React.FC = () => {
         method: 'POST', params: { path: { id: disputeId } },
       }));
       const refreshed = await evidenceQuery.refetch();
+      toast('Evidence snapshot saved. No PayPal action was started.');
       setEvidenceRefreshMessage(refreshed.isError
         ? 'Evidence was saved, but the history could not be reloaded. Please refresh the page.'
         : 'Evidence refreshed. No model plan or PayPal action was started.');
     } catch {
       setEvidenceRefreshMessage('Evidence could not be refreshed. Please try again.');
+      toast('Evidence could not be refreshed.', 'error');
     } finally {
       refreshingEvidenceRef.current = false;
       setRefreshingEvidence(false);
@@ -215,6 +226,7 @@ export const DisputeDetailPage: React.FC = () => {
             >
               {displayedDispute.id}
             </h1>
+            <button type="button" style={{ minHeight: 44 }} onClick={() => { void copyDisputeLink(); }}>Copy dispute link</button>
             <StatusBadge
               status={displayedDispute.latest_verdict ?? displayedDispute.status}
               testId="detail-status-badge"

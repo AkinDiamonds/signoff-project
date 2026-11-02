@@ -191,6 +191,8 @@ const hoursFromNow = (hours: number): string =>
   new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
 
 export const approvalCardFixture: ApprovalCard = {
+  execution_state: 'not_recorded',
+  server_now: '',
   id: 'appr-1001',
   decision_id: 'dec-1001',
   dispute_id: 'PP-D-1002',

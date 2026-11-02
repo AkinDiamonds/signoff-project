@@ -15,6 +15,7 @@ import {
   radius,
   spacing,
   typography,
+  toast,
 } from '@signoff/ui';
 import type { MoneyAmount } from '@signoff/ui';
 import { resolveApprovalCall, useApprovalCard } from '../../app/queries';
@@ -89,7 +90,7 @@ export const ApprovalPage: React.FC = () => {
       } else if (card.resolution === 'EDIT') {
         setOutcome('ALREADY_RESOLVED');
         setOutcomeMessage('This approval request has already been resolved with edits.');
-      } else if (card.resolution === 'EXPIRED' || new Date(card.expires_at).getTime() <= Date.now()) {
+      } else if (card.resolution === 'EXPIRED' || new Date(card.expires_at).getTime() <= (card.server_now ? new Date(card.server_now).getTime() : Date.now())) {
         setOutcome('EXPIRED');
         setOutcomeMessage('This approval link has expired.');
       }
@@ -101,9 +102,11 @@ export const ApprovalPage: React.FC = () => {
     isSubmittingRef.current = true;
     setIsSubmitting(true);
     try {
-      await resolveApprovalCall(token, { action: 'APPROVE' }, ownerCard);
+      const result = await resolveApprovalCall(token, { action: 'APPROVE' }, ownerCard);
       setOutcome('APPROVED');
-      setOutcomeMessage('Action approved and scheduled for execution.');
+      setOutcomeMessage(result.queued ? 'Approval saved. The action is queued; submission is not yet confirmed.' : 'Approval saved. Check the dispute for execution status.');
+      toast('Approval saved. Check the dispute for execution status.', 'pending', `approval:${token}`);
+      void cardQuery.refetch();
       try {
         sessionStorage.setItem(`resolved_approval_${token}`, 'APPROVED');
       } catch {
@@ -128,6 +131,7 @@ export const ApprovalPage: React.FC = () => {
       }, ownerCard);
       setOutcome('DENIED');
       setOutcomeMessage('Proposed action was denied. No changes were made.');
+      toast('Proposed action denied.', 'success', `approval:${token}`);
       try {
         sessionStorage.setItem(`resolved_approval_${token}`, 'DENIED');
       } catch {
@@ -184,9 +188,11 @@ export const ApprovalPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const body = buildEditResolveRequest(payload);
-      await resolveApprovalCall(token, body, ownerCard);
+      const result = await resolveApprovalCall(token, body, ownerCard);
       setOutcome('APPROVED');
-      setOutcomeMessage('Edited action approved and scheduled for execution.');
+      setOutcomeMessage(result.queued ? 'Edited approval saved. The action is queued; submission is not yet confirmed.' : 'Edited approval saved. Check the dispute for execution status.');
+      toast('Edited approval saved. Check the dispute for execution status.', 'pending', `approval:${token}`);
+      void cardQuery.refetch();
       try {
         sessionStorage.setItem(`resolved_approval_${token}`, 'APPROVED');
       } catch {
@@ -201,6 +207,7 @@ export const ApprovalPage: React.FC = () => {
   };
 
   const handleResolveError = (err: unknown) => {
+    toast('Could not confirm the approval outcome. Check its status before retrying.', 'error', `approval:${token}`);
     if (err instanceof Error) {
       const msg = err.message.toLowerCase();
       if (msg.includes('stale') || msg.includes('conflict')) {
@@ -282,7 +289,7 @@ export const ApprovalPage: React.FC = () => {
 
   if (outcome) {
     const outcomeTitles: Record<ApprovalOutcome, string> = {
-      APPROVED: 'Approval confirmed',
+      APPROVED: 'Approval saved',
       DENIED: 'Action denied',
       EXPIRED: 'Approval expired',
       STALE: 'Dispute state conflict',
@@ -305,6 +312,9 @@ export const ApprovalPage: React.FC = () => {
             <p style={{ margin: 0, fontSize: typography.fontSizeBody, color: colors.inkMuted }}>
               {outcomeMessage}
             </p>
+            {ownerCard && <p role="status">Execution record: {card?.execution_state ?? 'not_recorded'}.
+              {' '}A saved approval is separate from PayPal submission.</p>}
+            {card && <Link to={`/app/disputes/${encodeURIComponent(card.dispute_id)}`}>View current dispute and audit history</Link>}
 
             {outcome === 'OUTCOME_UNKNOWN' && (
               <div style={{ display: 'flex', justifyContent: 'center', gap: spacing[1], marginTop: spacing[1] }}>

@@ -172,6 +172,23 @@ def test_owner_card_approve_uses_same_one_time_resolution(db_session, setup_pend
         resolve_approval(db_session, token, ApproveResolveRequest(action="APPROVE"), now)
 
 
+def test_owner_history_survives_phone_refresh_after_resolution_and_expiry(db_session, setup_pending_approval):
+    from agent.app.approvals.service import build_approval_card_response
+
+    approval, _token, _decision, _dispute = setup_pending_approval
+    now = datetime(2026, 10, 6, 12, tzinfo=UTC)
+    result = resolve_approval_by_id(db_session, approval.id, ApproveResolveRequest(action='APPROVE'), now)
+    assert result.queued and not result.executed
+    db_session.expire_all()  # Simulate another API request/process reading committed state.
+    restored = get_approval_by_id(db_session, approval.id, now + timedelta(days=10), include_history=True)
+    card = build_approval_card_response(db_session, restored)
+    assert card.resolution == 'APPROVE'
+    assert card.execution_state == 'queued'
+    assert card.server_now
+    with pytest.raises(ConflictResolvedError):
+        resolve_approval_by_id(db_session, approval.id, ApproveResolveRequest(action='APPROVE'), now)
+
+
 def test_owner_card_refuses_stale_and_expired_decisions(db_session, setup_pending_approval):
     approval, _token, _decision, dispute = setup_pending_approval
     now = datetime(2026, 10, 6, 12, tzinfo=UTC)

@@ -115,6 +115,54 @@ def test_inbox_requires_owner_csrf_and_hides_demo_sessions(owner_app):
         assert client.post(path, json={'read': True}, headers={'X-CSRF-Token': csrf}).status_code == 200
 
 
+def test_phone_subscriptions_require_owner_and_csrf(owner_app):
+    app, _session, _settings = owner_app
+    with TestClient(app) as client:
+        assert client.get('/api/push/config').status_code == 401
+        csrf = sign_in(client).json()['csrf_token']
+        config = client.get('/api/push/config')
+        assert config.status_code == 200 and config.json()['available'] is False
+        path = '/api/push/subscriptions/remove'
+        assert client.post(path, json={'endpoint': 'https://fcm.googleapis.com/fcm/send/test'}).status_code == 403
+        assert client.post(path, json={'endpoint': 'https://fcm.googleapis.com/fcm/send/test'},
+                           headers={'X-CSRF-Token': csrf}).status_code == 204
+
+
+def test_phone_test_is_scoped_idempotent_and_never_queues_an_action(owner_app):
+    from decimal import Decimal
+
+    from agent.app.db.models import Dispute, Job, Notification, PushDelivery, PushSubscription
+
+    app, db, settings = owner_app
+    app.state.settings = settings.model_copy(update={
+        'web_push_vapid_public_key': 'public-fixture', 'web_push_vapid_private_key': 'private-fixture',
+        'web_push_vapid_subject': 'mailto:fictional@example.test',
+    })
+    endpoint = 'https://fcm.googleapis.com/fcm/send/fixture'
+    import hashlib
+
+    for identifier, demo in [('PP-PHONE-OWNER', None), ('PP-PHONE-DEMO', 'foreign-demo')]:
+        db.add(Dispute(id=identifier, state_fingerprint='fp', status='WAITING_FOR_SELLER_RESPONSE',
+                       reason='MERCHANDISE_OR_SERVICE_NOT_RECEIVED', amount=Decimal('24.00'),
+                       snapshot={}, demo_session_id=demo))
+    db.add(PushSubscription(endpoint_hash=hashlib.sha256(endpoint.encode()).hexdigest(), endpoint=endpoint,
+                            p256dh='fixture', auth='fixture', vapid_key='public-fixture', active=True))
+    db.commit()
+    body = {'endpoint': endpoint, 'dispute_id': 'PP-PHONE-OWNER', 'request_id': str(uuid.uuid4())}
+    with TestClient(app) as client:
+        csrf = sign_in(client).json()['csrf_token']
+        assert client.post('/api/push/test', json=body).status_code == 403
+        assert client.post('/api/push/test', json={**body, 'dispute_id': 'PP-PHONE-DEMO'},
+                           headers={'X-CSRF-Token': csrf}).status_code == 404
+        for _ in range(2):
+            assert client.post('/api/push/test', json=body, headers={'X-CSRF-Token': csrf}).status_code == 202
+        assert client.post('/api/push/test', json={**body, 'request_id': str(uuid.uuid4())},
+                           headers={'X-CSRF-Token': csrf}).status_code == 429
+    assert len(list(db.scalars(select(Notification)))) == 1
+    assert len(list(db.scalars(select(PushDelivery)))) == 1
+    assert list(db.scalars(select(Job))) == []
+
+
 def test_login_protects_reads_and_requires_csrf_for_writes(owner_app):
     app, db, _ = owner_app
     with TestClient(app) as client:

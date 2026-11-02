@@ -1,0 +1,5 @@
+{
+  "id": "/", "name": "Signoff", "short_name": "Signoff", "start_url": "/app/notifications",
+  "scope": "/", "display": "standalone", "background_color": "#f8fafc", "theme_color": "#14532d",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

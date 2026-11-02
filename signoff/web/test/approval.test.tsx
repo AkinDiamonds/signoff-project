@@ -120,7 +120,7 @@ describe('Approval card feature (Step 26)', () => {
     await waitFor(() => {
       expect(screen.getByTestId('outcome-approved')).toBeTruthy();
     });
-    expect(screen.getByText('Approval confirmed')).toBeTruthy();
+    expect(screen.getByText('Approval saved')).toBeTruthy();
   });
 
   it('denying confirms denial with optional reason and shows denied outcome screen', async () => {

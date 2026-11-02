@@ -301,6 +301,12 @@ class Worker:
                             advance_due_shipments(shipping, now=datetime.now(UTC), merchant_id=merchant)
                     except Exception:
                         logger.warning('Could not advance simulated shipping; will retry', exc_info=True)
+                    try:
+                        from agent.app.notifications.delivery import notification_tick
+
+                        notification_tick(self.session_factory, Settings())
+                    except Exception:
+                        logger.warning('Notification delivery check failed; will retry')
                     next_presence = time.monotonic() + 10
                 if self.reconcile_interval and time.monotonic() >= next_reconcile:
                     self._enqueue_reconcile_if_idle()

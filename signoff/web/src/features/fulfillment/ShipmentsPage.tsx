@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { components } from '@signoff/api-client/generated';
-import { Button, Money, PageHeader } from '@signoff/ui';
+import { Button, Money, PageHeader, toast } from '@signoff/ui';
 import { apiClient } from '../../app/api';
 import { unwrap } from '../../app/queries';
 
@@ -34,7 +34,9 @@ export const ShipmentsPage: React.FC = () => {
         body: { base_version: shipment.version, request_id: crypto.randomUUID(), action },
       }));
       setMessage(`${result.order_code}: ${stageLabel(result.stage)}. Shipping is simulated.`);
+      toast('Simulated shipment update saved.');
     } catch (failure) {
+      toast('Shipment could not be changed. Refresh before retrying.', 'error');
       setError(failure instanceof Error ? failure.message : 'Shipment could not be changed. Refresh and try again.');
     } finally {
       await client.invalidateQueries({ queryKey: ['simulated-shipments'] });
