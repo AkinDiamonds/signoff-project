@@ -11,7 +11,7 @@ This is the progress board. Verified outcomes are in EXECUTION-LOG.md; product c
 | T04 simulated fulfilment | PASS locally; deployed surface verified | Persistent automatic/manual stages, pauses, safe timestamps, scoped owner controls and reload/concurrency checks. |
 | T05 evidence | PARTIAL; saved model-run snapshots deployed | Inspectable immutable model-run evidence; pre-model exit snapshots, refresh and merchant missing-evidence policy remain. |
 | T06–T08 agent and approvals | PARTIAL | Durable owner approval access, grounded model evidence, strict output checks and stale-policy guard shipped; full re-gating, failure UX, concurrency and provider proof remain. |
-| T09–T10 notifications | PARTIAL | Persistent in-app inbox and outbox implemented; toasts, deadline reminders, push delivery and Android verification remain. |
+| T09–T10 notifications | PARTIAL; inbox deployed | Persistent in-app inbox and outbox deployed; toasts, deadline reminders, demo inbox, push delivery and Android verification remain. |
 | T11–T13 product/mobile validation | TODO | Accurate dashboard, coherent mobile flows and complete regression suite. |
 | T14–T17 Render release and proof | INITIAL RELEASE OBSERVED; full journey pending | Main auto-deploy used. Deployed owner access, worker presence, PayPal-only buyer handoff and 390px shop layout observed. Fresh actual purchase/dispute/model/execution and physical-phone proof remain. |
 

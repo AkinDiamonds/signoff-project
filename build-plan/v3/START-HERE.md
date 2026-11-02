@@ -95,3 +95,7 @@ Main ddab492 is remote-confirmed; standard CI 41354968018 and full E2E 413549679
 ### In-app notification increment, 2026-11-02
 
 Persistent owner inbox, generic source-event notifications, transactional outbox and CSRF read/unread are implemented with migration c86f1bd50006. Local full backend 630 plus final focused PostgreSQL tests, frontend 190, types/builds and full local cross-app 13/13 passed; local 390px Chromium layout passed. See EXECUTION-LOG for push/CI/deployment state. Phone push, outbox delivery worker, deadline reminders and demo-session inbox remain; do not claim full T09/T10 completion.
+
+### In-app inbox released
+
+Main 2497e607e10c6745a6636aa0f14f88e59dc1a5a6 is deployed for API/merchant UI; branch CI 41391504075, main CI 41391733584 (631 backend) and main E2E 41391733588 (13 browser cases) all passed. Render owner inbox GET 200 and 390px page verified, currently empty because old events were not backfilled. No live notification was changed. Outbox push delivery, deadline reminders, demo-session inbox and toasts remain; physical Android/real push remain unverified. User asked to stop after testing and pushing this feature.
