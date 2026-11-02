@@ -125,6 +125,23 @@ def test_simulated_tracking_is_not_sent_as_carrier_tracking():
     assert to_provide_evidence(evidence).tracking_info == ()
 
 
+def test_simulated_milestones_are_labeled_and_tracking_is_not_repeated():
+    original = record("A")
+    shipment = replace(original.shipments[0], payload={"source": "simulated"})
+    evidence = build("A", replace(original, shipments=(shipment, shipment, shipment)))
+    assert (evidence.notes or "").count(shipment.tracking_number) == 1
+    delivered = next(c.detail for c in evidence.strength.components if c.name == "delivered")
+    tracking = next(c.detail for c in evidence.strength.components if c.name == "tracking")
+    assert "simulated" in delivered.lower()
+    assert "not carrier-confirmed" in tracking.lower()
+
+
+def test_unknown_buyer_history_is_not_reported_as_no_disputes():
+    evidence = build("A", replace(record("A"), buyer_history_known=False))
+    history = next(c for c in evidence.strength.components if c.name == "buyer_history")
+    assert history.points == 0 and "unavailable" in history.detail.lower()
+
+
 def test_delivery_before_order_is_not_counted():
     original = record("A")
     early_shipment = replace(

@@ -50,6 +50,16 @@ def test_plan_timeline_displays_actions_without_rewriting_ledger(db_session):
     assert event.payload == {"action_types": ["PROVIDE_EVIDENCE", "SEND_MESSAGE"], "count": 2}
 
 
+def test_evidence_timeline_uses_recorded_strength_and_never_invents_medium(db_session):
+    record_ledger_event(db_session, "PP-STRENGTH", TimelineEventKind.EVIDENCE_BUILT,
+                        {"strength_label": "HIGH", "strength_score": 100})
+    record_ledger_event(db_session, "PP-STRENGTH", TimelineEventKind.EVIDENCE_BUILT, {})
+    db_session.commit()
+    items, _ = get_timeline_events(db_session, "PP-STRENGTH")
+    assert items[0]["evidence_strength"] == "HIGH"
+    assert items[1]["evidence_strength"] == "UNKNOWN"
+
+
 @pytest.fixture
 def db_session() -> Session:
     engine = create_engine(

@@ -10,6 +10,7 @@ Per plan/04-frontend-spec.md and Step 21:
 """
 
 import base64
+from dataclasses import replace
 from datetime import UTC, datetime
 from functools import partial
 from typing import Annotated, Any, Literal
@@ -21,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from agent.app.agent.evidence_snapshot import EvidenceSnapshotData, build_snapshot
 from agent.app.agent.reasons import build_evidence_for
+from agent.app.agent.reasons.history import count_buyer_disputes
 from agent.app.approvals.service import DEMO_APPROVAL_LINKS
 from agent.app.db.models import Approval, Decision, Dispute, EvidenceSnapshot, ReviewEvidenceSnapshot
 from agent.app.db.session import get_db_session
@@ -123,17 +125,21 @@ def refresh_evidence(id: str, db_session: Session, settings: Settings) -> Eviden
     adapter = LocalStoreAdapter(db_session, scope=order_scope(settings, dispute.demo_session_id))
     resolution = resolve_disputed_order(paypal_dispute.disputed_transactions or [], adapter.find_order)
     now = datetime.now(UTC)
+    order = resolution.order
+    if order is not None:
+        history = count_buyer_disputes(db_session, paypal_dispute, now=now, fallback_count=order.buyer_prior_disputes)
+        order = replace(order, buyer_prior_disputes=history.prior_disputes, buyer_history_known=history.known)
     if resolution.status in {"ambiguous", "unavailable"}:
         detail = ("Multiple orders matched; no order evidence was selected." if resolution.status == "ambiguous"
                   else "The store was unavailable; order evidence could not be checked.")
         payload, digest = build_snapshot(None, None, explanation=detail)
     elif (str(paypal_dispute.reason) == "MERCHANDISE_OR_SERVICE_NOT_RECEIVED"
-          and evaluate_missing_delivery(resolution.order, "HUMAN_REVIEW", now) == "review"):
-        payload, digest = build_snapshot(resolution.order, None,
+          and evaluate_missing_delivery(order, "HUMAN_REVIEW", now) == "review"):
+        payload, digest = build_snapshot(order, None,
                                          explanation="Delivery evidence is missing or unsafe; human review required.")
     else:
-        evidence = build_evidence_for(paypal_dispute.reason, resolution.order, transaction_id=resolution.transaction_id)
-        payload, digest = build_snapshot(resolution.order, evidence)
+        evidence = build_evidence_for(paypal_dispute.reason, order, transaction_id=resolution.transaction_id)
+        payload, digest = build_snapshot(order, evidence)
     row = ReviewEvidenceSnapshot(dispute_id=id, reason="manual_refresh", content_hash=digest,
                                  captured_at=now, payload=payload)
     db_session.add(row)

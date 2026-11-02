@@ -168,9 +168,9 @@ def _build_notes(
             parts.append("Simulated shipment records are included; they are not carrier-confirmed.")
         if any((shipment.payload or {}).get("source") != "simulated" for shipment, _, _ in shipments):
             parts.append("Some shipment source is unverified.")
-        routes = "; ".join(
+        routes = "; ".join(dict.fromkeys(
             f"{carrier} tracking {tracking_number}" for _, carrier, tracking_number in shipments
-        )
+        ))
         parts.append(f"Shipments: {routes}.")
         if delivered_at is not None:
             parts.append(f"Delivered on {delivered_at.date().isoformat()}.")
@@ -191,12 +191,19 @@ def score_evidence(
     delivered_at: datetime | None,
     buyer_prior_disputes: int,
 ) -> EvidenceStrength:
+    simulated_delivery = any(
+        shipment.status == TrackingStatus.DELIVERED and shipment.event_time == delivered_at
+        and (shipment.payload or {}).get("source") == "simulated"
+        for shipment, _, _ in shipments
+    )
+    simulated_tracking = any((shipment.payload or {}).get("source") == "simulated" for shipment, _, _ in shipments)
     components = [
         EvidenceComponent(
             name="delivered",
             points=40 if delivered_at is not None else 0,
             detail=(
-                f"Delivered on {delivered_at.date().isoformat()}."
+                f"{'Simulated delivery recorded' if simulated_delivery else 'Delivery recorded'} "
+                f"on {delivered_at.date().isoformat()}."
                 if delivered_at is not None
                 else "No on-time delivery event."
             ),
@@ -205,7 +212,8 @@ def score_evidence(
             name="tracking",
             points=25 if shipments else 0,
             detail=(
-                "Valid carrier and tracking number present."
+                ("Simulated tracking has valid format; not carrier-confirmed." if simulated_tracking
+                 else "Tracking has valid format; carrier confirmation is unavailable.")
                 if shipments
                 else "No valid shipment tracking."
             ),
@@ -215,6 +223,9 @@ def score_evidence(
     if order is None:
         history_points = 0
         history_detail = "No order record; buyer history not evaluated."
+    elif not order.buyer_history_known:
+        history_points = 0
+        history_detail = "Buyer dispute history is unavailable."
     elif buyer_prior_disputes == 0:
         history_points = 15
         history_detail = "No prior disputes."
@@ -309,7 +320,7 @@ def build_evidence(
         if (shipment.payload or {}).get("source") != "simulated"
     )
     notes = _build_notes(order, shipments, delivered_at, early_delivery)
-    reason_text = "Evidence built from the mock order and shipment records."
+    reason_text = "Evidence built from the recorded order and shipment information."
     if not shipments:
         reason_text = "No shipment tracking is available; submitting order notes only."
     if ignored:

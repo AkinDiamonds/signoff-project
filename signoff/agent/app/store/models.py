@@ -44,6 +44,7 @@ class OrderRecord:
     created_at: datetime
     shipments: tuple[ShipmentRecord, ...]
     buyer_prior_disputes: int = 0
+    buyer_history_known: bool = True
     scenario_id: str | None = None
     tracking_unavailable_reason: str | None = None
 

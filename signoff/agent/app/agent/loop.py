@@ -11,7 +11,7 @@ Per Step 17:
 import logging
 import uuid
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from typing import Any
 
@@ -260,6 +260,13 @@ async def run_agent_loop(
             status="no_action", run_id=effective_run_id, dispute_id=dispute_id,
             fingerprint=current_fingerprint, human_needed=True, error=reason,
         )
+
+    buyer_history = count_buyer_disputes(
+        session, paypal_dispute, now=now_dt, fallback_count=order_context.buyer_prior_disputes if order_context else 0,
+    )
+    if order_context is not None:
+        order_context = replace(order_context, buyer_prior_disputes=buyer_history.prior_disputes,
+                                buyer_history_known=buyer_history.known)
 
     charter_entity = charter_obj
     if charter_entity is None:
@@ -568,12 +575,6 @@ async def run_agent_loop(
 
     # Load active charter
     # History flags
-    buyer_history = count_buyer_disputes(
-        session,
-        paypal_dispute,
-        now=now_dt,
-        fallback_count=order_context.buyer_prior_disputes if order_context else 0,
-    )
     history_flags = HistoryFlags(
         buyer_dispute_count_in_window=buyer_history.prior_disputes,
         injection_flag=is_injection_flagged,

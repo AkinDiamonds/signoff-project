@@ -76,6 +76,6 @@ def build_not_as_described(
         evidence_type=EVIDENCE_TYPE,
         notes=notes,
         tracking_info=(),
-        reason="Receipt evidence built from the mock order record.",
+        reason="Receipt evidence built from the recorded order information.",
         strength=strength,
     )

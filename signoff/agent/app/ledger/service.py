@@ -193,7 +193,9 @@ def get_timeline_events(
         elif kind == TimelineEventKind.RUN_STARTED.value:
             event_dict["run_id"] = str(sanitized_payload.get("run_id", ""))
         elif kind == TimelineEventKind.EVIDENCE_BUILT.value:
-            event_dict["evidence_strength"] = sanitized_payload.get("evidence_strength", "medium")
+            label = sanitized_payload.get("strength_label", sanitized_payload.get("evidence_strength"))
+            normalized = label.upper() if isinstance(label, str) else ""
+            event_dict["evidence_strength"] = normalized if normalized in ("LOW", "MEDIUM", "HIGH") else "UNKNOWN"
         elif kind == TimelineEventKind.PLAN_PROPOSED.value:
             actions = sanitized_payload.get("action_types", [])
             event_dict["action_type"] = sanitized_payload.get("action_type") or ", ".join(

@@ -161,7 +161,8 @@ async def test_plan_history_distinguishes_cache_from_unverified_provider(db_sess
     assert [event['reasoning_source'] for event in plans] == ['unknown', 'cached']
 
 
-def test_manual_evidence_refresh_adds_history_without_running_agent(db_session):
+def test_manual_evidence_refresh_adds_history_without_running_agent(db_session, monkeypatch):
+    from agent.app.agent.reasons.history import BuyerHistory
     from agent.app.api.disputes import refresh_evidence
     from agent.app.db.models import Dispute as StoredDispute
     from agent.app.settings import Settings
@@ -171,13 +172,33 @@ def test_manual_evidence_refresh_adds_history_without_running_agent(db_session):
                                  reason=dispute.reason.value, amount=Decimal("100.00"), currency="USD",
                                  snapshot=dispute.model_dump(mode="json")))
     db_session.commit()
+    monkeypatch.setattr("agent.app.api.disputes.count_buyer_disputes",
+                        lambda *args, **kwargs: BuyerHistory("buyer", 3, True, 180))
     first = refresh_evidence(dispute.dispute_id, db_session, Settings())
     second = refresh_evidence(dispute.dispute_id, db_session, Settings())
     assert first.capture_kind == second.capture_kind == "manual_refresh"
     assert first.run_id != second.run_id
     assert first.evidence.order_code == second.evidence.order_code
+    history = next(c for c in first.evidence.components if c.name == 'buyer_history')
+    assert history.points == 0 and '3 prior disputes' in history.detail
     assert db_session.scalar(select(AgentRun)) is None
     assert db_session.scalar(select(Job).where(Job.kind == JobKind.EXECUTE_DECISION.value)) is None
+
+
+@pytest.mark.asyncio
+async def test_evidence_and_gate_use_same_known_buyer_history(db_session, monkeypatch):
+    from agent.app.agent.reasons.history import BuyerHistory
+
+    monkeypatch.setattr("agent.app.agent.loop.count_buyer_disputes",
+                        lambda *args, **kwargs: BuyerHistory("buyer", 3, True, 180))
+    dispute = make_dispute()
+    service = make_llm_service([ProviderResponse('{"actions":[{"action_type":"PROVIDE_EVIDENCE"}]}')])
+    result = await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute, llm_service=service)
+    snapshot = db_session.get(EvidenceSnapshot, result.run_id)
+    assert snapshot is not None
+    history = next(c for c in snapshot.payload['components'] if c['name'] == 'buyer_history')
+    assert history['points'] == 0 and '3 prior disputes' in history['detail']
+    assert result.decisions[0].rule_id == 'G5-01'
 
 
 @pytest.fixture
