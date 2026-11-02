@@ -99,6 +99,22 @@ def test_tracking_present_but_not_delivered_is_medium():
     assert evidence.strength.label == EvidenceStrengthLabel.MEDIUM
 
 
+def test_submission_notes_identify_simulated_and_unknown_shipment_sources():
+    original = record("A")
+    simulated = replace(original.shipments[0], payload={"source": "simulated"})
+    unknown = replace(original.shipments[0], payload=None)
+
+    simulated_notes = build("A", replace(original, shipments=(simulated,))).notes or ""
+    unknown_notes = build("A", replace(original, shipments=(unknown,))).notes or ""
+    mixed_notes = build("A", replace(original, shipments=(simulated, unknown))).notes or ""
+
+    assert "simulated" in simulated_notes.lower()
+    assert "not carrier-confirmed" in simulated_notes.lower()
+    assert "source is unverified" in unknown_notes.lower()
+    assert "simulated" not in unknown_notes.lower()
+    assert "simulated" in mixed_notes.lower() and "source is unverified" in mixed_notes.lower()
+
+
 def test_delivery_before_order_is_not_counted():
     original = record("A")
     early_shipment = replace(

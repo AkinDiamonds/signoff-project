@@ -164,6 +164,10 @@ def _build_notes(
         parts.append(f"Items: {', '.join(labels)}.")
 
     if shipments:
+        if any((shipment.payload or {}).get("source") == "simulated" for shipment, _, _ in shipments):
+            parts.append("Simulated shipment records are included; they are not carrier-confirmed.")
+        if any((shipment.payload or {}).get("source") != "simulated" for shipment, _, _ in shipments):
+            parts.append("Some shipment source is unverified.")
         routes = "; ".join(
             f"{carrier} tracking {tracking_number}" for _, carrier, tracking_number in shipments
         )
