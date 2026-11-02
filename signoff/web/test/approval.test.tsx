@@ -45,6 +45,28 @@ describe('Approval card feature (Step 26)', () => {
     expect(requests.filter(value => value.startsWith('POST'))).toHaveLength(1);
   });
 
+  it.each([
+    ['PROVIDE_EVIDENCE', { notes: 'Simulated shipment information' }, 'submit evidence'],
+    ['SEND_MESSAGE', { message: 'We are reviewing your case.' }, 'send a message'],
+  ])('describes %s without inventing a refund or carrier confirmation', async (actionType, payload, description) => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      const response = await mockFetch(input, options);
+      if (url.includes('/api/approvals/') && !url.includes('/resolve')) {
+        const card: unknown = await response.json();
+        if (typeof card !== 'object' || card === null) throw new Error('Expected approval card');
+        return new Response(JSON.stringify({ ...card, action_type: actionType, action_payload: payload }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return response;
+    }));
+    renderAt('/approve/valid-test-token-12345678901234567890');
+    await waitFor(() => expect(screen.getByTestId('approval-title').textContent).toContain(description));
+    expect(screen.getByTestId('approval-title').textContent?.toLowerCase()).not.toContain('refund');
+    expect(screen.queryByText(/Carrier delivery confirmed/)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Change the amount' })).toBeNull();
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
   });

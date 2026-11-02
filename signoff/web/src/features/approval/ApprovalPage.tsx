@@ -186,7 +186,7 @@ export const ApprovalPage: React.FC = () => {
       const body = buildEditResolveRequest(payload);
       await resolveApprovalCall(token, body, ownerCard);
       setOutcome('APPROVED');
-      setOutcomeMessage('Edited action approved and submitted for execution.');
+      setOutcomeMessage('Edited action approved and scheduled for execution.');
       try {
         sessionStorage.setItem(`resolved_approval_${token}`, 'APPROVED');
       } catch {
@@ -349,8 +349,16 @@ export const ApprovalPage: React.FC = () => {
 
   const amountDisplay = isMoneyAmount(card.action_payload.amount)
     ? `${card.action_payload.amount.currency_code} ${card.action_payload.amount.value}`
-    : 'a resolution';
-  const actionSummarySentence = `Signoff wants to refund ${amountDisplay} on dispute ${card.dispute.id}.`;
+    : 'an unspecified amount';
+  const actionDescriptions: Record<string, string> = {
+    PROVIDE_EVIDENCE: 'submit evidence',
+    SEND_MESSAGE: 'send a message',
+    MAKE_OFFER: `make an offer of ${amountDisplay}`,
+    ACCEPT_CLAIM: 'accept the buyer’s claim',
+    ESCALATE: 'escalate the dispute',
+    APPEAL: 'appeal the dispute',
+  };
+  const actionSummarySentence = `Signoff wants to ${actionDescriptions[card.action_type] ?? 'take an action'} on dispute ${card.dispute.id}.`;
   const ruleExplanation = getRuleExplanation(card.rule_id);
 
   return (
@@ -409,14 +417,13 @@ export const ApprovalPage: React.FC = () => {
                   fontWeight: typography.fontWeightSemibold,
                 }}
               >
-                Verified
+                Review
               </span>
             </div>
-            <ul style={{ margin: 0, paddingLeft: spacing[2], fontSize: typography.fontSizeBody, color: colors.ink, lineHeight: '22px' }}>
-              <li>Order history verified in store database.</li>
-              <li>Carrier delivery confirmed to buyer postal code.</li>
-              <li>Buyer claim evaluated against standing policy limits.</li>
-            </ul>
+            {typeof card.action_payload.notes === 'string' && <p>{card.action_payload.notes}</p>}
+            {typeof card.action_payload.message === 'string' && <p>{card.action_payload.message}</p>}
+            <p>Review the recorded evidence and its source on the dispute page before deciding.</p>
+            <Link to={`/app/disputes/${encodeURIComponent(card.dispute.id)}`}>View dispute evidence</Link>
           </div>
 
           {/* Gate reason and rule ID in plain English */}
@@ -487,7 +494,7 @@ export const ApprovalPage: React.FC = () => {
               </button>
 
               {/* 2. Change the amount */}
-              <button
+              {card.action_type === 'MAKE_OFFER' && <button
                 type="button"
                 data-testid="approval-edit-button"
                 disabled={isSubmitting}
@@ -513,7 +520,7 @@ export const ApprovalPage: React.FC = () => {
                 }}
               >
                 Change the amount
-              </button>
+              </button>}
 
               {/* 3. Decline (quiet text button, not red) */}
               <button
@@ -550,7 +557,7 @@ export const ApprovalPage: React.FC = () => {
                 style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}
               >
                 <p style={{ margin: 0, fontSize: typography.fontSizeBody, color: colors.ink }}>
-                  Are you sure you want to decline this proposed action? The agent will take no further action on this dispute.
+                  Are you sure you want to decline this proposed action? Other actions may still need review.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label htmlFor="deny-reason" style={{ fontSize: typography.fontSizeSmall, fontWeight: typography.fontWeightSemibold, color: colors.inkMuted }}>
