@@ -14,7 +14,8 @@ import {
   spacing,
   typography,
 } from '@signoff/ui';
-import { useDispute, useDisputeTimeline, useEvidenceSnapshots } from '../../app/queries';
+import { useDispute, useDisputeTimeline, useEvidenceSnapshots, unwrap } from '../../app/queries';
+import { apiClient } from '../../app/api';
 import { DecisionTimeline } from './timeline';
 import type { ApiTimelineEvent, DisputeDetail } from './types';
 
@@ -35,6 +36,30 @@ export const DisputeDetailPage: React.FC = () => {
   const latestTimestampRef = useRef<number>(0);
 
   const [isMessageExpanded, setIsMessageExpanded] = useState<boolean>(false);
+  const [refreshingEvidence, setRefreshingEvidence] = useState(false);
+  const [evidenceRefreshMessage, setEvidenceRefreshMessage] = useState<string | null>(null);
+  const refreshingEvidenceRef = useRef(false);
+
+  const refreshEvidence = async () => {
+    if (refreshingEvidenceRef.current) return;
+    refreshingEvidenceRef.current = true;
+    setRefreshingEvidence(true);
+    setEvidenceRefreshMessage(null);
+    try {
+      await unwrap(apiClient.request('/api/disputes/{id}/evidence/refresh', {
+        method: 'POST', params: { path: { id: disputeId } },
+      }));
+      const refreshed = await evidenceQuery.refetch();
+      setEvidenceRefreshMessage(refreshed.isError
+        ? 'Evidence was saved, but the history could not be reloaded. Please refresh the page.'
+        : 'Evidence refreshed. No model plan or PayPal action was started.');
+    } catch {
+      setEvidenceRefreshMessage('Evidence could not be refreshed. Please try again.');
+    } finally {
+      refreshingEvidenceRef.current = false;
+      setRefreshingEvidence(false);
+    }
+  };
 
   useEffect(() => {
     if (disputeQuery.data) {
@@ -389,9 +414,14 @@ export const DisputeDetailPage: React.FC = () => {
 
             {evidenceQuery.isPending && <p role="status">Loading saved evidence…</p>}
             {evidenceQuery.isError && <p role="alert">Saved evidence could not be loaded. Try refreshing.</p>}
+            <button type="button" disabled={refreshingEvidence} onClick={() => { void refreshEvidence(); }}>
+              {refreshingEvidence ? 'Refreshing evidence…' : 'Refresh evidence'}
+            </button>
+            <p>Uses the last synced dispute and current store records. It does not run the agent or contact PayPal.</p>
+            {evidenceRefreshMessage && <p role="status">{evidenceRefreshMessage}</p>}
             {evidenceQuery.data?.length === 0 && <p>No saved evidence snapshot is available for this dispute.</p>}
             {evidenceQuery.data?.map(snapshot => <details key={snapshot.run_id} open={evidenceQuery.data?.[0] === snapshot}>
-              <summary>{snapshot.capture_kind === 'pre_model_review' ? 'Review before model run' : 'Model run'} · {snapshot.run_id} · {new Date(snapshot.captured_at).toLocaleString()}</summary>
+              <summary>{snapshot.capture_kind === 'pre_model_review' ? 'Review before model run' : snapshot.capture_kind === 'manual_refresh' ? 'Manual evidence refresh' : 'Model run'} · {snapshot.run_id} · {new Date(snapshot.captured_at).toLocaleString()}</summary>
               <p>Order: {snapshot.evidence.order_code ?? 'Unavailable'} · Payment: {snapshot.evidence.payment_reference ?? 'Unavailable'}</p>
               {snapshot.evidence.amount && <p>Order total: {snapshot.evidence.currency} {snapshot.evidence.amount}</p>}
               {snapshot.evidence.items.length > 0 && <p>Items: {snapshot.evidence.items.join(', ')}</p>}
@@ -399,6 +429,7 @@ export const DisputeDetailPage: React.FC = () => {
               <ul>{snapshot.evidence.components.map(component => <li key={component.name}>{component.name}: {component.points} — {component.detail}</li>)}</ul>
               <p>{snapshot.evidence.explanation}</p>
               <p>{snapshot.evidence.buildable ? `Submission preview: ${snapshot.evidence.evidence_type}` : 'No evidence submission prepared.'}</p>
+              {snapshot.evidence.buildable && snapshot.evidence.tracking_submission_count === 0 && <p>Order notes only; no carrier tracking is included in the submission.</p>}
               {snapshot.evidence.notes && <p>{snapshot.evidence.notes}</p>}
               {snapshot.evidence.milestones.length > 0 && <><h3>Recorded tracking</h3><ul>
                 {snapshot.evidence.milestones.map((event, index) => <li key={`${event.event_time}-${index}`}>
@@ -406,7 +437,7 @@ export const DisputeDetailPage: React.FC = () => {
                   {event.source_id && <> · Record {event.source_id}</>}
                 </li>)}
               </ul></>}
-              <p>{snapshot.capture_kind === 'pre_model_review' ? 'Review stopped before a model plan was created.' : 'Gathered for this run. Check the audit trail for submission and PayPal confirmation.'}</p>
+              <p>{snapshot.capture_kind === 'pre_model_review' ? 'Review stopped before a model plan was created.' : snapshot.capture_kind === 'manual_refresh' ? 'Evidence refreshed without running the agent or submitting to PayPal.' : 'Gathered for this run. Check the audit trail for submission and PayPal confirmation.'}</p>
             </details>)}
             {rawEvidence ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>

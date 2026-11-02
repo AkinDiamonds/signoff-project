@@ -131,6 +131,25 @@ async def test_pre_model_review_preserves_evidence_without_creating_a_model_run(
     assert response[0].evidence.order_code == snapshot.payload["order_code"]
 
 
+def test_manual_evidence_refresh_adds_history_without_running_agent(db_session):
+    from agent.app.api.disputes import refresh_evidence
+    from agent.app.db.models import Dispute as StoredDispute
+    from agent.app.settings import Settings
+
+    dispute = make_dispute()
+    db_session.add(StoredDispute(id=dispute.dispute_id, state_fingerprint="fp", status="WAITING_FOR_SELLER_RESPONSE",
+                                 reason=dispute.reason.value, amount=Decimal("100.00"), currency="USD",
+                                 snapshot=dispute.model_dump(mode="json")))
+    db_session.commit()
+    first = refresh_evidence(dispute.dispute_id, db_session, Settings())
+    second = refresh_evidence(dispute.dispute_id, db_session, Settings())
+    assert first.capture_kind == second.capture_kind == "manual_refresh"
+    assert first.run_id != second.run_id
+    assert first.evidence.order_code == second.evidence.order_code
+    assert db_session.scalar(select(AgentRun)) is None
+    assert db_session.scalar(select(Job).where(Job.kind == JobKind.EXECUTE_DECISION.value)) is None
+
+
 @pytest.fixture
 def db_session() -> Session:
     engine = create_engine(

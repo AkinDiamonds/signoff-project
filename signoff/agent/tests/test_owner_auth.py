@@ -120,6 +120,7 @@ def test_login_protects_reads_and_requires_csrf_for_writes(owner_app):
     with TestClient(app) as client:
         assert client.get("/api/disputes").status_code == 401
         assert client.get("/api/disputes/example/evidence").status_code == 401
+        assert client.post("/api/disputes/example/evidence/refresh").status_code == 401
         assert client.get("/api/integrations/status").status_code == 401
         response = sign_in(client)
         assert "HttpOnly" in response.headers["set-cookie"]
@@ -131,6 +132,7 @@ def test_login_protects_reads_and_requires_csrf_for_writes(owner_app):
         assert protected.status_code == 200
         assert protected.headers["Cache-Control"] == "no-store"
         assert client.put("/api/charter", json={}).status_code == 403
+        assert client.post("/api/disputes/example/evidence/refresh").status_code == 403
         assert client.post("/api/auth/logout").status_code == 403
         csrf = response.json()["csrf_token"]
         assert client.post("/api/auth/logout", headers={"X-CSRF-Token": csrf}).status_code == 204

@@ -305,7 +305,8 @@ def build_evidence(
 
     tracking_info = tuple(
         {"carrier": carrier, "tracking_number": tracking_number}
-        for _, carrier, tracking_number in shipments
+        for shipment, carrier, tracking_number in shipments
+        if (shipment.payload or {}).get("source") != "simulated"
     )
     notes = _build_notes(order, shipments, delivered_at, early_delivery)
     reason_text = "Evidence built from the mock order and shipment records."

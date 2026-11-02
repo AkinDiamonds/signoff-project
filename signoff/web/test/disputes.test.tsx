@@ -160,6 +160,26 @@ describe('Disputes UI feature (Step 25)', () => {
     expect(screen.queryByText(/Order: Not found/)).toBeNull();
   });
 
+  it('refreshes evidence without claiming an agent run or PayPal action', async () => {
+    const requests: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes('/api/disputes/PP-D-1001/evidence/refresh')) {
+        requests.push(options?.method ?? 'GET');
+        return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      if (url.includes('/api/disputes/PP-D-1001/evidence')) {
+        return new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return mockFetch(input, options);
+    }));
+    await act(async () => { renderAt('/app/disputes/PP-D-1001'); });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Refresh evidence' })).toBeTruthy());
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh evidence' }));
+    await waitFor(() => expect(screen.getByText(/No model plan or PayPal action was started/)).toBeTruthy());
+    expect(requests).toEqual(['POST']);
+  });
+
   it('does not claim active analysis or invent an approval link while waiting for approval', async () => {
     await act(async () => {
       renderAt('/app/disputes/PP-D-1002');

@@ -115,6 +115,16 @@ def test_submission_notes_identify_simulated_and_unknown_shipment_sources():
     assert "simulated" in mixed_notes.lower() and "source is unverified" in mixed_notes.lower()
 
 
+def test_simulated_tracking_is_not_sent_as_carrier_tracking():
+    original = record("A")
+    simulated = replace(original.shipments[0], payload={"source": "simulated"})
+    evidence = build("A", replace(original, shipments=(simulated,)))
+    assert evidence.buildable
+    assert evidence.tracking_info == ()
+    assert "simulated" in (evidence.notes or "").lower()
+    assert to_provide_evidence(evidence).tracking_info == ()
+
+
 def test_delivery_before_order_is_not_counted():
     original = record("A")
     early_shipment = replace(

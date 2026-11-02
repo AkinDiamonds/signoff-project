@@ -19,14 +19,18 @@ from pydantic import BaseModel
 from sqlalchemy import case, select
 from sqlalchemy.orm import Session
 
-from agent.app.agent.evidence_snapshot import EvidenceSnapshotData
+from agent.app.agent.evidence_snapshot import EvidenceSnapshotData, build_snapshot
+from agent.app.agent.reasons import build_evidence_for
 from agent.app.approvals.service import DEMO_APPROVAL_LINKS
 from agent.app.db.models import Approval, Decision, Dispute, EvidenceSnapshot, ReviewEvidenceSnapshot
 from agent.app.db.session import get_db_session
 from agent.app.domain.enums import ApprovalResolution, DisputeReason, DisputeStatus, Verdict
 from agent.app.domain.money import Money
 from agent.app.errors import NotFoundError
+from agent.app.paypal.models import parse_dispute
+from agent.app.policy.missing_evidence import evaluate_missing_delivery
 from agent.app.settings import AppEnv, Settings
+from agent.app.store.local_adapter import LocalStoreAdapter
 from agent.app.store.resolution import ResolutionStatus, resolve_disputed_order
 from agent.app.store.scope import order_scope
 from agent.app.store_mock.repository import find_order_by_paypal_transaction_id
@@ -80,7 +84,7 @@ class DisputeDetailResponse(BaseModel):
 
 class EvidenceSnapshotResponse(BaseModel):
     run_id: str
-    capture_kind: Literal["model_run", "pre_model_review"] = "model_run"
+    capture_kind: Literal["model_run", "pre_model_review", "manual_refresh"] = "model_run"
     review_reason: str | None = None
     captured_at: datetime
     content_hash: str
@@ -101,12 +105,49 @@ def get_evidence_snapshots(
     reviews = db_session.scalars(select(ReviewEvidenceSnapshot).where(ReviewEvidenceSnapshot.dispute_id == id)
                                  .order_by(ReviewEvidenceSnapshot.captured_at.desc()).limit(50))
     results.extend(EvidenceSnapshotResponse(
-        run_id=str(row.id), capture_kind="pre_model_review", review_reason=row.reason, captured_at=row.captured_at,
+        run_id=str(row.id), capture_kind="manual_refresh" if row.reason == "manual_refresh" else "pre_model_review",
+        review_reason=row.reason, captured_at=row.captured_at,
         content_hash=row.content_hash, evidence=EvidenceSnapshotData.model_validate(row.payload),
     ) for row in reviews)
     results.sort(key=lambda row: (row.captured_at.replace(tzinfo=UTC) if row.captured_at.tzinfo is None
                                   else row.captured_at, row.run_id), reverse=True)
     return results[:50]
+
+
+def refresh_evidence(id: str, db_session: Session, settings: Settings) -> EvidenceSnapshotResponse:
+    """Capture current store facts against the last synced dispute without running the agent."""
+    dispute = db_session.get(Dispute, id)
+    if dispute is None:
+        raise NotFoundError(f"Dispute '{id}' not found")
+    paypal_dispute = parse_dispute(dispute.snapshot)
+    adapter = LocalStoreAdapter(db_session, scope=order_scope(settings, dispute.demo_session_id))
+    resolution = resolve_disputed_order(paypal_dispute.disputed_transactions or [], adapter.find_order)
+    now = datetime.now(UTC)
+    if resolution.status in {"ambiguous", "unavailable"}:
+        detail = ("Multiple orders matched; no order evidence was selected." if resolution.status == "ambiguous"
+                  else "The store was unavailable; order evidence could not be checked.")
+        payload, digest = build_snapshot(None, None, explanation=detail)
+    elif (str(paypal_dispute.reason) == "MERCHANDISE_OR_SERVICE_NOT_RECEIVED"
+          and evaluate_missing_delivery(resolution.order, "HUMAN_REVIEW", now) == "review"):
+        payload, digest = build_snapshot(resolution.order, None,
+                                         explanation="Delivery evidence is missing or unsafe; human review required.")
+    else:
+        evidence = build_evidence_for(paypal_dispute.reason, resolution.order, transaction_id=resolution.transaction_id)
+        payload, digest = build_snapshot(resolution.order, evidence)
+    row = ReviewEvidenceSnapshot(dispute_id=id, reason="manual_refresh", content_hash=digest,
+                                 captured_at=now, payload=payload)
+    db_session.add(row)
+    db_session.commit()
+    return EvidenceSnapshotResponse(run_id=str(row.id), capture_kind="manual_refresh", review_reason=row.reason,
+                                    captured_at=now, content_hash=digest,
+                                    evidence=EvidenceSnapshotData.model_validate(payload))
+
+
+@router.post("/{id}/evidence/refresh", response_model=EvidenceSnapshotResponse)
+def refresh_evidence_endpoint(
+    id: str, request: Request, db_session: Annotated[Session, Depends(get_db_session)],
+) -> EvidenceSnapshotResponse:
+    return refresh_evidence(id, db_session, request.app.state.settings)
 
 
 def _encode_cursor(offset: int) -> str:

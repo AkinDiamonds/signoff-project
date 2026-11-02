@@ -37,6 +37,7 @@ class EvidenceSnapshotData(BaseModel):
     milestones: list[SnapshotMilestone]
     buildable: bool
     evidence_type: str | None
+    tracking_submission_count: int | None = None
     notes: str | None
     explanation: str
     score: int | None
@@ -69,6 +70,7 @@ def build_snapshot(
         else [],
         buildable=evidence.buildable if evidence else False,
         evidence_type=evidence.evidence_type if evidence else None,
+        tracking_submission_count=len(evidence.tracking_info) if evidence else None,
         notes=evidence.notes if evidence else None,
         explanation=explanation or (evidence.reason if evidence else "No matching order evidence was available."),
         score=evidence.strength.score if evidence else None,
