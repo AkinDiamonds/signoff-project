@@ -194,6 +194,23 @@ describe('Disputes UI feature (Step 25)', () => {
     expect(approvalLink?.getAttribute('href') ?? '').not.toContain('/approve/mock-');
   });
 
+  it('shows human review when the latest model run failed', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes('/api/disputes/PP-D-1001/timeline')) {
+        return new Response(JSON.stringify({ items: [{ id: 'failed', dispute_id: 'PP-D-1001',
+          sequence_number: 20, kind: 'RUN_FAILED', error: 'The model response did not match the schema.',
+          created_at: '2026-10-31T20:00:00Z', is_truncated: false }], next_cursor: null }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return mockFetch(input, options);
+    }));
+    await act(async () => { renderAt('/app/disputes/PP-D-1001'); });
+    await waitFor(() => expect(screen.getByText('Analysis needs your review')).toBeTruthy());
+    expect(screen.queryByTestId('agent-in-progress-banner')).toBeNull();
+    expect(screen.getByText(/No action was proposed by this run/)).toBeTruthy();
+  });
+
   it('unknown dispute shows not-found state with link back to list', async () => {
     await act(async () => {
       renderAt('/app/disputes/does-not-exist');

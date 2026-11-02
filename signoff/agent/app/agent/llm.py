@@ -8,6 +8,7 @@ or a typed failure, so the caller can fall back to approval.
 import asyncio
 import json
 import logging
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
@@ -167,7 +168,10 @@ class OpenAICompatibleProvider:
         try:
             data = response.json()
             choice = data["choices"][0]
-            content = choice["message"]["content"]
+            message = choice["message"]
+            if isinstance(message, dict) and isinstance(message.get("refusal"), str) and message["refusal"].strip():
+                raise ProviderError(LLMFailureKind.refusal, "The model refused to produce a plan.")
+            content = message["content"]
             finish_reason = choice.get("finish_reason")
         except (ValueError, KeyError, IndexError, TypeError) as exc:
             raise ProviderError(
@@ -311,6 +315,13 @@ class LLMService:
         self._cost_per_call_usd = cost_per_call_usd
         self._timeout = timeout
         self._max_repairs = max_repairs
+
+    @property
+    def provider_model(self) -> str:
+        model = getattr(self._provider, "_model", None)
+        if isinstance(model, str) and re.fullmatch(r"[A-Za-z0-9._:/-]{1,100}", model):
+            return model
+        return "unavailable"
 
     @property
     def mode(self) -> LLMMode:

@@ -481,6 +481,22 @@ async def test_openai_provider_parses_content():
 
 
 @pytest.mark.asyncio
+async def test_openai_provider_refusal_field_is_typed_without_exposing_text():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"choices": [{"message": {"content": None,
+                                                                  "refusal": "private refusal text"},
+                                                       "finish_reason": "stop"}]})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        provider = OpenAICompatibleProvider(api_key="test-key", base_url="https://llm.example.test/v1",
+                                             model="test-model", http_client=client)
+        with pytest.raises(ProviderError) as exc_info:
+            await provider.complete([{"role": "user", "content": "hi"}])
+    assert exc_info.value.kind == LLMFailureKind.refusal
+    assert "private refusal text" not in str(exc_info.value)
+
+
+@pytest.mark.asyncio
 async def test_openai_provider_maps_timeout():
     def handler(request: httpx.Request) -> httpx.Response:
         raise httpx.ReadTimeout("too slow", request=request)

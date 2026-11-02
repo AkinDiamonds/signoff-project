@@ -131,6 +131,24 @@ async def test_pre_model_review_preserves_evidence_without_creating_a_model_run(
     assert response[0].evidence.order_code == snapshot.payload["order_code"]
 
 
+@pytest.mark.asyncio
+async def test_invalid_model_output_records_review_without_an_action(db_session):
+    dispute = make_dispute()
+    service = make_llm_service([ProviderResponse('{"actions":[{"action_type":"NOT_REAL"}]}'),
+                                ProviderResponse('{"actions":[{"action_type":"NOT_REAL"}]}')])
+    result = await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute, llm_service=service)
+    assert result.status == "failed" and result.human_needed and not result.decisions
+    assert db_session.scalar(select(Decision)) is None
+    assert db_session.scalar(select(Job).where(Job.kind == JobKind.EXECUTE_DECISION.value)) is None
+    from agent.app.db.models import LedgerEvent
+
+    failure = db_session.scalar(select(LedgerEvent).where(LedgerEvent.event_kind == 'RUN_FAILED'))
+    assert failure is not None
+    assert failure.payload['attempts'] == 2
+    assert failure.payload['schema'] == 'AgentPlan'
+    assert failure.payload['run_id'] == str(result.run_id)
+
+
 def test_manual_evidence_refresh_adds_history_without_running_agent(db_session):
     from agent.app.api.disputes import refresh_evidence
     from agent.app.db.models import Dispute as StoredDispute

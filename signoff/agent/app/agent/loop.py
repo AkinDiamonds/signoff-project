@@ -348,7 +348,8 @@ async def run_agent_loop(
     )
 
     # Record or reuse AgentRun
-    model_str = getattr(getattr(llm_service, "provider", None), "model", None) or "default-model"
+    model_value = getattr(llm_service, "provider_model", None)
+    model_str = model_value if isinstance(model_value, str) else "unavailable"
 
     existing_run = session.get(AgentRun, effective_run_id)
     snapshot_payload, snapshot_hash = build_snapshot(order_context, evidence)
@@ -436,7 +437,9 @@ async def run_agent_loop(
             session,
             dispute_id,
             TimelineEventKind.RUN_FAILED,
-            {"kind": llm_outcome.kind.value, "error": llm_outcome.message},
+            {"kind": llm_outcome.kind.value, "error": llm_outcome.message, "attempts": llm_outcome.attempts,
+             "schema": "AgentPlan", "prompt_version": PROMPT_VERSION, "model": model_str,
+             "run_id": str(effective_run_id)},
         )
         session.commit()
         return AgentLoopResult(

@@ -162,6 +162,7 @@ export const DisputeDetailPage: React.FC = () => {
     latestRunState.reason === 'tracking_requires_review';
   const needsPolicyReview = latestRunState?.kind === 'NO_ACTION' && 'reason' in latestRunState &&
     latestRunState.reason === 'signing_policy_changed';
+  const needsAnalysisReview = latestRunState?.kind === 'RUN_FAILED';
   const isAgentRunning =
     displayedDispute.status === 'WAITING_FOR_SELLER_RESPONSE' &&
     !displayedDispute.latest_verdict && !hasGateDecided && latestRunState?.kind === 'RUN_STARTED';
@@ -253,6 +254,10 @@ export const DisputeDetailPage: React.FC = () => {
       {needsPolicyReview && <div role="status" style={{ padding: 16, borderRadius: radius.card, background: '#fff7ed', color: '#7c2d12' }}>
         <strong>Signing limits need your review</strong>
         <p style={{ marginBottom: 0 }}>Your limits changed or are unavailable. No action was sent.</p>
+      </div>}
+      {needsAnalysisReview && <div role="status" style={{ padding: 16, borderRadius: radius.card, background: '#fff7ed', color: '#7c2d12' }}>
+        <strong>Analysis needs your review</strong>
+        <p style={{ marginBottom: 0 }}>The latest analysis could not produce a valid plan. No action was proposed by this run. Check the audit history for details.</p>
       </div>}
       {isAgentRunning && (
         <div
