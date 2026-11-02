@@ -369,7 +369,7 @@ export const ApprovalPage: React.FC = () => {
     ESCALATE: 'escalate the dispute',
     APPEAL: 'appeal the dispute',
   };
-  const actionSummarySentence = `Signoff wants to ${actionDescriptions[card.action_type] ?? 'take an action'} on dispute ${card.dispute.id}.`;
+  const actionSummarySentence = `Review before Signoff can ${actionDescriptions[card.action_type] ?? 'take an action'}`;
   const ruleExplanation = getRuleExplanation(card.rule_id);
 
   return (
@@ -402,6 +402,10 @@ export const ApprovalPage: React.FC = () => {
               {actionSummarySentence}
             </h1>
           </header>
+          <p style={{ margin: 0, color: '#111b36' }}>
+            Signoff proposes to {actionDescriptions[card.action_type] ?? 'take an action'} for this dispute.
+            Review the evidence and reason below before deciding. Your decision will be saved before any PayPal action is attempted.
+          </p>
 
           {/* Evidence summary: 3 bullets maximum */}
           <div

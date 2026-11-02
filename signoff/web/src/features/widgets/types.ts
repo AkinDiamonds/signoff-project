@@ -179,7 +179,7 @@ function timelineDetail(event: ApiTimelineEvent): string {
     case 'APPROVAL_RESOLVED':
       return `Resolution: ${value('resolution')}.`;
     case 'EXECUTION_CONFIRMED':
-      return `PayPal acknowledged ${value('external_id')}.`;
+      return 'Signoff recorded a confirmation after checking PayPal; the specific action is not independently verified.';
     case 'EXECUTION_FAILED':
       return `Execution failed: ${value('error_message')}.`;
     case 'INJECTION_FLAGGED':

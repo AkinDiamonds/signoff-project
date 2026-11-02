@@ -66,7 +66,7 @@ export const Layout: React.FC = () => {
     >
       <style>{`
         :focus-visible {
-          outline: 2px solid var(--signoff-nav-accent, #0F766E) !important;
+          outline: 3px solid #1648d8 !important;
           outline-offset: 2px !important;
         }
         .signoff-skip-link {
@@ -88,7 +88,7 @@ export const Layout: React.FC = () => {
         .signoff-nav-link {
           display: flex;
           align-items: center;
-          height: 36px;
+          min-height: 44px;
           padding: 0 12px;
           border-radius: 6px;
           font-size: 14px;
@@ -103,8 +103,8 @@ export const Layout: React.FC = () => {
           color: #111827;
         }
         .signoff-nav-link.active {
-          background-color: #F0FDFA;
-          color: #0F766E;
+          background-color: #eef2ff;
+          color: #1648d8;
           font-weight: 600;
         }
         .signoff-nav-link.active::before {
@@ -115,7 +115,7 @@ export const Layout: React.FC = () => {
           bottom: 8px;
           width: 3px;
           border-radius: 2px;
-          background-color: #0F766E;
+          background-color: #1648d8;
         }
         @media (max-width: 899px) {
           .signoff-sidebar-desktop {
@@ -178,7 +178,9 @@ export const Layout: React.FC = () => {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              padding: '6px',
+              minWidth: 44,
+              minHeight: 44,
+              padding: '10px',
               borderRadius: radius.control,
               color: '#374151',
               display: 'none',
@@ -207,7 +209,7 @@ export const Layout: React.FC = () => {
                 width: '24px',
                 height: '24px',
                 borderRadius: '6px',
-                background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)',
+                background: '#1648d8',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -223,23 +225,6 @@ export const Layout: React.FC = () => {
             </span>
           </NavLink>
 
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: '11px',
-              fontWeight: 600,
-              backgroundColor: '#F3F4F6',
-              color: '#4B5563',
-              padding: '2px 8px',
-              borderRadius: '9999px',
-              border: '1px solid #E5E7EB',
-            }}
-          >
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }} />
-            Live Sync
-          </span>
         </div>
 
         {/* Right side header controls */}
@@ -311,7 +296,6 @@ export const Layout: React.FC = () => {
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
               >
                 <span>Buyer Shop ↗</span>
-                <span style={{ fontSize: '11px', color: '#9CA3AF' }}>:5174</span>
               </a>
             </div>
           </nav>

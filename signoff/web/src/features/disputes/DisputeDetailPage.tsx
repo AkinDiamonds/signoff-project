@@ -182,9 +182,31 @@ export const DisputeDetailPage: React.FC = () => {
   const ruleId = displayedDispute.latest_rule_id;
   const ruleExplanation = ruleId ? getRuleExplanation(ruleId) : 'No gate rule recorded';
   const plainReason = formatDisputeReason(displayedDispute.reason);
+  const approvalState = displayedDispute.latest_approval_resolution;
+  const executionState = displayedDispute.latest_execution_status;
+  const reviewLabel = approvalState === 'PENDING' ? 'Your review is needed'
+    : approvalState === 'APPROVE' || approvalState === 'EDIT' ? 'Approval saved'
+    : approvalState === 'DENY' ? 'You declined the proposal'
+    : approvalState === 'EXPIRED' ? 'Approval expired'
+    : latestRunState?.kind === 'RUN_FAILED' ? 'Analysis could not finish'
+    : 'No review is pending';
+  const actionLabel = executionState === 'INTENDED' ? 'Preparing to send; result uncertain'
+    : executionState === 'SENT' ? 'Sent; PayPal result uncertain'
+    : executionState === 'CONFIRMED' ? 'Recorded as confirmed'
+    : executionState === 'FAILED' ? 'Recorded as failed'
+    : approvalState === 'APPROVE' || approvalState === 'EDIT' ? 'Approval saved; no execution recorded'
+    : 'No action recorded';
+  const uncertainAction = executionState === 'INTENDED' || executionState === 'SENT';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[4], maxWidth: '1300px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[4], maxWidth: '1300px', minWidth: 0 }}>
+      <style>{`
+        .seller-dispute-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; align-items: start; }
+        .seller-dispute-id { overflow-wrap: anywhere; }
+        .seller-status-row { display: grid; grid-template-columns: minmax(90px, 120px) minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px solid #dce2ef; }
+        .seller-status-row:last-child { border-bottom: 0; }
+        @media (max-width: 390px) { .seller-status-row { grid-template-columns: 1fr; gap: 2px; } }
+      `}</style>
       {/* Navigation Breadcrumb */}
       <nav aria-label="Breadcrumb">
         <Link
@@ -209,30 +231,27 @@ export const DisputeDetailPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2], flexWrap: 'wrap' }}>
             <h1
-              data-testid="dispute-detail-id"
               style={{
                 fontSize: '24px',
                 fontWeight: 700,
                 margin: 0,
                 color: '#111827',
-                fontFamily: 'monospace',
                 letterSpacing: '-0.02em',
               }}
             >
-              {displayedDispute.id}
+              {plainReason}
             </h1>
-            <button type="button" style={{ minHeight: 44 }} onClick={() => { void copyDisputeLink(); }}>Copy dispute link</button>
-            <StatusBadge
-              status={displayedDispute.status}
-              testId="detail-status-badge"
-            />
           </div>
           <div style={{ fontSize: '14px', color: '#6B7280' }}>
-            <span>{plainReason}</span> &bull;{' '}
             <strong style={{ color: '#111827' }}>
               <Money money={displayedDispute.amount} testId="detail-header-amount" />
             </strong>
           </div>
+          <div style={{ color: '#9a3412', fontWeight: 600 }}>Respond by <Deadline dueAt={displayedDispute.seller_response_due_date ?? null} /></div>
+          <details><summary style={{ cursor: 'pointer', minHeight: 44 }}>Technical details</summary>
+            <div className="seller-dispute-id" data-testid="dispute-detail-id">Dispute ID: {displayedDispute.id}</div>
+            <button type="button" style={{ minHeight: 44 }} onClick={() => { void copyDisputeLink(); }}>Copy dispute link</button>
+          </details>
         </div>
 
         {lastUpdated && (
@@ -252,6 +271,24 @@ export const DisputeDetailPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      <section aria-label="Current dispute status" data-testid="dispute-status-summary" style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: 12, padding: '4px 16px', color: '#111b36' }}>
+        <div className="seller-status-row"><strong>PayPal</strong><span><StatusBadge status={displayedDispute.status} testId="detail-status-badge" /></span></div>
+        <div className="seller-status-row"><strong>Signoff</strong><span>{reviewLabel}</span></div>
+        <div className="seller-status-row"><strong>Action</strong><span>{actionLabel}</span></div>
+      </section>
+      {uncertainAction && <div role="alert" style={{ border: '2px solid #b45309', borderRadius: 12, background: '#fff7ed', padding: 16, color: '#78350f' }}>
+        Signoff cannot yet tell whether PayPal received this action. Sending it again could duplicate the response. Check the PayPal case and this history before taking another step.
+      </div>}
+      {(approvalState === 'APPROVE' || approvalState === 'EDIT') && !executionState && <div role="status" style={{ border: '1px solid #cbd5e1', borderRadius: 12, background: '#f8fafc', padding: 16 }}>
+        Your approval was saved, but no execution was recorded for it. Check this dispute in PayPal before taking another step.
+      </div>}
+
+      {displayedDispute.approval_url && <section style={{ background: '#eef2ff', borderRadius: 12, padding: 20, color: '#111b36' }}>
+        <h2 style={{ marginTop: 0 }}>Your decision is needed</h2>
+        <p>Review the proposed response before anything is sent to PayPal.</p>
+        <a href={displayedDispute.approval_url} data-testid="open-approval-card-button" style={{ display: 'block', background: '#1648d8', color: '#fff', textAlign: 'center', padding: 14, minHeight: 44, borderRadius: 8, fontWeight: 700 }}>Review proposed response</a>
+      </section>}
 
       {/* Agent Active Banner (Only if actively evaluating) */}
       {needsDeliveryReview && <div role="status" style={{ padding: 16, borderRadius: radius.card, background: '#fff7ed', color: '#7c2d12' }}>
@@ -301,11 +338,9 @@ export const DisputeDetailPage: React.FC = () => {
 
       {/* 2-Column Responsive Layout */}
       <div
+        className="seller-dispute-layout"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: spacing[3],
-          alignItems: 'start',
         }}
       >
         {/* Left Column: Customer Message, Evidence, Timeline */}
@@ -562,31 +597,6 @@ export const DisputeDetailPage: React.FC = () => {
               {ruleExplanation}.
             </div>
 
-            {/* Approval Action Button */}
-            {displayedDispute.approval_url && (
-              <div style={{ marginTop: spacing[1] }}>
-                <a
-                  href={displayedDispute.approval_url}
-                  data-testid="open-approval-card-button"
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    boxSizing: 'border-box',
-                    textAlign: 'center',
-                    backgroundColor: '#0F766E',
-                    color: '#FFFFFF',
-                    padding: '10px 16px',
-                    borderRadius: radius.control,
-                    fontWeight: 600,
-                    fontSize: '14px',
-                    textDecoration: 'none',
-                    transition: 'background-color 0.15s ease',
-                  }}
-                >
-                  Review proposed action &rarr;
-                </a>
-              </div>
-            )}
             {displayedDispute.latest_verdict === 'NEEDS_APPROVAL' && !displayedDispute.approval_url && (
               <p role="status">No current approval card is available. It may have expired, been resolved, or become stale.</p>
             )}

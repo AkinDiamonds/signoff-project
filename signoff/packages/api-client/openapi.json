@@ -1005,6 +1005,26 @@
             "title": "Id",
             "type": "string"
           },
+          "latest_approval_resolution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApprovalResolution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "latest_execution_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExecutionStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "latest_rule_id": {
             "anyOf": [
               {
@@ -1919,6 +1939,17 @@
         ],
         "title": "ExecutionSentTimelineEvent",
         "type": "object"
+      },
+      "ExecutionStatus": {
+        "description": "Executor write-ahead protocol status.",
+        "enum": [
+          "INTENDED",
+          "SENT",
+          "CONFIRMED",
+          "FAILED"
+        ],
+        "title": "ExecutionStatus",
+        "type": "string"
       },
       "FieldError": {
         "properties": {

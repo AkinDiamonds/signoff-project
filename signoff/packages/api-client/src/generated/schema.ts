@@ -1372,6 +1372,8 @@ export interface components {
             created_at: string;
             /** Id */
             id: string;
+            latest_approval_resolution?: components["schemas"]["ApprovalResolution"] | null;
+            latest_execution_status?: components["schemas"]["ExecutionStatus"] | null;
             /** Latest Rule Id */
             latest_rule_id?: string | null;
             latest_verdict?: components["schemas"]["Verdict"] | null;
@@ -1753,6 +1755,12 @@ export interface components {
             /** Sequence Number */
             sequence_number: number;
         };
+        /**
+         * ExecutionStatus
+         * @description Executor write-ahead protocol status.
+         * @enum {string}
+         */
+        ExecutionStatus: "INTENDED" | "SENT" | "CONFIRMED" | "FAILED";
         /** FieldError */
         FieldError: {
             /** Message */

@@ -142,10 +142,11 @@ export const GuidePage: React.FC = () => {
           <Card title="Step 2: Watch it work" testId="guide-step-2">
             <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: colors.ink, lineHeight: 1.5 }}>
               Observe the four timeline stages: evidence gathering from your store, evaluation against your rules,
-              the policy gate verdict, and the confirmed PayPal action. Wait ~20 seconds for the pipeline to complete.
+              the policy gate verdict, and the recorded execution status. Timing varies, and a recorded confirmation
+              does not independently verify the specific PayPal action.
             </p>
             <div style={{ fontSize: '12px', color: colors.inkMuted }}>
-              The agent re-fetches carrier tracking and synthesizes proof without making unauthorized write calls.
+              The agent gathers available order and shipping evidence before evaluating the proposed action.
             </div>
           </Card>
 

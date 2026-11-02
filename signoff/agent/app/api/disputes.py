@@ -24,9 +24,9 @@ from agent.app.agent.evidence_snapshot import EvidenceSnapshotData, build_snapsh
 from agent.app.agent.reasons import build_evidence_for
 from agent.app.agent.reasons.history import count_buyer_disputes
 from agent.app.approvals.service import DEMO_APPROVAL_LINKS
-from agent.app.db.models import Approval, Decision, Dispute, EvidenceSnapshot, ReviewEvidenceSnapshot
+from agent.app.db.models import Approval, Decision, Dispute, EvidenceSnapshot, Execution, ReviewEvidenceSnapshot
 from agent.app.db.session import get_db_session
-from agent.app.domain.enums import ApprovalResolution, DisputeReason, DisputeStatus, Verdict
+from agent.app.domain.enums import ApprovalResolution, DisputeReason, DisputeStatus, ExecutionStatus, Verdict
 from agent.app.domain.money import Money
 from agent.app.errors import NotFoundError
 from agent.app.paypal.models import parse_dispute
@@ -81,6 +81,8 @@ class DisputeDetailResponse(BaseModel):
     latest_rule_id: str | None = None
     order_code: str | None = None
     approval_url: str | None = None
+    latest_approval_resolution: ApprovalResolution | None = None
+    latest_execution_status: ExecutionStatus | None = None
     order_resolution: ResolutionStatus = "not_found"
 
 
@@ -332,6 +334,16 @@ async def get_dispute_by_id(
     )
     latest_verdict = Verdict(latest_dec.verdict) if latest_dec else None
     latest_rule_id = latest_dec.rule_id if latest_dec else None
+    latest_approval = db_session.scalar(
+        select(Approval).where(Approval.dispute_id == id)
+        .order_by(Approval.created_at.desc(), Approval.id.desc()).limit(1)
+    )
+    execution_query = select(Execution).where(Execution.dispute_id == id)
+    if latest_approval is not None:
+        execution_query = execution_query.where(Execution.decision_id == latest_approval.decision_id)
+    latest_execution = db_session.scalar(
+        execution_query.order_by(Execution.created_at.desc(), Execution.id.desc()).limit(1)
+    )
 
     scope = order_scope(request.app.state.settings, dispute.demo_session_id)
     resolution = resolve_disputed_order(
@@ -379,4 +391,6 @@ async def get_dispute_by_id(
         order_code=resolution.order.order_code if resolution.order else None,
         order_resolution=resolution.status,
         approval_url=approval_url,
+        latest_approval_resolution=ApprovalResolution(latest_approval.resolution) if latest_approval else None,
+        latest_execution_status=ExecutionStatus(latest_execution.status) if latest_execution else None,
     )

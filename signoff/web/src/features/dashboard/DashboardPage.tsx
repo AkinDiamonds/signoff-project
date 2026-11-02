@@ -147,8 +147,8 @@ export const DashboardPage: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing[2] }}>
         <div>
           <PageHeader
-            title="Disputes & Operations"
-            description="Autonomous PayPal defense monitoring, signing limits, and real-time dispute metrics."
+            title="Your disputes"
+            description="See what needs your attention and when PayPal expects a response."
             testId="dashboard-title"
           />
         </div>
