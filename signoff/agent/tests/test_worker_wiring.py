@@ -28,7 +28,7 @@ from agent.app.agent.llm import (
 )
 from agent.app.approvals.service import create_approval
 from agent.app.db.base import Base
-from agent.app.db.models import Decision, LedgerEvent
+from agent.app.db.models import Decision, LedgerEvent, Notification, NotificationOutbox
 from agent.app.db.triggers import install_append_only_triggers
 from agent.app.domain.enums import (
     ActionType,
@@ -195,6 +195,10 @@ def test_worker_loop_full_pipeline(test_db):
         assert TimelineEventKind.GATE_DECIDED.value in kinds
         assert TimelineEventKind.EXECUTION_INTENDED.value in kinds
         assert TimelineEventKind.EXECUTION_CONFIRMED.value in kinds
+        notices = session.scalars(select(Notification).where(Notification.dispute_id == 'PP-SCENARIO-A')).all()
+        assert {notice.kind for notice in notices} >= {'new_dispute', 'action_confirmed'}
+        for notice in notices:
+            assert session.get(NotificationOutbox, notice.id) is not None
 
 
 def test_fake_scenario_provider():

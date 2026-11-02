@@ -9,11 +9,13 @@ import {
   typography,
 } from '@signoff/ui';
 import { ErrorBoundary } from './ErrorBoundary';
+import { useNotifications } from '../features/notifications/NotificationsPage';
 
 const NAV_ITEMS = [
   { to: '/app', label: 'Dashboard' },
   { to: '/app/disputes', label: 'Disputes' },
   { to: '/app/shipments', label: 'Shipments' },
+  { to: '/app/notifications', label: 'Notifications' },
   { to: '/app/policy', label: 'Policy Rules' },
   { to: '/app/settings', label: 'Settings' },
 ];
@@ -21,6 +23,7 @@ const NAV_ITEMS = [
 export const Layout: React.FC = () => {
   const location = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const notifications = useNotifications();
   const isApproval = location.pathname.startsWith('/approve/');
 
   // Approval page is mobile-first standalone without sidebar
@@ -290,7 +293,7 @@ export const Layout: React.FC = () => {
                     end={item.to === '/app'}
                     className={({ isActive }) => `signoff-nav-link ${isActive ? 'active' : ''}`}
                   >
-                    {item.label}
+                    {item.label}{item.to === '/app/notifications' && notifications.data?.unread_count ? ` (${notifications.data.unread_count})` : ''}
                   </NavLink>
                 </li>
               ))}
@@ -369,7 +372,7 @@ export const Layout: React.FC = () => {
                         end={item.to === '/app'}
                         className={({ isActive }) => `signoff-nav-link ${isActive ? 'active' : ''}`}
                       >
-                        {item.label}
+                        {item.label}{item.to === '/app/notifications' && notifications.data?.unread_count ? ` (${notifications.data.unread_count})` : ''}
                       </NavLink>
                     </li>
                   ))}

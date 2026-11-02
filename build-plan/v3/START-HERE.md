@@ -91,3 +91,7 @@ Owner-authorized override resolved the test blocker. Main 748cff2 is deployed; R
 ### Latest model safety release
 
 Main ddab492 is remote-confirmed; standard CI 41354968018 and full E2E 41354967949 passed. Existing Render owner/worker/shop health passed, but this backend-only change has no exposed build identifier; exact serving revision not independently proven. Workspace real provider returned two valid uncached fictional-case plans. Existing PP-R-MYR-10195637 approval predates evidence grounding and has no saved snapshot; it was not retroactively changed or verified. Next: pre-model evidence snapshots/refresh, provider failure UX, T07 fresh-policy concurrency/provider proof, notifications/inbox/push and complete UI/copy/mobile work.
+
+### In-app notification increment, 2026-11-02
+
+Persistent owner inbox, generic source-event notifications, transactional outbox and CSRF read/unread are implemented with migration c86f1bd50006. Local full backend 630 plus final focused PostgreSQL tests, frontend 190, types/builds and full local cross-app 13/13 passed; local 390px Chromium layout passed. See EXECUTION-LOG for push/CI/deployment state. Phone push, outbox delivery worker, deadline reminders and demo-session inbox remain; do not claim full T09/T10 completion.

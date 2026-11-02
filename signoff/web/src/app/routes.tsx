@@ -12,6 +12,7 @@ import { SettingsPage } from '../features/settings/SettingsPage';
 import { LoginPage } from '../features/auth/LoginPage';
 import { RequireMerchant } from '../features/auth/RequireMerchant';
 import { ShipmentsPage } from '../features/fulfillment/ShipmentsPage';
+import { NotificationsPage } from '../features/notifications/NotificationsPage';
 
 export const routes: RouteObject[] = [
   { path: 'login', element: <LoginPage /> },
@@ -34,6 +35,7 @@ export const routes: RouteObject[] = [
       { path: 'approvals/:approvalId', element: <ApprovalPage /> },
       { path: 'policy', element: <CharterPage /> },
       { path: 'shipments', element: <ShipmentsPage /> },
+      { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },
       // Compatibility aliases
       { path: 'charter', element: <CharterPage /> },

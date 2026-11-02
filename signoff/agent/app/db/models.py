@@ -482,6 +482,35 @@ class EvidenceFile(Base):
     )
 
 
+class Notification(Base):
+    """Generic, durable merchant inbox item; no raw buyer data."""
+
+    __tablename__ = "notifications"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    dispute_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    demo_session_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    kind: Mapped[str] = mapped_column(String(40), nullable=False)
+    dedupe_key: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    source_event_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey('ledger_events.id'), nullable=False
+    )
+    message: Mapped[str] = mapped_column(String(240), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class NotificationOutbox(Base):
+    """Delivery work retained until an opt-in destination is available."""
+
+    __tablename__ = "notification_outbox"
+    notification_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey('notifications.id'), primary_key=True
+    )
+    state: Mapped[str] = mapped_column(String(24), default='pending', nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
 class LedgerEvent(Base):
     """Append-only audit ledger recording every state transition per dispute.
 

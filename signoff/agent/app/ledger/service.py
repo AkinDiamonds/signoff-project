@@ -23,6 +23,7 @@ from agent.app.ledger.sanitizer import (
     sanitize_payload_dict,
     sanitize_untrusted_text,
 )
+from agent.app.notifications.service import record_notification
 
 
 def record_ledger_event(
@@ -53,6 +54,7 @@ def record_ledger_event(
     )
     session.add(event)
     session.flush()
+    record_notification(session, event)
     return event
 
 

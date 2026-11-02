@@ -27,6 +27,7 @@ from agent.app.db.models import Dispute as DBDispute
 from agent.app.domain.actions import ProposedAction, compute_action_hash
 from agent.app.domain.enums import DisputeStatus, ExecutionStatus, TimelineEventKind, Verdict
 from agent.app.errors import AppError
+from agent.app.notifications.service import record_notification
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.paypal.mutating_client import (
     PayPalClientError,
@@ -86,6 +87,8 @@ def record_execution_ledger_event(
         payload=payload,
     )
     session.add(event)
+    session.flush()
+    record_notification(session, event)
     return event
 
 

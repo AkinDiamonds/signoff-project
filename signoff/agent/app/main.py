@@ -19,6 +19,7 @@ from agent.app.api.disputes import router as disputes_router
 from agent.app.api.fulfillment import router as fulfillment_router
 from agent.app.api.kpis import router as kpis_router
 from agent.app.api.llm_proxy import router as llm_proxy_router
+from agent.app.api.notifications import router as notifications_router
 from agent.app.api.store import router as store_router
 from agent.app.api.timeline import router as timeline_router
 from agent.app.approvals.service import DEMO_APPROVAL_LINKS
@@ -168,6 +169,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     owner_access = [Depends(require_merchant)]
     app.include_router(auth_router)
     app.include_router(integrations_router, dependencies=owner_access)
+    app.include_router(notifications_router, dependencies=owner_access)
     app.include_router(fulfillment_router, dependencies=owner_access)
     app.include_router(webhooks_router)
     app.include_router(charter_router, dependencies=owner_access)

@@ -86,6 +86,35 @@ def test_durable_approval_cards_require_owner_and_csrf(owner_app):
                            headers={'X-CSRF-Token': csrf}).status_code == 404
 
 
+def test_inbox_requires_owner_csrf_and_hides_demo_sessions(owner_app):
+    from decimal import Decimal
+
+    from agent.app.db.models import Dispute
+    from agent.app.domain.enums import TimelineEventKind
+    from agent.app.ledger.service import record_ledger_event
+
+    app, db, _settings = owner_app
+    for dispute_id, demo_id in [('PP-INBOX', None), ('PP-PRIVATE', 'other-demo')]:
+        db.add(Dispute(id=dispute_id, demo_session_id=demo_id, state_fingerprint='fp',
+                       status='WAITING_FOR_SELLER_RESPONSE', reason='MERCHANDISE_OR_SERVICE_NOT_RECEIVED',
+                       amount=Decimal('24.00'), currency='USD', snapshot={}))
+        db.flush()
+        record_ledger_event(db, dispute_id, TimelineEventKind.APPROVAL_REQUESTED, {'approval_id': dispute_id})
+    db.commit()
+    with TestClient(app) as client:
+        assert client.get('/api/notifications').status_code == 401
+        csrf = sign_in(client).json()['csrf_token']
+        page = client.get('/api/notifications').json()
+        assert page['unread_count'] == 1 and len(page['items']) == 1
+        assert page['items'][0]['dispute_id'] == 'PP-INBOX'
+        identifier = page['items'][0]['id']
+        path = f'/api/notifications/{identifier}/read'
+        assert client.post(path, json={'read': True}).status_code == 403
+        assert client.post(path, json={'read': True}, headers={'X-CSRF-Token': csrf}).status_code == 200
+        assert client.get('/api/notifications').json()['unread_count'] == 0
+        assert client.post(path, json={'read': True}, headers={'X-CSRF-Token': csrf}).status_code == 200
+
+
 def test_login_protects_reads_and_requires_csrf_for_writes(owner_app):
     app, db, _ = owner_app
     with TestClient(app) as client:

@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 from agent.app.db.models import Decision, DemoPool, Dispute, Job, LedgerEvent, Order
 from agent.app.domain.enums import JobKind, JobStatus, TimelineEventKind
 from agent.app.errors import NotFoundError
+from agent.app.notifications.service import record_notification
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.paypal.read_client import PayPalReadClient
 from agent.app.settings import AppEnv, Settings
@@ -255,6 +256,7 @@ async def sync_dispute(
         )
         session.add(ledger_event)
         session.flush()
+        record_notification(session, ledger_event)
 
         # Enqueue agent run if seller response required
         if requires_seller_response(dispute_state):
