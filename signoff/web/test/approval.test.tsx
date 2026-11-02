@@ -27,6 +27,29 @@ describe('Approval card feature (Step 26)', () => {
     vi.stubGlobal('fetch', mockFetch);
   });
 
+  it('keeps the saved result without refetching a consumed single-use bearer link', async () => {
+    let resolved = false;
+    let reads = 0;
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes('/api/approvals/') && !url.endsWith('/resolve')) {
+        reads += 1;
+        if (resolved) return new Response(JSON.stringify({ error: { code: 'TOKEN_INVALID',
+          message: 'Invalid approval link', correlation_id: 'fictional' } }), { status: 404,
+          headers: { 'Content-Type': 'application/json' } });
+      }
+      const response = await mockFetch(input, options);
+      if (url.endsWith('/resolve')) resolved = true;
+      return response;
+    }));
+    renderAt('/approve/valid-test-token-12345678901234567890');
+    await waitFor(() => expect(screen.getByTestId('approval-approve-button')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('approval-approve-button'));
+    await waitFor(() => expect(screen.getByText('Approval saved')).toBeTruthy());
+    expect(reads).toBe(1);
+    expect(screen.queryByTestId('approval-error-state')).toBeNull();
+  });
+
   it('loads a durable owner card and resolves using its authenticated API route', async () => {
     const cardId = 'bb9b1426-179f-41b5-ab4c-0796922012a1';
     const requests: string[] = [];

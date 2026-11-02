@@ -106,7 +106,7 @@ export const ApprovalPage: React.FC = () => {
       setOutcome('APPROVED');
       setOutcomeMessage(result.queued ? 'Approval saved. The action is queued; submission is not yet confirmed.' : 'Approval saved. Check the dispute for execution status.');
       toast('Approval saved. Check the dispute for execution status.', 'pending', `approval:${token}`);
-      void cardQuery.refetch();
+      if (ownerCard) void cardQuery.refetch();
       try {
         sessionStorage.setItem(`resolved_approval_${token}`, 'APPROVED');
       } catch {
@@ -192,7 +192,7 @@ export const ApprovalPage: React.FC = () => {
       setOutcome('APPROVED');
       setOutcomeMessage(result.queued ? 'Edited approval saved. The action is queued; submission is not yet confirmed.' : 'Edited approval saved. Check the dispute for execution status.');
       toast('Edited approval saved. Check the dispute for execution status.', 'pending', `approval:${token}`);
-      void cardQuery.refetch();
+      if (ownerCard) void cardQuery.refetch();
       try {
         sessionStorage.setItem(`resolved_approval_${token}`, 'APPROVED');
       } catch {
@@ -239,7 +239,7 @@ export const ApprovalPage: React.FC = () => {
     );
   }
 
-  if (cardQuery.isError) {
+  if (cardQuery.isError && !outcome) {
     const error = cardQuery.error;
     const isInvalid =
       error.message?.toLowerCase().includes('invalid') ||

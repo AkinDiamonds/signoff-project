@@ -18,7 +18,9 @@ Built for the PayPal AI Hackathon. **Sandbox only. Fictional data only.**
 | Agent: not-received disputes | Working (scenarios A and B end to end; evidence, gate, execute, ledger) |
 | Agent: second dispute reason | Working (`MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED` receipt evidence; unknown reasons stop for human review) |
 | Append-only decision log | Working (append-only decisions and ledger events, cursor pagination, replay script) |
-| Approval page (mobile) | Working (mobile-first approve/deny/edit with distinct outcomes) |
+| Approval page (mobile) | Deployed; identity/history fixes implemented. Bearer outcome presentation fix verified on the two affected local browser cases; full physical/provider acceptance remains open. |
+| Owner notifications | Deployed inbox, shared feedback, deduplicated deadline reminders and leased push delivery. |
+| Phone push | Opt-in code deployed; FCM accepted two tests. Owner reports no phone display/installation; device permission and compatibility follow-up remain open. |
 | Charter editor | Working (versioned limits, field validation, conflict screen, history) |
 | Demo panel | Working (scenarios A-E, pool status, session reset, frozen/quota/cached labels) |
 | Dashboard (AG Studio) | Working (live KPIs, dispute table, lazy AG Studio workspace, read-only assistant via server proxy) |

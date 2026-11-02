@@ -1,12 +1,14 @@
-/* Signoff push worker v1: no fetch handler, offline cache, approval or payment requests. */
+/* Signoff push worker v2: no fetch handler, offline cache, approval or payment requests. */
 /* global self */
+self.addEventListener('install', event => { event.waitUntil(self.skipWaiting()); });
+self.addEventListener('activate', event => { event.waitUntil(self.clients.claim()); });
 self.addEventListener('push', event => {
   let data;
   try { data = event.data.json(); } catch { return; }
   if (!data || typeof data.notificationId !== 'string' || typeof data.disputeId !== 'string'
       || !/^[a-f0-9-]{36}$/i.test(data.notificationId) || data.disputeId.length > 100) return;
   event.waitUntil(self.registration.showNotification('Signoff', {
-    body: 'A dispute needs your review', icon: '/icon.svg',
+    body: 'A dispute needs your review', icon: '/icon-192.png',
     tag: `signoff:${data.notificationId}`, renotify: false,
     data: { path: `/app/disputes/${encodeURIComponent(data.disputeId)}` },
   }));

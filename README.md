@@ -26,7 +26,7 @@ Buyers approve their payment on PayPal-hosted checkout. If a problem arises, the
 | Shipping | Explicitly simulated |
 | Agent reasoning | OpenAI-compatible provider behind a server proxy; deployed journey verification tracked below |
 
-Current implementation and observed verification: [progress](build-plan/v3/PROGRESS.md), [release notes](build-plan/v3/RELEASE.md). This is an incremental release; pending fulfilment, notifications/push and full hosted journey work are not claimed complete.
+Current implementation and observed verification: [progress](build-plan/v3/PROGRESS.md), [release notes](build-plan/v3/RELEASE.md), [mobile review/push checkpoint](build-plan/v3/WEB-PUSH.md). Approval history, shared feedback, deadline reminders and opt-in push code are deployed incrementally. Push-service acceptance is observed, but the owner reported no visible phone notification; physical delivery and the full hosted PayPal journey are not claimed complete.
 
 ## Built with
 

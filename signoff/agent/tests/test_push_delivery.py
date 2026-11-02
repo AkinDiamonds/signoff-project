@@ -185,6 +185,37 @@ def test_push_transport_rejects_private_dns_and_never_follows_redirects(monkeypa
         assert calls == [{'timeout': 10, 'allow_redirects': False}]
 
 
+def test_visible_review_push_requests_high_urgency_and_stable_duplicate_topic(monkeypatch):
+    import base64
+    import json
+    from types import SimpleNamespace
+
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+
+    from agent.app.notifications.push import send_push
+
+    public = ec.generate_private_key(ec.SECP256R1()).public_key().public_bytes(
+        Encoding.X962, PublicFormat.UncompressedPoint)
+    def encode(value):
+        return base64.urlsafe_b64encode(value).decode().rstrip('=')
+    calls = []
+
+    def webpush(**kwargs):
+        calls.append(kwargs)
+        return SimpleNamespace(status_code=201)
+
+    monkeypatch.setattr('agent.app.notifications.push.webpush', webpush)
+    identifier = str(uuid.uuid4())
+    for _ in range(2):
+        assert send_push(push_settings(), 'https://fcm.googleapis.com/fcm/send/fixture',
+                         encode(public), encode(bytes(16)), identifier, 'PP-PUSH') == 201
+    assert calls[0]['headers'] == calls[1]['headers'] == {'Urgency': 'high', 'Topic': identifier.replace('-', '')}
+    payload = json.loads(calls[0]['data'])
+    assert payload['body'] == 'A dispute needs your review'
+    assert 'private-fixture' not in calls[0]['data']
+
+
 def test_postgres_push_lease_skips_locked_destination():
     engine = create_engine(Settings().database_url)
     delivery_id, notification_id, subscription_id = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()

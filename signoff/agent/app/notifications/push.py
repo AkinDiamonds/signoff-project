@@ -84,6 +84,7 @@ def send_push(settings: Settings, endpoint: str, p256dh: str, auth: str,
                 subscription_info={'endpoint': endpoint, 'keys': {'p256dh': p256dh, 'auth': auth}},
                 data=payload, vapid_private_key=settings.web_push_vapid_private_key,
                 vapid_claims={'sub': settings.web_push_vapid_subject},
+                headers={'Urgency': 'high', 'Topic': notification_id.replace('-', '')[:32]},
                 timeout=10, ttl=3600, requests_session=transport,
             )
         except WebPushException as exc:

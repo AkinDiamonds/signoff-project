@@ -18,6 +18,24 @@ it('never requests permission on load and explains unsupported devices', async (
   expect(screen.getByRole('button', { name: 'Enable phone notifications' }).hasAttribute('disabled')).toBe(true);
 });
 
+it('updates an existing worker on refresh without requesting permission again', async () => {
+  const requestPermission = vi.fn();
+  const update = vi.fn(async () => undefined);
+  const registration = { update, pushManager: { getSubscription: async () => ({ endpoint: 'fixture' }) } };
+  Object.defineProperty(navigator, 'serviceWorker', { configurable: true,
+    value: { getRegistration: async () => registration } });
+  vi.stubGlobal('PushManager', function () {});
+  vi.stubGlobal('Notification', { permission: 'granted', requestPermission });
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ available: true, public_key: 'AQID',
+    pending_deliveries: 0, failed_deliveries: 0 }), { status: 200, headers: { 'Content-Type': 'application/json' } })));
+  const view = render(<PhoneNotifications />);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Disable phone notifications' })).toBeTruthy());
+  expect(update).toHaveBeenCalledOnce();
+  expect(requestPermission).not.toHaveBeenCalled();
+  view.unmount();
+  Reflect.deleteProperty(navigator, 'serviceWorker');
+});
+
 it('opts in only on a tap and revokes the server destination before browser unsubscribe', async () => {
   const order: string[] = [];
   const requestPermission = vi.fn(async () => 'granted');

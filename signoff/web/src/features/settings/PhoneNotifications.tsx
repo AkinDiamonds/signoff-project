@@ -31,6 +31,7 @@ export const PhoneNotifications: React.FC = () => {
       if (!disposed) setConfig(value);
       if (supported) {
         const registration = await navigator.serviceWorker.getRegistration('/');
+        if (registration) await registration.update();
         const subscription = await registration?.pushManager.getSubscription();
         if (!disposed) setEnabled(Boolean(subscription));
       }
@@ -114,6 +115,8 @@ export const PhoneNotifications: React.FC = () => {
     <h2 style={{ marginTop: 0 }}>Phone notifications</h2>
     <p>Receive a generic review reminder when this site is in the background. Opening it never approves an action.</p>
     <p>On Android, use Chrome over HTTPS. On iPhone or iPad, use iOS/iPadOS 16.4 or later, add this site to your Home Screen, then enable notifications from that app.</p>
+    <p>Installation is optional on Android. If alerts don’t appear, check Android’s Chrome notification settings and the notification tray.</p>
+    {supported && <p>Browser notification permission: {{ granted: 'Allowed', denied: 'Blocked', default: 'Not chosen' }[Notification.permission]}.</p>}
     {!supported && <p>This browser does not support phone notifications. Use the notification inbox.</p>}
     {supported && config && !config.available && <p>Phone notifications need server setup. Your inbox is available.</p>}
     {config && <p>{config.pending_deliveries} pending deliveries · {config.failed_deliveries} failed deliveries.

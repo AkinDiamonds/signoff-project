@@ -2,11 +2,11 @@
 
 ## Current release
 
-Approval checkpoint `6866a37` is on main and Render API/worker/merchant/shop report that exact revision live. Main CI `41430660487` and E2E `41430660537` passed. API readiness reports database connected. This deploy contains the previously reviewed approval identity/idempotency fix, not the subsequent history/toast/push work described below.
+Feature checkpoint `186694a` is on main and Render API/worker/merchant/shop report that exact revision live. Branch CI `41433637902` and main standard CI `41434110074` passed; main E2E `41434110278` had 12 passed/2 failed approval outcome cases. A presentation fix passed the two affected isolated stub browser cases and awaits its own deployment. API is ready, schema is `e08b3df70008`, worker is current, owner routes are protected and push assets/controls are observed served.
 
 Executor confirmation changes remain paused by owner instruction. A recorded CONFIRMED status is not independent proof of an action-specific PayPal receipt. Do not replay uncertain or historical approved actions to test deployment.
 
-## Implemented feature checkpoint (not yet deployed)
+## Implemented features
 
 - Owner-authenticated approval history survives resolved/expired card refreshes. Server time and execution/job state are separate from approval resolution. Original expiring bearer access and resolve locks/checks remain unchanged.
 - Shared accessible, dismissible, deduplicated toasts for policy, approval, shipping, checkout, evidence refresh, connection checks and copying an authenticated dispute link. Pending submission is never described as confirmed execution.
@@ -39,7 +39,9 @@ Before promoting this feature checkpoint to main: require its CI, verify a recov
 
 Previous application code can ignore the added tables and read the inbox. Roll back compatible application code while retaining the new tables and history; the migration refuses a hosted downgrade. Only the existing schema round-trip check on a validated local disposable `signoff_test*` database in test mode may tear down the new tables. Do not replay PayPal actions during rollback.
 
-## Physical Android acceptance — BLOCKED until actual device use
+## Physical Android acceptance — phone display not proven
+
+Owner reported installation failure and no visible notification. FCM accepted two first-attempt phone tests, but that is not proof of display, correct click-through or opt-out. An active subscription remains recorded. Device/browser and Android/Chrome channel details are pending. PNG icon and worker-update compatibility changes are prepared separately; do not label those changes proof that delivery now works.
 
 1. After the feature release is live, sign in on Android Chrome over HTTPS and open Settings.
 2. Tap Enable phone notifications; grant permission deliberately. Do not infer permission from desktop tests.
