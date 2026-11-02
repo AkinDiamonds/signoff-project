@@ -12,7 +12,7 @@ Per plan/04-frontend-spec.md and Step 21:
 import base64
 from datetime import UTC, datetime
 from functools import partial
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 
 from agent.app.agent.evidence_snapshot import EvidenceSnapshotData
 from agent.app.approvals.service import DEMO_APPROVAL_LINKS
-from agent.app.db.models import Approval, Decision, Dispute, EvidenceSnapshot
+from agent.app.db.models import Approval, Decision, Dispute, EvidenceSnapshot, ReviewEvidenceSnapshot
 from agent.app.db.session import get_db_session
 from agent.app.domain.enums import ApprovalResolution, DisputeReason, DisputeStatus, Verdict
 from agent.app.domain.money import Money
@@ -80,6 +80,8 @@ class DisputeDetailResponse(BaseModel):
 
 class EvidenceSnapshotResponse(BaseModel):
     run_id: str
+    capture_kind: Literal["model_run", "pre_model_review"] = "model_run"
+    review_reason: str | None = None
     captured_at: datetime
     content_hash: str
     evidence: EvidenceSnapshotData
@@ -93,8 +95,18 @@ def get_evidence_snapshots(
         raise NotFoundError(f"Dispute '{id}' not found")
     rows = db_session.scalars(select(EvidenceSnapshot).where(EvidenceSnapshot.dispute_id == id)
                               .order_by(EvidenceSnapshot.captured_at.desc()).limit(50))
-    return [EvidenceSnapshotResponse(run_id=str(row.run_id), captured_at=row.captured_at,
-            content_hash=row.content_hash, evidence=EvidenceSnapshotData.model_validate(row.payload)) for row in rows]
+    results = [EvidenceSnapshotResponse(run_id=str(row.run_id), captured_at=row.captured_at,
+               content_hash=row.content_hash, evidence=EvidenceSnapshotData.model_validate(row.payload))
+               for row in rows]
+    reviews = db_session.scalars(select(ReviewEvidenceSnapshot).where(ReviewEvidenceSnapshot.dispute_id == id)
+                                 .order_by(ReviewEvidenceSnapshot.captured_at.desc()).limit(50))
+    results.extend(EvidenceSnapshotResponse(
+        run_id=str(row.id), capture_kind="pre_model_review", review_reason=row.reason, captured_at=row.captured_at,
+        content_hash=row.content_hash, evidence=EvidenceSnapshotData.model_validate(row.payload),
+    ) for row in reviews)
+    results.sort(key=lambda row: (row.captured_at.replace(tzinfo=UTC) if row.captured_at.tzinfo is None
+                                  else row.captured_at, row.run_id), reverse=True)
+    return results[:50]
 
 
 def _encode_cursor(offset: int) -> str:

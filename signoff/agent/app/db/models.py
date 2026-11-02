@@ -247,6 +247,18 @@ class EvidenceSnapshot(Base):
     payload: Mapped[dict[str, Any]] = mapped_column(JSONType, nullable=False)
 
 
+class ReviewEvidenceSnapshot(Base):
+    """Evidence observed on a review exit before a model run exists."""
+
+    __tablename__ = "review_evidence_snapshots"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    dispute_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    reason: Mapped[str] = mapped_column(String(50), nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONType, nullable=False)
+
+
 class Decision(Base):
     """Deterministic gate evaluation record (APPEND-ONLY via database trigger).
 

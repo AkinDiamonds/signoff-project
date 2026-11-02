@@ -1523,6 +1523,12 @@ export interface components {
         /** EvidenceSnapshotResponse */
         EvidenceSnapshotResponse: {
             /**
+             * Capture Kind
+             * @default model_run
+             * @enum {string}
+             */
+            capture_kind: "model_run" | "pre_model_review";
+            /**
              * Captured At
              * Format: date-time
              */
@@ -1530,6 +1536,8 @@ export interface components {
             /** Content Hash */
             content_hash: string;
             evidence: components["schemas"]["EvidenceSnapshotData"];
+            /** Review Reason */
+            review_reason?: string | null;
             /** Run Id */
             run_id: string;
         };

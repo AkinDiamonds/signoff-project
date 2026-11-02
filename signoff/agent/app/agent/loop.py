@@ -33,7 +33,7 @@ from agent.app.agent.schemas import AgentPlan
 from agent.app.agent.screener import screen_dispute_and_context
 from agent.app.agent.tools import READ_TOOL_NAMES, get_dispute_tool
 from agent.app.approvals import create_approval
-from agent.app.db.models import AgentRun, Decision, EvidenceSnapshot, Execution
+from agent.app.db.models import AgentRun, Decision, EvidenceSnapshot, Execution, ReviewEvidenceSnapshot
 from agent.app.db.models import Dispute as DBDispute
 from agent.app.domain.actions import BaseProposedAction, compute_action_hash
 from agent.app.domain.enums import ActionType, ExecutionStatus, JobKind, TimelineEventKind, Verdict
@@ -49,12 +49,22 @@ from agent.app.queue.queue import enqueue_job
 from agent.app.settings import Settings
 from agent.app.store.base import StoreAdapter
 from agent.app.store.local_adapter import LocalStoreAdapter
+from agent.app.store.models import OrderRecord
 from agent.app.store.resolution import resolve_disputed_order
 from agent.app.store.scope import order_scope
 
 logger = logging.getLogger(__name__)
 
 MAX_ACTIONS_PER_PLAN = 2
+
+
+def _record_review_evidence(
+    session: Session, dispute_id: str, reason: str, explanation: str,
+    captured_at: datetime, order: OrderRecord | None = None,
+) -> None:
+    payload, digest = build_snapshot(order, None, explanation=explanation)
+    session.add(ReviewEvidenceSnapshot(dispute_id=dispute_id, reason=reason, content_hash=digest,
+                                       captured_at=captured_at, payload=payload))
 
 MUTATING_TOOL_NAMES: frozenset[str] = frozenset({
     "refund",
@@ -206,6 +216,8 @@ async def run_agent_loop(
 
     # Unsupported reason: the agent never guesses. Stop before planning.
     if not isinstance(support, SupportedReason):
+        _record_review_evidence(session, dispute_id, "unsupported_reason",
+                                "This reason is unsupported; order evidence was not gathered.", now_dt)
         record_ledger_event(
             session,
             dispute_id,
@@ -236,6 +248,9 @@ async def run_agent_loop(
     if resolution.status in {"ambiguous", "unavailable"}:
         reason = "order_ambiguous" if resolution.status == "ambiguous" else "store_unavailable"
         message = "Order evidence could not be resolved safely. Human review required."
+        detail = ("Multiple orders matched; no order evidence was selected." if resolution.status == "ambiguous"
+                  else "The store was unavailable; order evidence could not be checked.")
+        _record_review_evidence(session, dispute_id, reason, detail, now_dt)
         record_ledger_event(
             session, dispute_id, TimelineEventKind.NO_ACTION,
             {"reason": reason, "message": message},
@@ -255,6 +270,9 @@ async def run_agent_loop(
     elif order_context is not None and order_context.tracking_unavailable_reason:
         missing_mode = 'review'
     if missing_mode == 'review':
+        _record_review_evidence(session, dispute_id, "tracking_requires_review",
+                                "Delivery evidence is missing or unsafe; human review required.",
+                                now_dt, order_context)
         record_ledger_event(
             session, dispute_id, TimelineEventKind.NO_ACTION,
             {"reason": "tracking_requires_review",
@@ -298,6 +316,9 @@ async def run_agent_loop(
 
     # Supported reason whose required evidence is missing: no submission, human needed.
     if support.requires_buildable_evidence and (evidence is None or not evidence.buildable):
+        _record_review_evidence(session, dispute_id, "evidence_missing",
+                                "Required evidence could not be prepared; human review required.",
+                                now_dt, order_context)
         record_ledger_event(
             session,
             dispute_id,

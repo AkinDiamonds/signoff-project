@@ -99,6 +99,38 @@ async def test_unsafe_shipping_stops_before_model_or_execution(db_session, reaso
     assert db_session.scalar(select(Job).where(Job.kind == JobKind.EXECUTE_DECISION.value)) is None
 
 
+@pytest.mark.asyncio
+async def test_pre_model_review_preserves_evidence_without_creating_a_model_run(db_session):
+    from agent.app.api.disputes import get_evidence_snapshots
+    from agent.app.db.models import Dispute as StoredDispute
+    from agent.app.db.models import ReviewEvidenceSnapshot
+
+    class UnsafeShippingStore(LocalStoreAdapter):
+        def find_order(self, transaction_id):
+            order = super().find_order(transaction_id)
+            assert order is not None
+            return replace(order, tracking_unavailable_reason="Simulated shipping requires human review.")
+
+    dispute = make_dispute()
+    db_session.add(StoredDispute(id=dispute.dispute_id, state_fingerprint="fp", status="WAITING_FOR_SELLER_RESPONSE",
+                                 reason=dispute.reason.value, amount=Decimal("100.00"), currency="USD", snapshot={}))
+    db_session.commit()
+    result = await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute,
+                                  store_adapter=UnsafeShippingStore(db_session))
+    assert result.human_needed
+    assert db_session.get(AgentRun, result.run_id) is None
+    snapshot = db_session.scalar(select(ReviewEvidenceSnapshot))
+    assert snapshot is not None
+    assert snapshot.reason == "tracking_requires_review"
+    assert snapshot.payload["order_code"]
+    assert snapshot.payload["buildable"] is False
+    assert snapshot.payload["notes"] is None
+    response = get_evidence_snapshots(dispute.dispute_id, db_session)
+    assert len(response) == 1 and response[0].capture_kind == "pre_model_review"
+    assert response[0].review_reason == "tracking_requires_review"
+    assert response[0].evidence.order_code == snapshot.payload["order_code"]
+
+
 @pytest.fixture
 def db_session() -> Session:
     engine = create_engine(
@@ -798,6 +830,15 @@ async def test_store_unavailable_fails_closed_to_human_review(db_session: Sessio
     assert result.actions_count == 0
     assert result.status == "no_action"
     assert len(result.decisions) == 0
+
+    from agent.app.db.models import ReviewEvidenceSnapshot
+
+    review = db_session.scalar(select(ReviewEvidenceSnapshot))
+    assert review is not None and review.payload["order_code"] is None
+    if failure is StoreUnavailable:
+        assert review.reason == "store_unavailable" and "unavailable" in review.payload["explanation"]
+    else:
+        assert review.reason == "order_ambiguous" and "multiple orders" in review.payload["explanation"].lower()
 
     events, _ = get_timeline_events(db_session, dispute.dispute_id)
     kinds = [e["kind"] for e in events]

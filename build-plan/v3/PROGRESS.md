@@ -15,7 +15,7 @@ Status as of 2026-11-02. Details and verification evidence are in [EXECUTION-LOG
 
 1. **T00 audit:** complete the unobserved hosted order, approval and provider diagnostics and the remaining page/control evidence.
 2. **T03–T04 hosted proof:** purchase a fresh sandbox order, confirm its durable PayPal capture correlation, and demonstrate persistent simulated shipping on that order.
-3. **T05 evidence:** capture truthful evidence for pre-model exits, provide refresh/re-evaluation history, and verify missing, invalid and unavailable sources and their displayed provenance. Existing runs must not acquire invented historic evidence.
+3. **T05 evidence:** pre-model review snapshots are implemented in the checkpoint branch; verify them on the deployed release, complete refresh/re-evaluation history, and verify missing, invalid and unavailable sources and their displayed provenance. Existing runs must not acquire invented historic evidence.
 4. **T06 provider reliability:** finish failure-task UX and output truthfulness, and prove valid uncached plans for multiple fictional states through the hosted provider. Preserve bounded repair and human review on failure.
 5. **T07 workflow and execution:** prove webhook deduplication and catch-up, fresh PayPal state and policy checks, lease/restart recovery and uncertain-write reconciliation. Verify actual supported sandbox actions independently in PayPal.
 6. **T08 approvals:** complete concurrency, expiry, stale-state, restart and phone-refresh verification, including a real permitted phone approval and at-most-once action.

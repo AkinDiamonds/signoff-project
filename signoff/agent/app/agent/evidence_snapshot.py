@@ -44,7 +44,9 @@ class EvidenceSnapshotData(BaseModel):
     components: list[SnapshotComponent]
 
 
-def build_snapshot(order: OrderRecord | None, evidence: BuiltEvidence | None) -> tuple[dict[str, object], str]:
+def build_snapshot(
+    order: OrderRecord | None, evidence: BuiltEvidence | None, *, explanation: str | None = None,
+) -> tuple[dict[str, object], str]:
     snapshot = EvidenceSnapshotData(
         order_code=order.order_code if order else None,
         payment_reference=order.paypal_transaction_id if order else None,
@@ -68,7 +70,7 @@ def build_snapshot(order: OrderRecord | None, evidence: BuiltEvidence | None) ->
         buildable=evidence.buildable if evidence else False,
         evidence_type=evidence.evidence_type if evidence else None,
         notes=evidence.notes if evidence else None,
-        explanation=evidence.reason if evidence else "No matching order evidence was available.",
+        explanation=explanation or (evidence.reason if evidence else "No matching order evidence was available."),
         score=evidence.strength.score if evidence else None,
         strength=evidence.strength.label.value if evidence else None,
         components=[

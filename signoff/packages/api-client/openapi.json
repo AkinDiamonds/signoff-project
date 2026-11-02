@@ -1676,6 +1676,15 @@
       },
       "EvidenceSnapshotResponse": {
         "properties": {
+          "capture_kind": {
+            "default": "model_run",
+            "enum": [
+              "model_run",
+              "pre_model_review"
+            ],
+            "title": "Capture Kind",
+            "type": "string"
+          },
           "captured_at": {
             "format": "date-time",
             "title": "Captured At",
@@ -1687,6 +1696,17 @@
           },
           "evidence": {
             "$ref": "#/components/schemas/EvidenceSnapshotData"
+          },
+          "review_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Reason"
           },
           "run_id": {
             "title": "Run Id",

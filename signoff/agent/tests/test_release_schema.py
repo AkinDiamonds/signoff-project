@@ -66,6 +66,27 @@ def test_evidence_snapshot_is_append_only_in_migrated_postgres():
     engine.dispose()
 
 
+def test_review_evidence_is_append_only_in_migrated_postgres():
+    engine = create_engine(Settings().database_url)
+    identifier = uuid.uuid4()
+    with engine.connect() as conn:
+        transaction = conn.begin()
+        try:
+            conn.execute(text("INSERT INTO review_evidence_snapshots "
+                              "(id, dispute_id, reason, content_hash, captured_at, payload) "
+                              "VALUES (:id, 'PP-FICTIONAL', 'store_unavailable', 'hash', now(), '{}')"),
+                         {'id': identifier})
+            for sql in ("UPDATE review_evidence_snapshots SET content_hash='modified' WHERE id=:id",
+                        "DELETE FROM review_evidence_snapshots WHERE id=:id"):
+                savepoint = conn.begin_nested()
+                with pytest.raises(DBAPIError, match='append-only'):
+                    conn.execute(text(sql), {'id': identifier})
+                savepoint.rollback()
+        finally:
+            transaction.rollback()
+    engine.dispose()
+
+
 def test_api_runs_release_preparation_before_serving(monkeypatch):
     calls = []
     monkeypatch.setattr('agent.app.main.prepare_production_schema', lambda settings: calls.append(settings.app_env))

@@ -391,8 +391,8 @@ export const DisputeDetailPage: React.FC = () => {
             {evidenceQuery.isError && <p role="alert">Saved evidence could not be loaded. Try refreshing.</p>}
             {evidenceQuery.data?.length === 0 && <p>No saved evidence snapshot is available for this dispute.</p>}
             {evidenceQuery.data?.map(snapshot => <details key={snapshot.run_id} open={evidenceQuery.data?.[0] === snapshot}>
-              <summary>Run {snapshot.run_id} · {new Date(snapshot.captured_at).toLocaleString()}</summary>
-              <p>Order: {snapshot.evidence.order_code ?? 'Not found'} · Payment: {snapshot.evidence.payment_reference ?? 'Unavailable'}</p>
+              <summary>{snapshot.capture_kind === 'pre_model_review' ? 'Review before model run' : 'Model run'} · {snapshot.run_id} · {new Date(snapshot.captured_at).toLocaleString()}</summary>
+              <p>Order: {snapshot.evidence.order_code ?? 'Unavailable'} · Payment: {snapshot.evidence.payment_reference ?? 'Unavailable'}</p>
               {snapshot.evidence.amount && <p>Order total: {snapshot.evidence.currency} {snapshot.evidence.amount}</p>}
               {snapshot.evidence.items.length > 0 && <p>Items: {snapshot.evidence.items.join(', ')}</p>}
               <p>Evidence strength: {snapshot.evidence.strength ?? 'Unavailable'}{snapshot.evidence.score != null ? ` (${snapshot.evidence.score}/100)` : ''}</p>
@@ -406,7 +406,7 @@ export const DisputeDetailPage: React.FC = () => {
                   {event.source_id && <> · Record {event.source_id}</>}
                 </li>)}
               </ul></>}
-              <p>Gathered for this run. Check the audit trail for submission and PayPal confirmation.</p>
+              <p>{snapshot.capture_kind === 'pre_model_review' ? 'Review stopped before a model plan was created.' : 'Gathered for this run. Check the audit trail for submission and PayPal confirmation.'}</p>
             </details>)}
             {rawEvidence ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>

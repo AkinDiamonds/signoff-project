@@ -138,6 +138,28 @@ describe('Disputes UI feature (Step 25)', () => {
     expect(screen.getByText(/Submission preview: PROOF_OF_FULFILLMENT/)).toBeTruthy();
   });
 
+  it('distinguishes an unavailable store review from a model run or a missing order', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes('/api/disputes/PP-D-1001/evidence')) {
+        return new Response(JSON.stringify([{
+          run_id: 'review-example', capture_kind: 'pre_model_review', review_reason: 'store_unavailable',
+          captured_at: '2026-10-31T20:00:00Z', content_hash: 'abc',
+          evidence: { version: 1, order_code: null, payment_reference: null, order_created_at: null,
+            amount: null, currency: null, items: [], milestones: [], buildable: false,
+            evidence_type: null, notes: null, explanation: 'The store was unavailable; order evidence could not be checked.',
+            score: null, strength: null, components: [] },
+        }]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return mockFetch(input, options);
+    }));
+    await act(async () => { renderAt('/app/disputes/PP-D-1001'); });
+    await waitFor(() => expect(screen.getByText(/Review before model run.*review-example/)).toBeTruthy());
+    expect(screen.getByText(/store was unavailable/)).toBeTruthy();
+    expect(screen.getByText(/Review stopped before a model plan was created/)).toBeTruthy();
+    expect(screen.queryByText(/Order: Not found/)).toBeNull();
+  });
+
   it('does not claim active analysis or invent an approval link while waiting for approval', async () => {
     await act(async () => {
       renderAt('/app/disputes/PP-D-1002');
