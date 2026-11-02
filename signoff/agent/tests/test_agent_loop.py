@@ -149,6 +149,18 @@ async def test_invalid_model_output_records_review_without_an_action(db_session)
     assert failure.payload['run_id'] == str(result.run_id)
 
 
+@pytest.mark.asyncio
+async def test_plan_history_distinguishes_cache_from_unverified_provider(db_session):
+    dispute = make_dispute()
+    service = LLMService(provider=FakeProvider([ProviderResponse('{"actions":[{"action_type":"PROVIDE_EVIDENCE"}]}')]),
+                         cache=ScenarioCache(enabled=True), budget=DailyBudget(Decimal('1.00')))
+    await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute, llm_service=service)
+    await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute, llm_service=service)
+    events, _ = get_timeline_events(db_session, dispute.dispute_id)
+    plans = [event for event in events if event['kind'] == 'PLAN_PROPOSED']
+    assert [event['reasoning_source'] for event in plans] == ['unknown', 'cached']
+
+
 def test_manual_evidence_refresh_adds_history_without_running_agent(db_session):
     from agent.app.api.disputes import refresh_evidence
     from agent.app.db.models import Dispute as StoredDispute

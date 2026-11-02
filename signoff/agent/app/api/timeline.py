@@ -47,6 +47,7 @@ class EvidenceBuiltTimelineEvent(BaseTimelineEvent):
 class PlanProposedTimelineEvent(BaseTimelineEvent):
     kind: Literal[TimelineEventKind.PLAN_PROPOSED] = TimelineEventKind.PLAN_PROPOSED
     action_type: str
+    reasoning_source: Literal["cached", "provider", "unknown"] = "unknown"
 
 
 class GateDecidedTimelineEvent(BaseTimelineEvent):

@@ -2680,6 +2680,16 @@
             "title": "Kind",
             "type": "string"
           },
+          "reasoning_source": {
+            "default": "unknown",
+            "enum": [
+              "cached",
+              "provider",
+              "unknown"
+            ],
+            "title": "Reasoning Source",
+            "type": "string"
+          },
           "sequence_number": {
             "title": "Sequence Number",
             "type": "integer"

@@ -324,6 +324,10 @@ class LLMService:
         return "unavailable"
 
     @property
+    def provider_is_configured(self) -> bool:
+        return isinstance(self._provider, OpenAICompatibleProvider)
+
+    @property
     def mode(self) -> LLMMode:
         """Current operating mode for /api/status."""
         if self._provider is not None and self._budget.remaining_usd >= self._cost_per_call_usd:

@@ -78,7 +78,7 @@ export function renderTimelineEventContent(event: KnownTimelineEvent): {
     case 'PLAN_PROPOSED':
       return {
         title: 'Action plan proposed',
-        details: `Proposed action: ${event.action_type}.`,
+        details: `Proposed action: ${event.action_type}. ${event.reasoning_source === 'cached' ? 'Cached reasoning.' : event.reasoning_source === 'provider' ? 'Provider response.' : 'Reasoning source unavailable.'}`,
       };
     case 'GATE_DECIDED':
       return {

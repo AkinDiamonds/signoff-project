@@ -551,6 +551,9 @@ async def run_agent_loop(
         {
             "action_types": [a.action_type.value for a in ordered_actions],
             "count": len(ordered_actions),
+            "reasoning_source": "cached" if llm_outcome.cached else (
+                "provider" if getattr(llm_service, "provider_is_configured", False) is True else "unknown"
+            ),
         },
     )
 

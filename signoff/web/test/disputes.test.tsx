@@ -273,6 +273,15 @@ describe('Disputes UI feature (Step 25)', () => {
     expect(items[2]?.textContent).toContain('FUTURE_CUSTOM_EVENT');
   });
 
+  it('labels cached reasoning without calling it a live provider response', () => {
+    const event: ApiTimelineEvent = { id: 'plan', dispute_id: 'PP-D-1001', sequence_number: 1,
+      kind: 'PLAN_PROPOSED', action_type: 'PROVIDE_EVIDENCE', reasoning_source: 'cached',
+      created_at: '2026-10-31T20:00:00Z', is_truncated: false };
+    render(<DecisionTimeline events={[event]} />);
+    expect(screen.getByText(/Cached reasoning/)).toBeTruthy();
+    expect(screen.queryByText(/Provider response/)).toBeNull();
+  });
+
   it('collapses long buyer message and toggles expand/collapse', async () => {
     const longMessage = 'A'.repeat(250);
     vi.stubGlobal(

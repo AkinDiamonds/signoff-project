@@ -2027,6 +2027,12 @@ export interface components {
              * @constant
              */
             kind: "PLAN_PROPOSED";
+            /**
+             * Reasoning Source
+             * @default unknown
+             * @enum {string}
+             */
+            reasoning_source: "cached" | "provider" | "unknown";
             /** Sequence Number */
             sequence_number: number;
         };

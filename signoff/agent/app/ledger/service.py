@@ -199,6 +199,10 @@ def get_timeline_events(
             event_dict["action_type"] = sanitized_payload.get("action_type") or ", ".join(
                 action for action in actions if isinstance(action, str)
             )
+            source = sanitized_payload.get("reasoning_source")
+            event_dict["reasoning_source"] = (
+                source if isinstance(source, str) and source in {"cached", "provider"} else "unknown"
+            )
         elif kind == TimelineEventKind.GATE_DECIDED.value:
             event_dict["verdict"] = sanitized_payload.get("verdict", "")
             event_dict["rule_id"] = sanitized_payload.get("rule_id", "")
