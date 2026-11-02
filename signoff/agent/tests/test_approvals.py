@@ -154,6 +154,8 @@ def test_owner_card_survives_new_api_process_without_raw_token(db_session, setup
         with TestClient(app) as client:
             detail = client.get(f"/api/disputes/{dispute.id}").json()
             assert detail["approval_url"] == f"/app/approvals/{approval.id}"
+            assert detail["latest_approval_resolution"] == "PENDING"
+            assert detail["latest_execution_status"] is None
             card = client.get(f"/api/approvals/cards/{approval.id}")
             assert card.status_code == 200 and card.json()["id"] == str(approval.id)
             assert token not in card.text and token not in str(detail)

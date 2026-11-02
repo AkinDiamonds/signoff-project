@@ -1,5 +1,7 @@
 # T12 UI and copy direction — working draft
 
+Implementation status: the first merchant dispute-detail and shell slice is coded locally. The full audited page inventory, mobile browser checks, accessibility and hosted acceptance remain to be completed before T12 can be closed.
+
 This plan is for a first-time small seller checking disputes on a phone. The seller should be able to answer, in order: **What needs me now? Why? What will happen if I act? Did anything actually get sent?** The first design pass covers the merchant dispute journey and uses calm, plain language. The owner selected the **white and cobalt** visual direction and wants **PayPal status, Signoff review state, and action delivery state always visible near the top** of dispute detail.
 
 ## Screen order
