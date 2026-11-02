@@ -3,8 +3,10 @@ import { expect, test } from '@playwright/test';
 
 test('merchant and shop pages fit narrow screens', async ({ page }) => {
   test.setTimeout(120000);
-  const merchant = ['/', '/guide', '/app', '/app/disputes', '/app/disputes/PP-D-1001', '/app/policy', '/app/settings', '/app/notifications', '/approve/sample-token-12345678901234567890'];
-  const shop = ['/', '/cart', '/checkout', '/orders'];
+  const merchant = ['/', '/guide', '/app', '/app/disputes', '/app/disputes/PP-D-1001', '/app/policy', '/app/settings', '/app/notifications', '/app/demo', '/app/pool', '/approve/sample-token-12345678901234567890'];
+  const shop = ['/', '/product/CND-LAV-01', '/cart', '/checkout', '/orders'];
+  const product = { sku: 'CND-LAV-01', name: 'Lavender Candle', description: 'Fictional candle', price: { currency_code: 'USD', value: '21.00' } };
+  await page.route('**/api/shop/catalog**', route => route.fulfill({ json: route.request().url().includes('CND-LAV-01') ? product : [product], headers: { 'access-control-allow-origin': '*' } }));
   const failures: string[] = [];
   for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 800 });
