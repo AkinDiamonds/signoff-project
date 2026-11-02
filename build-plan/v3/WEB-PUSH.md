@@ -35,7 +35,7 @@ Do not regenerate the pair at startup or on deploy. Rotation requires browser re
 
 Migration `e08b3df70008` adds subscription/delivery tables and permits a null notification source event for scheduled reminders/tests. It does not rewrite old inbox, approval, decision or execution records. A populated local upgrade and repeated upgrade preserve existing notification/source/outbox identities.
 
-Before promoting this feature checkpoint to main: require its CI, verify a recoverable hosted database backup/PITR checkpoint, then use the existing migration/Render rollout. Hosted backup evidence is not available through the current Render connector; no browser connector is available to inspect the backup page. Do not call local migration success hosted backup proof.
+Before promoting this feature checkpoint to main: require its CI, verify a recoverable hosted database backup/PITR checkpoint, then use the existing migration/Render rollout. The owner supplied the Render PITR form showing an available checkpoint on 2 November 2026 at 11:42:53 WAT (10:42:53 UTC). This establishes an available pre-migration recovery point, not a completed restore drill; no recovery/clone was started. Alembic CLI predeploy and API/worker startup share the same migration lock, so concurrent deployment processes cannot apply the migration simultaneously.
 
 Previous application code can ignore the added tables and read the inbox. Roll back compatible application code while retaining the new tables and history; the migration refuses a hosted downgrade. Only the existing schema round-trip check on a validated local disposable `signoff_test*` database in test mode may tear down the new tables. Do not replay PayPal actions during rollback.
 

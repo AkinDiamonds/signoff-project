@@ -1,5 +1,9 @@
 """Forward release migration is serialized; startup fails closed on migration errors."""
 
+import os
+import subprocess
+import sys
+import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
@@ -12,9 +16,46 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
 from agent.app.db.models import Order
-from agent.app.db.release import upgrade_release_schema
+from agent.app.db.release import _MIGRATION_LOCK, upgrade_release_schema
 from agent.app.main import create_app
 from agent.app.settings import AppEnv, Settings
+
+
+def test_cli_migrations_wait_for_startup_migration_lock():
+    engine = create_engine(Settings().database_url)
+    process = None
+    with engine.connect() as lock:
+        lock.execute(text('SELECT pg_advisory_lock(:key)'), {'key': _MIGRATION_LOCK})
+        lock.commit()
+        try:
+            process = subprocess.Popen(
+                [sys.executable, '-m', 'alembic', 'current'],
+                env=dict(os.environ, PGAPPNAME='signoff_migration_lock_test'),
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            waiting = False
+            deadline = time.monotonic() + 10
+            while time.monotonic() < deadline:
+                with engine.connect() as inspect:
+                    waiting = bool(inspect.scalar(text(
+                        "SELECT count(*) FROM pg_stat_activity WHERE "
+                        "application_name='signoff_migration_lock_test' AND wait_event='advisory'"
+                    )))
+                if waiting or process.poll() is not None:
+                    break
+                time.sleep(0.05)
+            assert waiting, 'CLI predeploy must wait for the shared startup migration lock'
+        finally:
+            lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': _MIGRATION_LOCK})
+            lock.commit()
+            if process is not None:
+                try:
+                    assert process.wait(timeout=15) == 0
+                finally:
+                    if process.poll() is None:
+                        process.kill()
+                        process.wait(timeout=5)
+    engine.dispose()
 
 
 def test_concurrent_forward_release_checks_preserve_order_data():

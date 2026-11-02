@@ -9,10 +9,11 @@ sys.path.insert(0, str(root_dir / "signoff"))
 sys.path.insert(0, str(root_dir / "signoff" / "agent"))
 
 from alembic import context
-from sqlalchemy import Connection, engine_from_config, pool
+from sqlalchemy import Connection, engine_from_config, pool, text
 
 import agent.app.db.models  # noqa: F401 - ensure all models register with Base.metadata
 from agent.app.db.base import Base
+from agent.app.db.release import _MIGRATION_LOCK
 from agent.app.settings import Settings
 
 # Alembic Config object
@@ -69,14 +70,18 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
 
-    with connectable.connect() as connection:
+    # Render's predeploy CLI and API/worker startup must serialize against
+    # the same lock. Startup's supplied connection is already locked above.
+    with connectable.connect() as connection, connection.begin():
+        if connection.dialect.name == 'postgresql':
+            connection.execute(text("SET LOCAL statement_timeout = '60s'"))
+            connection.execute(text('SELECT pg_advisory_xact_lock(:key)'), {'key': _MIGRATION_LOCK})
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
             compare_server_default=True,
         )
-
         with context.begin_transaction():
             context.run_migrations()
 
