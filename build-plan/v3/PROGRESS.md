@@ -1,26 +1,35 @@
-# Signoff implementation progress
+# Signoff v3 progress
 
-This is the progress board. Verified outcomes are in EXECUTION-LOG.md; product choices are in 02-owner-decisions.md. Code being pushed to a checkpoint branch does not mean Render has deployed it.
+Status as of 2026-11-02. Details and verification evidence are in [EXECUTION-LOG.md](EXECUTION-LOG.md); the [execution plan](00-execution-plan.md) defines each exit criterion. Implementation or local tests alone do not complete a task that also requires deployed proof.
 
-| Step | State | Visible outcome |
-|---|---|---|
-| T00 audit | PARTIAL | 39 deployed page/viewport observations recorded; hosted order/valid approval/provider diagnostics still unobserved. |
-| T01 engineering baseline | PASS locally | 489 backend + 169 frontend tests; lint/types/import contracts/parity/builds pass. |
-| T02 owner access and readiness | PASS locally and on Render desktop Chromium | Owner login/session/reload, Secure/HttpOnly/Partitioned cookie, CSRF rejection, logout/denied access and fresh worker heartbeat verified. Physical Android remains pending. [Deployed evidence](evidence/release-2026-10-31/README.md). |
-| T03 commerce | IMPLEMENTED; hosted proof pending | Durable IDs/intents, exact capture/payee validation, stable request IDs, concurrent/restart recovery and shared resolver. Merchant/demo scope and canonical alias checks complete in 618ed19; real hosted purchase proof stays open. |
-| T04 simulated fulfilment | PASS locally; deployed surface verified | Persistent automatic/manual stages, pauses, safe timestamps, scoped owner controls and reload/concurrency checks. |
-| T05 evidence | PARTIAL; saved model-run snapshots deployed | Inspectable immutable model-run evidence; pre-model exit snapshots, refresh and merchant missing-evidence policy remain. |
-| T06–T08 agent and approvals | PARTIAL | Durable owner approval access, grounded model evidence, strict output checks and stale-policy guard shipped; full re-gating, failure UX, concurrency and provider proof remain. |
-| T09–T10 notifications | PARTIAL; inbox deployed | Persistent in-app inbox and outbox deployed; toasts, deadline reminders, demo inbox, push delivery and Android verification remain. |
-| T11–T13 product/mobile validation | TODO | Accurate dashboard, coherent mobile flows and complete regression suite. |
-| T14–T17 Render release and proof | INITIAL RELEASE OBSERVED; full journey pending | Main auto-deploy used. Deployed owner access, worker presence, PayPal-only buyer handoff and 390px shop layout observed. Fresh actual purchase/dispute/model/execution and physical-phone proof remain. |
+## Completed checkpoints
 
-Checkpoint branch: `codex/signoff-v3`. The owner has requested commits/pushes at verified milestones. Keep checkpoint SHA/push/CI status in EXECUTION-LOG.md. Show browser screenshots as user-facing features become available, and label local versus deployed evidence.
+- **T01 engineering baseline:** local lint, types, tests, import contracts, parity and builds passed. These checks must continue to pass for subsequent changes.
+- **T02 owner access and readiness:** owner session, CSRF protection and readiness were verified locally and on Render with desktop Chromium. Physical Android verification is outstanding.
+- **T03–T04 implementation:** payment identity and recovery, scoped order resolution, and persistent simulated shipping were implemented and locally tested. Shipping surfaces were observed on Render; a fresh hosted purchase and shipment progression remain unproven.
+- **T05 increments:** immutable model-run evidence snapshots and the merchant's missing-delivery policy are implemented and deployed. The default is human review; the optional settlement path remains gated.
+- **T06–T08 increments:** model evidence grounding and stricter output validation, a signing-policy freshness guard, and durable owner access to pending approvals are implemented. A real provider returned valid plans for two fictional local cases; this was not a hosted worker or PayPal execution test.
+- **T09 increment:** the persistent owner inbox and transactional outbox are deployed. Main CI recorded 631 backend tests and the full cross-app suite recorded 13 passing browser cases. A deployed empty inbox was observed; push delivery is not implemented.
 
-Pushed product checkpoints: T01 `07f1d7b`; T02 code `20f24fb`; prior handoff `d491e61`. GitHub CI for both T02 code and prior handoff is confirmed successful. Earlier local results have not been rerun in the fresh workspace.
+## Remaining work, in plan order
 
-Latest: 600 backend / 185 frontend tests, lint/types/import/parity/client freshness and both builds PASS. Native local HTTPS shipping controls PASS; phone viewport only. Earlier owner access on Render is verified; shipping page/authenticated API and both new UI bundles observed on Render. Main 1930967 CI and full E2E PASS (12/12). See [shipping evidence](evidence/t04/README.md).
+1. **T00 audit:** complete the unobserved hosted order, approval and provider diagnostics and the remaining page/control evidence.
+2. **T03–T04 hosted proof:** purchase a fresh sandbox order, confirm its durable PayPal capture correlation, and demonstrate persistent simulated shipping on that order.
+3. **T05 evidence:** capture truthful evidence for pre-model exits, provide refresh/re-evaluation history, and verify missing, invalid and unavailable sources and their displayed provenance. Existing runs must not acquire invented historic evidence.
+4. **T06 provider reliability:** finish failure-task UX and output truthfulness, and prove valid uncached plans for multiple fictional states through the hosted provider. Preserve bounded repair and human review on failure.
+5. **T07 workflow and execution:** prove webhook deduplication and catch-up, fresh PayPal state and policy checks, lease/restart recovery and uncertain-write reconciliation. Verify actual supported sandbox actions independently in PayPal.
+6. **T08 approvals:** complete concurrency, expiry, stale-state, restart and phone-refresh verification, including a real permitted phone approval and at-most-once action.
+7. **T09 notifications:** add accessible shared toasts, deadline reminders, appropriately scoped demo notifications and durable outbox delivery/retry behavior. Verify restart and recipient isolation.
+8. **T10 web push:** implement opt-in subscriptions, secure VAPID configuration, outbox delivery and expiration/retry handling; prove background delivery, click-through and opt-out on a physical Android phone.
+9. **T11 dashboard and audit:** reconcile current dispute, agent, approval and execution states; verify KPIs and chronological history against source records.
+10. **T12 mobile and copy:** finish the audited pages and controls, accessible interaction and honest copy; verify 320px/390px layouts, keyboard and phone journeys.
+11. **T13 acceptance suite:** consolidate the acceptance matrix, populated-schema migration, process separation, security, accessibility and CI checks. Preserve failures and do not weaken assertions.
+12. **T14–T15 release:** prepare and verify the exact compatible release, migrations, backup, service revisions and rollback; deploy through the existing authorized Render auto-deploy flow.
+13. **T16 hosted journey:** prove the fresh buyer checkout → PayPal Resolution Center dispute → webhook/sync → evidence → gated action or approval → PayPal result, with dated sanitized evidence and phone push.
+14. **T17 handoff:** update the judge journey, access instructions, claims, troubleshooting and rollback, and prepare the competition demonstration using only proven behavior.
 
-Next: T05 evidence and policy, fresh sandbox purchase → PayPal Resolution Center dispute → webhook proof. Physical Android and later product steps remain pending.
+## Current release and limits
 
-Latest source main ddab492; CI and full E2E passed. Policy setting is deployed; exact serving revision for the subsequent backend-only model update is not independently verified. Full UI/copy and notification/push work remain open.
+GitHub `main` was observed at `2497e607e10c6745a6636aa0f14f88e59dc1a5a6`; checkpoint branch `codex/signoff-v3` was observed at `02f6c4917b4eaaa05973514b106d72278ca92d65`. The latter adds release documentation. The inbox API and merchant bundle were observed on Render; the worker's exact revision was not independently verified. See the latest execution-log entries for dates, commands, CI and evidence.
+
+The full v3 definition of done remains open. In particular, no fresh deployed end-to-end PayPal action or physical Android push has been proven. The supplied competition deadline is November 12, 2026 at 21:00 Africa/Lagos; the remaining scope and external/device proof require careful scheduling.

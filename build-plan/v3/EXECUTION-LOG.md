@@ -359,3 +359,8 @@ This checkpoint is on a feature branch and is not release-ready until the cookie
 - Main CI 41391733584 succeeded (631 backend tests), and full E2E 41391733588 succeeded (13 browser cases). Local full backend 630 plus subsequent dedicated PostgreSQL atomic rollback/dedup tests, frontend 190, types/builds and full cross-app 13/13 passed. A focused browser repeat verified link navigation and read status across reload.
 - Deployed API schema and merchant bundle were observed. Authenticated browser verified inbox GET 200, zero items/unread, and 390px no-overflow. No live notifications were marked read and no real dispute/payment was changed. Old events were not backfilled; new qualifying events create inbox items. Browser evidence is desktop Chromium, not a physical Android test. The worker's exact new source revision was not independently verified.
 - This release is in-app inbox only. Delivery outbox entries are retained but push delivery, deadline reminders, demo-session inbox capability and shared toasts are not implemented. Opt-in phone push and physical-device verification remain T10.
+
+### Progress inventory refresh — 2026-11-02
+
+- Fetched the remote checkpoint and fast-forwarded the clean local checkout from ddab492 to 02f6c49. GitHub reported main at 2497e60 and the checkpoint branch at 02f6c49. No product changes or provider mutations were made.
+- Reconciled PROGRESS.md with this log: the missing-delivery policy and inbox are implemented, while their outstanding evidence, delivery and hosted acceptance criteria remain open. Listed the remaining v3 tasks in plan order. This is a documentation checkpoint, not a declaration that those tasks are complete.
