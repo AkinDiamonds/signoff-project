@@ -71,6 +71,18 @@ test('dispute deep link survives refresh and browser back', async ({ page }) => 
   await expect(page.getByTestId('dispute-link-PP-D-1001')).toBeVisible();
 });
 
+test('dispute list presents readable cards on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto('/app/disputes');
+  const row = page.getByTestId('dispute-row-PP-D-1001');
+  await expect(row).toBeVisible();
+  await expect(row).toHaveCSS('display', 'block');
+  await expect(row.getByText('Waiting for your response')).toBeVisible();
+  expect(await row.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+  const result = await new AxeBuilder({ page }).analyze();
+  expect(result.violations.filter(v => v.impact === 'serious' || v.impact === 'critical')).toEqual([]);
+});
+
 test('buyer pages have no serious accessibility violations', async ({ page }) => {
   test.setTimeout(90000);
   await page.setViewportSize({ width: 390, height: 800 });

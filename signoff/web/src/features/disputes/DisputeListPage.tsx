@@ -167,8 +167,13 @@ export const DisputeListPage: React.FC = () => {
         cell: (row) => <Money money={row.amount} testId={`dispute-amount-${row.id}`} />,
       },
       {
+        id: 'status',
+        header: 'PayPal status',
+        cell: (row) => <StatusBadge status={row.status} />,
+      },
+      {
         id: 'verdict',
-        header: 'Verdict',
+        header: 'Latest review decision',
         cell: (row) => (
           <StatusBadge
             status={row.latest_verdict ?? 'UNKNOWN'}

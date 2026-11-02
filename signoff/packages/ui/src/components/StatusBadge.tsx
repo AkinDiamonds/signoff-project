@@ -40,6 +40,8 @@ export function resolveBadgePalette(val: string): Palette {
     case 'UNDER_REVIEW':
     case 'WAITING_FOR_SELLER':
     case 'WAITING_FOR_BUYER':
+    case 'WAITING_FOR_SELLER_RESPONSE':
+    case 'WAITING_FOR_BUYER_RESPONSE':
     case 'UNFULFILLED':
       return {
         bg: colors.verdict.NEEDS_APPROVAL.bg,
@@ -80,7 +82,13 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
 }) => {
   const effectiveVal = verdict || status || 'UNKNOWN';
   const palette = resolveBadgePalette(effectiveVal);
-  const displayLabel = label || palette.defaultLabel;
+  const statusLabels: Record<string, string> = {
+    WAITING_FOR_SELLER_RESPONSE: 'Waiting for your response',
+    WAITING_FOR_BUYER_RESPONSE: 'Waiting for buyer',
+    UNDER_REVIEW: 'Under PayPal review',
+    RESOLVED: 'Resolved',
+  };
+  const displayLabel = label || (status && !verdict ? statusLabels[status] : undefined) || palette.defaultLabel;
   const testAttr =
     testId ?? `status-badge-${effectiveVal.toLowerCase().replace(/_/g, '-')}`;
 
@@ -92,7 +100,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
         display: 'inline-flex',
         alignItems: 'center',
         gap: '4px',
-        height: '20px',
+        minHeight: '20px',
         padding: '0 8px',
         borderRadius: radius.pill,
         fontSize: typography.fontSizeSmall,
@@ -102,7 +110,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
         border: `1px solid ${palette.border}`,
         color: palette.text,
         boxSizing: 'border-box',
-        whiteSpace: 'nowrap',
+        whiteSpace: 'normal',
       }}
     >
       <span aria-hidden="true" style={{ fontSize: '11px' }}>

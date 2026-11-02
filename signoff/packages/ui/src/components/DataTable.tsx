@@ -59,6 +59,7 @@ export function DataTable<T>({
   return (
     <div
       data-testid={testId}
+      className="signoff-data-table"
       style={{
         width: '100%',
         overflowX: 'auto',
@@ -68,6 +69,15 @@ export function DataTable<T>({
         boxShadow: '0 1px 0 rgba(0, 0, 0, 0.05)',
       }}
     >
+      <style>{`
+        @media (max-width: 600px) {
+          .signoff-data-table table, .signoff-data-table tbody { display: block; width: 100%; }
+          .signoff-data-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+          .signoff-data-table tr { display: block; height: auto !important; padding: 12px 16px; }
+          .signoff-data-table td { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; text-align: left !important; padding: 6px 0 !important; overflow-wrap: anywhere; }
+          .signoff-data-table td::before { content: attr(data-label); font-weight: 600; color: #4b5563; }
+        }
+      `}</style>
       <table
         data-testid={tableTestId}
         style={{
@@ -166,6 +176,7 @@ export function DataTable<T>({
                   return (
                     <td
                       key={col.id}
+                      data-label={typeof col.header === 'string' ? col.header : ''}
                       style={{
                         padding: `0 ${spacing[2]}`,
                         color: colors.ink,
