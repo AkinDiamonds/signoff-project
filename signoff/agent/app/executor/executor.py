@@ -214,6 +214,11 @@ async def execute_decision(
             error="EXEC-STALE: Dispute state changed since decision",
         )
 
+    # Serialize attempts for the same dispute until the write-ahead intent is
+    # committed. Different decision records can represent the same action.
+    if session.get_bind().dialect.name == "postgresql":
+        session.execute(select(func.pg_advisory_xact_lock(func.hashtext(clean_dispute_id))))
+
     # Step 3: Ensure decision record in DB and check for duplicate submission
     dec_uuid = ensure_decision_record(
         session=session,
@@ -223,9 +228,14 @@ async def execute_decision(
         decision_id=decision_id,
     )
 
-    # Check if an execution already exists for this decision_id (one call only)
+    # An approval creates a distinct decision; execution identity remains the
+    # dispute, fingerprint and action, including uncertain or failed attempts.
     existing_exec = session.execute(
-        select(Execution).where(Execution.decision_id == dec_uuid)
+        select(Execution).join(Decision, Execution.decision_id == Decision.id).where(
+            Execution.dispute_id == clean_dispute_id,
+            Decision.action_hash == decision.action_hash,
+            Decision.dispute_fingerprint == decision.dispute_fingerprint,
+        ).order_by(Execution.created_at, Execution.id).limit(1)
     ).scalar_one_or_none()
 
     if existing_exec is not None:
@@ -238,7 +248,7 @@ async def execute_decision(
         return ExecutionResult(
             status=ExecutionStatus(existing_exec.status),
             dispute_id=clean_dispute_id,
-            decision_id=dec_uuid,
+            decision_id=existing_exec.decision_id,
             execution_id=existing_exec.id,
             http_status=existing_exec.http_status,
             paypal_debug_id=existing_exec.paypal_debug_id,

@@ -62,6 +62,12 @@ from agent.app.queue.queue import enqueue_job
 
 logger = logging.getLogger(__name__)
 
+
+def _resolution_decision_id(dispute_id: str, action_hash: str, fingerprint: str, verdict: Verdict) -> uuid.UUID:
+    """Keep resolution decisions distinct from original gates and stable across retries."""
+    name = f"approval-resolution:{dispute_id}:{action_hash}:{fingerprint}:{verdict.value}"
+    return uuid.uuid5(uuid.NAMESPACE_OID, name)
+
 DEFAULT_APPROVAL_TTL = timedelta(days=3)
 MIN_EXPIRY_MARGIN = timedelta(hours=1)
 
@@ -389,6 +395,8 @@ def _resolve_approval(
             dispute_fingerprint=decision.dispute_fingerprint,
             charter_version=decision.charter_version,
             also_triggered=[decision.rule_id],
+            decision_id=_resolution_decision_id(approval.dispute_id, decision.action_hash,
+                                                 decision.dispute_fingerprint, Verdict.DENY),
         )
 
         record_ledger_event(
@@ -443,6 +451,8 @@ def _resolve_approval(
             dispute_fingerprint=decision.dispute_fingerprint,
             charter_version=decision.charter_version,
             also_triggered=waived_dec.also_triggered,
+            decision_id=_resolution_decision_id(approval.dispute_id, decision.action_hash,
+                                                 decision.dispute_fingerprint, Verdict.ALLOW),
         )
 
         approval.resolution = ApprovalResolution.APPROVE.value
@@ -472,7 +482,8 @@ def _resolve_approval(
             approval_id=str(approval.id),
             dispute_id=approval.dispute_id,
             decision_id=new_decision.id,
-            executed=True,
+            queued=True,
+            executed=False,
         )
 
     if isinstance(request, EditResolveRequest):
@@ -567,6 +578,8 @@ def _resolve_approval(
             dispute_fingerprint=re_gated.dispute_fingerprint,
             charter_version=re_gated.charter_version,
             also_triggered=list(also_triggered),
+            decision_id=_resolution_decision_id(approval.dispute_id, re_gated.action_hash,
+                                                 re_gated.dispute_fingerprint, verdict_to_save),
         )
 
         approval.resolution = ApprovalResolution.EDIT.value
@@ -600,7 +613,8 @@ def _resolve_approval(
             approval_id=str(approval.id),
             dispute_id=approval.dispute_id,
             decision_id=new_decision.id,
-            executed=executed,
+            queued=executed,
+            executed=False,
         )
 
     raise EditValidationError(f"Unsupported resolve action: '{getattr(request, 'action', None)}'")

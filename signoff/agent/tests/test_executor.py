@@ -355,6 +355,62 @@ async def test_executor_duplicate_submission_one_call_only(db_session: Session):
         assert res2.status == ExecutionStatus.CONFIRMED
         assert res2.execution_id == res1.execution_id
 
+        # The same action can also have a distinct approved decision. That must
+        # not turn a previously sent action into a second PayPal call.
+        approved_id = uuid.uuid4()
+        res3 = await execute_decision(
+            session=db_session, decision=decision, action=action, dispute_id="PP-D-12345",
+            read_client=read_client, mutating_client=mutating_client, decision_id=approved_id,
+        )
+        assert post_count == 1
+        assert res3.execution_id == res1.execution_id
+
+
+def test_postgres_concurrent_distinct_decisions_send_only_once():
+    import asyncio
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+
+    from agent.app.paypal.mutating_client import MutatingResult
+    from agent.app.settings import Settings
+
+    engine = create_engine(Settings().database_url)
+    dispute_id = f"PP-CONCURRENT-{uuid.uuid4().hex}"
+    dispute = make_sample_paypal_dispute(dispute_id=dispute_id)
+    action = SendMessage(message="Fictional test message")
+    decision = make_gate_allow_decision(action, dispute)
+    barrier = threading.Barrier(2)
+    lock = threading.Lock()
+    calls: list[str] = []
+
+    class ReadClient:
+        async def get_dispute(self, _dispute_id):
+            return dispute
+
+    class MutatingClient:
+        async def execute_action(self, **_kwargs):
+            with lock:
+                calls.append("sent")
+            await asyncio.sleep(0.2)
+            return MutatingResult(status_code=200, debug_id=None, data={})
+
+    def run_attempt():
+        with Session(engine) as session:
+            barrier.wait(timeout=5)
+            return asyncio.run(execute_decision(session, decision, action, dispute_id,
+                                               read_client=ReadClient(), mutating_client=MutatingClient(),
+                                               decision_id=uuid.uuid4()))
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(lambda _: run_attempt(), range(2)))
+        assert calls == ["sent"]
+        assert results[0].execution_id == results[1].execution_id
+        with Session(engine) as session:
+            assert len(session.scalars(select(Execution).where(Execution.dispute_id == dispute_id)).all()) == 1
+    finally:
+        engine.dispose()
+
 
 @pytest.mark.asyncio
 async def test_executor_paypal_4xx_marks_failed_with_debug_id(db_session: Session):

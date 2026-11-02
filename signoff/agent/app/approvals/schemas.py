@@ -146,4 +146,5 @@ class ResolveResponse(BaseModel):
     # UUID of the persisted decision, so callers can look it up directly.
     # Serialized as a string by Pydantic/FastAPI.
     decision_id: uuid.UUID | None = None
+    queued: bool = False
     executed: bool = False

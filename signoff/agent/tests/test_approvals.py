@@ -293,7 +293,7 @@ def test_resolve_approve_executes_waiver(db_session, setup_pending_approval):
     outcome = resolve_approval(db_session, raw_token, req, now=now_dt)
 
     assert outcome.resolution == "APPROVE"
-    assert outcome.executed is True
+    assert outcome.queued is True and outcome.executed is False
     assert outcome.decision_id is not None
 
     # Verify new decision has ALLOW and rule A-01
@@ -313,6 +313,57 @@ def test_resolve_approve_executes_waiver(db_session, setup_pending_approval):
     updated_app = db_session.scalar(select(Approval).where(Approval.id == approval.id))
     assert updated_app.resolution == ApprovalResolution.APPROVE.value
     assert updated_app.resolved_at is not None
+
+
+def test_approval_of_deterministic_gate_decision_creates_distinct_allowed_record(db_session, setup_pending_approval):
+    from agent.app.ledger.service import record_decision
+
+    _, _, original, dispute = setup_pending_approval
+    decision = record_decision(db_session, dispute_id=original.dispute_id, action_type=original.action_type,
+                               action_payload=original.action_payload, verdict=original.verdict,
+                               rule_id=original.rule_id, reason=original.reason, action_hash=original.action_hash,
+                               dispute_fingerprint=original.dispute_fingerprint,
+                               charter_version=original.charter_version)
+    approval, token = create_approval(db_session, decision, parse_dispute(dispute.snapshot),
+                                      now=datetime(2026, 10, 6, 12, tzinfo=UTC))
+    db_session.commit()
+    result = resolve_approval(db_session, token, ApproveResolveRequest(action="APPROVE"),
+                              now=datetime(2026, 10, 6, 12, tzinfo=UTC))
+    allowed = db_session.get(Decision, result.decision_id)
+    assert allowed is not None and allowed.id != decision.id
+    assert allowed.verdict == Verdict.ALLOW.value and decision.verdict == Verdict.NEEDS_APPROVAL.value
+    assert db_session.get(Approval, approval.id).resolution == ApprovalResolution.APPROVE.value
+
+
+@pytest.mark.asyncio
+async def test_deterministic_approved_decision_reaches_worker_as_allowed(
+    db_session, setup_pending_approval, monkeypatch,
+):
+    from unittest.mock import AsyncMock
+
+    from agent.app.executor.job import handle_execute_decision_job
+    from agent.app.ledger.service import record_decision
+    from agent.app.policy.charter import get_or_seed_charter
+
+    _, _, original, dispute = setup_pending_approval
+    original = record_decision(db_session, dispute_id=original.dispute_id, action_type=original.action_type,
+                               action_payload=original.action_payload, verdict=original.verdict,
+                               rule_id=original.rule_id, reason=original.reason, action_hash=original.action_hash,
+                               dispute_fingerprint=original.dispute_fingerprint,
+                               charter_version=original.charter_version)
+    _, token = create_approval(db_session, original, parse_dispute(dispute.snapshot),
+                               now=datetime(2026, 10, 6, 12, tzinfo=UTC))
+    get_or_seed_charter(db_session, merchant_id="default")
+    db_session.commit()
+    resolve_approval(db_session, token, ApproveResolveRequest(action="APPROVE"),
+                     now=datetime(2026, 10, 6, 12, tzinfo=UTC))
+    job = db_session.scalar(select(Job).where(Job.kind == JobKind.EXECUTE_DECISION.value))
+    executor = AsyncMock()
+    monkeypatch.setattr("agent.app.executor.job.execute_decision", executor)
+    await handle_execute_decision_job(job, db_session, read_client=object(), mutating_client=object())
+    assert executor.await_count == 1
+    assert executor.await_args.kwargs['decision'].verdict == Verdict.ALLOW
+    assert executor.await_args.kwargs['decision_id'] != original.id
 
 
 # ---------------------------------------------------------------------------
@@ -360,7 +411,7 @@ def test_resolve_edit_success(db_session, setup_pending_approval):
     outcome = resolve_approval(db_session, raw_token, req, now=now_dt)
 
     assert outcome.resolution == "EDIT"
-    assert outcome.executed is True
+    assert outcome.queued is True and outcome.executed is False
 
     # Edited decision was saved
     new_dec = db_session.scalar(select(Decision).where(Decision.id == outcome.decision_id))

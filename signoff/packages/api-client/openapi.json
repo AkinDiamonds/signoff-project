@@ -2872,6 +2872,11 @@
             "title": "Executed",
             "type": "boolean"
           },
+          "queued": {
+            "default": false,
+            "title": "Queued",
+            "type": "boolean"
+          },
           "resolution": {
             "title": "Resolution",
             "type": "string"

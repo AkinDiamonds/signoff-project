@@ -2112,6 +2112,11 @@ export interface components {
              * @default false
              */
             executed: boolean;
+            /**
+             * Queued
+             * @default false
+             */
+            queued: boolean;
             /** Resolution */
             resolution: string;
             /**

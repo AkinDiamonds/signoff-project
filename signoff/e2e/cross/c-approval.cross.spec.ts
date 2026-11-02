@@ -12,6 +12,20 @@ const SHOP_URL = process.env.SHOP_URL ?? 'http://localhost:5174';
 const WEB_URL = process.env.WEB_URL ?? 'http://localhost:5173';
 const BUYER_EMAIL = 'casey.nguyen@example.test';
 
+test('C: unchanged approval reaches the stub provider once @full', async ({ page, request, session }) => {
+  const { disputeId } = await createScenario(request, 'C', session.id);
+  await stub.emit(request, disputeId, ['CUSTOMER.DISPUTE.CREATED']);
+  await waitForTimeline(request, disputeId, (events) => hasKind(events, 'APPROVAL_REQUESTED'));
+  await session.applyTo(page);
+  const link = await approvalUrl(request, disputeId);
+  await page.goto(link);
+  await page.getByTestId('approval-approve-button').tap();
+  await expect(page.getByTestId('outcome-approved')).toBeVisible();
+  const items = await waitForTimeline(request, disputeId, (events) => hasKind(events, 'EXECUTION_CONFIRMED'));
+  expect(items.filter(item => item.kind === 'EXECUTION_INTENDED')).toHaveLength(1);
+  expect((await stub.state(request)).disputes[disputeId]?.offer).toBeTruthy();
+});
+
 test('C: merchant approves an edited offer on a phone @full', async ({ browser, page, request, session }) => {
   const { disputeId } = await createScenario(request, 'C', session.id);
   await stub.emit(request, disputeId, ['CUSTOMER.DISPUTE.CREATED']);
