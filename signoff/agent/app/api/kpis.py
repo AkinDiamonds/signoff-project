@@ -3,9 +3,8 @@
 Per plan/04-frontend-spec.md and Step 21:
 - Open disputes: status needs seller response or approval pending.
 - Dollars at risk: sum of amounts on open USD disputes.
-- Recovered: sum of amounts on disputes resolved in the merchant's favor.
-- Conceded: sum of amounts refunded or paid out via accepted claims/settled offers.
-- Share auto-resolved: disputes closed with no human approval / closed disputes.
+- Recovered/conceded: disputed amounts with explicit seller/buyer-favour outcomes.
+- Auto-resolution attribution is unavailable until action-specific proof is verified.
 - Estimated hours saved: closed disputes * assumed minutes each; returns assumption value.
 - Edge cases:
   * No closed disputes: ratios/hours are null (None), never NaN or divide-by-zero.
@@ -22,9 +21,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from agent.app.db.models import Approval, Decision, Dispute
+from agent.app.db.models import Approval, Dispute
 from agent.app.db.session import get_db_session
-from agent.app.domain.enums import ActionType, ApprovalResolution, DisputeStatus, Verdict
+from agent.app.domain.enums import ApprovalResolution, DisputeStatus
 
 router = APIRouter(prefix="/api/kpis", tags=["KPIs"])
 
@@ -44,15 +43,15 @@ class KpiResponse(BaseModel):
         description="Sum of amounts on USD disputes resolved in merchant's favor"
     )
     conceded: str = Field(
-        description="Sum of amounts refunded or conceded on USD disputes"
+        description="Disputed USD amounts with an explicit buyer-favour outcome; not a payment total"
     )
     closed_disputes: int = Field(description="Total count of closed disputes")
-    auto_resolved_disputes: int = Field(
-        description="Count of closed disputes resolved without human approval"
+    auto_resolved_disputes: int | None = Field(
+        default=None, description="Unavailable until action-specific resolution attribution is verified"
     )
     share_auto_resolved: float | None = Field(
         default=None,
-        description="Proportion of closed disputes auto-resolved (null when closed disputes is 0)",
+        description="Unavailable until action-specific resolution attribution is verified",
     )
     assumed_minutes_per_dispute: int = Field(
         default=DEFAULT_ASSUMED_MINUTES_PER_DISPUTE,
@@ -86,29 +85,22 @@ async def get_kpis(
 ) -> KpiResponse:
     disputes = list(db_session.scalars(select(Dispute)).all())
     approvals = list(db_session.scalars(select(Approval)).all())
-    decisions = list(db_session.scalars(select(Decision)).all())
 
     approvals_by_dispute: dict[str, list[Approval]] = {}
     for approval in approvals:
         approvals_by_dispute.setdefault(approval.dispute_id, []).append(approval)
-
-    decisions_by_dispute: dict[str, list[Decision]] = {}
-    for decision in decisions:
-        decisions_by_dispute.setdefault(decision.dispute_id, []).append(decision)
 
     open_disputes_count = 0
     dollars_at_risk = Decimal("0.00")
     recovered = Decimal("0.00")
     conceded = Decimal("0.00")
     closed_disputes_count = 0
-    auto_resolved_count = 0
 
     other_currency_open_disputes: dict[str, int] = {}
     non_usd_open_disputes = 0
 
     for dispute in disputes:
         disp_approvals = approvals_by_dispute.get(dispute.id, [])
-        disp_decisions = decisions_by_dispute.get(dispute.id, [])
 
         has_pending_approval = any(
             a.resolution == ApprovalResolution.PENDING.value for a in disp_approvals
@@ -133,44 +125,13 @@ async def get_kpis(
         if is_closed:
             closed_disputes_count += 1
 
-            # Check if resolved by agent vs outside agent
-            # If no agent decisions exist, dispute was resolved outside the agent
-            if disp_decisions:
-                had_human_approval = any(
-                    a.resolution in (ApprovalResolution.APPROVE.value, ApprovalResolution.EDIT.value)
-                    for a in disp_approvals
-                )
-                if not had_human_approval:
-                    auto_resolved_count += 1
-
-            # Determine whether recovered (merchant's favor) or conceded
+            # Only explicit PayPal outcome codes classify the disputed amount.
             snapshot = dispute.snapshot or {}
             outcome_code = (snapshot.get("dispute_outcome") or {}).get("outcome_code", "").upper()
-            refund_details = snapshot.get("refund_details") or {}
-            has_refund = bool(refund_details.get("allowed_refund_amount"))
-
-            has_concession_decision = any(
-                d.action_type in (ActionType.ACCEPT_CLAIM.value, ActionType.MAKE_OFFER.value)
-                and d.verdict == Verdict.ALLOW.value
-                for d in disp_decisions
-            )
-            has_concession_approval = any(
-                a.resolution in (ApprovalResolution.APPROVE.value, ApprovalResolution.EDIT.value)
-                for a in disp_approvals
-            )
-
-            is_conceded = (
-                outcome_code in ("RESOLVED_BUYER_FAVOUR", "BUYER_FAVOUR")
-                or has_refund
-                or has_concession_decision
-                or has_concession_approval
-            )
-
-            if is_conceded:
-                if dispute.currency == "USD":
+            if dispute.currency == "USD":
+                if outcome_code in ("RESOLVED_BUYER_FAVOUR", "BUYER_FAVOUR"):
                     conceded += dispute.amount
-            else:
-                if dispute.currency == "USD":
+                elif outcome_code in ("RESOLVED_SELLER_FAVOUR", "SELLER_FAVOUR"):
                     recovered += dispute.amount
 
     # Edge cases: no closed disputes -> ratios are null
@@ -178,7 +139,6 @@ async def get_kpis(
     estimated_hours_saved: float | None = None
 
     if closed_disputes_count > 0:
-        share_auto_resolved = round(auto_resolved_count / closed_disputes_count, 4)
         hours = (closed_disputes_count * DEFAULT_ASSUMED_MINUTES_PER_DISPUTE) / 60.0
         estimated_hours_saved = round(hours, 2)
 
@@ -188,7 +148,7 @@ async def get_kpis(
         recovered=f"{recovered:.2f}",
         conceded=f"{conceded:.2f}",
         closed_disputes=closed_disputes_count,
-        auto_resolved_disputes=auto_resolved_count,
+        auto_resolved_disputes=None,
         share_auto_resolved=share_auto_resolved,
         assumed_minutes_per_dispute=DEFAULT_ASSUMED_MINUTES_PER_DISPUTE,
         estimated_hours_saved=estimated_hours_saved,

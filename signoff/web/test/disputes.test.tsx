@@ -211,6 +211,28 @@ describe('Disputes UI feature (Step 25)', () => {
     expect(screen.getByText(/No action was proposed by this run/)).toBeTruthy();
   });
 
+  it('finds a newer failed run on a later timeline page', async () => {
+    const requested: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes('/api/disputes/PP-D-1001/timeline')) {
+        requested.push(url);
+        const later = new URL(url, 'http://localhost').searchParams.has('cursor');
+        const event = later
+          ? { id: 'failed', dispute_id: 'PP-D-1001', sequence_number: 101, kind: 'RUN_FAILED',
+            error: 'Analysis failed', created_at: '2026-10-31T20:01:00Z', is_truncated: false }
+          : { id: 'old', dispute_id: 'PP-D-1001', sequence_number: 100, kind: 'GATE_DECIDED',
+            verdict: 'NEEDS_APPROVAL', rule_id: 'G3-01', created_at: '2026-10-31T20:00:00Z', is_truncated: false };
+        return new Response(JSON.stringify({ items: [event], next_cursor: later ? null : '100' }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return mockFetch(input, options);
+    }));
+    await act(async () => { renderAt('/app/disputes/PP-D-1001'); });
+    await waitFor(() => expect(screen.getByText('Analysis needs your review')).toBeTruthy());
+    expect(requested.some(url => url.includes('cursor=100'))).toBe(true);
+  });
+
   it('unknown dispute shows not-found state with link back to list', async () => {
     await act(async () => {
       renderAt('/app/disputes/does-not-exist');

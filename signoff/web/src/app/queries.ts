@@ -113,7 +113,20 @@ export function useDispute(id: string, options?: { refetchInterval?: number }) {
 export function useDisputeTimeline(id: string, options?: { refetchInterval?: number }) {
   return useQuery<TimelineResponse, ApiQueryError>({
     queryKey: ['dispute-timeline', id],
-    queryFn: async (): Promise<TimelineResponse> => unwrap(apiClient.getDisputeTimeline(id)),
+    queryFn: async (): Promise<TimelineResponse> => {
+      const items: TimelineResponse['items'] = [];
+      let cursor: string | undefined;
+      const seen = new Set<string>();
+      for (let page = 0; page < 10; page += 1) {
+        const result = await unwrap(apiClient.getDisputeTimeline(id, { limit: 100, ...(cursor ? { cursor } : {}) }));
+        items.push(...result.items);
+        if (!result.next_cursor) return { items, next_cursor: null };
+        if (seen.has(result.next_cursor)) throw new ApiQueryError('Timeline pagination did not advance', null);
+        seen.add(result.next_cursor);
+        cursor = result.next_cursor;
+      }
+      throw new ApiQueryError('Timeline is too long to display completely', null);
+    },
     enabled: Boolean(id),
     ...(options?.refetchInterval !== undefined ? { refetchInterval: options.refetchInterval } : {}),
   });

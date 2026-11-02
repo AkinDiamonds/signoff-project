@@ -102,9 +102,9 @@ export const DashboardPage: React.FC = () => {
       },
       {
         id: 'verdict',
-        header: 'Status',
+        header: 'PayPal status',
         cell: (row) => (
-          <StatusBadge status={row.latest_verdict ?? row.status} />
+          <StatusBadge status={row.status} />
         ),
       },
       {
@@ -206,15 +206,15 @@ export const DashboardPage: React.FC = () => {
             </div>
             <div>
               <div style={{ fontSize: '15px', fontWeight: 600, color: '#92400E' }}>
-                <span data-testid="kpi-needs-approval">{needsApprovalCount}</span> dispute(s) require merchant signoff
+                <span data-testid="kpi-needs-approval">{needsApprovalCount}</span> listed dispute(s) have a review state
               </div>
               <div style={{ fontSize: '13px', color: '#B45309' }}>
-                Proposed resolution exceeds auto-refund limit. Merchant action required before PayPal deadline.
+                This reflects the latest recorded verdict or PayPal status, and does not count current approval cards.
               </div>
             </div>
           </div>
           <Link
-            to="/app/disputes?status=UNDER_REVIEW"
+            to="/app/disputes"
             style={{
               padding: '8px 16px',
               backgroundColor: '#D97706',
@@ -282,17 +282,17 @@ export const DashboardPage: React.FC = () => {
 
         <div data-testid="kpi-card-recovered" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
           <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Recovered
+            Seller-favour disputes
           </div>
           <div style={{ fontSize: '26px', fontWeight: 700, color: '#059669', margin: '4px 0 2px' }}>
             <Money testId="kpi-recovered" money={{ value: kpis.recovered, currency_code: 'USD' }} />
           </div>
-          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Protected revenue won</div>
+          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Disputed USD amounts with known outcomes</div>
         </div>
 
         <div style={{ padding: '16px 20px' }}>
           <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Autonomous Win Rate
+            Auto-resolution share
           </div>
           <div style={{ fontSize: '26px', fontWeight: 700, color: '#0F766E', margin: '4px 0 2px' }}>
             <span data-testid="kpi-autonomous-share">{values.share}</span>

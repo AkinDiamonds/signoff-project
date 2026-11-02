@@ -2090,9 +2090,16 @@
             "type": "integer"
           },
           "auto_resolved_disputes": {
-            "description": "Count of closed disputes resolved without human approval",
-            "title": "Auto Resolved Disputes",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Unavailable until action-specific resolution attribution is verified",
+            "title": "Auto Resolved Disputes"
           },
           "closed_disputes": {
             "description": "Total count of closed disputes",
@@ -2100,7 +2107,7 @@
             "type": "integer"
           },
           "conceded": {
-            "description": "Sum of amounts refunded or conceded on USD disputes",
+            "description": "Disputed USD amounts with an explicit buyer-favour outcome; not a payment total",
             "title": "Conceded",
             "type": "string"
           },
@@ -2154,7 +2161,7 @@
                 "type": "null"
               }
             ],
-            "description": "Proportion of closed disputes auto-resolved (null when closed disputes is 0)",
+            "description": "Unavailable until action-specific resolution attribution is verified",
             "title": "Share Auto Resolved"
           }
         },
@@ -2163,8 +2170,7 @@
           "dollars_at_risk",
           "recovered",
           "conceded",
-          "closed_disputes",
-          "auto_resolved_disputes"
+          "closed_disputes"
         ],
         "title": "KpiResponse",
         "type": "object"

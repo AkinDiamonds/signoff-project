@@ -172,7 +172,7 @@ export const DisputeListPage: React.FC = () => {
         header: 'Verdict',
         cell: (row) => (
           <StatusBadge
-            status={row.latest_verdict ?? row.status}
+            status={row.latest_verdict ?? 'UNKNOWN'}
             testId={`dispute-verdict-${row.id}`}
           />
         ),

@@ -140,7 +140,7 @@ async def test_kpis_empty_db(client: httpx.AsyncClient):
     assert data["recovered"] == "0.00"
     assert data["conceded"] == "0.00"
     assert data["closed_disputes"] == 0
-    assert data["auto_resolved_disputes"] == 0
+    assert data["auto_resolved_disputes"] is None
     assert data["share_auto_resolved"] is None
     assert data["estimated_hours_saved"] is None
     assert data["assumed_minutes_per_dispute"] == 20
@@ -262,11 +262,31 @@ async def test_kpis_auto_resolved_and_outside_agent_logic(client: httpx.AsyncCli
     data = resp.json()
 
     assert data["closed_disputes"] == 3
-    assert data["auto_resolved_disputes"] == 1  # Only PP-AUTO
-    assert data["share_auto_resolved"] == round(1 / 3, 4)
+    # A decision alone cannot establish that an action resolved the case.
+    assert data["auto_resolved_disputes"] is None
+    assert data["share_auto_resolved"] is None
     assert data["recovered"] == "50.00"  # 20.00 (outside) + 30.00 (auto)
-    assert data["conceded"] == "50.00"   # human dispute was refunded
+    assert data["conceded"] == "0.00"   # allowed refund is not proof of payment
     assert data["estimated_hours_saved"] == round((3 * 20) / 60.0, 2)
+
+
+@pytest.mark.asyncio
+async def test_kpis_do_not_guess_unknown_outcomes_or_count_an_offer(client: httpx.AsyncClient, db_session: Session):
+    now = datetime.now(UTC)
+    cases = (("UNKNOWN", {}), ("BUYER", {"dispute_outcome": {"outcome_code": "RESOLVED_BUYER_FAVOUR"}}))
+    for dispute_id, outcome in cases:
+        db_session.add(Dispute(id=dispute_id, state_fingerprint=f"fp-{dispute_id}",
+                               status=DisputeStatus.RESOLVED.value,
+                               reason=DisputeReason.MERCHANDISE_OR_SERVICE_NOT_RECEIVED.value,
+                               amount=Decimal("12.00"), currency="USD", snapshot=outcome, created_at=now))
+    db_session.commit()
+    response = await client.get("/api/kpis")
+    assert response.status_code == 200
+    result = response.json()
+    assert result["recovered"] == "0.00"
+    assert result["conceded"] == "12.00"
+    assert result["auto_resolved_disputes"] is None
+    assert result["share_auto_resolved"] is None
 
 
 # --- 3. Disputes Endpoint & Filter Tests ---

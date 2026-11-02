@@ -1836,9 +1836,9 @@ export interface components {
             assumed_minutes_per_dispute: number;
             /**
              * Auto Resolved Disputes
-             * @description Count of closed disputes resolved without human approval
+             * @description Unavailable until action-specific resolution attribution is verified
              */
-            auto_resolved_disputes: number;
+            auto_resolved_disputes?: number | null;
             /**
              * Closed Disputes
              * @description Total count of closed disputes
@@ -1846,7 +1846,7 @@ export interface components {
             closed_disputes: number;
             /**
              * Conceded
-             * @description Sum of amounts refunded or conceded on USD disputes
+             * @description Disputed USD amounts with an explicit buyer-favour outcome; not a payment total
              */
             conceded: string;
             /**
@@ -1884,7 +1884,7 @@ export interface components {
             recovered: string;
             /**
              * Share Auto Resolved
-             * @description Proportion of closed disputes auto-resolved (null when closed disputes is 0)
+             * @description Unavailable until action-specific resolution attribution is verified
              */
             share_auto_resolved?: number | null;
         };

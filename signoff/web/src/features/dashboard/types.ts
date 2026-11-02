@@ -76,22 +76,22 @@ export function toStudioKpiRows(kpis: Kpis): StudioKpiRow[] {
       note: 'Open USD disputes only',
     },
     {
-      metric: 'Recovered',
+      metric: 'Seller-favour disputed amount',
       value: `USD ${kpis.recovered}`,
       numeric_value: amountToCents(kpis.recovered),
       note: 'Resolved in the merchant favor',
     },
     {
-      metric: 'Conceded',
+      metric: 'Buyer-favour disputed amount',
       value: `USD ${kpis.conceded}`,
       numeric_value: amountToCents(kpis.conceded),
-      note: 'Refunded or conceded',
+      note: 'Disputed USD amount; not a payment total',
     },
     {
       metric: 'Share auto-resolved',
-      value: share === null ? 'No closed disputes' : `${share}%`,
+      value: share === null ? 'Unavailable' : `${share}%`,
       numeric_value: share,
-      note: 'Closed without human approval',
+      note: 'Action-specific resolution attribution is not verified',
     },
     {
       metric: 'Estimated hours saved',

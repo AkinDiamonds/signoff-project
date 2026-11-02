@@ -160,11 +160,6 @@ export const DisputeDetailPage: React.FC = () => {
     }
   }
 
-  const hasGateDecided = Boolean(
-    timelineQuery.data?.items?.some(
-      (ev) => 'kind' in ev && (ev.kind === 'GATE_DECIDED' || ev.kind === 'EXECUTION_CONFIRMED')
-    )
-  );
   const latestRunState = timelineQuery.data?.items?.filter(event =>
     ['RUN_STARTED', 'NO_ACTION', 'RUN_FAILED', 'GATE_DECIDED', 'EXECUTION_CONFIRMED'].includes(event.kind)
   ).reduce<ApiTimelineEvent | undefined>((latest, event) =>
@@ -176,7 +171,7 @@ export const DisputeDetailPage: React.FC = () => {
   const needsAnalysisReview = latestRunState?.kind === 'RUN_FAILED';
   const isAgentRunning =
     displayedDispute.status === 'WAITING_FOR_SELLER_RESPONSE' &&
-    !displayedDispute.latest_verdict && !hasGateDecided && latestRunState?.kind === 'RUN_STARTED';
+    latestRunState?.kind === 'RUN_STARTED';
 
   const shouldTruncateMessage = rawBuyerMessage && rawBuyerMessage.length > 200;
   const messageToDisplay =
@@ -184,8 +179,8 @@ export const DisputeDetailPage: React.FC = () => {
       ? `${rawBuyerMessage.slice(0, 200)}...`
       : rawBuyerMessage;
 
-  const ruleId = displayedDispute.latest_rule_id ?? 'G3-01';
-  const ruleExplanation = getRuleExplanation(ruleId);
+  const ruleId = displayedDispute.latest_rule_id;
+  const ruleExplanation = ruleId ? getRuleExplanation(ruleId) : 'No gate rule recorded';
   const plainReason = formatDisputeReason(displayedDispute.reason);
 
   return (
@@ -228,7 +223,7 @@ export const DisputeDetailPage: React.FC = () => {
             </h1>
             <button type="button" style={{ minHeight: 44 }} onClick={() => { void copyDisputeLink(); }}>Copy dispute link</button>
             <StatusBadge
-              status={displayedDispute.latest_verdict ?? displayedDispute.status}
+              status={displayedDispute.status}
               testId="detail-status-badge"
             />
           </div>
@@ -540,7 +535,9 @@ export const DisputeDetailPage: React.FC = () => {
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${colors.border}` }}>
               <span style={{ fontSize: '13px', color: '#6B7280' }}>Gate Verdict:</span>
-              <StatusBadge status={displayedDispute.latest_verdict ?? 'NEEDS_APPROVAL'} testId="detail-verdict-chip" />
+              {displayedDispute.latest_verdict
+                ? <StatusBadge status={displayedDispute.latest_verdict} testId="detail-verdict-chip" />
+                : <span data-testid="detail-verdict-chip">Not recorded</span>}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${colors.border}` }}>
@@ -557,7 +554,7 @@ export const DisputeDetailPage: React.FC = () => {
                   color: '#111827',
                 }}
               >
-                {ruleId}
+                {ruleId ?? 'Not recorded'}
               </span>
             </div>
 

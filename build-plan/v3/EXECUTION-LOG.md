@@ -1,5 +1,12 @@
 # Execution log
 
+### T11 dashboard and audit corrections — 2026-11-02
+
+- Gate decisions and recorded execution confirmation cannot establish that an action caused resolution under the paused T07 confirmation semantics. The KPI API now returns unavailable for auto-resolution attribution. Seller/buyer-favour USD disputed totals require an explicit outcome code; unknown outcomes and allowed refunds do not count. These totals are disputed amounts, not proof of cash transferred.
+- Dashboard labels PayPal status separately from the latest recorded gate verdict and describes review-state counts as such. Detail no longer invents a gate verdict or rule and recognizes a newer run despite an earlier gate event. Timeline retrieval follows cursor pages with a bounded failure instead of presenting the first page as the entire history. A later-page failed-run regression passes.
+- Focused checks: 4 KPI tests, 15 dispute UI tests, 4 dashboard UI tests, 6 phone diagnostic tests, changed-file Ruff/ESLint, web TypeScript, strict KPI mypy, API client freshness and diff whitespace passed. Tests first demonstrated the unsupported KPI claims. Full suites were not rerun. Phone diagnostic changes from the preceding investigation remain separate uncommitted work; owner reports notifications now work, without independent proof of background delivery, click-through or opt-out.
+- T11 remains incomplete: hosted reconciliation across current runs, approvals, executions and notifications, chronological history/source IDs, browser back/refresh and the complete acceptance matrix are not proven. Executor confirmation remains paused; do not infer causality from CONFIRMED or replay prior approvals.
+
 ### Local phone display diagnosis — 2026-11-02
 
 - Added an explicit local notification display test in Settings. It uses the active service worker and reports whether the browser retains the tagged notification, alongside permission, worker/update/controller and subscription-key match status. It sends no server request and exposes no endpoint or key. Browser retention does not prove visible display or remote push receipt.
