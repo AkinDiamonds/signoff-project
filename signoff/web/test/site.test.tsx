@@ -79,7 +79,8 @@ describe('Site Feature Components', () => {
 
       // Problem section
       expect(screen.getByRole('heading', { name: /PayPal disputes have a deadline/i })).toBeTruthy();
-      expect(screen.getAllByText(/10 days/i).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText(/PayPal provides a response deadline for each dispute/i)).toBeTruthy();
+      expect(screen.queryByText(/exactly 10 days/i)).toBeNull();
       expect(screen.getByText(/The Hallucination Danger/i)).toBeTruthy();
 
       // Signing limit idea
@@ -111,8 +112,8 @@ describe('Site Feature Components', () => {
       // Header and resource links
       expect(screen.getByRole('heading', { level: 1, name: /How to test Signoff/i })).toBeTruthy();
       expect(screen.getByTestId('guide-link-repo').getAttribute('href')).toContain('github.com');
-      expect(screen.getByTestId('guide-link-license').getAttribute('href')).toBe('/LICENSE');
-      expect(screen.getByTestId('guide-link-video').getAttribute('href')).toContain('youtube.com');
+      expect(screen.getByTestId('guide-link-license').getAttribute('href')).toContain('/blob/main/LICENSE');
+      expect(screen.getByText('Video walkthrough not available yet')).toBeTruthy();
 
       // 5 Numbered Steps
       expect(screen.getByTestId('guide-step-1')).toBeTruthy();
