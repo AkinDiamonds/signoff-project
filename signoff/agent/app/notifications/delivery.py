@@ -17,6 +17,23 @@ from agent.app.settings import Settings
 MAX_ATTEMPTS = 5
 
 
+def deadline_key(dispute_id: str, due: datetime, now: datetime) -> str:
+    window = '1h' if due <= now + timedelta(hours=1) else '24h'
+    return hashlib.sha256(f'owner:{dispute_id}:deadline:{due.isoformat()}:{window}'.encode()).hexdigest()
+
+
+def obsolete_deadline(session: Session, notification: Notification, now: datetime) -> bool:
+    if notification.kind != 'deadline_reminder':
+        return False
+    dispute = session.get(Dispute, notification.dispute_id)
+    if dispute is None or dispute.status == 'RESOLVED' or dispute.seller_response_due_date is None:
+        return True
+    due = dispute.seller_response_due_date
+    due = due.replace(tzinfo=UTC) if due.tzinfo is None else due
+    return (due <= now or due > now + timedelta(hours=24)
+            or deadline_key(dispute.id, due, now) != notification.dedupe_key)
+
+
 def insert_for(session: Session):  # type: ignore[no-untyped-def]
     return sqlite_insert if session.get_bind().dialect.name == 'sqlite' else pg_insert
 
@@ -34,8 +51,7 @@ def deadline_reminders(session: Session, now: datetime) -> int:
         if due is None:
             continue
         due = due.replace(tzinfo=UTC) if due.tzinfo is None else due
-        window = '1h' if due <= now + timedelta(hours=1) else '24h'
-        key = hashlib.sha256(f'owner:{dispute.id}:deadline:{due.isoformat()}:{window}'.encode()).hexdigest()
+        key = deadline_key(dispute.id, due, now)
         identifier = uuid.uuid4()
         added = session.scalar(insert_for(session)(Notification).values(
             id=identifier, dispute_id=dispute.id, kind='deadline_reminder', dedupe_key=key,
@@ -112,7 +128,7 @@ def deliver_one(factory: sessionmaker[Session], settings: Settings, *,
         status = 0
         error = None
         if (subscription is None or not subscription.active or notification is None
-                or notification.demo_session_id is not None):
+                or notification.demo_session_id is not None or obsolete_deadline(session, notification, now)):
             outcome = 'cancelled'
         elif not configured(settings) or subscription.vapid_key != settings.web_push_vapid_public_key:
             outcome, error = 'failed', 'push_configuration_unavailable'

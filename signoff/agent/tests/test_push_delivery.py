@@ -123,6 +123,23 @@ def test_restart_recovers_expired_lease_and_caps_retry_attempts(push_db):
         assert row.state == 'failed' and row.attempts == 5
 
 
+@pytest.mark.parametrize('change', ['resolved', 'overdue', 'shifted'])
+def test_obsolete_deadline_is_cancelled_before_send(push_db, change):
+    prepare_delivery(push_db)
+    with push_db() as session:
+        dispute = session.get(Dispute, 'PP-PUSH')
+        if change == 'resolved':
+            dispute.status = 'RESOLVED'
+        elif change == 'overdue':
+            dispute.seller_response_due_date = datetime.now(UTC) - timedelta(minutes=1)
+        else:
+            dispute.seller_response_due_date = datetime.now(UTC) + timedelta(hours=36)
+        session.commit()
+    assert deliver_one(push_db, push_settings(), sender=lambda *args: pytest.fail('Obsolete reminder sent'))
+    with push_db() as session:
+        assert session.scalars(select(PushDelivery)).one().state == 'cancelled'
+
+
 def test_opt_out_prevents_pending_delivery_and_demo_never_fans_out(push_db):
     prepare_delivery(push_db)
     with push_db() as session:
