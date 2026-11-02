@@ -37,7 +37,7 @@ Migration `e08b3df70008` adds subscription/delivery tables and permits a null no
 
 Before promoting this feature checkpoint to main: require its CI, verify a recoverable hosted database backup/PITR checkpoint, then use the existing migration/Render rollout. Hosted backup evidence is not available through the current Render connector; no browser connector is available to inspect the backup page. Do not call local migration success hosted backup proof.
 
-Previous application code can ignore the added tables and read the inbox. Roll back compatible application code while retaining the new tables and history; never run this migration's destructive downgrade (it deliberately refuses). Do not replay PayPal actions during rollback.
+Previous application code can ignore the added tables and read the inbox. Roll back compatible application code while retaining the new tables and history; the migration refuses a hosted downgrade. Only the existing schema round-trip check on a validated local disposable `signoff_test*` database in test mode may tear down the new tables. Do not replay PayPal actions during rollback.
 
 ## Physical Android acceptance — BLOCKED until actual device use
 

@@ -1,5 +1,7 @@
 """Owner web push destinations and leased delivery attempts; preserve inbox history."""
 
+import os
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -36,4 +38,13 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    raise RuntimeError('Forward-only: retain inbox and delivery history during application rollback')
+    # Production rollback retains data. Only the existing disposable test-schema
+    # round trip may tear down these tables; a test-mode flag alone is insufficient.
+    url = op.get_bind().engine.url
+    if (os.environ.get('APP_ENV') != 'test' or url.host not in {'localhost', '127.0.0.1', '::1'}
+            or not url.database or not (url.database == 'signoff_test' or url.database.startswith('signoff_test_'))
+            or url.query):
+        raise RuntimeError('Forward-only: retain inbox and delivery history during application rollback')
+    op.drop_table('push_deliveries')
+    op.drop_table('push_subscriptions')
+    op.alter_column('notifications', 'source_event_id', existing_type=sa.Uuid(), nullable=False)

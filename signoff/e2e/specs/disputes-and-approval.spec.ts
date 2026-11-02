@@ -44,9 +44,9 @@ test.describe('Disputes and Approval UI (Steps 25 & 26)', () => {
     const approveBtn = page.getByTestId('approval-approve-button');
     await approveBtn.click();
 
-    // Outcome confirmed
+    // Approval saved; provider submission is a separate outcome.
     await expect(page.getByTestId('outcome-approved')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Approval confirmed' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Approval saved' })).toBeVisible();
   });
 
   test('mobile approval flow: deny with reason', async ({ page }) => {
