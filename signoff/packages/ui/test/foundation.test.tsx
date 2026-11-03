@@ -12,13 +12,13 @@ import {
   typography,
 } from '../src';
 
-describe('UI Foundation (Shopify tokens & components)', () => {
-  it('exposes Shopify measured tokens', () => {
-    expect(colors.appBackground).toBe('#F1F1F1');
-    expect(colors.surface).toBe('#FFFFFF');
-    expect(colors.border).toBe('#E1E1E1');
-    expect(colors.ink).toBe('#303030');
-    expect(colors.verdict.ALLOW.bg).toBe('#AEE9D1');
+describe('UI Foundation (merchant tokens & components)', () => {
+  it('exposes neutral semantic tokens', () => {
+    expect(colors.appBackground).toBe('var(--signoff-canvas, #F1F1F1)');
+    expect(colors.surface).toBe('var(--signoff-surface, #FFFFFF)');
+    expect(colors.border).toBe('var(--signoff-divider, #E1E1E1)');
+    expect(colors.ink).toBe('var(--signoff-ink, #303030)');
+    expect(colors.verdict.ALLOW.bg).toBe('var(--signoff-success-bg, #AEE9D1)');
     expect(radius.card).toBe('8px');
     expect(typography.rowHeight).toBe('44px');
   });

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useBlocker } from 'react-router';
 import type { ActionType, DisputeReason } from '@signoff/api-client';
 import {
   Button,
@@ -76,7 +77,7 @@ const SettingRow: React.FC<SettingRowProps> = ({
       <span
         style={{
           padding: '8px 10px',
-          backgroundColor: '#F7F7F7',
+          backgroundColor: 'var(--signoff-surface, #fff)',
           color: colors.inkMuted,
           fontSize: typography.fontSizeSmall,
           fontWeight: typography.fontWeightMedium,
@@ -150,7 +151,7 @@ const CheckboxGroup = <T extends string>({
       borderRadius: radius.card,
       padding: spacing[2],
       margin: 0,
-      backgroundColor: '#FAFAFA',
+      backgroundColor: 'var(--signoff-surface, #fff)',
     }}
   >
     <legend style={{ fontWeight: typography.fontWeightSemibold, fontSize: typography.fontSizeSmall, color: colors.ink, padding: '0 4px' }}>
@@ -208,6 +209,7 @@ export const CharterPage: React.FC = () => {
   const [savedVersion, setSavedVersion] = useState<number | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const submitting = useRef(false);
+  const leaveDialog = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (charterQuery.data && values === null) {
@@ -236,6 +238,31 @@ export const CharterPage: React.FC = () => {
     return JSON.stringify(comparable(current.value)) !== JSON.stringify(comparable(initial.value));
   }, [values, initialValues]);
 
+  const blocker = useBlocker(isDirty && !mutation.isPending);
+  useEffect(() => {
+    if (!isDirty) return;
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [isDirty]);
+
+  useEffect(() => {
+    if (blocker.state !== 'blocked') return;
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const buttons = leaveDialog.current?.querySelectorAll<HTMLButtonElement>('button');
+    buttons?.[0]?.focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); blocker.reset(); }
+      if (event.key === 'Tab' && buttons && buttons.length > 0) {
+        const first = buttons[0]; const last = buttons[buttons.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
+    };
+    document.addEventListener('keydown', keydown);
+    return () => { document.removeEventListener('keydown', keydown); previous?.focus(); };
+  }, [blocker]);
+
   const handleDiscard = () => {
     if (initialValues) {
       setValues({ ...initialValues });
@@ -255,6 +282,9 @@ export const CharterPage: React.FC = () => {
       const built = buildCharterUpdate(values, baseVersion);
       if (!built.ok) {
         setErrors(built.errors);
+        const first = Object.keys(built.errors)[0];
+        const ids: Record<string, string> = { autoOfferMax: 'charter-auto-offer', autoAcceptMax: 'charter-auto-accept', autoActMaxDisputeAmount: 'charter-auto-act', repeatDisputerThreshold: 'charter-repeat-threshold' };
+        if (first && ids[first]) document.getElementById(ids[first])?.focus();
         return;
       }
       setErrors({});
@@ -339,6 +369,25 @@ export const CharterPage: React.FC = () => {
           <p style={{ margin: 0, fontSize: typography.fontSizeSmall, color: colors.ink }}>
             A newer version is available: <strong data-testid="charter-conflict-version">v{newerCharter.version}</strong>. Your unsaved changes were not applied.
           </p>
+          <details>
+            <summary>Compare your edits with the latest version</summary>
+            <div style={{ overflowX: 'auto' }} role="region" aria-label="Signing limit comparison" tabIndex={0}>
+              <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 360, textAlign: 'left' }}>
+                <thead><tr><th>Setting</th><th>Your edit</th><th>Latest</th></tr></thead>
+                <tbody>
+                  <tr><th>Offer limit (USD)</th><td>{values.autoOfferMax}</td><td>{newerCharter.auto_offer_max.value}</td></tr>
+                  <tr><th>Accept limit (USD)</th><td>{values.autoAcceptMax}</td><td>{newerCharter.auto_accept_max.value}</td></tr>
+                  <tr><th>Dispute size (USD)</th><td>{values.autoActMaxDisputeAmount}</td><td>{newerCharter.auto_act_max_dispute_amount.value}</td></tr>
+                  <tr><th>Repeat threshold</th><td>{values.repeatDisputerThreshold}</td><td>{newerCharter.repeat_disputer_threshold}</td></tr>
+                  <tr><th>Automatic evidence</th><td>{values.autoProvideEvidence ? 'On' : 'Off'}</td><td>{newerCharter.auto_provide_evidence ? 'On' : 'Off'}</td></tr>
+                  <tr><th>Automatic messages</th><td>{values.autoSendMessage ? 'On' : 'Off'}</td><td>{newerCharter.auto_send_message ? 'On' : 'Off'}</td></tr>
+                  <tr><th>Missing delivery</th><td>{values.missingDeliveryPolicy.replaceAll('_', ' ')}</td><td>{(newerCharter.missing_delivery_policy ?? 'HUMAN_REVIEW').replaceAll('_', ' ')}</td></tr>
+                  <tr><th>Excluded reasons</th><td>{values.neverAutoReasons.join(', ') || 'None'}</td><td>{newerCharter.never_auto_reasons?.join(', ') || 'None'}</td></tr>
+                  <tr><th>Excluded actions</th><td>{values.neverAutoActions.join(', ') || 'None'}</td><td>{newerCharter.never_auto_actions?.join(', ') || 'None'}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
           <div>
             <Button
               testId="charter-load-latest"
@@ -361,6 +410,7 @@ export const CharterPage: React.FC = () => {
       <Card title="Signing limits" testId="charter-form">
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
           <p style={{ margin: 0 }}>Set the amounts Signoff may handle without asking you. Other rules and PayPal's current options still apply.</p>
+          <h2 style={{ fontSize: 18, margin: '16px 0 0' }}>Financial limits</h2>
           {/* Row 1: Refund without asking, up to */}
           <SettingRow
             id="charter-auto-offer"
@@ -436,6 +486,7 @@ export const CharterPage: React.FC = () => {
             )}
           </div>
 
+          <h2 style={{ fontSize: 18, margin: '16px 0 0' }}>Automatic actions</h2>
           {/* Automated features toggles */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2], marginTop: spacing[1] }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: typography.fontSizeBody }}>
@@ -466,12 +517,13 @@ export const CharterPage: React.FC = () => {
               <option value="HUMAN_REVIEW">Require human review</option>
               <option value="GATED_SETTLEMENT">Allow settlement within signing limits</option>
             </select>
-            <span style={{ fontSize: 13, color: '#52605a' }}>
+            <span style={{ fontSize: 13, color: 'var(--signoff-muted, #686861)' }}>
               Settlement actions remain subject to PayPal rules and your signing limits. Invalid tracking or an unknown order still requires review.
             </span>
           </label>
 
           {/* Exclusion rules */}
+          <details><summary style={{ cursor: 'pointer', fontWeight: 600 }}>Review exceptions</summary>
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2], marginTop: spacing[1] }}>
             <CheckboxGroup<DisputeReason>
               legend="Never automate these reasons"
@@ -489,6 +541,7 @@ export const CharterPage: React.FC = () => {
             />
           </div>
 
+          </details>
           {/* In-form save notification / errors */}
           {savedVersion !== null && (
             <span role="status" data-testid="charter-save-success" style={{ color: colors.badgeSuccessText, fontSize: typography.fontSizeSmall }}>
@@ -545,6 +598,14 @@ export const CharterPage: React.FC = () => {
           </ol>
         )}
       </Card>
+
+      {blocker.state === 'blocked' && <div ref={leaveDialog} role="dialog" aria-modal="true" aria-labelledby="charter-leave-title" style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,.45)', display: 'grid', placeItems: 'center', padding: 20 }}>
+        <div style={{ background: colors.surface, color: colors.ink, borderRadius: 8, padding: 24, width: 'min(100%, 440px)', display: 'grid', gap: 16 }}>
+          <h2 id="charter-leave-title" style={{ margin: 0 }}>Discard unsaved changes?</h2>
+          <p style={{ margin: 0 }}>Your changes to signing limits have not been saved.</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}><Button onClick={() => blocker.reset()}>Keep editing</Button><Button variant="secondary" onClick={() => blocker.proceed()}>Discard changes</Button></div>
+        </div>
+      </div>}
 
       {/* Sticky save bar at bottom */}
       <div

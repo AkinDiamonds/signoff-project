@@ -1,5 +1,7 @@
 # STATUS
 
+2026-11-03 continuation: mobile merchant shell, route changes, filter and save safeguards, truthful metric labels and read-only execution-attempt projection implemented on `codex/signoff-notion-mobile`. Frontend checks and focused backend tests pass; the complete backend suite and several route acceptance items remain open. See `signoff/docs/ui/redesign-progress.md` for route status and browser evidence.
+
 2026-11-03 redesign checkpoint: created `codex/signoff-notion-mobile` from clean `work` (`e7331ca`). Fixed signing-limits unchanged saves and mobile navigation overlap, with component and browser geometry regression coverage. The design materials were subsequently found on `origin/main` under `signoff/docs/ui`. See `signoff/docs/ui/redesign-progress.md`.
 
 2026-11-02 T12 mobile list: shared data tables render labeled cards at phone widths, the dispute list shows PayPal status alongside the latest review decision, and PayPal status labels are readable rather than raw enum values. A focused 320px card/axe browser test passed. Deployment and the remaining physical-phone and full control inventory checks are still pending.

@@ -40,9 +40,7 @@ export interface StudioEmbedProps {
 }
 
 export const StudioEmbed: React.FC<StudioEmbedProps> = ({ data }) => {
-  // Vitest jsdom doesn't support canvas layout; browser mounts AG Studio immediately
-  const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent);
-  const [loaded, setLoaded] = useState(!isJsdom);
+  const [loaded, setLoaded] = useState(false);
 
   if (!loaded) {
     return (
@@ -65,11 +63,12 @@ export const StudioEmbed: React.FC<StudioEmbedProps> = ({ data }) => {
 
   return (
     <section aria-label="AG Studio dashboard" data-testid="studio-region">
-      <StudioErrorBoundary>
-        <Suspense fallback={<Skeleton height="500px" />}>
-          <LazyStudio data={data} />
-        </Suspense>
-      </StudioErrorBoundary>
+      <p>Interactive workspace uses a wider layout. Scroll within this region to inspect all widgets.</p>
+      <div role="region" aria-label="Scrollable analytics workspace" tabIndex={0} style={{ overflowX: 'auto', maxWidth: '100%' }}>
+        <div style={{ minWidth: 700 }}><StudioErrorBoundary>
+          <Suspense fallback={<Skeleton height="500px" />}><LazyStudio data={data} /></Suspense>
+        </StudioErrorBoundary></div>
+      </div>
     </section>
   );
 };

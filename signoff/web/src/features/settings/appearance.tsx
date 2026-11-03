@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 export type Display = 'light' | 'dark' | 'device';
 export type Accent = 'forest' | 'blue' | 'violet' | 'slate';
-const accents: Record<Accent, string> = { forest: '#14532d', blue: '#1d4ed8', violet: '#6d28d9', slate: '#334155' };
+const accents: Record<Accent, string> = { forest: '#1F5A42', blue: '#1d4ed8', violet: '#6d28d9', slate: '#334155' };
 type Appearance = { display: Display; accent: Accent; apply: (display: Display, accent: Accent) => void };
 const Context = createContext<Appearance>({ display: 'light', accent: 'forest', apply: () => {} });
 export const useAppearance = () => useContext(Context);

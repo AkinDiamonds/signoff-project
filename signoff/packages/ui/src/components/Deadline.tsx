@@ -6,7 +6,7 @@ export interface DeadlineProps {
   testId?: string;
 }
 
-const formatUtc = (date: Date): string => `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+const formatLocal = (date: Date): string => date.toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
 
 export function describeDeadline(dueAt: string | null, now: Date): string {
   if (dueAt === null) {
@@ -18,20 +18,20 @@ export function describeDeadline(dueAt: string | null, now: Date): string {
   }
   const remainingMs = due.getTime() - now.getTime();
   if (remainingMs < 0) {
-    return `Overdue, was due ${formatUtc(due)}`;
+    return `Overdue, was due ${formatLocal(due)}`;
   }
   if (remainingMs === 0) {
     return 'Due now';
   }
   const hours = Math.floor(remainingMs / 3_600_000);
   if (hours < 48) {
-    return `Due in ${hours} h (${formatUtc(due)})`;
+    return `Due in ${hours} h (${formatLocal(due)})`;
   }
-  return `Due in ${Math.floor(hours / 24)} days (${formatUtc(due)})`;
+  return `Due in ${Math.floor(hours / 24)} days (${formatLocal(due)})`;
 }
 
 export const Deadline: React.FC<DeadlineProps> = ({ dueAt, now, testId }) => (
-  <time dateTime={dueAt ?? undefined} data-testid={testId}>
+  <time dateTime={dueAt ?? undefined} data-testid={testId} title={dueAt && !Number.isNaN(Date.parse(dueAt)) ? new Date(dueAt).toISOString() : undefined}>
     {describeDeadline(dueAt, now ?? new Date())}
   </time>
 );

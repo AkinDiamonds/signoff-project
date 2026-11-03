@@ -14,7 +14,8 @@ test.describe('@smoke web shell', () => {
   });
 
   test('skip link moves focus to the main landmark', { tag: '@smoke' }, async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/app');
+    await expect(page.getByTestId('shell-topbar')).toBeVisible();
     await page.keyboard.press('Tab');
     const skip = page.getByRole('link', { name: 'Skip to main content' });
     await expect(skip).toBeFocused();

@@ -9,6 +9,14 @@ import { unwrap } from '../../app/queries';
 type Page = components['schemas']['NotificationPage'];
 type Item = components['schemas']['NotificationItem'];
 
+function dayGroup(value: string): 'Today' | 'Yesterday' | 'Earlier' {
+  const date = new Date(value);
+  const today = new Date();
+  if (date.toDateString() === today.toDateString()) return 'Today';
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  return date.toDateString() === yesterday.toDateString() ? 'Yesterday' : 'Earlier';
+}
+
 export function useNotifications(offset = 0) {
   return useQuery({
     queryKey: ['notifications', offset],
@@ -19,6 +27,7 @@ export function useNotifications(offset = 0) {
 
 export const NotificationsPage: React.FC = () => {
   const [offset, setOffset] = useState(0);
+  const [view, setView] = useState<'all' | 'unread'>('all');
   const query = useNotifications(offset);
   const client = useQueryClient();
   const change = useMutation({
@@ -28,27 +37,35 @@ export const NotificationsPage: React.FC = () => {
     onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
   });
   return <div style={{ display: 'grid', gap: 20, maxWidth: 900, width: '100%' }}>
-    <PageHeader title="Notifications" description="Updates about your disputes and actions." />
+    <PageHeader title="Updates" description="Updates about your disputes and actions." />
     {query.isPending && <p role="status">Loading notifications…</p>}
     {query.isError && <div role="alert"><p>Couldn’t load notifications.</p>
       <Button onClick={() => { void query.refetch(); }}>Try again</Button></div>}
     {change.isError && <p role="alert">Couldn’t update this notification. Please try again.</p>}
     {query.data && <>
-      <p aria-live="polite">{query.data.unread_count} unread</p>
-      {query.data.items.length === 0 && <p>No notifications here yet.</p>}
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 12 }}>
-        {query.data.items.map(item => <li key={item.id} style={{ background: '#fff', border: '1px solid #dce5df',
-          borderRadius: 12, padding: 16, display: 'grid', gap: 10, overflowWrap: 'anywhere' }}>
+      <div aria-label="Update views" style={{ display: 'flex', gap: 8 }}>
+        <button type="button" aria-pressed={view === 'all'} onClick={() => setView('all')} style={{ minHeight: 44, padding: '8px 16px' }}>All</button>
+        <button type="button" aria-pressed={view === 'unread'} onClick={() => setView('unread')} style={{ minHeight: 44, padding: '8px 16px' }}>Unread · <span>{query.data.unread_count} unread</span></button>
+      </div>
+      {query.data.items.length === 0 && <p>No updates here yet.</p>}
+      {view === 'unread' && query.data.items.length > 0 && query.data.items.every(item => item.read_at) && <p>No unread updates on this page.</p>}
+      {(['Today', 'Yesterday', 'Earlier'] as const).map(group => {
+        const items = query.data.items.filter(item => (view === 'all' || !item.read_at) && dayGroup(item.created_at) === group);
+        if (items.length === 0) return null;
+        return <section key={group} aria-label={group}><h2 style={{ fontSize: 16 }}>{group}</h2><ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 12 }}>
+        {items.map(item => <li key={item.id} style={{ borderBottom: '1px solid #e7e7e2',
+          padding: '16px 0', display: 'grid', gap: 10, overflowWrap: 'anywhere' }}>
           <div><strong>{item.message}</strong>{!item.read_at && <span> · Unread</span>}</div>
           <time dateTime={item.created_at}>{new Date(item.created_at).toLocaleString()}</time>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
             <Link to={`/app/disputes/${encodeURIComponent(item.dispute_id)}`}>View dispute</Link>
-            <Button variant="secondary" disabled={change.isPending} onClick={() => change.mutate(item)}>
+            <button type="button" style={{ minHeight: 44, background: 'transparent', border: 0, textDecoration: 'underline', color: 'inherit', cursor: 'pointer' }} disabled={change.isPending} onClick={() => change.mutate(item)}>
               {item.read_at ? 'Mark unread' : 'Mark read'}
-            </Button>
+            </button>
           </div>
         </li>)}
-      </ul>
+      </ul></section>;
+      })}
       <div style={{ display: 'flex', gap: 10 }}>
         <Button variant="secondary" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - 25))}>Previous</Button>
         <Button variant="secondary" disabled={query.data.next_offset == null}

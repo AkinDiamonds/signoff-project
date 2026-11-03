@@ -137,7 +137,7 @@ export const DemoPanel: React.FC = () => {
           padding: `${spacing[1]} 0`,
         }}
       >
-        <strong>{poolSnapshot ? poolSnapshot.available : '5'}</strong> of {poolSnapshot ? poolSnapshot.total : '5'} pooled transactions available.
+        {poolSnapshot ? <><strong>{poolSnapshot.available}</strong> of {poolSnapshot.total} pooled transactions available.</> : poolQuery.isPending ? 'Checking scenario availability…' : 'Scenario availability is unavailable.'}
         {poolSnapshot && poolIsEmpty(poolSnapshot) && ' The pool is empty; reset the demo or reseed it.'}
       </div>
 
@@ -196,7 +196,9 @@ export const DemoPanel: React.FC = () => {
               </p>
             </div>
 
-            <div>
+            <details>
+              <summary style={{ minHeight: 44, cursor: 'pointer', color: colors.interactive }}>View scenario</summary>
+              <p style={{ color: colors.inkMuted }}>Running creates a sandbox dispute and starts processing.</p>
               <button
                 type="button"
                 data-testid={`demo-scenario-${scenario.id}`}
@@ -205,6 +207,7 @@ export const DemoPanel: React.FC = () => {
                 aria-busy={pending === scenario.id}
                 style={{
                   padding: '8px 16px',
+                  minHeight: 44,
                   backgroundColor: colors.primaryAction,
                   color: '#FFFFFF',
                   borderRadius: radius.control,
@@ -217,7 +220,7 @@ export const DemoPanel: React.FC = () => {
               >
                 {pending === scenario.id ? `Running ${scenario.id}...` : 'Run this scenario'}
               </button>
-            </div>
+            </details>
           </div>
         ))}
       </div>

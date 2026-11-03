@@ -33,7 +33,7 @@ function mockSession({ reject = false, retain = true, configured = true } = {}) 
   const fetcher = vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
     if (url.endsWith('/api/auth/login')) {
-      if (reject) return reply({ error: { code: 'INVALID_CREDENTIALS', message: 'Email or password is incorrect', correlation_id: 'fixture' } }, 401);
+      if (reject) return reply({ error: { code: 'INVALID_CREDENTIALS', message: 'Sign-in failed. Check your details and try again.', correlation_id: 'fixture' } }, 401);
       signedIn = true;
       return reply({ required: true, configured, authenticated: true, email: 'owner@example.test', csrf_token: 'fixture-csrf', expires_at: null });
     }
@@ -58,7 +58,7 @@ async function submit() {
 describe('owner sign-in', () => {
   it('redirects an anonymous merchant visitor to login', async () => {
     mockSession(); const router = show('/app');
-    await screen.findByRole('heading', { name: /Your shop/ });
+    await screen.findByRole('heading', { name: /Sign in to Signoff/ });
     expect(router.state.location.pathname).toBe('/login');
     expect(screen.queryByText(/forgot password|sign up/i)).toBeNull();
   });
@@ -73,7 +73,7 @@ describe('owner sign-in', () => {
   });
   it('shows rejected credentials without navigating or claiming success', async () => {
     mockSession({ reject: true }); const router = show(); await submit();
-    expect(await screen.findByRole('alert')).toHaveTextContent('Email or password is incorrect');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Sign-in failed. Check your details and try again.');
     expect(router.state.location.pathname).toBe('/login');
   });
   it('explains when the browser does not retain the cookie', async () => {

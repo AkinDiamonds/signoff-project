@@ -15,7 +15,7 @@ const labels: Record<ReadinessItem['state'], string> = {
   verified: 'Verified', failed: 'Check failed', stale: 'Out of date',
 };
 const cardStyle: React.CSSProperties = {
-  background: '#fff', borderRadius: radius.card, border: `1px solid ${colors.border}`, padding: 20, minWidth: 0,
+  background: 'var(--signoff-surface, #fff)', borderRadius: radius.card, border: `1px solid ${colors.border}`, padding: 20, minWidth: 0,
 };
 
 const Connection: React.FC<{ title: string; item: ReadinessItem }> = ({ title, item }) => (
@@ -28,8 +28,8 @@ const Connection: React.FC<{ title: string; item: ReadinessItem }> = ({ title, i
         {labels[item.state]}
       </span>
     </div>
-    <p style={{ lineHeight: 1.6, fontSize: 14, color: '#52605a' }}>{item.detail}</p>
-    {item.checked_at && <p style={{ fontSize: 12, color: '#66736c', marginBottom: 0 }}>Last observed {new Date(item.checked_at).toLocaleString()}</p>}
+    <p style={{ lineHeight: 1.6, fontSize: 14, color: 'var(--signoff-muted, #686861)' }}>{item.detail}</p>
+    {item.checked_at && <p style={{ fontSize: 12, color: 'var(--signoff-muted, #686861)', marginBottom: 0 }}>Last observed {new Date(item.checked_at).toLocaleString()}</p>}
   </section>
 );
 
@@ -69,13 +69,12 @@ export const SettingsPage: React.FC = () => {
       <section style={cardStyle}>
         <h2 style={{ marginTop: 0, fontSize: 18 }}>Your account</h2>
         <p>{session.data?.email ?? 'Local development session'}</p>
-        {session.data?.authenticated && <Button disabled={signingOut} onClick={() => { void logout(); }}>{signingOut ? 'Signing out…' : 'Sign out'}</Button>}
       </section>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <h2 style={{ fontSize: 18, margin: 0 }}>Connections</h2>
         <Button onClick={() => { void check(); }} disabled={checking}>{checking ? 'Checking…' : 'Check connections'}</Button>
       </div>
-      <p style={{ margin: 0, color: '#52605a', lineHeight: 1.6 }}>Check PayPal authentication and store access. Webhook and worker statuses reflect observed activity.</p>
+      <p style={{ margin: 0, color: 'var(--signoff-muted, #686861)', lineHeight: 1.6 }}>Check PayPal authentication and store access. Webhook and worker statuses reflect observed activity.</p>
       {message && <p role="status" style={{ margin: 0 }}>{message}</p>}
       {error && <p role="alert" style={{ color: '#9f1239', margin: 0 }}>{error}</p>}
       {integrations.isPending && <p role="status">Loading connection status…</p>}
@@ -84,8 +83,8 @@ export const SettingsPage: React.FC = () => {
         <section style={{ ...cardStyle, overflowWrap: 'anywhere' }}>
           <h3 style={{ marginTop: 0, fontSize: 16 }}>{data.paypal_environment === 'sandbox' ? 'PayPal sandbox' : 'Local PayPal stub'}</h3>
           <dl style={{ margin: 0, display: 'grid', gap: 8 }}>
-            <dt style={{ color: '#66736c', fontSize: 13 }}>Merchant ID</dt><dd style={{ margin: 0 }}>{data.merchant_id ?? 'Not configured'}</dd>
-            <dt style={{ color: '#66736c', fontSize: 13 }}>Webhook address</dt><dd style={{ margin: 0, fontSize: 13 }}>{data.webhook_url}</dd>
+            <dt style={{ color: 'var(--signoff-muted, #686861)', fontSize: 13 }}>Merchant ID</dt><dd style={{ margin: 0 }}>{data.merchant_id ?? 'Not configured'}</dd>
+            <dt style={{ color: 'var(--signoff-muted, #686861)', fontSize: 13 }}>Webhook address</dt><dd style={{ margin: 0, fontSize: 13 }}>{data.webhook_url}</dd>
           </dl>
         </section>
         <div style={{ display: 'grid', gap: spacing[3], gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))' }}>
@@ -98,7 +97,7 @@ export const SettingsPage: React.FC = () => {
       </>}
       <section style={cardStyle}>
         <h2 style={{ marginTop: 0, fontSize: 18 }}>Signing preferences</h2>
-        <p style={{ color: '#52605a', lineHeight: 1.6 }}>Control the actions and amounts Signoff can handle automatically.</p>
+        <p style={{ color: 'var(--signoff-muted, #686861)', lineHeight: 1.6 }}>Control the actions and amounts Signoff can handle automatically.</p>
         <Link to="/app/policy" style={{ color: '#115e59', fontWeight: 600 }}>Manage signing limits →</Link>
       </section>
       <section style={cardStyle}>
@@ -106,6 +105,7 @@ export const SettingsPage: React.FC = () => {
         <Link to="/app/settings/appearance" style={{ color: "var(--signoff-action-primary)", fontWeight: 600 }}>Choose display and accent color</Link>
       </section>
       <PhoneNotifications />
+      {session.data?.authenticated && <Button disabled={signingOut} onClick={() => { void logout(); }}>{signingOut ? 'Signing out…' : 'Sign out'}</Button>}
     </div>
   );
 };

@@ -110,7 +110,7 @@ describe('Site Feature Components', () => {
       renderWithProviders(<GuidePage />);
 
       // Header and resource links
-      expect(screen.getByRole('heading', { level: 1, name: /How to test Signoff/i })).toBeTruthy();
+      expect(screen.getByRole('heading', { level: 1, name: /^Help$/i })).toBeTruthy();
       expect(screen.getByTestId('guide-link-repo').getAttribute('href')).toContain('github.com');
       expect(screen.getByTestId('guide-link-license').getAttribute('href')).toContain('/blob/main/LICENSE');
       expect(screen.getByText('Video walkthrough not available yet')).toBeTruthy();

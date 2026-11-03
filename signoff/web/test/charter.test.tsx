@@ -70,6 +70,17 @@ describe('Charter page (Step 27)', () => {
     expect(fetchSpy.mock.calls.some(([, init]) => init?.method === 'PUT')).toBe(false);
   });
 
+  it('protects unsaved changes and keeps edits when navigation is cancelled', async () => {
+    renderAt('/app/policy');
+    await waitForLoaded();
+    fireEvent.change(screen.getByLabelText('Auto-offer maximum (USD)'), { target: { value: '30' } });
+    fireEvent.click(screen.getByRole('navigation', { name: 'Main' }).querySelector<HTMLAnchorElement>('a[href="/app/more"]') ?? document.createElement('a'));
+    expect(screen.getByRole('dialog', { name: 'Discard unsaved changes?' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(screen.getByLabelText<HTMLInputElement>('Auto-offer maximum (USD)').value).toBe('30');
+
+  });
+
   it('shows a field-level error and does not save invalid input', async () => {
     await act(async () => {
       renderAt('/app/charter');

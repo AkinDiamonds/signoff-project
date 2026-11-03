@@ -6,25 +6,25 @@
 
 // Badge palette shared by the semantic tokens and verdict colours below.
 const badgeColors = {
-  success: { bg: '#AEE9D1', border: '#AEE9D1', text: '#0C5132' },
-  attention: { bg: '#FFD79D', border: '#FFD79D', text: '#5E4200' },
-  critical: { bg: '#FED3D1', border: '#FED3D1', text: '#8E1F0B' },
+  success: { bg: 'var(--signoff-success-bg, #AEE9D1)', border: 'var(--signoff-success-bg, #AEE9D1)', text: 'var(--signoff-success-text, #0C5132)' },
+  attention: { bg: 'var(--signoff-attention-bg, #FFD79D)', border: 'var(--signoff-attention-bg, #FFD79D)', text: 'var(--signoff-attention-text, #5E4200)' },
+  critical: { bg: 'var(--signoff-critical-bg, #FED3D1)', border: 'var(--signoff-critical-bg, #FED3D1)', text: 'var(--signoff-critical-text, #8E1F0B)' },
 } as const;
 
 export const colors = {
   // Brand accents — teal kept for brand mark, active nav indicator only
   brandPrimary: 'var(--signoff-action-primary, #14532d)',
   brandHover: '#1239AA',
-  brandSurface: '#EEF2FF',
+  brandSurface: 'var(--signoff-brand-surface, #EEF2FF)',
 
   // Neutrals — Shopify Polaris measured values
-  appBackground: '#F1F1F1', // Area behind cards (screenshot 02-orders-list)
-  surface: '#FFFFFF', // Card fill
-  surfaceSubtle: '#F8FAFC',
-  border: '#E1E1E1', // 1px card and row divider
-  borderStrong: '#C9CCCF',
-  ink: '#303030', // Text primary: body and headings
-  inkMuted: '#616161', // Text secondary: helper text, column headers
+  appBackground: 'var(--signoff-canvas, #F1F1F1)', // Area behind cards (screenshot 02-orders-list)
+  surface: 'var(--signoff-surface, #FFFFFF)', // Card fill
+  surfaceSubtle: 'var(--signoff-subtle, #F8FAFC)',
+  border: 'var(--signoff-divider, #E1E1E1)', // 1px card and row divider
+  borderStrong: 'var(--signoff-input-border, #C9CCCF)',
+  ink: 'var(--signoff-ink, #303030)', // Text primary: body and headings
+  inkMuted: 'var(--signoff-muted, #616161)', // Text secondary: helper text, column headers
 
   // Actions — Shopify near-black button, blue link
   actionPrimary: 'var(--signoff-action-primary, #14532d)',

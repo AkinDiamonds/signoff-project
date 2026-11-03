@@ -17,3 +17,28 @@ test('save controls and mobile navigation remain separate', async ({ page }, tes
     await expect(save).toBeEnabled();
   }
 });
+
+
+test('unsaved signing limits can be kept or discarded during navigation', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'merchant-mobile');
+  await page.goto('/app/policy');
+  await page.getByLabel('Auto-offer maximum (USD)').fill('30');
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'More' }).click();
+  await expect(page.getByRole('dialog', { name: 'Discard unsaved changes?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Keep editing' }).click();
+  await expect(page.getByLabel('Auto-offer maximum (USD)')).toHaveValue('30');
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'More' }).click();
+  await page.getByRole('button', { name: 'Discard changes' }).click();
+  await expect(page).toHaveURL(/\/app\/more$/);
+});
+
+
+test('dispute filters apply to the URL only after confirmation', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'merchant-mobile');
+  await page.goto('/app/disputes');
+  await page.getByRole('button', { name: 'Filter' }).click();
+  await page.getByLabel('Status').selectOption('RESOLVED');
+  await expect(page).not.toHaveURL(/status=/);
+  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await expect(page).toHaveURL(/status=RESOLVED/);
+});

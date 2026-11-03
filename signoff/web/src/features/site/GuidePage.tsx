@@ -4,17 +4,19 @@
  * architectural transparency, and direct links to live test scenarios.
  */
 
-import React from 'react';
-import { Card, colors, spacing } from '@signoff/ui';
+import React, { useState } from 'react';
+import { colors, spacing } from '@signoff/ui';
 import { ViewSwitcher } from './ViewSwitcher';
 
-const SERIF_STACK = `'Newsreader', 'Instrument Serif', 'Playfair Display', Georgia, 'Times New Roman', serif`;
+const SERIF_STACK = 'Inter, system-ui, sans-serif';
 
 export const GuidePage: React.FC = () => {
+  const [view, setView] = useState<'merchant' | 'buyer'>('merchant');
   return (
-    <div data-testid="guide-page" style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], background: '#fff', color: colors.ink, padding: spacing[2] }}>
+    <div data-testid="guide-page" style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], color: colors.ink, maxWidth: 760, minWidth: 0 }}>
+      <style>{`@media(max-width:700px) { .guide-matrix table, .guide-matrix tbody, .guide-matrix tr, .guide-matrix td { display:block; width:100%; } .guide-matrix thead { display:none; } .guide-matrix td { padding:6px 14px !important; overflow-wrap:anywhere; } .guide-matrix td:not(:first-child)::before { display:block; color:var(--signoff-muted, #686861); font-weight:600; } .guide-matrix td:nth-child(2)::before { content:"Real / live"; } .guide-matrix td:nth-child(3)::before { content:"Simulated / stubbed"; } .guide-matrix td:nth-child(4)::before { content:"Verification proof"; } .guide-matrix tr { padding:12px 0; } }`}</style>
       {/* Persistent Audience View Switcher */}
-      <ViewSwitcher initialView="merchant" />
+      <ViewSwitcher initialView="merchant" onViewChange={setView} />
 
       {/* Guide Header */}
       <header
@@ -33,10 +35,10 @@ export const GuidePage: React.FC = () => {
             lineHeight: 1.2,
           }}
         >
-          How to test Signoff
+          Help
         </h1>
         <p style={{ fontSize: '15px', color: colors.inkMuted, margin: 0, lineHeight: 1.5 }}>
-          Follow these five steps. No terminal, no sandbox account, no prior knowledge needed.
+          Explore the sandbox with the appropriate merchant or buyer view. Merchant actions require a signed-in session.
         </p>
       </header>
 
@@ -92,6 +94,7 @@ export const GuidePage: React.FC = () => {
         <span style={{ color: colors.inkMuted, fontSize: '13px' }}>Video walkthrough not available yet</span>
       </section>
 
+      {view === 'merchant' ? <>
       {/* Numbered 5-Step Evaluation Path */}
       <section aria-labelledby="numbered-path-title" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
         <h2 id="numbered-path-title" style={{ fontFamily: SERIF_STACK, fontSize: '22px', fontWeight: 400, color: colors.ink, margin: 0 }}>
@@ -100,9 +103,9 @@ export const GuidePage: React.FC = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
           {/* Step 1 */}
-          <Card title="Step 1: Open a live dispute" testId="guide-step-1">
+          <details data-testid="guide-step-1" style={{ borderBottom: `1px solid ${colors.border}`, padding: '12px 0' }}><summary style={{ minHeight: 44, cursor: 'pointer', fontWeight: 600 }}>Step 1: Open a live dispute</summary>
             <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: colors.ink, lineHeight: 1.5 }}>
-              The agent has not run yet — you are about to watch it. Open the dispute pool to select an open case.
+              Open the demo dispute pool to see available cases. Availability depends on the current sandbox session.
             </p>
             <a
               href="/app/pool"
@@ -120,10 +123,10 @@ export const GuidePage: React.FC = () => {
             >
               Open Dispute Pool →
             </a>
-          </Card>
+          </details>
 
           {/* Step 2 */}
-          <Card title="Step 2: Watch it work" testId="guide-step-2">
+          <details data-testid="guide-step-2" style={{ borderBottom: `1px solid ${colors.border}`, padding: '12px 0' }}><summary style={{ minHeight: 44, cursor: 'pointer', fontWeight: 600 }}>Step 2: Watch it work</summary>
             <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: colors.ink, lineHeight: 1.5 }}>
               Observe the four timeline stages: evidence gathering from your store, evaluation against your rules,
               the policy gate verdict, and the recorded execution status. Timing varies, and a recorded confirmation
@@ -132,13 +135,12 @@ export const GuidePage: React.FC = () => {
             <div style={{ fontSize: '12px', color: colors.inkMuted }}>
               The agent gathers available order and shipping evidence before evaluating the proposed action.
             </div>
-          </Card>
+          </details>
 
           {/* Step 3 */}
-          <Card title="Step 3: Approve something" testId="guide-step-3">
+          <details data-testid="guide-step-3" style={{ borderBottom: `1px solid ${colors.border}`, padding: '12px 0' }}><summary style={{ minHeight: 44, cursor: 'pointer', fontWeight: 600 }}>Step 3: Approve something</summary>
             <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: colors.ink, lineHeight: 1.5 }}>
-              This action is over the auto-approve limit — you are the one authorising it. Open any dispute requiring
-              merchant signoff to inspect the proposed plan and 1-tap signoff token.
+              If a current approval is available, inspect the proposed action and its consequences before deciding. A historical review state does not mean an approval is still available.
             </p>
             <a
               href="/app/disputes"
@@ -157,10 +159,10 @@ export const GuidePage: React.FC = () => {
             >
               View Disputes Needing Signoff →
             </a>
-          </Card>
+          </details>
 
           {/* Step 4 */}
-          <Card title="Step 4: See a prompt injection blocked" testId="guide-step-4">
+          <details data-testid="guide-step-4" style={{ borderBottom: `1px solid ${colors.border}`, padding: '12px 0' }}><summary style={{ minHeight: 44, cursor: 'pointer', fontWeight: 600 }}>Step 4: See a prompt injection blocked</summary>
             <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: colors.ink, lineHeight: 1.5 }}>
               Look for a buyer message attempting prompt injection (e.g. demanding an unearned refund) and inspect
               the gate decision that deterministically blocks and fails closed.
@@ -198,16 +200,16 @@ export const GuidePage: React.FC = () => {
                 Scenario Controls →
               </a>
             </div>
-          </Card>
+          </details>
 
           {/* Step 5 */}
-          <Card title="Step 5: Ask the dashboard" testId="guide-step-5">
+          <details data-testid="guide-step-5" style={{ borderBottom: `1px solid ${colors.border}`, padding: '12px 0' }}><summary style={{ minHeight: 44, cursor: 'pointer', fontWeight: 600 }}>Step 5: Ask the dashboard</summary>
             <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: colors.ink, lineHeight: 1.5 }}>
-              Open the merchant dashboard at <code>/app</code> to inspect the four key operational metrics:
+              Open Reports at <code>/app/reports</code> to inspect the four key operational metrics:
               dollars at risk, deadline radar, authority meter usage, and auto-resolved share.
             </p>
             <a
-              href="/app"
+              href="/app/reports"
               style={{
                 display: 'inline-block',
                 backgroundColor: colors.surface,
@@ -220,11 +222,13 @@ export const GuidePage: React.FC = () => {
                 textDecoration: 'none',
               }}
             >
-              Open Merchant Dashboard →
+              Open Reports →
             </a>
-          </Card>
+          </details>
         </div>
       </section>
+
+      </> : <section aria-label="Buyer guidance"><h2>Buyer sandbox</h2><p>Use the separate buyer shop to browse fictional products and review sandbox orders. A payment or dispute action changes the sandbox and requires an intentional step.</p><p>The buyer shop opens separately from merchant controls.</p></section>}
 
       {/* What is Real Table */}
       <section aria-labelledby="real-simulated-title" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
@@ -232,7 +236,7 @@ export const GuidePage: React.FC = () => {
           What is real
         </h2>
 
-        <div role="region" aria-label="Real and simulated features" tabIndex={0} style={{ overflowX: 'auto', border: `1px solid ${colors.border}`, borderRadius: '8px' }}>
+        <div className="guide-matrix" role="region" aria-label="Real and simulated features" tabIndex={0} style={{ overflowX: 'auto', border: `1px solid ${colors.border}`, borderRadius: '8px' }}>
           <table
             data-testid="real-simulated-table"
             style={{

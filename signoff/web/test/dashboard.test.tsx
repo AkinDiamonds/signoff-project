@@ -7,6 +7,8 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { ThemeProvider } from '@signoff/ui';
 import { routes } from '../src/app/routes';
 import { mockFetch, resetMockState } from '../src/app/mockFetch';
+import { toStudioDisputeRows } from '../src/features/dashboard/types';
+import { disputesFixture } from '../../fixtures/ui';
 
 function renderAt(path: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -38,6 +40,31 @@ describe('Dashboard and read-only assistant (Step 28)', () => {
     vi.unstubAllGlobals();
   });
 
+  it('keeps non-USD amounts out of the USD Studio sum', () => {
+    const original = disputesFixture.items[0];
+    if (!original) throw new Error('Expected a dispute fixture');
+    const rows = toStudioDisputeRows([original, { ...original, id: 'foreign', amount: { currency_code: 'EUR', value: '12.00' } }]);
+    expect(rows[0]?.usd_amount_cents).toBe(4200);
+    expect(rows[1]?.usd_amount_cents).toBeNull();
+  });
+
+  it('places only current approvals in the attention queue', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (new URL(url, 'http://localhost').pathname === '/api/disputes') {
+        return new Response(JSON.stringify({ ...disputesFixture, items: disputesFixture.items.map((item, index) => ({
+          ...item, latest_verdict: 'NEEDS_APPROVAL', current_approval_available: index === 0,
+        })) }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return mockFetch(input, options);
+    }));
+    renderAt('/app');
+    const attention = await screen.findByRole('region', { name: 'Needs attention' });
+    await waitFor(() => expect(attention.textContent).toContain('1 current approval'));
+    expect(attention.querySelectorAll('a')).toHaveLength(1);
+    expect(attention.textContent).toContain('Review current approval');
+  });
+
   it('renders KPI numbers from the API and the assumption footnote', async () => {
     await act(async () => {
       renderAt('/app/reports');
@@ -54,7 +81,7 @@ describe('Dashboard and read-only assistant (Step 28)', () => {
     expect(screen.getByTestId('dashboard-dispute-row-PP-D-1001')).toBeTruthy();
     expect(screen.getByTestId('dashboard-dispute-row-PP-D-1002')).toBeTruthy();
     const list = screen.getByTestId('dashboard-disputes-card');
-    expect(list.compareDocumentPosition(screen.getByTestId('kpi-card-open')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByTestId('kpi-card-open').compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     const rows = list.querySelectorAll('tbody tr');
     expect(rows[0]?.getAttribute('data-testid')).toBe('dashboard-dispute-row-PP-D-1001');
   });
@@ -132,8 +159,8 @@ it('shows the work queue on Home and links to reports through More', async () =>
   resetMockState();
   vi.stubGlobal('fetch', mockFetch);
   await act(async () => { renderAt('/app'); });
-  expect(await screen.findByRole('heading', { name: 'Needs your attention' })).toBeTruthy();
-  expect(screen.getByRole('heading', { name: 'Upcoming deadlines' })).toBeTruthy();
-  expect((await screen.findByRole('link', { name: 'Review dispute' })).getAttribute('href')).toContain('/app/disputes/');
+  expect(await screen.findByRole('heading', { name: 'Review history' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Deadlines' })).toBeTruthy();
+  expect((await screen.findByRole('link', { name: 'Inspect case' })).getAttribute('href')).toContain('/app/disputes/');
   vi.unstubAllGlobals();
 });

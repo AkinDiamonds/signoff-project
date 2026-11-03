@@ -188,7 +188,7 @@ export const DisputeDetailPage: React.FC = () => {
   const approvalState = displayedDispute.latest_approval_resolution;
   const executionState = displayedDispute.latest_execution_status;
   const reviewLabel = approvalState === undefined ? 'Status unavailable'
-    : approvalState === 'PENDING' ? displayedDispute.approval_url ? 'Your review is needed' : 'Review link unavailable'
+    : approvalState === 'PENDING' ? displayedDispute.approval_url?.startsWith('/app/approvals/') ? 'Your review is needed' : 'Review link unavailable'
     : approvalState === 'APPROVE' || approvalState === 'EDIT' ? 'Approval saved'
     : approvalState === 'DENY' ? 'You declined the proposal'
     : approvalState === 'EXPIRED' ? 'Approval expired'
@@ -203,6 +203,10 @@ export const DisputeDetailPage: React.FC = () => {
     : approvalState === 'APPROVE' || approvalState === 'EDIT' ? 'Approval saved; no execution recorded'
     : 'No action recorded';
   const uncertainAction = executionState === 'INTENDED' || executionState === 'SENT';
+  // Only authenticated owner cards are generated after the server checks the
+  // pending approval, expiry and dispute fingerprint. Legacy demo links do not
+  // establish that a current approval exists.
+  const currentApprovalUrl = approvalState === 'PENDING' && displayedDispute.approval_url?.startsWith('/app/approvals/') ? displayedDispute.approval_url : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[4], maxWidth: '1300px', minWidth: 0 }}>
@@ -217,6 +221,8 @@ export const DisputeDetailPage: React.FC = () => {
         .seller-status-row:last-child { border-bottom: 0; }
         @media (max-width: 390px) { .seller-status-row { grid-template-columns: 1fr; gap: 2px; } }
       `}</style>
+      <nav aria-label="Case sections" style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}><a href="#case-overview">Overview</a><a href="#case-evidence">Evidence</a><a href="#case-activity">Activity</a></nav>
+      <span id="case-overview" />
       {/* Navigation Breadcrumb */}
       <nav aria-label="Breadcrumb">
         <Link
@@ -236,7 +242,7 @@ export const DisputeDetailPage: React.FC = () => {
           ← Back to disputes
         </Link>
       </nav>
-      <div style={{ fontSize: 14, color: "#52605a", overflowWrap: "anywhere" }}>Case {disputeId}</div>
+      <div style={{ fontSize: 14, color: "var(--signoff-muted, #686861)", overflowWrap: "anywhere" }}>Case {disputeId}</div>
 
       {/* Record Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing[2] }}>
@@ -247,19 +253,19 @@ export const DisputeDetailPage: React.FC = () => {
                 fontSize: '24px',
                 fontWeight: 700,
                 margin: 0,
-                color: '#111827',
+                color: 'var(--signoff-ink, #252521)',
                 letterSpacing: '-0.02em',
               }}
             >
               {plainReason}
             </h1>
           </div>
-          <div style={{ fontSize: '14px', color: '#4B5563' }}>
-            <strong style={{ color: '#111827' }}>
+          <div style={{ fontSize: '14px', color: 'var(--signoff-muted, #686861)' }}>
+            <strong style={{ color: 'var(--signoff-ink, #252521)' }}>
               <Money money={displayedDispute.amount} testId="detail-header-amount" />
             </strong>
           </div>
-          <div style={{ color: '#9a3412', fontWeight: 600 }}><Deadline dueAt={displayedDispute.seller_response_due_date ?? null} /></div>
+          <div style={{ color: 'var(--signoff-danger-text, #842f2c)', fontWeight: 600 }}><Deadline dueAt={displayedDispute.seller_response_due_date ?? null} /></div>
           <details><summary style={{ cursor: 'pointer', minHeight: 44 }}>Technical details</summary>
             <div className="seller-dispute-id" data-testid="dispute-detail-id">Dispute ID: {displayedDispute.id}</div>
             <button type="button" style={{ minHeight: 44 }} onClick={() => { void copyDisputeLink(); }}>Copy dispute link</button>
@@ -269,7 +275,7 @@ export const DisputeDetailPage: React.FC = () => {
         {lastUpdated && (
           <div
             data-testid="detail-stale-indicator"
-            style={{ fontSize: '12px', color: '#4B5563', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ fontSize: '12px', color: 'var(--signoff-muted, #686861)', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <span
               style={{
@@ -284,7 +290,7 @@ export const DisputeDetailPage: React.FC = () => {
         )}
       </div>
 
-      <section aria-label="Current dispute status" data-testid="dispute-status-summary" style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: 12, padding: '4px 16px', color: '#111b36' }}>
+      <section aria-label="Current dispute status" data-testid="dispute-status-summary" style={{ background: 'var(--signoff-surface, #fff)', border: '1px solid #cbd5e1', borderRadius: 12, padding: '4px 16px', color: 'var(--signoff-ink, #252521)' }}>
         <div className="seller-status-row"><strong>PayPal</strong><span><StatusBadge status={displayedDispute.status} testId="detail-status-badge" /></span></div>
         <div className="seller-status-row"><strong>Signoff</strong><span>{reviewLabel}</span></div>
         <div className="seller-status-row"><strong>Action</strong><span>{actionLabel}</span></div>
@@ -292,14 +298,14 @@ export const DisputeDetailPage: React.FC = () => {
       {uncertainAction && <div role="alert" style={{ border: '2px solid #b45309', borderRadius: 12, background: '#fff7ed', padding: 16, color: '#78350f' }}>
         Signoff cannot yet tell whether PayPal received this action. Sending it again could duplicate the response. Check the PayPal case and this history before taking another step.
       </div>}
-      {(approvalState === 'APPROVE' || approvalState === 'EDIT') && !executionState && <div role="status" style={{ border: '1px solid #cbd5e1', borderRadius: 12, background: '#f8fafc', padding: 16 }}>
+      {(approvalState === 'APPROVE' || approvalState === 'EDIT') && !executionState && <div role="status" style={{ border: '1px solid #cbd5e1', borderRadius: 12, background: 'var(--signoff-surface, #fff)', padding: 16 }}>
         Your approval was saved, but no execution was recorded for it. Check this dispute in PayPal before taking another step.
       </div>}
 
-      {displayedDispute.approval_url && <section style={{ background: '#eef2ff', borderRadius: 12, padding: 20, color: '#111b36' }}>
+      {currentApprovalUrl && <section style={{ background: '#eef2ff', borderRadius: 12, padding: 20, color: 'var(--signoff-ink, #252521)' }}>
         <h2 style={{ marginTop: 0 }}>Your decision is needed</h2>
         <p>Review the proposed response before anything is sent to PayPal.</p>
-        <a href={displayedDispute.approval_url} data-testid="open-approval-card-button" style={{ display: 'block', background: 'var(--signoff-action-primary, #14532d)', color: '#fff', textAlign: 'center', padding: 14, minHeight: 44, borderRadius: 8, fontWeight: 700 }}>Review reply</a>
+        <a href={currentApprovalUrl ?? undefined} data-testid="open-approval-card-button" style={{ display: 'block', background: 'var(--signoff-action-primary, #14532d)', color: '#fff', textAlign: 'center', padding: 14, minHeight: 44, borderRadius: 8, fontWeight: 700 }}>Review reply</a>
       </section>}
 
       {/* Agent Active Banner (Only if actively evaluating) */}
@@ -361,7 +367,7 @@ export const DisputeDetailPage: React.FC = () => {
           <section
             data-testid="dispute-buyer-message-panel"
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: 'var(--signoff-surface, #fff)',
               borderRadius: radius.card,
               border: `1px solid ${colors.border}`,
               padding: spacing[3],
@@ -370,8 +376,8 @@ export const DisputeDetailPage: React.FC = () => {
               gap: spacing[2],
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+              <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--signoff-ink, #252521)' }}>
                 What happened
               </h2>
               <span
@@ -379,8 +385,8 @@ export const DisputeDetailPage: React.FC = () => {
                 style={{
                   fontSize: '11px',
                   fontWeight: 600,
-                  color: '#4B5563',
-                  backgroundColor: '#F3F4F6',
+                  color: 'var(--signoff-muted, #686861)',
+                  backgroundColor: 'var(--signoff-surface, #fff)',
                   padding: '2px 8px',
                   borderRadius: '4px',
                   border: '1px solid #E5E7EB',
@@ -396,11 +402,11 @@ export const DisputeDetailPage: React.FC = () => {
                   data-testid="buyer-message-content"
                   style={{
                     fontSize: '14px',
-                    color: '#1F2937',
+                    color: 'var(--signoff-ink, #252521)',
                     lineHeight: 1.6,
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-word',
-                    backgroundColor: '#F9FAFB',
+                    backgroundColor: 'var(--signoff-surface, #fff)',
                     padding: '12px 16px',
                     borderRadius: radius.control,
                     border: `1px solid ${colors.border}`,
@@ -428,7 +434,7 @@ export const DisputeDetailPage: React.FC = () => {
                 )}
               </div>
             ) : (
-              <p style={{ margin: 0, fontSize: '13px', color: '#4B5563' }}>
+              <p style={{ margin: 0, fontSize: '13px', color: 'var(--signoff-muted, #686861)' }}>
                 No textual statement submitted with this PayPal dispute.
               </p>
             )}
@@ -436,9 +442,10 @@ export const DisputeDetailPage: React.FC = () => {
 
           {/* Evidence Gathering Section */}
           <section
+            id="case-evidence"
             data-testid="dispute-evidence-panel"
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: 'var(--signoff-surface, #fff)',
               borderRadius: radius.card,
               border: `1px solid ${colors.border}`,
               padding: spacing[3],
@@ -447,12 +454,12 @@ export const DisputeDetailPage: React.FC = () => {
               gap: spacing[2],
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+              <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--signoff-ink, #252521)' }}>
                 What we found
               </h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '12px', color: '#4B5563' }}>Evidence strength:</span>
+                <span style={{ fontSize: '12px', color: 'var(--signoff-muted, #686861)' }}>Historical evidence strength:</span>
                 <span
                   data-testid="evidence-strength-badge"
                   style={{
@@ -473,7 +480,7 @@ export const DisputeDetailPage: React.FC = () => {
 
             {evidenceQuery.isPending && <p role="status">Loading saved evidence…</p>}
             {evidenceQuery.isError && <p role="alert">Saved evidence could not be loaded. Try refreshing.</p>}
-            <button type="button" disabled={refreshingEvidence} onClick={() => { void refreshEvidence(); }}>
+            <button type="button" style={{ minHeight: 44, background: colors.surface, color: colors.ink, border: `1px solid ${colors.borderStrong}`, borderRadius: 6, fontSize: 16 }} disabled={refreshingEvidence} onClick={() => { void refreshEvidence(); }}>
               {refreshingEvidence ? 'Refreshing evidence…' : 'Refresh evidence'}
             </button>
             <p>Uses the last synced dispute and current store records. It does not run the agent or contact PayPal.</p>
@@ -501,19 +508,19 @@ export const DisputeDetailPage: React.FC = () => {
             {rawEvidence ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>
-                  <span style={{ fontWeight: 600, color: '#111827' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--signoff-ink, #252521)' }}>
                     Recorded tracking
                   </span>
-                  <span style={{ color: '#4B5563' }}>
+                  <span style={{ color: 'var(--signoff-muted, #686861)' }}>
                     {rawEvidence.delivered_at ? new Date(String(rawEvidence.delivered_at)).toLocaleDateString() : 'Delivery date unavailable'}
                   </span>
                 </div>
-                <div style={{ color: '#4B5563', lineHeight: 1.5 }}>
+                <div style={{ color: 'var(--signoff-muted, #686861)', lineHeight: 1.5 }}>
                   Carrier: {String(rawEvidence.carrier ?? 'Unavailable')}; status: {String(rawEvidence.status ?? 'Unavailable')}.
                 </div>
               </div>
             ) : (
-              <div style={{ color: '#4B5563', fontSize: '13px' }}>
+              <div style={{ color: 'var(--signoff-muted, #686861)', fontSize: '13px' }}>
                 No external evidence package has been correlated for this dispute yet.
               </div>
             )}
@@ -533,7 +540,7 @@ export const DisputeDetailPage: React.FC = () => {
           <section
             data-testid="dispute-decision-card"
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: 'var(--signoff-surface, #fff)',
               borderRadius: radius.card,
               border: `1px solid ${colors.border}`,
               padding: spacing[3],
@@ -542,36 +549,36 @@ export const DisputeDetailPage: React.FC = () => {
               gap: spacing[2],
             }}
           >
-            <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
+            <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--signoff-ink, #252521)' }}>
               Your reply
             </h2>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${colors.border}` }}>
-              <span style={{ fontSize: '13px', color: '#4B5563' }}>Review decision:</span>
+              <span style={{ fontSize: '13px', color: 'var(--signoff-muted, #686861)' }}>Review decision:</span>
               {displayedDispute.latest_verdict
                 ? <StatusBadge status={displayedDispute.latest_verdict} testId="detail-verdict-chip" />
                 : <span data-testid="detail-verdict-chip">Not recorded</span>}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${colors.border}` }}>
-              <span style={{ fontSize: '13px', color: '#4B5563' }}>Signing rule:</span>
+              <span style={{ fontSize: '13px', color: 'var(--signoff-muted, #686861)' }}>Signing rule:</span>
               <span
                 title={ruleExplanation}
                 style={{
                   fontFamily: 'monospace',
                   fontSize: '12px',
                   fontWeight: 600,
-                  backgroundColor: '#F3F4F6',
+                  backgroundColor: 'var(--signoff-surface, #fff)',
                   padding: '2px 8px',
                   borderRadius: radius.control,
-                  color: '#111827',
+                  color: 'var(--signoff-ink, #252521)',
                 }}
               >
                 {ruleId ?? 'Not recorded'}
               </span>
             </div>
 
-            <div style={{ fontSize: '13px', color: '#4B5563', lineHeight: 1.5, padding: '4px 0' }}>
+            <div style={{ fontSize: '13px', color: 'var(--signoff-muted, #686861)', lineHeight: 1.5, padding: '4px 0' }}>
               {ruleExplanation}.
             </div>
 
@@ -584,7 +591,7 @@ export const DisputeDetailPage: React.FC = () => {
           <section
             data-testid="dispute-summary-card"
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: 'var(--signoff-surface, #fff)',
               borderRadius: radius.card,
               border: `1px solid ${colors.border}`,
               padding: spacing[3],
@@ -593,7 +600,7 @@ export const DisputeDetailPage: React.FC = () => {
               gap: spacing[2],
             }}
           >
-            <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
+            <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--signoff-ink, #252521)' }}>
               Case details
             </h2>
 
@@ -607,29 +614,29 @@ export const DisputeDetailPage: React.FC = () => {
               }}
             >
               <div>
-                <dt style={{ color: '#4B5563', fontWeight: 500 }}>Disputed Amount</dt>
-                <dd style={{ margin: '2px 0 0', fontWeight: 700, fontSize: '15px', color: '#111827' }}>
+                <dt style={{ color: 'var(--signoff-muted, #686861)', fontWeight: 500 }}>Disputed Amount</dt>
+                <dd style={{ margin: '2px 0 0', fontWeight: 700, fontSize: '15px', color: 'var(--signoff-ink, #252521)' }}>
                   <Money money={displayedDispute.amount} testId="detail-amount" />
                 </dd>
               </div>
 
               <div>
-                <dt style={{ color: '#4B5563', fontWeight: 500 }}>Store Order Reference</dt>
-                <dd style={{ margin: '2px 0 0', color: '#111827', fontWeight: 600 }}>
+                <dt style={{ color: 'var(--signoff-muted, #686861)', fontWeight: 500 }}>Store Order Reference</dt>
+                <dd style={{ margin: '2px 0 0', color: 'var(--signoff-ink, #252521)', fontWeight: 600 }}>
                   {displayedDispute.order_code ?? 'Not available'}
                 </dd>
               </div>
 
               <div>
-                <dt style={{ color: '#4B5563', fontWeight: 500 }}>PayPal Response Due Date</dt>
+                <dt style={{ color: 'var(--signoff-muted, #686861)', fontWeight: 500 }}>PayPal Response Due Date</dt>
                 <dd style={{ margin: '2px 0 0' }}>
                   <Deadline dueAt={displayedDispute.seller_response_due_date ?? null} />
                 </dd>
               </div>
 
               <div>
-                <dt style={{ color: '#4B5563', fontWeight: 500 }}>PayPal Dispute ID</dt>
-                <dd style={{ margin: '2px 0 0', fontFamily: 'monospace', color: '#4B5563' }}>
+                <dt style={{ color: 'var(--signoff-muted, #686861)', fontWeight: 500 }}>PayPal Dispute ID</dt>
+                <dd style={{ margin: '2px 0 0', fontFamily: 'monospace', color: 'var(--signoff-muted, #686861)' }}>
                   {displayedDispute.id}
                 </dd>
               </div>
@@ -637,9 +644,10 @@ export const DisputeDetailPage: React.FC = () => {
           </section>
           {/* Audit Trail Timeline */}
           <section
+            id="case-activity"
             data-testid="decision-timeline-card"
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: 'var(--signoff-surface, #fff)',
               borderRadius: radius.card,
               border: `1px solid ${colors.border}`,
               padding: spacing[3],
@@ -648,11 +656,11 @@ export const DisputeDetailPage: React.FC = () => {
               gap: spacing[2],
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+              <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--signoff-ink, #252521)' }}>
                 Updates
               </h2>
-              <span style={{ fontSize: '11px', color: '#4B5563' }}>History</span>
+              <span style={{ fontSize: '11px', color: 'var(--signoff-muted, #686861)' }}>History</span>
             </div>
 
             {timelineQuery.isPending && (
@@ -677,7 +685,7 @@ export const DisputeDetailPage: React.FC = () => {
           </section>
         </div>
       </div>
-      {displayedDispute.approval_url && <div className="seller-mobile-action"><a href={displayedDispute.approval_url} style={{ display: 'block', minHeight: 48, padding: 14, textAlign: 'center', borderRadius: 8, background: 'var(--signoff-action-primary, #14532d)', color: '#fff', fontWeight: 700, textDecoration: 'none' }}>Review reply</a></div>}
+      {currentApprovalUrl && <div className="seller-mobile-action"><a href={currentApprovalUrl ?? undefined} style={{ display: 'block', minHeight: 48, padding: 14, textAlign: 'center', borderRadius: 8, background: 'var(--signoff-action-primary, #14532d)', color: '#fff', fontWeight: 700, textDecoration: 'none' }}>Review reply</a></div>}
     </div>
   );
 };
