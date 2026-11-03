@@ -259,7 +259,7 @@ export const DisputeDetailPage: React.FC = () => {
               <Money money={displayedDispute.amount} testId="detail-header-amount" />
             </strong>
           </div>
-          <div style={{ color: '#9a3412', fontWeight: 600 }}>Respond by <Deadline dueAt={displayedDispute.seller_response_due_date ?? null} /></div>
+          <div style={{ color: '#9a3412', fontWeight: 600 }}><Deadline dueAt={displayedDispute.seller_response_due_date ?? null} /></div>
           <details><summary style={{ cursor: 'pointer', minHeight: 44 }}>Technical details</summary>
             <div className="seller-dispute-id" data-testid="dispute-detail-id">Dispute ID: {displayedDispute.id}</div>
             <button type="button" style={{ minHeight: 44 }} onClick={() => { void copyDisputeLink(); }}>Copy dispute link</button>

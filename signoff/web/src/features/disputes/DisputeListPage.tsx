@@ -12,6 +12,7 @@ import {
   StatusBadge,
   colors,
   formatDisputeReason,
+  describeDeadline,
   radius,
   spacing,
   typography,
@@ -38,27 +39,11 @@ export const DisputeStatusBadge: React.FC<{ status: string; testId?: string }> =
 
 function formatDueInfo(dueAt: string | null | undefined): { relative: string; absolute: string } {
   if (!dueAt) return { relative: 'No deadline', absolute: '—' };
-  const target = new Date(dueAt).getTime();
-  const now = Date.now();
-  const diffDays = Math.round((target - now) / 86400000);
-  const absolute = new Date(dueAt).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-  if (diffDays < 0) {
-    const overdue = Math.abs(diffDays);
-    return {
-      relative: overdue === 1 ? 'Overdue by 1 day' : `Overdue by ${overdue} days`,
-      absolute,
-    };
-  }
-  if (diffDays === 0) {
-    return { relative: 'Due today', absolute };
-  }
+  const date = new Date(dueAt);
+  if (Number.isNaN(date.getTime())) return { relative: 'Unknown deadline', absolute: '—' };
   return {
-    relative: diffDays === 1 ? 'Due in 1 day' : `Due in ${diffDays} days`,
-    absolute,
+    relative: describeDeadline(dueAt, new Date()),
+    absolute: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
   };
 }
 

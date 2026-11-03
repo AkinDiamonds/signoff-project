@@ -147,7 +147,7 @@ export const JudgePoolPage: React.FC = () => {
           <EmptyState
             testId="pool-empty-state"
             title="No demo disputes right now"
-            description="No live demo disputes right now — three finished runs are available below."
+            description={finishedDisputes.length === 0 ? "No demo disputes are available. Run a scenario to create one." : `${finishedDisputes.length} finished ${finishedDisputes.length === 1 ? 'run is' : 'runs are'} available below.`}
           />
         ) : (
           <div

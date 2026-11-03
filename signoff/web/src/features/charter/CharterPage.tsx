@@ -225,7 +225,15 @@ export const CharterPage: React.FC = () => {
 
   const isDirty = useMemo(() => {
     if (!values || !initialValues) return false;
-    return JSON.stringify(values) !== JSON.stringify(initialValues);
+    const current = buildCharterUpdate(values, 0);
+    const initial = buildCharterUpdate(initialValues, 0);
+    if (!current.ok || !initial.ok) return JSON.stringify(values) !== JSON.stringify(initialValues);
+    const comparable = (value: typeof current.value) => ({
+      ...value,
+      never_auto_reasons: [...(value.never_auto_reasons ?? [])].sort(),
+      never_auto_actions: [...(value.never_auto_actions ?? [])].sort(),
+    });
+    return JSON.stringify(comparable(current.value)) !== JSON.stringify(comparable(initial.value));
   }, [values, initialValues]);
 
   const handleDiscard = () => {
@@ -237,7 +245,7 @@ export const CharterPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (values === null || baseVersion === null || submitting.current) {
+    if (values === null || baseVersion === null || !isDirty || submitting.current) {
       return;
     }
     submitting.current = true;
@@ -303,7 +311,8 @@ export const CharterPage: React.FC = () => {
   const pending = mutation.isPending;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], paddingBottom: '80px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
+      <style>{`.charter-save-bar { position: sticky; bottom: 0; } @media (max-width: 899px) { .charter-save-bar { bottom: calc(65px + env(safe-area-inset-bottom)); } }`}</style>
       <PageHeader
         title="Signing limits"
         description="What the agent may do without asking you."
@@ -540,11 +549,8 @@ export const CharterPage: React.FC = () => {
       {/* Sticky save bar at bottom */}
       <div
         data-testid="charter-sticky-save-bar"
+        className="charter-save-bar"
         style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
           backgroundColor: colors.surface,
           borderTop: `1px solid ${colors.border}`,
           padding: `${spacing[2]} ${spacing[4]}`,
@@ -553,7 +559,7 @@ export const CharterPage: React.FC = () => {
           alignItems: 'center',
           gap: spacing[2],
           boxShadow: '0 -2px 8px rgba(0,0,0,0.06)',
-          zIndex: 100,
+          zIndex: 19,
         }}
       >
         <button
@@ -576,7 +582,7 @@ export const CharterPage: React.FC = () => {
           type="button"
           data-testid="charter-save-button"
           onClick={() => void handleSave()}
-          disabled={pending}
+          disabled={!isDirty || pending}
           style={{
             padding: '8px 20px',
             backgroundColor: colors.primaryAction,
@@ -585,7 +591,8 @@ export const CharterPage: React.FC = () => {
             fontSize: typography.fontSizeBody,
             fontWeight: typography.fontWeightSemibold,
             color: '#FFFFFF',
-            cursor: pending ? 'not-allowed' : 'pointer',
+            cursor: !isDirty || pending ? 'not-allowed' : 'pointer',
+            opacity: !isDirty || pending ? 0.6 : 1,
           }}
         >
           {pending ? 'Saving...' : 'Save'}
