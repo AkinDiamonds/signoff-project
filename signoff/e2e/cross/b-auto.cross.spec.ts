@@ -41,7 +41,7 @@ test('B: in-transit dispute requires review by default @smoke @full', async ({ p
   await page.reload();
   await expect(page.getByText('Delivery evidence needs your review', { exact: true })).toBeVisible();
   await page.goto(`/app/disputes?q=${encodeURIComponent(disputeId)}`);
-  await expect(page.getByTestId(`dispute-row-${disputeId}`)).toBeVisible();
+  await expect(page.locator(`a[href="/app/disputes/${disputeId}"]`)).toBeVisible();
   await page.goBack();
   await expect(page.getByTestId('dispute-detail-id')).toContainText(disputeId);
   await expect(page.getByText('Delivery evidence needs your review', { exact: true })).toBeVisible();
