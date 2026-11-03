@@ -82,7 +82,12 @@ def test_only_latest_relevant_run_failure_requires_analysis_review() -> None:
         record_ledger_event(session, 'recovered', TimelineEventKind.RUN_STARTED, {'run_id': 'new'})
         record_ledger_event(session, 'failed', TimelineEventKind.DISPUTE_SYNCED, {'status': 'OPEN'})
         record_ledger_event(session, 'failed', TimelineEventKind.EXECUTION_CONFIRMED, {'execution_id': 'other'})
-        assert failed_analysis_dispute_ids(session, ['failed', 'recovered']) == {'failed'}
+        record_ledger_event(session, 'tracking', TimelineEventKind.NO_ACTION, {'reason': 'tracking_requires_review'})
+        record_ledger_event(session, 'policy', TimelineEventKind.NO_ACTION, {'reason': 'signing_policy_changed'})
+        record_ledger_event(session, 'other', TimelineEventKind.NO_ACTION, {'reason': 'no_action_needed'})
+        assert failed_analysis_dispute_ids(session, ['failed', 'recovered', 'tracking', 'policy', 'other']) == {
+            'failed', 'tracking', 'policy',
+        }
 
 
 def test_session_scope_only_narrows_results_and_missing_session_is_empty() -> None:
