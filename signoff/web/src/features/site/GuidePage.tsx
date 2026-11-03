@@ -14,7 +14,7 @@ export const GuidePage: React.FC = () => {
   const [view, setView] = useState<'merchant' | 'buyer'>('merchant');
   return (
     <div data-testid="guide-page" style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], color: colors.ink, maxWidth: 760, minWidth: 0 }}>
-      <style>{`@media(max-width:700px) { .guide-matrix table, .guide-matrix tbody, .guide-matrix tr, .guide-matrix td { display:block; width:100%; } .guide-matrix thead { display:none; } .guide-matrix td { padding:6px 14px !important; overflow-wrap:anywhere; } .guide-matrix td:not(:first-child)::before { display:block; color:var(--signoff-muted, #686861); font-weight:600; } .guide-matrix td:nth-child(2)::before { content:"Real / live"; } .guide-matrix td:nth-child(3)::before { content:"Simulated / stubbed"; } .guide-matrix td:nth-child(4)::before { content:"Verification proof"; } .guide-matrix tr { padding:12px 0; } }`}</style>
+      <style>{`.guide-cell-label { display:none; } @media(max-width:700px) { .guide-matrix table, .guide-matrix tbody, .guide-matrix tr, .guide-matrix td { display:block; width:100%; } .guide-matrix thead { display:none; } .guide-matrix td { padding:6px 14px !important; overflow-wrap:anywhere; } .guide-cell-label { display:block; color:var(--signoff-muted, #686861); font-weight:600; } .guide-matrix tr { padding:12px 0; } }`}</style>
       {/* Persistent Audience View Switcher */}
       <ViewSwitcher initialView="merchant" onViewChange={setView} />
 
@@ -157,7 +157,7 @@ export const GuidePage: React.FC = () => {
                 textDecoration: 'none',
               }}
             >
-              View Disputes Needing Signoff →
+              View disputes →
             </a>
           </details>
 
@@ -310,14 +310,14 @@ export const GuidePage: React.FC = () => {
                   key={row.component}
                   style={{
                     borderBottom: idx < 7 ? `1px solid ${colors.border}` : 'none',
-                    backgroundColor: idx % 2 === 0 ? '#ffffff' : colors.surfaceSubtle,
+                    backgroundColor: idx % 2 === 0 ? colors.surface : colors.surfaceSubtle,
                   }}
                 >
                   <td style={{ padding: '10px 14px', fontWeight: 600, color: colors.ink }}>{row.component}</td>
-                  <td style={{ padding: '10px 14px', color: '#166534' }}>{row.real}</td>
-                  <td style={{ padding: '10px 14px', color: '#92400E' }}>{row.simulated}</td>
-                  <td style={{ padding: '10px 14px', color: colors.inkMuted, fontFamily: 'monospace', fontSize: '11px' }}>
-                    {row.proof}
+                  <td style={{ padding: '10px 14px', color: colors.ink }}><span className="guide-cell-label">Real / live</span><span>{row.real}</span></td>
+                  <td style={{ padding: '10px 14px', color: colors.ink }}><span className="guide-cell-label">Simulated / stubbed</span><span>{row.simulated}</span></td>
+                  <td style={{ padding: '10px 14px', color: colors.inkMuted, fontFamily: 'monospace', fontSize: '13px' }}>
+                    <span className="guide-cell-label">Verification proof</span><span>{row.proof}</span>
                   </td>
                 </tr>
               ))}

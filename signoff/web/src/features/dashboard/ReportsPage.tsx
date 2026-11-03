@@ -384,6 +384,13 @@ export const ReportsPage: React.FC = () => {
           : ''}
       </p>
 
+      {/* Integrated Assistant & Widgets Section (Test Compatible) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
+        <WidgetsSection
+          disputes={disputes}
+          charter={charterQuery.data}
+          timeline={timelineQuery.data?.items ?? []}
+        />
       {/* Flagship AG Studio Workspace (Always Visible, Primary Centerpiece) */}
       <section aria-label="AG Studio Analytics" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -412,14 +419,7 @@ export const ReportsPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Integrated Assistant & Widgets Section (Test Compatible) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
         <AssistantPanel kpis={kpis} disputes={disputes} />
-        <WidgetsSection
-          disputes={disputes}
-          charter={charterQuery.data}
-          timeline={timelineQuery.data?.items ?? []}
-        />
       </div>
     </div>
   );

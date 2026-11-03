@@ -17,7 +17,7 @@ import {
 } from '@signoff/ui';
 import { useDispute, useDisputeTimeline, useEvidenceSnapshots, unwrap } from '../../app/queries';
 import { apiClient } from '../../app/api';
-import { DecisionTimeline } from './timeline';
+import { DecisionTimeline, ExecutionAttempts } from './timeline';
 import type { ApiTimelineEvent, DisputeDetail } from './types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -164,7 +164,7 @@ export const DisputeDetailPage: React.FC = () => {
   }
 
   const latestRunState = timelineQuery.data?.items?.filter(event =>
-    ['RUN_STARTED', 'NO_ACTION', 'RUN_FAILED', 'GATE_DECIDED', 'EXECUTION_CONFIRMED'].includes(event.kind)
+    ['RUN_STARTED', 'NO_ACTION', 'RUN_FAILED', 'GATE_DECIDED'].includes(event.kind)
   ).reduce<ApiTimelineEvent | undefined>((latest, event) =>
     !latest || event.sequence_number > latest.sequence_number ? event : latest, undefined);
   const needsDeliveryReview = latestRunState?.kind === 'NO_ACTION' && 'reason' in latestRunState &&
@@ -301,6 +301,8 @@ export const DisputeDetailPage: React.FC = () => {
       {(approvalState === 'APPROVE' || approvalState === 'EDIT') && !executionState && <div role="status" style={{ border: '1px solid #cbd5e1', borderRadius: 12, background: 'var(--signoff-surface, #fff)', padding: 16 }}>
         Your approval was saved, but no execution was recorded for it. Check this dispute in PayPal before taking another step.
       </div>}
+
+      {timelineQuery.isSuccess && <ExecutionAttempts events={timelineQuery.data.items ?? []} />}
 
       {currentApprovalUrl && <section style={{ background: '#eef2ff', borderRadius: 12, padding: 20, color: 'var(--signoff-ink, #252521)' }}>
         <h2 style={{ marginTop: 0 }}>Your decision is needed</h2>
@@ -499,7 +501,7 @@ export const DisputeDetailPage: React.FC = () => {
               {snapshot.evidence.notes && <p>{snapshot.evidence.notes}</p>}
               {snapshot.evidence.milestones.length > 0 && <><h3>Recorded tracking</h3><ul>
                 {snapshot.evidence.milestones.map((event, index) => <li key={`${event.event_time}-${index}`}>
-                  {event.status} · {new Date(event.event_time).toLocaleString()} · {event.source} · {event.carrier} {event.tracking_number}
+                  {event.status} · {new Date(event.event_time).toLocaleString()} · {event.source === 'simulated' ? 'simulated · not carrier-confirmed' : event.source} · {event.carrier} {event.tracking_number}
                   {event.source_id && <> · Record {event.source_id}</>}
                 </li>)}
               </ul></>}
@@ -516,7 +518,7 @@ export const DisputeDetailPage: React.FC = () => {
                   </span>
                 </div>
                 <div style={{ color: 'var(--signoff-muted, #686861)', lineHeight: 1.5 }}>
-                  Carrier: {String(rawEvidence.carrier ?? 'Unavailable')}; status: {String(rawEvidence.status ?? 'Unavailable')}.
+                  Carrier: {String(rawEvidence.carrier ?? 'Unavailable')}; status: {String(rawEvidence.status ?? 'Unavailable')}. {rawEvidence.source === 'simulated' ? 'Simulated · not carrier-confirmed.' : 'Source not verified; carrier confirmation is unavailable.'}
                 </div>
               </div>
             ) : (

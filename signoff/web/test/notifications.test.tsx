@@ -48,6 +48,20 @@ describe('Notifications', () => {
     await waitFor(() => expect(screen.getByText('1 unread')).toBeTruthy());
     expect(writes).toBe(2);
   });
+  it('requests unread results from the first page when switching views', async () => {
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      urls.push(url);
+      return json({ items: [], unread_count: 2, next_offset: url.includes('offset=0') ? 25 : null });
+    }));
+    mount();
+    fireEvent.click(await screen.findByRole('button', { name: 'Next' }));
+    await waitFor(() => expect(urls.some(url => url.includes('offset=25'))).toBe(true));
+    fireEvent.click(await screen.findByRole('button', { name: /Unread/ }));
+    await waitFor(() => expect(urls.some(url => url.includes('offset=0') && url.includes('unread_only=true'))).toBe(true));
+  });
+
   it('shows a load error without claiming the inbox is empty', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => json({ error: { code: 'UNAVAILABLE', message: 'Unavailable' } }, 503)));
     mount();

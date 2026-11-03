@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { PageHeader, Button, colors, radius, spacing, toast } from '@signoff/ui';
+import { PageHeader, Button, colors, spacing, toast } from '@signoff/ui';
 import { PhoneNotifications } from './PhoneNotifications';
 import type { components } from '@signoff/api-client/generated';
 import { apiClient } from '../../app/api';
@@ -15,22 +15,22 @@ const labels: Record<ReadinessItem['state'], string> = {
   verified: 'Verified', failed: 'Check failed', stale: 'Out of date',
 };
 const cardStyle: React.CSSProperties = {
-  background: 'var(--signoff-surface, #fff)', borderRadius: radius.card, border: `1px solid ${colors.border}`, padding: 20, minWidth: 0,
+  background: 'var(--signoff-surface, #fff)', borderBottom: `1px solid ${colors.border}`, padding: '16px 0', minWidth: 0,
 };
 
 const Connection: React.FC<{ title: string; item: ReadinessItem }> = ({ title, item }) => (
-  <section style={cardStyle} aria-label={title}>
-    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+  <section aria-label={title}><details style={cardStyle}>
+    <summary style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', minHeight: 48 }}>
       <h3 style={{ margin: 0, fontSize: 16 }}>{title}</h3>
       <span style={{ fontSize: 12, fontWeight: 650, padding: '5px 9px', borderRadius: 99,
         background: item.state === 'verified' ? '#ecfdf5' : item.state === 'failed' ? '#fff1f2' : '#f1f5f4',
         color: item.state === 'verified' ? '#065f46' : item.state === 'failed' ? '#9f1239' : '#42524a' }}>
         {labels[item.state]}
       </span>
-    </div>
+    </summary>
     <p style={{ lineHeight: 1.6, fontSize: 14, color: 'var(--signoff-muted, #686861)' }}>{item.detail}</p>
     {item.checked_at && <p style={{ fontSize: 12, color: 'var(--signoff-muted, #686861)', marginBottom: 0 }}>Last observed {new Date(item.checked_at).toLocaleString()}</p>}
-  </section>
+  </details></section>
 );
 
 export const SettingsPage: React.FC = () => {
@@ -104,7 +104,7 @@ export const SettingsPage: React.FC = () => {
         <h2 style={{ marginTop: 0, fontSize: 18 }}>Appearance</h2>
         <Link to="/app/settings/appearance" style={{ color: "var(--signoff-action-primary)", fontWeight: 600 }}>Choose display and accent color</Link>
       </section>
-      <PhoneNotifications />
+      <details style={cardStyle}><summary style={{ cursor: 'pointer', minHeight: 48, fontWeight: 600 }}>Phone notifications</summary><PhoneNotifications /></details>
       {session.data?.authenticated && <Button disabled={signingOut} onClick={() => { void logout(); }}>{signingOut ? 'Signing out…' : 'Sign out'}</Button>}
     </div>
   );

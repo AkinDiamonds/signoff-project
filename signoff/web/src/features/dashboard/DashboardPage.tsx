@@ -8,9 +8,9 @@ export const DashboardPage: React.FC = () => {
   const kpis = useKpis();
   const open = (disputes.data ?? []).filter(item => item.status !== 'RESOLVED').sort((a, b) => (a.seller_response_due_date ?? '9999').localeCompare(b.seller_response_due_date ?? '9999'));
   const deadlines = open.filter(item => item.seller_response_due_date);
-  const approvals = open.filter(item => item.current_approval_available === true);
-  const approvalAvailabilityKnown = disputes.data?.every(item => typeof item.current_approval_available === 'boolean') ?? false;
-  const review = open.filter(item => !item.current_approval_available && (item.latest_verdict === 'NEEDS_APPROVAL' || item.status === 'UNDER_REVIEW'));
+  const attention = open.filter(item => item.current_approval_available === true || item.analysis_needs_review === true || item.approval_execution_attention != null);
+  const attentionAvailabilityKnown = disputes.data?.every(item => typeof item.current_approval_available === 'boolean' && typeof item.analysis_needs_review === 'boolean' && 'approval_execution_attention' in item) ?? false;
+  const review = open.filter(item => !item.current_approval_available && !item.analysis_needs_review && !item.approval_execution_attention && (item.latest_verdict === 'NEEDS_APPROVAL' || item.status === 'UNDER_REVIEW'));
   return <div style={{ maxWidth: 900, display: 'grid', gap: 32 }}>
     <PageHeader title="Home" description="Your shop, at a glance." testId="dashboard-title" />
     <section aria-label="Open dispute summary">
@@ -27,10 +27,10 @@ export const DashboardPage: React.FC = () => {
       {disputes.isPending && <Skeleton height="80px" />}
       {disputes.isError && <ErrorState message="Couldn’t load current approvals." onRetry={() => void disputes.refetch()} />}
       {disputes.isSuccess && <>
-        <p style={{ color: colors.inkMuted }}>{approvalAvailabilityKnown ? `${approvals.length} current approval${approvals.length === 1 ? '' : 's'} in the loaded disputes.` : 'Current approval availability is unavailable for some loaded disputes.'}</p>
-        {approvals.map(item => <Link key={item.id} to={`/app/disputes/${item.id}`} style={{ display: 'grid', gap: 6, padding: '16px 0', borderTop: `1px solid ${colors.border}`, color: colors.ink, textDecoration: 'none' }}>
+        <p style={{ color: colors.inkMuted }}>{attentionAvailabilityKnown ? `${attention.length} case${attention.length === 1 ? '' : 's'} in the loaded disputes ${attention.length === 1 ? 'needs' : 'need'} review.` : 'Some attention information is unavailable for the loaded disputes.'}</p>
+        {attention.map(item => <Link key={item.id} to={`/app/disputes/${item.id}`} style={{ display: 'grid', gap: 6, padding: '16px 0', borderTop: `1px solid ${colors.border}`, color: colors.ink, textDecoration: 'none' }}>
           <strong>{item.order_code ? `Order ${item.order_code}` : `Case ${item.id}`} · <Money money={item.amount} /></strong>
-          <span>{formatDisputeReason(item.reason)}</span><span style={{ color: colors.interactive }}>Review current approval →</span>
+          <span>{formatDisputeReason(item.reason)}</span>{item.analysis_needs_review && <span>Analysis needs review</span>}{item.current_approval_available && <span>Current approval available</span>}{item.approval_execution_attention === 'FAILED' && <span>Approved action recorded as failed</span>}{item.approval_execution_attention === 'NOT_RECORDED' && <span>Approval saved · execution not recorded</span>}<span style={{ color: colors.interactive }}>Inspect case →</span>
         </Link>)}
         <p style={{ color: colors.inkMuted, fontSize: 13 }}>Based on up to 50 loaded disputes. Open a case to check its current state.</p>
       </>}

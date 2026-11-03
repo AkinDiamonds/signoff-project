@@ -18,6 +18,7 @@ import {
 } from '@signoff/ui';
 import type { DisputeReason, DisputeStatus } from '@signoff/api-client';
 import { useDisputes } from '../../app/queries';
+import { getDemoSession } from '../demo/api';
 import {
   filtersToSearchParams,
   isReasonFilter,
@@ -58,6 +59,10 @@ export const DisputeListPage: React.FC = () => {
   // Parse filters from URL, falling back to defaults on invalid input
   const filters = useMemo(() => parseDisputeFilters(searchParams), [searchParams]);
 
+  const [searchInput, setSearchInput] = useState(filters.q);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => { setSearchInput(filters.q); }, [filters.q]);
+  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current); }, []);
   const [filterOpen, setFilterOpen] = useState(false);
   const [draft, setDraft] = useState(filters);
   const filterDialog = useRef<HTMLDivElement>(null);
@@ -87,7 +92,11 @@ export const DisputeListPage: React.FC = () => {
       reason?: DisputeReason;
       limit?: number;
       cursor?: string;
-    } = { limit: filters.limit };
+      scope?: 'all' | 'mine';
+      view?: 'all' | 'attention' | 'waiting' | 'closed';
+      search?: string;
+    } = { limit: filters.limit, scope: filters.scope, view: filters.view };
+    if (filters.q) q.search = filters.q;
     if (filters.status !== 'ALL') {
       q.status = filters.status;
     }
@@ -101,7 +110,8 @@ export const DisputeListPage: React.FC = () => {
   }, [filters]);
 
   // Query with auto refetch every 10s
-  const query = useDisputes(apiQuery);
+  const demoSession = getDemoSession();
+  const query = useDisputes(apiQuery, filters.scope === 'mine' ? demoSession : null);
 
   const [displayedItems, setDisplayedItems] = useState<DisputeListItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -122,24 +132,15 @@ export const DisputeListPage: React.FC = () => {
   }, [location.state, query.isSuccess, displayedItems]);
 
   const updateFilter = (patch: Partial<typeof filters>) => {
+    if ('q' in patch && searchTimer.current) { clearTimeout(searchTimer.current); searchTimer.current = null; }
     const updated = { ...filters, ...patch };
-    if ('status' in patch || 'reason' in patch || 'scope' in patch || 'q' in patch) {
+    if ('status' in patch || 'reason' in patch || 'scope' in patch || 'q' in patch || 'view' in patch) {
       updated.cursor = null;
     }
     setSearchParams(filtersToSearchParams(updated));
   };
 
-  // Filter items client-side by search query if set
-  const filteredItems = useMemo(() => {
-    if (!filters.q) return displayedItems;
-    const queryTerm = filters.q.toLowerCase();
-    return displayedItems.filter((item) => {
-      const matchId = item.id.toLowerCase().includes(queryTerm);
-      const matchOrder = item.order_code && item.order_code.toLowerCase().includes(queryTerm);
-      return Boolean(matchId || matchOrder);
-    });
-  }, [displayedItems, filters.q]);
-
+  const filteredItems = displayedItems;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
@@ -169,15 +170,24 @@ export const DisputeListPage: React.FC = () => {
                 color: colors.inkMuted,
               }}
             >
-              Search
+              Search disputes
             </label>
             <input
               id="filter-search"
               data-testid="filter-search"
               type="text"
-              placeholder="Filter by dispute ID or order code"
-              value={filters.q}
-              onChange={(e) => updateFilter({ q: e.target.value })}
+              maxLength={200}
+              placeholder="Search by case or order"
+              value={searchInput}
+              onChange={(event) => {
+                const value = event.target.value;
+                setSearchInput(value);
+                if (searchTimer.current) clearTimeout(searchTimer.current);
+                searchTimer.current = setTimeout(() => setSearchParams(current => {
+                  const next = parseDisputeFilters(current);
+                  return filtersToSearchParams({ ...next, q: value, cursor: null });
+                }), 300);
+              }}
               style={{
                 padding: '6px 10px',
                 borderRadius: radius.control,
@@ -272,23 +282,32 @@ export const DisputeListPage: React.FC = () => {
             </select>
           </div>
 
-          <p style={{ margin: 0, color: colors.inkMuted, fontSize: 14 }}>Showing all sessions. Session filtering is unavailable.</p>
+          <fieldset style={{ border: 0, padding: 0, margin: 0 }}><legend>Scope</legend>
+            <label style={{ display: 'flex', alignItems: 'center', minHeight: 44, gap: 8 }}><input type="radio" name="scope" checked={draft.scope === 'all'} onChange={() => setDraft(current => ({ ...current, scope: 'all' }))} />All sessions</label>
+            <label style={{ display: 'flex', alignItems: 'center', minHeight: 44, gap: 8 }}><input type="radio" name="scope" checked={draft.scope === 'mine'} onChange={() => setDraft(current => ({ ...current, scope: 'mine' }))} />My demo session</label>
+            {!demoSession && draft.scope === 'mine' && <p>No active demo session is available on this device.</p>}
+          </fieldset>
 
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Button variant="secondary" testId="reset-filters-button" onClick={() => setDraft(current => ({ ...current, status: 'ALL', reason: 'ALL', scope: 'all' }))}>Clear filters</Button>
-                <Button onClick={() => { updateFilter({ status: draft.status, reason: draft.reason }); setFilterOpen(false); }}>Apply filters</Button>
+                <Button onClick={() => { updateFilter({ status: draft.status, reason: draft.reason, scope: draft.scope }); setFilterOpen(false); }}>Apply filters</Button>
               </div>
             </div>
           </div>}
         </form>
       </Card>
 
-      {(filters.status !== 'ALL' || filters.reason !== 'ALL') && <div aria-label="Applied filters" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      {(filters.status !== 'ALL' || filters.reason !== 'ALL' || filters.scope !== 'all') && <div aria-label="Applied filters" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {filters.status !== 'ALL' && <button type="button" onClick={() => updateFilter({ status: 'ALL' })}>Status: {filters.status.replaceAll('_', ' ')} ×</button>}
         {filters.reason !== 'ALL' && <button type="button" onClick={() => updateFilter({ reason: 'ALL' })}>Reason: {formatDisputeReason(filters.reason)} ×</button>}
-        <button type="button" onClick={() => updateFilter({ status: 'ALL', reason: 'ALL', q: '' })}>Clear all</button>
+        {filters.scope === 'mine' && <button type="button" onClick={() => updateFilter({ scope: 'all' })}>My demo session ×</button>}
+        <button type="button" onClick={() => updateFilter({ status: 'ALL', reason: 'ALL', scope: 'all', q: '' })}>Clear all</button>
       </div>}
+
+      <nav aria-label="Dispute views" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+        {([['all', 'All'], ['attention', 'Needs attention'], ['waiting', 'Waiting'], ['closed', 'Closed']] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={filters.view === value} onClick={() => updateFilter({ view: value, status: 'ALL' })} style={{ whiteSpace: 'nowrap', minHeight: 44, border: 0, borderRadius: 6, padding: '8px 12px', background: filters.view === value ? colors.primaryAction : colors.surfaceSubtle, color: filters.view === value ? '#fff' : colors.ink }}>{label}</button>)}
+      </nav>
 
       {/* Main Content Area */}
       {query.isPending && (
@@ -317,8 +336,8 @@ export const DisputeListPage: React.FC = () => {
       {query.isSuccess && filteredItems.length === 0 && (
         <EmptyState
           testId="disputes-empty-state"
-          title={filters.q || filters.status !== "ALL" || filters.reason !== "ALL" ? "No disputes match these filters" : "No disputes yet"}
-          description={filters.q || filters.status !== "ALL" || filters.reason !== "ALL" ? "Change or reset the filters to see more disputes." : "Disputes appear here when PayPal opens one."}
+          title={filters.scope === 'mine' && !demoSession ? 'No active demo session' : filters.q || filters.status !== "ALL" || filters.reason !== "ALL" ? 'No disputes match these filters' : filters.view !== 'all' ? 'No disputes in this view' : filters.scope === 'mine' ? 'No disputes in this session' : 'No disputes yet'}
+          description={filters.scope === 'mine' && !demoSession ? 'Run a demo scenario to start a session, or choose all sessions.' : filters.q || filters.status !== "ALL" || filters.reason !== "ALL" || filters.view !== 'all' ? 'Change the view or filters to see more disputes.' : 'Disputes appear here when PayPal opens one.'}
           action={
             <div style={{ display: 'flex', gap: spacing[2], alignItems: 'center' }}>
               <Link

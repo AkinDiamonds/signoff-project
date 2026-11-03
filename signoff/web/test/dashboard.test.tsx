@@ -53,16 +53,33 @@ describe('Dashboard and read-only assistant (Step 28)', () => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
       if (new URL(url, 'http://localhost').pathname === '/api/disputes') {
         return new Response(JSON.stringify({ ...disputesFixture, items: disputesFixture.items.map((item, index) => ({
-          ...item, latest_verdict: 'NEEDS_APPROVAL', current_approval_available: index === 0,
+          ...item, latest_verdict: 'NEEDS_APPROVAL', current_approval_available: index === 0, analysis_needs_review: false, approval_execution_attention: null,
         })) }), { status: 200, headers: { 'Content-Type': 'application/json' } });
       }
       return mockFetch(input, options);
     }));
     renderAt('/app');
     const attention = await screen.findByRole('region', { name: 'Needs attention' });
-    await waitFor(() => expect(attention.textContent).toContain('1 current approval'));
+    await waitFor(() => expect(attention.textContent).toContain('1 case in the loaded disputes needs review'));
     expect(attention.querySelectorAll('a')).toHaveLength(1);
-    expect(attention.textContent).toContain('Review current approval');
+    expect(attention.textContent).toContain('Current approval available');
+  });
+
+  it('shows a saved approval without implying execution', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (new URL(url, 'http://localhost').pathname === '/api/disputes') {
+        return new Response(JSON.stringify({ ...disputesFixture, items: disputesFixture.items.map((item, index) => ({
+          ...item, current_approval_available: false, analysis_needs_review: false,
+          approval_execution_attention: index === 0 ? 'NOT_RECORDED' : null,
+        })) }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return mockFetch(input, options);
+    }));
+    renderAt('/app');
+    const attention = await screen.findByRole('region', { name: 'Needs attention' });
+    await waitFor(() => expect(attention.textContent).toContain('Approval saved · execution not recorded'));
+    expect(attention.textContent).not.toContain('completed');
   });
 
   it('renders KPI numbers from the API and the assumption footnote', async () => {

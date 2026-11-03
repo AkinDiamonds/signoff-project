@@ -42,3 +42,30 @@ test('dispute filters apply to the URL only after confirmation', async ({ page }
   await page.getByRole('button', { name: 'Apply filters' }).click();
   await expect(page).toHaveURL(/status=RESOLVED/);
 });
+
+test('session filter never broadens an absent demo session', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'merchant-mobile');
+  await page.goto('/app/disputes');
+  await page.getByRole('button', { name: 'Filter' }).click();
+  await page.getByLabel('My demo session').check();
+  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await expect(page).toHaveURL(/scope=mine/);
+  await expect(page.getByText('No active demo session')).toBeVisible();
+});
+
+test('dispute views persist in the URL and show a view-specific empty state', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'merchant-mobile');
+  await page.goto('/app/disputes');
+  await page.getByRole('button', { name: 'Waiting', exact: true }).click();
+  await expect(page).toHaveURL(/view=waiting/);
+  await expect(page.getByText('No disputes in this view')).toBeVisible();
+});
+
+test('search filters cases by order reference and persists in the URL', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'merchant-mobile');
+  await page.goto('/app/disputes');
+  await page.getByLabel('Search disputes').fill('ORD0000002');
+  await expect(page).toHaveURL(/q=ORD0000002/);
+  await expect(page.getByTestId('dispute-row-PP-D-1002')).toBeVisible();
+  await expect(page.getByTestId('dispute-row-PP-D-1001')).toHaveCount(0);
+});

@@ -250,6 +250,25 @@ export const mockFetch: typeof fetch = async (input, init) => {
       return json({ ...statusFixture, demo_frozen: demoMode.frozen });
     }
 
+    if (pathname === '/api/disputes') {
+      const session = new Headers(init?.headers).get('X-Demo-Session');
+      const source = searchParams.get('scope') === 'mine'
+        ? (session ? Array.from(createdDisputes.values()).map(item => item.detail) : [])
+        : disputesFixture.items;
+      const view = searchParams.get('view');
+      const search = searchParams.get('search')?.trim().toLowerCase() ?? '';
+      const items = source.filter(item => (!searchParams.has('status') || item.status === searchParams.get('status')) &&
+        (!searchParams.has('reason') || item.reason === searchParams.get('reason')) &&
+        (!search || item.id.toLowerCase().includes(search) || (item.order_code ?? '').toLowerCase().includes(search)) &&
+        (view !== 'waiting' || item.status === 'WAITING_FOR_BUYER_RESPONSE') &&
+        (view !== 'closed' || item.status === 'RESOLVED') &&
+        (view !== 'attention' || (item.status !== 'RESOLVED' &&
+          (('current_approval_available' in item && item.current_approval_available) ||
+           ('analysis_needs_review' in item && item.analysis_needs_review) ||
+           ('approval_execution_attention' in item && item.approval_execution_attention)))));
+      return json({ items, next_cursor: null, total_count: items.length });
+    }
+
     if (STATIC_FIXTURES[pathname] !== undefined) {
       return json(STATIC_FIXTURES[pathname]);
     }

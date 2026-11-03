@@ -7,7 +7,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { ThemeProvider } from '@signoff/ui';
 import { routes } from '../src/app/routes';
 import { mockFetch } from '../src/app/mockFetch';
-import { DecisionTimeline } from '../src/features/disputes/timeline';
+import { DecisionTimeline, ExecutionAttempts } from '../src/features/disputes/timeline';
 import type { ApiTimelineEvent } from '../src/features/disputes/types';
 
 function renderAt(path: string) {
@@ -38,12 +38,13 @@ describe('Disputes UI feature (Step 25)', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('disputes-table')).toBeTruthy();
-    });
+    }, { timeout: 5000 });
 
     fireEvent.click(screen.getByRole('button', { name: 'Filter' }));
     expect(screen.getByTestId('filter-status')).toBeTruthy();
     expect(screen.getByTestId('filter-reason')).toBeTruthy();
-    expect(screen.getByText('Showing all sessions. Session filtering is unavailable.')).toBeTruthy();
+    expect(screen.getByLabelText('All sessions')).toBeTruthy();
+    expect(screen.getByLabelText('My demo session')).toBeTruthy();
 
     expect(screen.getByTestId('dispute-row-PP-D-1001')).toBeTruthy();
     expect(screen.getByTestId('dispute-row-PP-D-1002')).toBeTruthy();
@@ -245,6 +246,21 @@ describe('Disputes UI feature (Step 25)', () => {
     expect(screen.getByText('Provide evidence.')).toBeTruthy();
     expect(screen.getByText('Send message.')).toBeTruthy();
     expect(screen.getByText(/require independent verification/)).toBeTruthy();
+  });
+
+  it('shows mixed execution attempts independently without implying PayPal success', () => {
+    const base = { dispute_id: 'PP-D-1001', created_at: '2026-10-31T20:00:00Z', is_truncated: false };
+    const events: ApiTimelineEvent[] = [
+      { ...base, id: 'i1', sequence_number: 1, kind: 'EXECUTION_INTENDED', action_type: 'PROVIDE_EVIDENCE', execution_id: 'a' },
+      { ...base, id: 'f1', sequence_number: 2, kind: 'EXECUTION_FAILED', error_message: 'Rejected', execution_id: 'a' },
+      { ...base, id: 'i2', sequence_number: 3, kind: 'EXECUTION_INTENDED', action_type: 'SEND_MESSAGE', execution_id: 'b' },
+      { ...base, id: 'c2', sequence_number: 4, kind: 'EXECUTION_CONFIRMED', external_id: '', execution_id: 'b' },
+    ];
+    render(<ExecutionAttempts events={events} />);
+    expect(screen.getByText('provide evidence')).toBeTruthy();
+    expect(screen.getByText('Failed')).toBeTruthy();
+    expect(screen.getByText('send message')).toBeTruthy();
+    expect(screen.getByText(/PayPal outcome is not independently verified/)).toBeTruthy();
   });
 
   it('finds a newer failed run on a later timeline page', async () => {

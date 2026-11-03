@@ -17,18 +17,18 @@ function dayGroup(value: string): 'Today' | 'Yesterday' | 'Earlier' {
   return date.toDateString() === yesterday.toDateString() ? 'Yesterday' : 'Earlier';
 }
 
-export function useNotifications(offset = 0) {
+export function useNotifications(offset = 0, unreadOnly = false, enabled = true) {
   return useQuery({
-    queryKey: ['notifications', offset],
-    queryFn: () => unwrap(apiClient.request<Page>('/api/notifications', { params: { query: { offset, limit: 25 } } })),
-    refetchInterval: 30_000, retry: false,
+    queryKey: ['notifications', offset, unreadOnly],
+    queryFn: () => unwrap(apiClient.request<Page>('/api/notifications', { params: { query: { offset, limit: 25, unread_only: unreadOnly } } })),
+    refetchInterval: 30_000, retry: false, enabled,
   });
 }
 
 export const NotificationsPage: React.FC = () => {
   const [offset, setOffset] = useState(0);
   const [view, setView] = useState<'all' | 'unread'>('all');
-  const query = useNotifications(offset);
+  const query = useNotifications(offset, view === 'unread');
   const client = useQueryClient();
   const change = useMutation({
     mutationFn: (item: Item) => unwrap(apiClient.request<Item>('/api/notifications/{notification_id}/read', {
@@ -44,13 +44,12 @@ export const NotificationsPage: React.FC = () => {
     {change.isError && <p role="alert">Couldn’t update this notification. Please try again.</p>}
     {query.data && <>
       <div aria-label="Update views" style={{ display: 'flex', gap: 8 }}>
-        <button type="button" aria-pressed={view === 'all'} onClick={() => setView('all')} style={{ minHeight: 44, padding: '8px 16px' }}>All</button>
-        <button type="button" aria-pressed={view === 'unread'} onClick={() => setView('unread')} style={{ minHeight: 44, padding: '8px 16px' }}>Unread · <span>{query.data.unread_count} unread</span></button>
+        <button type="button" aria-pressed={view === 'all'} onClick={() => { setOffset(0); setView('all'); }} style={{ minHeight: 44, padding: '8px 16px' }}>All</button>
+        <button type="button" aria-pressed={view === 'unread'} onClick={() => { setOffset(0); setView('unread'); }} style={{ minHeight: 44, padding: '8px 16px' }}>Unread · <span>{query.data.unread_count} unread</span></button>
       </div>
-      {query.data.items.length === 0 && <p>No updates here yet.</p>}
-      {view === 'unread' && query.data.items.length > 0 && query.data.items.every(item => item.read_at) && <p>No unread updates on this page.</p>}
+      {query.data.items.length === 0 && <p>{view === 'unread' ? 'No unread updates here.' : 'No updates here yet.'}</p>}
       {(['Today', 'Yesterday', 'Earlier'] as const).map(group => {
-        const items = query.data.items.filter(item => (view === 'all' || !item.read_at) && dayGroup(item.created_at) === group);
+        const items = query.data.items.filter(item => dayGroup(item.created_at) === group);
         if (items.length === 0) return null;
         return <section key={group} aria-label={group}><h2 style={{ fontSize: 16 }}>{group}</h2><ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 12 }}>
         {items.map(item => <li key={item.id} style={{ borderBottom: '1px solid #e7e7e2',
@@ -59,9 +58,11 @@ export const NotificationsPage: React.FC = () => {
           <time dateTime={item.created_at}>{new Date(item.created_at).toLocaleString()}</time>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
             <Link to={`/app/disputes/${encodeURIComponent(item.dispute_id)}`}>View dispute</Link>
-            <button type="button" style={{ minHeight: 44, background: 'transparent', border: 0, textDecoration: 'underline', color: 'inherit', cursor: 'pointer' }} disabled={change.isPending} onClick={() => change.mutate(item)}>
-              {item.read_at ? 'Mark unread' : 'Mark read'}
-            </button>
+            <details><summary aria-label={`More options for ${item.dispute_id}`} style={{ cursor: 'pointer', minHeight: 44 }}>More options</summary>
+              <button type="button" style={{ minHeight: 44, background: 'transparent', border: 0, textDecoration: 'underline', color: 'inherit', cursor: 'pointer' }} disabled={change.isPending} onClick={() => change.mutate(item)}>
+                {item.read_at ? 'Mark unread' : 'Mark read'}
+              </button>
+            </details>
           </div>
         </li>)}
       </ul></section>;

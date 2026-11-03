@@ -94,10 +94,11 @@ export type DisputesQuery = NonNullable<
   Parameters<typeof apiClient.getDisputes>[0]
 >;
 
-export function useDisputes(params?: DisputesQuery) {
+export function useDisputes(params?: DisputesQuery, demoSession?: string | null) {
   return useQuery<DisputesResponse, ApiQueryError>({
-    queryKey: ['disputes', params],
-    queryFn: async (): Promise<DisputesResponse> => unwrap(apiClient.getDisputes(params)),
+    queryKey: ['disputes', params, demoSession],
+    queryFn: async (): Promise<DisputesResponse> => unwrap(apiClient.getDisputes(params, demoSession)),
+    refetchInterval: 10_000,
   });
 }
 

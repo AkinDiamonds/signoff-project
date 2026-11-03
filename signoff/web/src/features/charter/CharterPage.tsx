@@ -207,6 +207,7 @@ export const CharterPage: React.FC = () => {
   const [errors, setErrors] = useState<CharterFieldErrors>({});
   const [newerCharter, setNewerCharter] = useState<Charter | null>(null);
   const [savedVersion, setSavedVersion] = useState<number | null>(null);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const submitting = useRef(false);
   const leaveDialog = useRef<HTMLDivElement>(null);
@@ -295,6 +296,7 @@ export const CharterPage: React.FC = () => {
         setInitialValues(nextVals);
         setBaseVersion(saved.version);
         setSavedVersion(saved.version);
+        setSavedAt(saved.created_at);
         toast('Signing limits saved.');
       } catch (error) {
         toast('Signing limits could not be saved. Review the form and try again.', 'error');
@@ -523,6 +525,10 @@ export const CharterPage: React.FC = () => {
           </label>
 
           {/* Exclusion rules */}
+          {(values.neverAutoReasons.length > 0 || values.neverAutoActions.length > 0) && <div aria-label="Selected review exceptions" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {values.neverAutoReasons.map(reason => <button key={reason} type="button" onClick={() => patch({ neverAutoReasons: toggleList(values.neverAutoReasons, reason) })} aria-label={`Remove reason ${HUMAN_REASON_LABELS[reason] || reason.replaceAll('_', ' ')}`} style={{ minHeight: 44, border: `1px solid ${colors.borderStrong}`, borderRadius: 6, background: colors.surfaceSubtle, color: colors.ink, padding: '8px 12px' }}>{HUMAN_REASON_LABELS[reason] || reason.replaceAll('_', ' ')} ×</button>)}
+            {values.neverAutoActions.map(action => <button key={action} type="button" onClick={() => patch({ neverAutoActions: toggleList(values.neverAutoActions, action) })} aria-label={`Remove action ${action.replaceAll('_', ' ')}`} style={{ minHeight: 44, border: `1px solid ${colors.borderStrong}`, borderRadius: 6, background: colors.surfaceSubtle, color: colors.ink, padding: '8px 12px' }}>{action.replaceAll('_', ' ')} ×</button>)}
+          </div>}
           <details><summary style={{ cursor: 'pointer', fontWeight: 600 }}>Review exceptions</summary>
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2], marginTop: spacing[1] }}>
             <CheckboxGroup<DisputeReason>
@@ -545,7 +551,7 @@ export const CharterPage: React.FC = () => {
           {/* In-form save notification / errors */}
           {savedVersion !== null && (
             <span role="status" data-testid="charter-save-success" style={{ color: colors.badgeSuccessText, fontSize: typography.fontSizeSmall }}>
-              Charter v{savedVersion} saved.
+              Charter v{savedVersion} saved.{savedAt && <> <time dateTime={savedAt}>{new Date(savedAt).toLocaleString()}</time></>}
             </span>
           )}
           {saveError && (

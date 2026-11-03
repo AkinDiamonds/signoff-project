@@ -1,5 +1,7 @@
 # STATUS
 
+2026-11-03 checkpoint: mobile merchant redesign and server-backed scope/views/search, current attention, unread pagination, and execution-attempt projection are on `codex/signoff-notion-mobile`. Full frontend tests passed (221); the isolated PostgreSQL suite passed 688 before the final focused search/attempt tests. Browser screenshots and a11y sweeps are recorded in `signoff/docs/ui/redesign-progress.md`. Physical-device and manual accessibility acceptance remain open; do not treat this as release-ready.
+
 2026-11-03 continuation: mobile merchant shell, route changes, filter and save safeguards, truthful metric labels and read-only execution-attempt projection implemented on `codex/signoff-notion-mobile`. Frontend checks and focused backend tests pass; the complete backend suite and several route acceptance items remain open. See `signoff/docs/ui/redesign-progress.md` for route status and browser evidence.
 
 2026-11-03 redesign checkpoint: created `codex/signoff-notion-mobile` from clean `work` (`e7331ca`). Fixed signing-limits unchanged saves and mobile navigation overlap, with component and browser geometry regression coverage. The design materials were subsequently found on `origin/main` under `signoff/docs/ui`. See `signoff/docs/ui/redesign-progress.md`.

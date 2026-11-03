@@ -28,17 +28,17 @@ export const WidgetsSection: React.FC<WidgetsSectionProps> = ({ disputes, charte
   );
 
   return (
-    <section aria-label="Custom widgets" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
-      <h2 style={{ margin: 0, fontSize: '18px' }}>Custom widgets</h2>
+    <section aria-label="Dispute insights" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+      <h2 style={{ margin: 0, fontSize: '18px' }}>Dispute insights</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: spacing[2] }}>
-        <Card title="Decision Timeline" testId="widget-decision-timeline">
-          <DecisionTimelineWidget items={timelineItems} />
-        </Card>
-        <Card title="Deadline Radar" testId="widget-deadline-radar">
+        <Card title="Deadline radar" testId="widget-deadline-radar">
           <DeadlineRadar items={deadlineItems} {...(now ? { now } : {})} />
         </Card>
-        <Card title="Authority Meter" testId="widget-authority-meter">
+        <Card title="Authority meter" testId="widget-authority-meter">
           <AuthorityMeter meters={meters} />
+        </Card>
+        <Card title="Decision timeline" testId="widget-decision-timeline">
+          <DecisionTimelineWidget items={timelineItems} />
         </Card>
       </div>
     </section>
