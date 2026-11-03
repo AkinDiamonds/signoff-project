@@ -112,13 +112,18 @@ def failed_analysis_dispute_ids(session: Session, dispute_ids: list[str]) -> set
         .subquery()
     )
     events = session.execute(
-        select(LedgerEvent.dispute_id, LedgerEvent.event_kind).join(
+        select(LedgerEvent.dispute_id, LedgerEvent.event_kind, LedgerEvent.payload).join(
             latest_sequence,
             (LedgerEvent.dispute_id == latest_sequence.c.dispute_id)
             & (LedgerEvent.sequence_number == latest_sequence.c.sequence),
         )
     )
-    return {dispute_id for dispute_id, kind in events if kind == TimelineEventKind.RUN_FAILED.value}
+    return {
+        dispute_id for dispute_id, kind, payload in events
+        if kind == TimelineEventKind.RUN_FAILED.value
+        or (kind == TimelineEventKind.NO_ACTION.value and (payload or {}).get("reason") in
+            {"tracking_requires_review", "signing_policy_changed"})
+    }
 
 
 
