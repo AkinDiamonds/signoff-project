@@ -13,6 +13,7 @@ Per plan/04-frontend-spec.md and Step 21:
   * Money fields are strings formatted to two decimal places.
 """
 
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Annotated
 
@@ -21,9 +22,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from agent.app.db.models import Approval, Dispute
+from agent.app.api.disputes import current_approval_dispute_ids
+from agent.app.db.models import Dispute
 from agent.app.db.session import get_db_session
-from agent.app.domain.enums import ApprovalResolution, DisputeStatus
+from agent.app.domain.enums import DisputeStatus
 
 router = APIRouter(prefix="/api/kpis", tags=["KPIs"])
 
@@ -34,7 +36,7 @@ class KpiResponse(BaseModel):
     """Aggregated operational metrics for dispute management."""
 
     open_disputes: int = Field(
-        description="Count of open disputes (waiting for seller response or pending human approval)"
+        description="Count of open disputes (waiting for seller response or current human approval)"
     )
     dollars_at_risk: str = Field(
         description="Sum of amounts on open USD disputes formatted as a decimal string"
@@ -84,11 +86,7 @@ async def get_kpis(
     db_session: Annotated[Session, Depends(get_db_session)],
 ) -> KpiResponse:
     disputes = list(db_session.scalars(select(Dispute)).all())
-    approvals = list(db_session.scalars(select(Approval)).all())
-
-    approvals_by_dispute: dict[str, list[Approval]] = {}
-    for approval in approvals:
-        approvals_by_dispute.setdefault(approval.dispute_id, []).append(approval)
+    current_approvals = current_approval_dispute_ids(db_session, [item.id for item in disputes], datetime.now(UTC))
 
     open_disputes_count = 0
     dollars_at_risk = Decimal("0.00")
@@ -100,11 +98,7 @@ async def get_kpis(
     non_usd_open_disputes = 0
 
     for dispute in disputes:
-        disp_approvals = approvals_by_dispute.get(dispute.id, [])
-
-        has_pending_approval = any(
-            a.resolution == ApprovalResolution.PENDING.value for a in disp_approvals
-        )
+        has_pending_approval = dispute.id in current_approvals
         is_closed = dispute.status == DisputeStatus.RESOLVED.value
 
         # Open disputes: status needs seller response or approval pending

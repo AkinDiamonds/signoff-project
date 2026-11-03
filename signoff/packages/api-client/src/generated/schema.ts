@@ -1408,6 +1408,10 @@ export interface components {
          */
         DisputeListItem: {
             amount: components["schemas"]["Money-Output"];
+            /** Analysis Needs Review */
+            analysis_needs_review?: boolean | null;
+            /** Approval Execution Attention */
+            approval_execution_attention?: ("NOT_RECORDED" | "FAILED") | null;
             /**
              * Created At
              * Format: date-time
@@ -1886,7 +1890,7 @@ export interface components {
             non_usd_open_disputes: number;
             /**
              * Open Disputes
-             * @description Count of open disputes (waiting for seller response or pending human approval)
+             * @description Count of open disputes (waiting for seller response or current human approval)
              */
             open_disputes: number;
             /**
@@ -4199,6 +4203,9 @@ export interface operations {
     list_disputes_api_disputes_get: {
         parameters: {
             query?: {
+                scope?: "all" | "mine";
+                view?: "all" | "attention" | "waiting" | "closed";
+                search?: string | null;
                 /** @description Filter by status */
                 status?: components["schemas"]["DisputeStatus"] | null;
                 /** @description Filter by reason */
@@ -4214,7 +4221,9 @@ export interface operations {
                 /** @description Sort direction (asc or desc) */
                 sort_direction?: string;
             };
-            header?: never;
+            header?: {
+                "X-Demo-Session"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5568,6 +5577,7 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                unread_only?: boolean;
             };
             header?: never;
             path?: never;

@@ -1125,6 +1125,32 @@
           "amount": {
             "$ref": "#/components/schemas/Money-Output"
           },
+          "analysis_needs_review": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Needs Review"
+          },
+          "approval_execution_attention": {
+            "anyOf": [
+              {
+                "enum": [
+                  "NOT_RECORDED",
+                  "FAILED"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Execution Attention"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -2226,7 +2252,7 @@
             "type": "integer"
           },
           "open_disputes": {
-            "description": "Count of open disputes (waiting for seller response or pending human approval)",
+            "description": "Count of open disputes (waiting for seller response or current human approval)",
             "title": "Open Disputes",
             "type": "integer"
           },
@@ -5907,6 +5933,53 @@
         "operationId": "list_disputes_api_disputes_get",
         "parameters": [
           {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "mine"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "view",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "attention",
+                "waiting",
+                "closed"
+              ],
+              "title": "View",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
             "description": "Filter by status",
             "in": "query",
             "name": "status",
@@ -6016,6 +6089,22 @@
               "pattern": "^(asc|desc)$",
               "title": "Sort Direction",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Demo-Session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-Session"
             }
           }
         ],
@@ -7705,6 +7794,16 @@
               "minimum": 0,
               "title": "Offset",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "unread_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Unread Only",
+              "type": "boolean"
             }
           }
         ],

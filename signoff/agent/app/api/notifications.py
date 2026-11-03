@@ -39,10 +39,14 @@ class NotificationReadRequest(BaseModel):
 @router.get('', response_model=NotificationPage)
 def list_notifications(db: Annotated[Session, Depends(get_db_session)],
                        limit: Annotated[int, Query(ge=1, le=100)] = 25,
-                       offset: Annotated[int, Query(ge=0, le=10000)] = 0) -> NotificationPage:
+                       offset: Annotated[int, Query(ge=0, le=10000)] = 0,
+                       unread_only: bool = False) -> NotificationPage:
     # Single owner production inbox; demo-session records are not exposed here.
     scope = Notification.demo_session_id.is_(None)
-    rows = list(db.scalars(select(Notification).where(scope).order_by(
+    query = select(Notification).where(scope)
+    if unread_only:
+        query = query.where(Notification.read_at.is_(None))
+    rows = list(db.scalars(query.order_by(
         Notification.created_at.desc(), Notification.id.desc()).offset(offset).limit(limit + 1)))
     unread = db.scalar(select(func.count(Notification.id)).where(scope, Notification.read_at.is_(None))) or 0
     return NotificationPage(items=[NotificationItem.model_validate(row) for row in rows[:limit]],
