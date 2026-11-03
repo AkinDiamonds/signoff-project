@@ -13,7 +13,7 @@ const badgeColors = {
 
 export const colors = {
   // Brand accents — teal kept for brand mark, active nav indicator only
-  brandPrimary: '#1648D8',
+  brandPrimary: 'var(--signoff-action-primary, #14532d)',
   brandHover: '#1239AA',
   brandSurface: '#EEF2FF',
 
@@ -27,12 +27,12 @@ export const colors = {
   inkMuted: '#616161', // Text secondary: helper text, column headers
 
   // Actions — Shopify near-black button, blue link
-  actionPrimary: '#1648D8',
+  actionPrimary: 'var(--signoff-action-primary, #14532d)',
   actionPrimaryText: '#FFFFFF',
-  linkInteractive: '#005BD3', // Links inside tables
+  linkInteractive: 'var(--signoff-action-primary, #14532d)', // Links inside tables
   // Semantic aliases used by feature pages
-  primaryAction: '#1648D8',
-  interactive: '#005BD3',
+  primaryAction: 'var(--signoff-action-primary, #14532d)',
+  interactive: 'var(--signoff-action-primary, #14532d)',
 
   // Badge semantic tokens — Shopify success/attention/critical palette
   badgeSuccessBg: badgeColors.success.bg,
@@ -98,14 +98,14 @@ export const shadow = {
 export const typography = {
   fontFamily:
     "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-  fontSizeSmall: '12px',
-  fontSizeBody: '13px',
-  fontSizeHeading: '18px',
+  fontSizeSmall: '14px',
+  fontSizeBody: '16px',
+  fontSizeHeading: '20px',
   fontSizeTitle: '20px',
-  fontSizePageTitle: '20px',
+  fontSizePageTitle: '28px',
   fontWeightNormal: 400,
   fontWeightMedium: 500,
   fontWeightSemibold: 600,
-  lineHeightBody: '20px',
+  lineHeightBody: '24px',
   rowHeight: '44px',
 } as const;

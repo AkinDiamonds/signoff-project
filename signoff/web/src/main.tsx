@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
 import { QueryClient } from '@tanstack/react-query';
 import { createBrowserRouter } from 'react-router';
 import { App } from './app/App';

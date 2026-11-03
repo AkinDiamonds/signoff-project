@@ -19,7 +19,7 @@ export const Button: React.FC<ButtonProps> = ({
   let border = 'transparent';
 
   if (variant === 'secondary') {
-    bg = colors.surfaceSubtle;
+    bg = colors.surface;
     text = colors.ink;
     border = colors.border;
   } else if (variant === 'danger') {
@@ -36,10 +36,10 @@ export const Button: React.FC<ButtonProps> = ({
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: 44,
+        minHeight: 48,
         padding: `8px ${spacing[2]}`,
         borderRadius: '6px',
-        fontSize: '14px',
+        fontSize: '16px',
         fontWeight: 500,
         backgroundColor: bg,
         color: text,

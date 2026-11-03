@@ -38,7 +38,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             fontSize: typography.fontSizePageTitle,
             fontWeight: typography.fontWeightSemibold,
             color: colors.ink,
-            lineHeight: '28px',
+            lineHeight: '1.2',
           }}
         >
           {title}

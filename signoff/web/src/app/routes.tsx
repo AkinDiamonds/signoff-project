@@ -1,5 +1,7 @@
 import type { RouteObject } from 'react-router';
 import { Layout } from './Layout';
+import { MorePage } from './MorePage';
+import { ReportsPage } from '../features/dashboard/ReportsPage';
 import { MarketingLayout } from './MarketingLayout';
 import { HomePage, NotFoundPage } from './pages';
 import { DisputeListPage, DisputeDetailPage } from '../features/disputes';
@@ -9,6 +11,7 @@ import { DemoPanel, JudgePoolPage } from '../features/demo';
 import { DashboardPage } from '../features/dashboard';
 import { GuidePage } from '../features/site';
 import { SettingsPage } from '../features/settings/SettingsPage';
+import { AppearancePage } from '../features/settings/AppearancePage';
 import { LoginPage } from '../features/auth/LoginPage';
 import { RequireMerchant } from '../features/auth/RequireMerchant';
 import { ShipmentsPage } from '../features/fulfillment/ShipmentsPage';
@@ -37,6 +40,9 @@ export const routes: RouteObject[] = [
       { path: 'shipments', element: <ShipmentsPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },
+      { path: 'settings/appearance', element: <AppearancePage /> },
+      { path: 'more', element: <MorePage /> },
+      { path: 'reports', element: <ReportsPage /> },
       // Compatibility aliases
       { path: 'charter', element: <CharterPage /> },
       { path: 'demo', element: <DemoPanel /> },

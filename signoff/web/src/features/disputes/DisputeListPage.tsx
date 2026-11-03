@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useSearchParams } from 'react-router';
 import {
   Button,
   Card,
@@ -29,6 +29,7 @@ import {
   VALID_STATUSES,
 } from './filterSchema';
 import type { DisputeListItem } from './types';
+const DisputesGrid = lazy(() => import('./DisputesGrid').then(module => ({ default: module.DisputesGrid })));
 
 export const DisputeStatusBadge: React.FC<{ status: string; testId?: string }> = ({
   status,
@@ -63,6 +64,14 @@ function formatDueInfo(dueAt: string | null | undefined): { relative: string; ab
 
 export const DisputeListPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [desktop, setDesktop] = useState(() => window.matchMedia?.('(min-width: 900px)').matches ?? false);
+  useEffect(() => {
+    const media = window.matchMedia?.('(min-width: 900px)');
+    const update = () => setDesktop(media?.matches ?? false);
+    media?.addEventListener?.('change', update);
+    return () => media?.removeEventListener?.('change', update);
+  }, []);
+  const location = useLocation();
 
   // Parse filters from URL, falling back to defaults on invalid input
   const filters = useMemo(() => parseDisputeFilters(searchParams), [searchParams]);
@@ -114,6 +123,13 @@ export const DisputeListPage: React.FC = () => {
     }
   }, [query.data]);
 
+  useEffect(() => {
+    const state: unknown = location.state;
+    if (query.isSuccess && state && typeof state === "object" && "restoreScrollY" in state && typeof state.restoreScrollY === "number") {
+      window.scrollTo(0, state.restoreScrollY);
+    }
+  }, [location.state, query.isSuccess, displayedItems]);
+
   const updateFilter = (patch: Partial<typeof filters>) => {
     const updated = { ...filters, ...patch };
     if ('status' in patch || 'reason' in patch || 'scope' in patch || 'q' in patch) {
@@ -141,6 +157,7 @@ export const DisputeListPage: React.FC = () => {
         cell: (row) => (
           <Link
             to={`/app/disputes/${row.id}`}
+            state={{ from: `/app/disputes${searchParams.toString() ? `?${searchParams.toString()}` : ""}`, scrollY: window.scrollY }}
             data-testid={`dispute-link-${row.id}`}
             style={{
               fontFamily: 'monospace',
@@ -192,14 +209,14 @@ export const DisputeListPage: React.FC = () => {
                 {relative}
               </span>
               <span style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
-                {absolute}
+                {absolute === '—' ? '' : absolute}
               </span>
             </div>
           );
         },
       },
     ],
-    []
+    [searchParams]
   );
 
   return (
@@ -433,8 +450,8 @@ export const DisputeListPage: React.FC = () => {
       {query.isSuccess && filteredItems.length === 0 && (
         <EmptyState
           testId="disputes-empty-state"
-          title="No disputes yet"
-          description="Disputes appear here when PayPal opens one."
+          title={filters.q || filters.status !== "ALL" || filters.reason !== "ALL" ? "No disputes match these filters" : "No disputes yet"}
+          description={filters.q || filters.status !== "ALL" || filters.reason !== "ALL" ? "Change or reset the filters to see more disputes." : "Disputes appear here when PayPal opens one."}
           action={
             <div style={{ display: 'flex', gap: spacing[2], alignItems: 'center' }}>
               <Link
@@ -471,14 +488,14 @@ export const DisputeListPage: React.FC = () => {
 
       {query.isSuccess && filteredItems.length > 0 && (
         <>
-          <DataTable
+          {desktop ? <Suspense fallback={<Skeleton height="180px" />}><DisputesGrid rows={filteredItems} returnTo={`/app/disputes${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} /></Suspense> : <DataTable
             columns={columns}
             data={filteredItems}
             keyExtractor={(item) => item.id}
             rowTestId={(item) => `dispute-row-${item.id}`}
             tableTestId="disputes-table"
             caption="All store disputes"
-          />
+          />}
 
           <div
             data-testid="disputes-pagination"

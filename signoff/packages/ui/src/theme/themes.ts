@@ -29,8 +29,8 @@ export const THEMES: Record<Exclude<ThemePreset, 'custom'>, ThemeConfig> = {
     topbarText: '#303030',
     appBg: '#F1F1F1',
     textPrimary: '#303030',
-    navAccent: '#1648D8',
-    actionPrimary: '#1648D8',
+    navAccent: '#14532d',
+    actionPrimary: '#14532d',
     cardBg: '#FFFFFF',
     border: '#E1E1E1',
   },
@@ -154,7 +154,6 @@ export function applyTheme(preset: ThemePreset, customColour?: string): void {
   root.style.setProperty('--signoff-app-bg', cfg.appBg);
   root.style.setProperty('--signoff-text-primary', cfg.textPrimary);
   root.style.setProperty('--signoff-nav-accent', cfg.navAccent);
-  root.style.setProperty('--signoff-action-primary', cfg.actionPrimary);
   root.style.setProperty('--signoff-card-bg', cfg.cardBg);
   root.style.setProperty('--signoff-border', cfg.border);
   root.setAttribute('data-theme', preset);

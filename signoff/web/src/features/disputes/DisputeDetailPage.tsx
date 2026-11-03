@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useLocation, useParams } from 'react-router';
 import {
   Deadline,
   EmptyState,
@@ -26,6 +26,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export const DisputeDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const origin: unknown = location.state;
+  const backTo = origin && typeof origin === 'object' && 'from' in origin && typeof origin.from === 'string' && origin.from.startsWith('/app/disputes') ? origin.from : '/app/disputes';
   const disputeId = id ?? '';
   const copyDisputeLink = async () => {
     try {
@@ -204,8 +207,12 @@ export const DisputeDetailPage: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[4], maxWidth: '1300px', minWidth: 0 }}>
       <style>{`
-        .seller-dispute-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; align-items: start; }
+        .seller-dispute-layout { display: block !important; }
+        .seller-dispute-layout section { border: 0 !important; border-top: 1px solid #dce2df !important; border-radius: 0 !important; padding: 24px 0 !important; }
+        .seller-dispute-layout h2 { font-size: 20px !important; font-weight: 700 !important; }
         .seller-dispute-id { overflow-wrap: anywhere; }
+        .seller-mobile-action { display:none; }
+        @media (max-width:899px) { .seller-mobile-action { display:block; position:sticky; bottom:calc(64px + env(safe-area-inset-bottom)); background:#fff; border-top:1px solid #dce2df; padding:12px 0; z-index:9; } }
         .seller-status-row { display: grid; grid-template-columns: minmax(90px, 120px) minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px solid #dce2ef; }
         .seller-status-row:last-child { border-bottom: 0; }
         @media (max-width: 390px) { .seller-status-row { grid-template-columns: 1fr; gap: 2px; } }
@@ -213,7 +220,8 @@ export const DisputeDetailPage: React.FC = () => {
       {/* Navigation Breadcrumb */}
       <nav aria-label="Breadcrumb">
         <Link
-          to="/app/disputes"
+          to={backTo}
+          state={origin && typeof origin === "object" && "scrollY" in origin ? { restoreScrollY: origin.scrollY } : null}
           data-testid="breadcrumb-disputes-link"
           style={{
             fontSize: '13px',
@@ -225,9 +233,10 @@ export const DisputeDetailPage: React.FC = () => {
             gap: '4px',
           }}
         >
-          &larr; Back to all disputes
+          ← Back to disputes
         </Link>
       </nav>
+      <div style={{ fontSize: 14, color: "#52605a", overflowWrap: "anywhere" }}>Case {disputeId}</div>
 
       {/* Record Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing[2] }}>
@@ -290,7 +299,7 @@ export const DisputeDetailPage: React.FC = () => {
       {displayedDispute.approval_url && <section style={{ background: '#eef2ff', borderRadius: 12, padding: 20, color: '#111b36' }}>
         <h2 style={{ marginTop: 0 }}>Your decision is needed</h2>
         <p>Review the proposed response before anything is sent to PayPal.</p>
-        <a href={displayedDispute.approval_url} data-testid="open-approval-card-button" style={{ display: 'block', background: '#1648d8', color: '#fff', textAlign: 'center', padding: 14, minHeight: 44, borderRadius: 8, fontWeight: 700 }}>Review proposed response</a>
+        <a href={displayedDispute.approval_url} data-testid="open-approval-card-button" style={{ display: 'block', background: 'var(--signoff-action-primary, #14532d)', color: '#fff', textAlign: 'center', padding: 14, minHeight: 44, borderRadius: 8, fontWeight: 700 }}>Review reply</a>
       </section>}
 
       {/* Agent Active Banner (Only if actively evaluating) */}
@@ -363,7 +372,7 @@ export const DisputeDetailPage: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
-                Customer Submission
+                What happened
               </h2>
               <span
                 data-testid="untrusted-text-label"
@@ -440,7 +449,7 @@ export const DisputeDetailPage: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
-                Evidence
+                What we found
               </h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '12px', color: '#4B5563' }}>Evidence strength:</span>
@@ -510,50 +519,16 @@ export const DisputeDetailPage: React.FC = () => {
             )}
           </section>
 
-          {/* Audit Trail Timeline */}
-          <section
-            data-testid="decision-timeline-card"
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: radius.card,
-              border: `1px solid ${colors.border}`,
-              padding: spacing[3],
-              display: 'flex',
-              flexDirection: 'column',
-              gap: spacing[2],
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
-                Audit Trail & History
-              </h2>
-              <span style={{ fontSize: '11px', color: '#4B5563' }}>History</span>
-            </div>
 
-            {timelineQuery.isPending && (
-              <div role="status" aria-label="Loading timeline" style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
-                <Skeleton height="20px" width="40%" />
-                <Skeleton height="20px" width="60%" />
-              </div>
-            )}
-
-            {timelineQuery.isError && (
-              <ErrorState
-                testId="timeline-error"
-                message={timelineQuery.error.message}
-                correlationId={timelineQuery.error.correlationId}
-                onRetry={() => void timelineQuery.refetch()}
-              />
-            )}
-
-            {timelineQuery.isSuccess && (
-              <DecisionTimeline events={timelineQuery.data.items ?? []} reverse={true} />
-            )}
-          </section>
         </div>
 
         {/* Right Column: Decision & Details */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], minWidth: 0, flex: '1 1 320px' }}>
+          <section aria-label="What’s missing" style={{ borderTop: '1px solid #dce2df', padding: '24px 0' }}>
+            <h2 style={{ fontSize: 20, margin: '0 0 12px' }}>What’s missing</h2>
+            <p>{needsDeliveryReview ? 'Delivery evidence needs your review. Add available tracking in Shipments.' : 'Review the evidence above for any missing information.'}</p>
+            {needsDeliveryReview && <Link to="/app/shipments" style={{ color: 'var(--signoff-action-primary)', fontWeight: 600 }}>Go to shipments</Link>}
+          </section>
           {/* Decision & Gate Evaluation */}
           <section
             data-testid="dispute-decision-card"
@@ -568,7 +543,7 @@ export const DisputeDetailPage: React.FC = () => {
             }}
           >
             <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
-              Proposed action and signing limits
+              Your reply
             </h2>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${colors.border}` }}>
@@ -619,7 +594,7 @@ export const DisputeDetailPage: React.FC = () => {
             }}
           >
             <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
-              Transaction & PayPal Details
+              Case details
             </h2>
 
             <dl
@@ -641,7 +616,7 @@ export const DisputeDetailPage: React.FC = () => {
               <div>
                 <dt style={{ color: '#4B5563', fontWeight: 500 }}>Store Order Reference</dt>
                 <dd style={{ margin: '2px 0 0', color: '#111827', fontWeight: 600 }}>
-                  {displayedDispute.order_code ?? '—'}
+                  {displayedDispute.order_code ?? 'Not available'}
                 </dd>
               </div>
 
@@ -660,8 +635,49 @@ export const DisputeDetailPage: React.FC = () => {
               </div>
             </dl>
           </section>
+          {/* Audit Trail Timeline */}
+          <section
+            data-testid="decision-timeline-card"
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: radius.card,
+              border: `1px solid ${colors.border}`,
+              padding: spacing[3],
+              display: 'flex',
+              flexDirection: 'column',
+              gap: spacing[2],
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
+                Updates
+              </h2>
+              <span style={{ fontSize: '11px', color: '#4B5563' }}>History</span>
+            </div>
+
+            {timelineQuery.isPending && (
+              <div role="status" aria-label="Loading timeline" style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
+                <Skeleton height="20px" width="40%" />
+                <Skeleton height="20px" width="60%" />
+              </div>
+            )}
+
+            {timelineQuery.isError && (
+              <ErrorState
+                testId="timeline-error"
+                message={timelineQuery.error.message}
+                correlationId={timelineQuery.error.correlationId}
+                onRetry={() => void timelineQuery.refetch()}
+              />
+            )}
+
+            {timelineQuery.isSuccess && (
+              <DecisionTimeline events={timelineQuery.data.items ?? []} reverse={true} />
+            )}
+          </section>
         </div>
       </div>
+      {displayedDispute.approval_url && <div className="seller-mobile-action"><a href={displayedDispute.approval_url} style={{ display: 'block', minHeight: 48, padding: 14, textAlign: 'center', borderRadius: 8, background: 'var(--signoff-action-primary, #14532d)', color: '#fff', fontWeight: 700, textDecoration: 'none' }}>Review reply</a></div>}
     </div>
   );
 };

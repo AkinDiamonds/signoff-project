@@ -38,7 +38,7 @@ export const LoginPage: React.FC = () => {
     <main style={{ minHeight: '100dvh', boxSizing: 'border-box', padding: 'clamp(24px, 7vw, 72px) 20px',
       background: '#f6f8f7', color: '#13201c', display: 'grid', alignContent: 'center' }}>
       <div style={{ width: '100%', maxWidth: 420, margin: '0 auto' }}>
-        <Link to="/" style={{ color: '#115e59', fontSize: 22, fontWeight: 750, textDecoration: 'none' }}>signoff<span aria-hidden="true">.</span></Link>
+        <Link to="/" style={{ color: '#115e59', fontSize: 22, fontWeight: 750, textDecoration: 'none' }}><img src="/icon.svg" alt="" style={{ width: 36, height: 36, verticalAlign: "middle", marginRight: 10 }} />Signoff</Link>
         <h1 style={{ fontSize: 'clamp(30px, 8vw, 40px)', letterSpacing: '-0.04em', margin: '32px 0 12px' }}>Your shop.<br />Your decisions.</h1>
         <p style={{ color: '#52605a', lineHeight: 1.6, marginBottom: 28 }}>Sign in to review disputes, inspect evidence, and manage your signing limits.</p>
         {session.data?.authenticated ? (

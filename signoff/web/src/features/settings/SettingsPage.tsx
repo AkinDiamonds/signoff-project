@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { PageHeader, Button, colors, radius, spacing, useTheme, toast } from '@signoff/ui';
+import { PageHeader, Button, colors, radius, spacing, toast } from '@signoff/ui';
 import { PhoneNotifications } from './PhoneNotifications';
 import type { components } from '@signoff/api-client/generated';
 import { apiClient } from '../../app/api';
@@ -37,7 +37,6 @@ export const SettingsPage: React.FC = () => {
   const session = useOwnerSession();
   const client = useQueryClient();
   const navigate = useNavigate();
-  const theme = useTheme();
   const [checking, setChecking] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -104,7 +103,7 @@ export const SettingsPage: React.FC = () => {
       </section>
       <section style={cardStyle}>
         <h2 style={{ marginTop: 0, fontSize: 18 }}>Appearance</h2>
-        <Button onClick={theme.openPicker}>Choose a theme</Button>
+        <Link to="/app/settings/appearance" style={{ color: "var(--signoff-action-primary)", fontWeight: 600 }}>Choose display and accent color</Link>
       </section>
       <PhoneNotifications />
     </div>

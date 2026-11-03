@@ -110,7 +110,7 @@ export function DataTable<T>({
             style={{
               borderBottom: `1px solid ${colors.border}`,
               backgroundColor: colors.surface,
-              height: '36px',
+              height: '48px',
             }}
           >
             {columns.map((col) => {
@@ -124,8 +124,6 @@ export function DataTable<T>({
                     fontSize: typography.fontSizeSmall,
                     fontWeight: typography.fontWeightSemibold,
                     color: colors.inkMuted,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
                     textAlign: align,
                     width: col.width,
                     whiteSpace: 'nowrap',

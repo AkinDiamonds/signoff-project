@@ -40,7 +40,7 @@ describe('Dashboard and read-only assistant (Step 28)', () => {
 
   it('renders KPI numbers from the API and the assumption footnote', async () => {
     await act(async () => {
-      renderAt('/app');
+      renderAt('/app/reports');
     });
     await waitForDashboard();
 
@@ -61,7 +61,7 @@ describe('Dashboard and read-only assistant (Step 28)', () => {
 
   it('offers a plain dispute list and a loadable Studio workspace', async () => {
     await act(async () => {
-      renderAt('/app');
+      renderAt('/app/reports');
     });
     await waitForDashboard();
 
@@ -74,7 +74,7 @@ describe('Dashboard and read-only assistant (Step 28)', () => {
 
   it('answers a sample question through the proxy', async () => {
     await act(async () => {
-      renderAt('/app');
+      renderAt('/app/reports');
     });
     await waitForDashboard();
 
@@ -113,7 +113,7 @@ describe('Dashboard and read-only assistant (Step 28)', () => {
     );
 
     await act(async () => {
-      renderAt('/app');
+      renderAt('/app/reports');
     });
     await waitForDashboard();
 
@@ -125,4 +125,15 @@ describe('Dashboard and read-only assistant (Step 28)', () => {
       expect(screen.getByTestId('assistant-error').textContent).toContain('budget is exhausted');
     });
   });
+});
+
+
+it('shows the work queue on Home and links to reports through More', async () => {
+  resetMockState();
+  vi.stubGlobal('fetch', mockFetch);
+  await act(async () => { renderAt('/app'); });
+  expect(await screen.findByRole('heading', { name: 'Needs your attention' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Upcoming deadlines' })).toBeTruthy();
+  expect((await screen.findByRole('link', { name: 'Review dispute' })).getAttribute('href')).toContain('/app/disputes/');
+  vi.unstubAllGlobals();
 });
