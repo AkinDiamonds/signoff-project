@@ -43,17 +43,17 @@ const initialReport: AgReportState = {
       widgets: {
         'widget-open': {
           type: 'value',
-          format: { title: { text: 'Open disputes', enabled: true } },
+          format: { title: { text: 'All loaded disputes', enabled: true } },
           dataMapping: { value: [{ id: 'disputes.id', aggregation: 'count' }] },
         },
         'widget-value': {
           type: 'value',
-          format: { title: { text: 'Disputed value (cents)', enabled: true } },
-          dataMapping: { value: [{ id: 'disputes.amount_cents', aggregation: 'sum' }] },
+          format: { title: { text: 'Loaded USD amounts (cents)', enabled: true } },
+          dataMapping: { value: [{ id: 'disputes.usd_amount_cents', aggregation: 'sum' }] },
         },
         'widget-needs-approval': {
           type: 'value',
-          format: { title: { text: 'Needs approval', enabled: true } },
+          format: { title: { text: 'Latest verdict: needs approval', enabled: true } },
           dataMapping: { value: [{ id: 'disputes.id', aggregation: 'count' }] },
         },
       },

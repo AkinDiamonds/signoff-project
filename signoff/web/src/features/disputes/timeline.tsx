@@ -95,11 +95,11 @@ export function renderTimelineEventContent(event: KnownTimelineEvent): {
               style={{
                 fontSize: '12px',
                 fontFamily: 'monospace',
-                backgroundColor: '#F1F1F1',
+                backgroundColor: colors.surfaceSubtle,
                 padding: '2px 6px',
                 borderRadius: '4px',
                 cursor: 'help',
-                color: '#303030',
+                color: 'var(--signoff-ink, #252521)',
               }}
             >
               {event.rule_id}
@@ -195,6 +195,14 @@ export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events, reve
     return reverse ? seqB - seqA : seqA - seqB;
   });
 
+  const actionsByAttempt = new Map<string, string>();
+  for (const event of sorted) {
+    if (event.kind === 'EXECUTION_INTENDED' && 'execution_id' in event && event.execution_id &&
+        'action_type' in event && typeof event.action_type === 'string') {
+      actionsByAttempt.set(event.execution_id, event.action_type.replaceAll('_', ' ').toLowerCase());
+    }
+  }
+
   if (sorted.length === 0) {
     return (
       <div data-testid="timeline-empty" style={{ padding: spacing[2], color: colors.inkMuted, fontSize: typography.fontSizeSmall }}>
@@ -228,6 +236,12 @@ export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events, reve
             title: `Event: ${('kind' in item ? item.kind : 'UNKNOWN')}`,
             details: 'Event data recorded in dispute audit log.',
           };
+        }
+
+        const attemptId = 'execution_id' in item && typeof item.execution_id === 'string' ? item.execution_id : null;
+        const action = attemptId ? actionsByAttempt.get(attemptId) : undefined;
+        if (action && item.kind !== 'EXECUTION_INTENDED') {
+          content = { ...content, details: <><strong>{action[0]?.toUpperCase()}{action.slice(1)}.</strong> {content.details}</> };
         }
 
         const createdAt = 'created_at' in item ? item.created_at : '';
@@ -274,7 +288,7 @@ export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events, reve
                     dateTime={createdAt}
                     style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, marginLeft: 'auto' }}
                   >
-                    {new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    {new Date(createdAt).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
                   </time>
                 )}
               </div>
@@ -283,7 +297,7 @@ export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events, reve
               )}
               <details style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
                 <summary>Audit reference</summary>
-                <span>Event {item.id} · Sequence {seqNum}</span>
+                <span>Event {item.id} · Sequence {seqNum}{attemptId && <> · Attempt {attemptId}</>}</span>
               </details>
             </div>
           </li>
@@ -291,4 +305,41 @@ export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events, reve
       })}
     </ol>
   );
+};
+
+/** Shows only associations backed by a recorded execution ID. */
+export const ExecutionAttempts: React.FC<{ events: ApiTimelineEvent[] }> = ({ events }) => {
+  const sorted = [...events].sort((a, b) => a.sequence_number - b.sequence_number);
+  const attempts = new Map<string, { action: string; status: string; detail?: string }>();
+  let unmatched = false;
+  for (const event of sorted) {
+    if (!['EXECUTION_INTENDED', 'EXECUTION_SENT', 'EXECUTION_CONFIRMED', 'EXECUTION_FAILED'].includes(event.kind)) continue;
+    const id = 'execution_id' in event && typeof event.execution_id === 'string' ? event.execution_id : null;
+    if (!id) { unmatched = true; continue; }
+    if (event.kind === 'EXECUTION_INTENDED' && 'action_type' in event && typeof event.action_type === 'string') {
+      attempts.set(id, { action: event.action_type.replaceAll('_', ' ').toLowerCase(), status: 'Preparing; result not recorded' });
+      continue;
+    }
+    const attempt = attempts.get(id);
+    if (!attempt) { unmatched = true; continue; }
+    if (event.kind === 'EXECUTION_SENT') attempt.status = 'Dispatched; result uncertain';
+    else if (event.kind === 'EXECUTION_CONFIRMED') attempt.status = 'Confirmation recorded; PayPal outcome is not independently verified';
+    else if (event.kind === 'EXECUTION_FAILED') {
+      attempt.status = 'Failed';
+      if ('error_message' in event && typeof event.error_message === 'string' && event.error_message) attempt.detail = event.error_message;
+    }
+  }
+  if (attempts.size === 0 && !unmatched) return null;
+  return <section aria-label="Action attempts" style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 24 }}>
+    <h2 style={{ fontSize: 18 }}>Action attempts</h2>
+    <p style={{ color: colors.inkMuted }}>Each result applies to its own recorded attempt.</p>
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+      {[...attempts.entries()].map(([id, attempt]) => <li key={id} style={{ padding: '14px 0', borderBottom: `1px solid ${colors.border}` }}>
+        <strong style={{ textTransform: 'capitalize' }}>{attempt.action}</strong><div>{attempt.status}</div>
+        {attempt.detail && <details><summary>Failure detail</summary><p>{attempt.detail}</p></details>}
+        <details><summary>Attempt reference</summary><code style={{ overflowWrap: 'anywhere' }}>{id}</code></details>
+      </li>)}
+    </ul>
+    {unmatched && <p>Some older execution events cannot be matched to an attempt. See the activity history for those records.</p>}
+  </section>;
 };

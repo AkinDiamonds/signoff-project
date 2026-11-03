@@ -10,6 +10,7 @@ export interface StudioDisputeRow {
   status: string;
   reason: string;
   amount_cents: number;
+  usd_amount_cents: number | null;
   amount_display: string;
   verdict: string;
   rule_id: string;
@@ -49,6 +50,7 @@ export function toStudioDisputeRows(items: readonly DisputeItem[]): StudioDisput
     status: item.status,
     reason: item.reason,
     amount_cents: amountToCents(item.amount.value),
+    usd_amount_cents: item.amount.currency_code === 'USD' && CENTS.test(item.amount.value) ? amountToCents(item.amount.value) : null,
     amount_display: `${item.amount.currency_code} ${item.amount.value}`,
     verdict: item.latest_verdict ?? 'PENDING',
     rule_id: item.latest_rule_id ?? '',

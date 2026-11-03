@@ -33,8 +33,8 @@ describe('Merchant simulated shipments', () => {
   it('labels simulation, history and the next automatic milestone', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response([shipment])));
     mount();
-    await screen.findByRole('heading', { name: 'SIGSHIPTEST' });
-    expect(screen.getByText(/Simulated shipment · Label created/)).toBeTruthy();
+    await screen.findByText('SIGSHIPTEST');
+    expect(screen.getByText(/Simulated · Label created/)).toBeTruthy();
     expect(screen.getByText(/Next automatic milestone/)).toBeTruthy();
     expect(screen.getByText(/Nothing is sent to a real carrier/)).toBeTruthy();
   });
@@ -65,7 +65,7 @@ describe('Merchant simulated shipments', () => {
   it('locks scenario changes after a dispute without blocking chronological advancement', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response([{ ...shipment, can_configure_scenario: false }])));
     mount();
-    await screen.findByRole('heading', { name: 'SIGSHIPTEST' });
+    await screen.findByText('SIGSHIPTEST');
     expect(screen.getByRole('button', { name: 'Simulate exception' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Withhold tracking' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Advance simulated shipment' })).not.toBeDisabled();
@@ -77,7 +77,7 @@ describe('Merchant simulated shipments', () => {
       { ...shipment, mode: 'missing_tracking', next_event_at: null },
     ])));
     mount();
-    await screen.findByRole('heading', { name: 'SIGSHIPTEST' });
+    await screen.findByText('SIGSHIPTEST');
     expect(screen.getByRole('status').textContent).toContain('requires human review');
     expect(screen.getByRole('button', { name: 'Advance simulated shipment' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Resume simulated shipping' })).toBeTruthy();

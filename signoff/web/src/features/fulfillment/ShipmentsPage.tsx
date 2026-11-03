@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { components } from '@signoff/api-client/generated';
-import { Button, Money, PageHeader, toast } from '@signoff/ui';
+import { Button, Money, PageHeader, colors, toast } from '@signoff/ui';
 import { apiClient } from '../../app/api';
 import { unwrap } from '../../app/queries';
 
@@ -58,7 +58,7 @@ export const ShipmentsPage: React.FC = () => {
         <p>Couldn’t load shipments. Check your connection and try again.</p>
         <Button onClick={() => { void shipments.refetch(); }}>Try again</Button>
       </div>}
-      {shipments.data?.length === 0 && <section style={{ padding: 24, background: '#fff', borderRadius: 12 }}>
+      {shipments.data?.length === 0 && <section style={{ padding: 24, background: 'var(--signoff-surface, #fff)', borderRadius: 12 }}>
         <h2 style={{ marginTop: 0 }}>No simulated shipments yet</h2>
         <p>New verified sandbox payments start a shipment automatically. Existing orders keep their recorded history.</p>
       </section>}
@@ -66,21 +66,23 @@ export const ShipmentsPage: React.FC = () => {
         const pending = busy !== null;
         const terminal = shipment.stage === 'DELIVERED' || shipment.stage === 'RETURNED';
         return <section key={shipment.shipment_id} aria-label={`Order ${shipment.order_code}`}
-          style={{ padding: 'clamp(16px, 4vw, 24px)', border: '1px solid #dce5df', background: '#fff', borderRadius: 12, minWidth: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <h2 style={{ margin: 0, fontSize: 20, overflowWrap: 'anywhere' }}>{shipment.order_code}</h2>
-            <Money money={shipment.amount} />
-          </div>
-          <p style={{ color: '#0f766e', fontWeight: 650 }}>Simulated shipment · {stageLabel(shipment.stage)}</p>
-          <p style={{ fontSize: 13, overflowWrap: 'anywhere', color: '#52605a' }}>
+          style={{ padding: 'clamp(16px, 4vw, 24px)', border: '1px solid #dce5df', background: 'var(--signoff-surface, #fff)', borderRadius: 12, minWidth: 0 }}>
+          <details>
+            <summary style={{ cursor: 'pointer', minHeight: 48 }}>
+              <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <strong style={{ fontSize: 18, overflowWrap: 'anywhere' }}>{shipment.order_code}</strong><Money money={shipment.amount} />
+              </span>
+              <span style={{ color: colors.inkMuted }}>Simulated · {stageLabel(shipment.stage)}</span>
+            </summary>
+          <p style={{ fontSize: 13, overflowWrap: 'anywhere', color: 'var(--signoff-muted, #686861)' }}>
             Simulated {shipment.carrier} tracking: {shipment.tracking_number}
           </p>
           {shipment.mode === 'missing_tracking' && <p role="status">Tracking is withheld for this scenario. The agent requires human review.</p>}
           {shipment.mode === 'exception' && <p role="status">Simulated shipping exception. Automatic progress is paused for human review.</p>}
-          {shipment.next_event_at && <p style={{ fontSize: 13, color: '#52605a' }}>
+          {shipment.next_event_at && <p style={{ fontSize: 13, color: 'var(--signoff-muted, #686861)' }}>
             Next automatic milestone: <time dateTime={shipment.next_event_at}>{new Date(shipment.next_event_at).toLocaleString()}</time>
           </p>}
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <details style={{ marginTop: 12 }}><summary style={{ minHeight: 44, cursor: 'pointer' }}>Simulated shipment controls</summary><div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Button disabled={pending || terminal || shipment.mode !== 'normal'} onClick={() => { void change(shipment, 'advance'); }}>
               {busy === shipment.order_code ? 'Updating…' : 'Advance simulated shipment'}
             </Button>
@@ -92,9 +94,10 @@ export const ShipmentsPage: React.FC = () => {
             </> : <Button variant="secondary" disabled={pending || !shipment.can_configure_scenario}
               onClick={() => { void change(shipment, 'resume'); }}>Resume simulated shipping</Button>}
           </div>
-          {!shipment.can_configure_scenario && <p style={{ fontSize: 13, color: '#52605a' }}>
+          {!shipment.can_configure_scenario && <p style={{ fontSize: 13, color: 'var(--signoff-muted, #686861)' }}>
             A PayPal dispute exists. Scenario settings are locked; normal shipment milestones can still advance.
           </p>}
+          </details>
           <details style={{ marginTop: 18 }}>
             <summary style={{ cursor: 'pointer', minHeight: 32 }}>Simulated shipment history</summary>
             <ol style={{ paddingLeft: 20, lineHeight: 1.6 }}>
@@ -102,6 +105,7 @@ export const ShipmentsPage: React.FC = () => {
                 {stageLabel(event.status)} · {new Date(event.event_time).toLocaleString()} · {event.source}
               </li>)}
             </ol>
+          </details>
           </details>
         </section>;
       })}

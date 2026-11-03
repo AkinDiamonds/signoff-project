@@ -6,7 +6,7 @@ import { Deadline, Money, StatusBadge, formatDisputeReason } from '@signoff/ui';
 import type { DisputeListItem } from './types';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
-const theme = themeQuartz.withParams({ accentColor: '#14532d', backgroundColor: '#ffffff', foregroundColor: '#17201b', borderColor: '#e1e7e3', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 16, rowHeight: 84, headerHeight: 52, spacing: 8 });
+const theme = themeQuartz.withParams({ accentColor: '#14532d', backgroundColor: 'var(--signoff-surface, #fff)', foregroundColor: '#17201b', borderColor: '#e1e7e3', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 16, rowHeight: 84, headerHeight: 52, spacing: 8 });
 export const DisputesGrid: React.FC<{ rows: DisputeListItem[]; returnTo: string }> = ({ rows, returnTo }) => {
   const columns = useMemo<ColDef<DisputeListItem>[]>(() => [
     { headerName: 'Dispute', field: 'id', minWidth: 190, cellRenderer: (p: ICellRendererParams<DisputeListItem>) => p.data ? <Link to={`/app/disputes/${p.data.id}`} state={{ from: returnTo, scrollY: window.scrollY }} style={{ color: 'var(--signoff-action-primary)', fontWeight: 600 }}>{p.data.order_code || p.data.id}</Link> : null },

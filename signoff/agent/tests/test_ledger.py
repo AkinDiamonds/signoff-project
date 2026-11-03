@@ -21,6 +21,7 @@ from sqlalchemy import create_engine, exc, select, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from agent.app.api.timeline import TimelineResponse
 from agent.app.db.base import Base
 from agent.app.db.models import Charter, Decision, Dispute, LedgerEvent
 from agent.app.db.session import get_db_session
@@ -58,6 +59,25 @@ def test_evidence_timeline_uses_recorded_strength_and_never_invents_medium(db_se
     items, _ = get_timeline_events(db_session, "PP-STRENGTH")
     assert items[0]["evidence_strength"] == "HIGH"
     assert items[1]["evidence_strength"] == "UNKNOWN"
+
+
+def test_execution_events_preserve_attempt_identity_and_failure_detail(db_session):
+    record_ledger_event(db_session, "PP-MIXED", TimelineEventKind.EXECUTION_INTENDED,
+                        {"execution_id": "attempt-evidence", "action_type": "PROVIDE_EVIDENCE"})
+    record_ledger_event(db_session, "PP-MIXED", TimelineEventKind.EXECUTION_FAILED,
+                        {"execution_id": "attempt-evidence", "error": "Evidence rejected"})
+    record_ledger_event(db_session, "PP-MIXED", TimelineEventKind.EXECUTION_INTENDED,
+                        {"execution_id": "attempt-message", "action_type": "SEND_MESSAGE"})
+    record_ledger_event(db_session, "PP-MIXED", TimelineEventKind.EXECUTION_CONFIRMED,
+                        {"execution_id": "attempt-message"})
+    db_session.commit()
+    items, _ = get_timeline_events(db_session, "PP-MIXED")
+    assert [item["execution_id"] for item in items] == [
+        "attempt-evidence", "attempt-evidence", "attempt-message", "attempt-message"
+    ]
+    assert items[1]["error_message"] == "Evidence rejected"
+    response = TimelineResponse.model_validate({"items": items}).model_dump()
+    assert response["items"][1]["execution_id"] == "attempt-evidence"
 
 
 @pytest.fixture

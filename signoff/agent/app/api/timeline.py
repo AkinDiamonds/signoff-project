@@ -67,21 +67,25 @@ class ApprovalResolvedTimelineEvent(BaseTimelineEvent):
 
 
 class ExecutionIntendedTimelineEvent(BaseTimelineEvent):
+    execution_id: str | None = None
     kind: Literal[TimelineEventKind.EXECUTION_INTENDED] = TimelineEventKind.EXECUTION_INTENDED
     action_type: str
 
 
 class ExecutionSentTimelineEvent(BaseTimelineEvent):
+    execution_id: str | None = None
     kind: Literal[TimelineEventKind.EXECUTION_SENT] = TimelineEventKind.EXECUTION_SENT
     payload: dict[str, Any] = Field(default_factory=dict)
 
 
 class ExecutionConfirmedTimelineEvent(BaseTimelineEvent):
+    execution_id: str | None = None
     kind: Literal[TimelineEventKind.EXECUTION_CONFIRMED] = TimelineEventKind.EXECUTION_CONFIRMED
     external_id: str
 
 
 class ExecutionFailedTimelineEvent(BaseTimelineEvent):
+    execution_id: str | None = None
     kind: Literal[TimelineEventKind.EXECUTION_FAILED] = TimelineEventKind.EXECUTION_FAILED
     error_message: str
 

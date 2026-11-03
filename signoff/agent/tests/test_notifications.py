@@ -104,3 +104,20 @@ def test_postgres_deduplication_and_outbox_rollback_are_atomic():
             assert session.scalars(select(Notification).where(Notification.dispute_id == dispute_id)).all() == []
     finally:
         engine.dispose()
+
+
+def test_unread_filter_paginates_unread_records_without_changing_total(db):
+    from datetime import UTC, datetime
+
+    from agent.app.api.notifications import list_notifications
+
+    for index in range(4):
+        db.add(Notification(dispute_id='PP-NOTIFY', kind='review_needed', dedupe_key=f'filter-{index}',
+                            message='Update', read_at=datetime.now(UTC) if index == 0 else None))
+    db.commit()
+    page = list_notifications(db, limit=2, offset=0, unread_only=True)
+    assert len(page.items) == 2
+    assert all(item.read_at is None for item in page.items)
+    assert page.unread_count == 3 and page.next_offset == 2
+    last = list_notifications(db, limit=2, offset=2, unread_only=True)
+    assert len(last.items) == 1 and last.next_offset is None

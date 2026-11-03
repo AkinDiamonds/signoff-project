@@ -53,6 +53,34 @@ describe('Charter page (Step 27)', () => {
     expect(screen.getByTestId('charter-version-history')).toBeTruthy();
   });
 
+  it('does not create a version when the form is unchanged or reverted', async () => {
+    const fetchSpy = vi.fn(mockFetch);
+    vi.stubGlobal('fetch', fetchSpy);
+    renderAt('/app/policy');
+    await waitForLoaded();
+    const save = screen.getByTestId<HTMLButtonElement>('charter-save-button');
+    expect(save.disabled).toBe(true);
+    fireEvent.click(save);
+    const input = screen.getByLabelText('Auto-offer maximum (USD)');
+    fireEvent.change(input, { target: { value: '30' } });
+    expect(save.disabled).toBe(false);
+    fireEvent.change(input, { target: { value: '25' } });
+    expect(save.disabled).toBe(true);
+    fireEvent.click(save);
+    expect(fetchSpy.mock.calls.some(([, init]) => init?.method === 'PUT')).toBe(false);
+  });
+
+  it('protects unsaved changes and keeps edits when navigation is cancelled', async () => {
+    renderAt('/app/policy');
+    await waitForLoaded();
+    fireEvent.change(screen.getByLabelText('Auto-offer maximum (USD)'), { target: { value: '30' } });
+    fireEvent.click(screen.getByRole('navigation', { name: 'Main' }).querySelector<HTMLAnchorElement>('a[href="/app/more"]') ?? document.createElement('a'));
+    expect(screen.getByRole('dialog', { name: 'Discard unsaved changes?' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(screen.getByLabelText<HTMLInputElement>('Auto-offer maximum (USD)').value).toBe('30');
+
+  });
+
   it('shows a field-level error and does not save invalid input', async () => {
     await act(async () => {
       renderAt('/app/charter');
@@ -127,6 +155,7 @@ describe('Charter page (Step 27)', () => {
     await waitForLoaded();
 
     advanceMockCharterVersion();
+    fireEvent.change(screen.getByLabelText('Auto-offer maximum (USD)'), { target: { value: '30' } });
     await act(async () => {
       fireEvent.click(screen.getByTestId('charter-save-button'));
     });

@@ -27,6 +27,28 @@ describe('Approval card feature (Step 26)', () => {
     vi.stubGlobal('fetch', mockFetch);
   });
 
+  it('removes approval controls when an open card expires', async () => {
+    let resolves = 0;
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.endsWith('/resolve')) resolves += 1;
+      const response = await mockFetch(input, options);
+      if (url.includes('/api/approvals/') && !url.endsWith('/resolve')) {
+        const card: unknown = await response.json();
+        if (typeof card !== 'object' || card === null) throw new Error('Expected approval card');
+        const now = Date.now();
+        return new Response(JSON.stringify({ ...card, server_now: new Date(now).toISOString(), expires_at: new Date(now + 200).toISOString() }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return response;
+    }));
+    renderAt('/approve/valid-test-token-12345678901234567890');
+    await waitFor(() => expect(screen.getByTestId('approval-approve-button')).toBeTruthy());
+    await waitFor(() => expect(screen.queryByTestId('approval-approve-button')).toBeNull(), { timeout: 3000 });
+    expect(screen.getByTestId('outcome-expired')).toBeTruthy();
+    expect(resolves).toBe(0);
+  });
+
   it('keeps the saved result without refetching a consumed single-use bearer link', async () => {
     let resolved = false;
     let reads = 0;

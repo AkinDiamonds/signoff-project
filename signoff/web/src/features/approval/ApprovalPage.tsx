@@ -8,7 +8,6 @@ import {
   ErrorState,
   Money,
   Skeleton,
-  StatusBadge,
   VerdictChip,
   colors,
   getRuleExplanation,
@@ -97,8 +96,32 @@ export const ApprovalPage: React.FC = () => {
     }
   }, [card, outcome]);
 
+  // Advance from the server clock observed when the card was fetched. The
+  // server still makes the authoritative expiry decision on every submission.
+  const expiryReached = () => {
+    if (!card) return true;
+    const expires = Date.parse(card.expires_at);
+    const serverNow = card.server_now ? Date.parse(card.server_now) : cardQuery.dataUpdatedAt;
+    return !Number.isFinite(expires) || !Number.isFinite(serverNow) ||
+      serverNow + Math.max(0, Date.now() - cardQuery.dataUpdatedAt) >= expires;
+  };
+
+  useEffect(() => {
+    if (!card || outcome || (card.resolution && card.resolution !== 'PENDING')) return;
+    const check = () => {
+      if (expiryReached()) {
+        setOutcome('EXPIRED');
+        setOutcomeMessage('This approval link has expired.');
+      }
+    };
+    check();
+    const timer = window.setInterval(check, 1000);
+    return () => window.clearInterval(timer);
+  }, [card, cardQuery.dataUpdatedAt, outcome]);
+
   const handleApprove = async () => {
     if (isSubmittingRef.current || isSubmitting || outcome) return;
+    if (expiryReached()) { setOutcome('EXPIRED'); setOutcomeMessage('This approval link has expired.'); return; }
     isSubmittingRef.current = true;
     setIsSubmitting(true);
     try {
@@ -122,6 +145,7 @@ export const ApprovalPage: React.FC = () => {
 
   const handleDenySubmit = async () => {
     if (isSubmittingRef.current || isSubmitting || outcome) return;
+    if (expiryReached()) { setOutcome('EXPIRED'); setOutcomeMessage('This approval link has expired.'); return; }
     isSubmittingRef.current = true;
     setIsSubmitting(true);
     try {
@@ -184,6 +208,7 @@ export const ApprovalPage: React.FC = () => {
 
   const executeEdit = async (payload: EditRequestPayload) => {
     if (isSubmittingRef.current || isSubmitting || outcome) return;
+    if (expiryReached()) { setOutcome('EXPIRED'); setOutcomeMessage('This approval link has expired.'); return; }
     isSubmittingRef.current = true;
     setIsSubmitting(true);
     try {
@@ -303,9 +328,6 @@ export const ApprovalPage: React.FC = () => {
       <div style={{ maxWidth: '520px', width: '100%', boxSizing: 'border-box', margin: '0 auto', padding: spacing[2] }}>
         <Card testId={`outcome-${outcome.toLowerCase().replace(/_/g, '-')}`}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2], textAlign: 'center', padding: `${spacing[2]} 0` }}>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <StatusBadge status={outcome === 'APPROVED' ? 'ALLOWED' : outcome === 'DENIED' ? 'DENIED' : 'NEEDS_APPROVAL'} />
-            </div>
             <h2 style={{ fontSize: typography.fontSizePageTitle, margin: 0, color: colors.ink }}>
               {outcomeTitles[outcome]}
             </h2>
@@ -403,7 +425,7 @@ export const ApprovalPage: React.FC = () => {
               {actionSummarySentence}
             </h1>
           </header>
-          <p style={{ margin: 0, color: '#111b36' }}>
+          <p style={{ margin: 0, color: 'var(--signoff-ink, #252521)' }}>
             Signoff proposes to {actionDescriptions[card.action_type] ?? 'take an action'} for this dispute.
             Review the evidence and reason below before deciding. Your decision will be saved before any PayPal action is attempted.
           </p>
@@ -412,7 +434,7 @@ export const ApprovalPage: React.FC = () => {
           <div
             data-testid="approval-evidence-card"
             style={{
-              backgroundColor: '#FAFAFA',
+              backgroundColor: 'var(--signoff-surface, #fff)',
               borderRadius: radius.card,
               padding: spacing[2],
               border: `1px solid ${colors.border}`,
@@ -738,7 +760,7 @@ export const ApprovalPage: React.FC = () => {
               </p>
               <div
                 style={{
-                  backgroundColor: '#FAFAFA',
+                  backgroundColor: 'var(--signoff-surface, #fff)',
                   padding: spacing[2],
                   borderRadius: radius.card,
                   border: `1px solid ${colors.border}`,

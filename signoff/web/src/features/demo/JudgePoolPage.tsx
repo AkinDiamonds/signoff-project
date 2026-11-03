@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import {
   Button,
   EmptyState,
@@ -94,15 +94,15 @@ export const JudgePoolPage: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing[2] }}>
         <PageHeader
           title="Demo disputes"
-          description="Choose a live scenario to watch the dispute agent evaluate and defend."
+          description="Choose a sandbox case to evaluate."
         />
-        <Button
+        <div><p style={{ margin: '0 0 8px', color: colors.inkMuted }}>Start over clears this browser’s demo session; the ledger is preserved.</p><Button
           variant="secondary"
           onClick={handleStartOver}
           testId="pool-start-over-button"
         >
           Start over
-        </Button>
+        </Button></div>
       </div>
 
       {startOverNotice && (
@@ -147,7 +147,8 @@ export const JudgePoolPage: React.FC = () => {
           <EmptyState
             testId="pool-empty-state"
             title="No demo disputes right now"
-            description="No live demo disputes right now — three finished runs are available below."
+            description={finishedDisputes.length === 0 ? "No demo disputes are available. Run a scenario to create one." : `${finishedDisputes.length} finished ${finishedDisputes.length === 1 ? 'run is' : 'runs are'} available below.`}
+            action={<Link to="/app/demo">Browse scenarios</Link>}
           />
         ) : (
           <div

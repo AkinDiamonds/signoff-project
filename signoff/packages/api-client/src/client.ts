@@ -327,7 +327,8 @@ export class SignoffApiClient {
   }
 
   async getDisputes(
-    query?: paths['/api/disputes']['get']['parameters']['query']
+    query?: paths['/api/disputes']['get']['parameters']['query'],
+    demoSession?: string | null
   ): Promise<
     ClientResponse<paths['/api/disputes']['get']['responses']['200']['content']['application/json']>
   > {
@@ -336,6 +337,7 @@ export class SignoffApiClient {
     >('/api/disputes', {
       method: 'GET',
       params: { query },
+      ...(demoSession ? { headers: { 'X-Demo-Session': demoSession } } : {}),
     });
   }
 

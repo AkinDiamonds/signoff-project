@@ -16,6 +16,7 @@ test.describe('Charter and demo panel (Step 27)', () => {
     await page.goto('/app/demo');
     await expect(page.getByTestId('demo-panel-title')).toBeVisible();
 
+    await page.getByTestId('demo-scenario-C').locator('..').locator('summary').click();
     await page.getByTestId('demo-scenario-C').click();
     await expect(page.getByTestId('demo-created-link')).toBeVisible({ timeout: 5000 });
     await page.getByTestId('demo-created-link').click();
@@ -26,6 +27,7 @@ test.describe('Charter and demo panel (Step 27)', () => {
 
   test('shows the quota message when creation is rate limited', async ({ page }) => {
     await page.goto('/app/demo?mock-quota=true');
+    await page.getByTestId('demo-scenario-B').locator('..').locator('summary').click();
     await page.getByTestId('demo-scenario-B').click();
     await expect(page.getByTestId('demo-error')).toContainText('Daily demo quota reached');
     await expect(page.getByTestId('demo-error')).toContainText('Resets at');

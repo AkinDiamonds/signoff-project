@@ -10,23 +10,43 @@ Per plan/04-frontend-spec.md and Step 21:
 """
 
 import base64
+import uuid
 from dataclasses import replace
 from datetime import UTC, datetime
 from functools import partial
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel
-from sqlalchemy import case, select
+from sqlalchemy import case, false, func, select, true
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.elements import ColumnElement
 
 from agent.app.agent.evidence_snapshot import EvidenceSnapshotData, build_snapshot
 from agent.app.agent.reasons import build_evidence_for
 from agent.app.agent.reasons.history import count_buyer_disputes
 from agent.app.approvals.service import DEMO_APPROVAL_LINKS, build_approval_card_response
-from agent.app.db.models import Approval, Decision, Dispute, EvidenceSnapshot, Execution, ReviewEvidenceSnapshot
+from agent.app.db.models import (
+    Approval,
+    Decision,
+    Dispute,
+    EvidenceSnapshot,
+    Execution,
+    Job,
+    LedgerEvent,
+    ReviewEvidenceSnapshot,
+)
 from agent.app.db.session import get_db_session
-from agent.app.domain.enums import ApprovalResolution, DisputeReason, DisputeStatus, ExecutionStatus, Verdict
+from agent.app.domain.enums import (
+    ApprovalResolution,
+    DisputeReason,
+    DisputeStatus,
+    ExecutionStatus,
+    JobKind,
+    JobStatus,
+    TimelineEventKind,
+    Verdict,
+)
 from agent.app.domain.money import Money
 from agent.app.errors import NotFoundError
 from agent.app.paypal.models import parse_dispute
@@ -53,8 +73,121 @@ class DisputeListItem(BaseModel):
     updated_at: datetime
     latest_verdict: Verdict | None = None
     latest_rule_id: str | None = None
+    current_approval_available: bool | None = None
+    analysis_needs_review: bool | None = None
+    approval_execution_attention: Literal["NOT_RECORDED", "FAILED"] | None = None
     order_code: str | None = None
     order_resolution: ResolutionStatus = "not_found"
+
+
+def current_approval_dispute_ids(session: Session, dispute_ids: list[str], now: datetime) -> set[str]:
+    """Return only pending, unexpired approvals bound to the current dispute state."""
+    if not dispute_ids:
+        return set()
+    rows = session.scalars(
+        select(Approval.dispute_id)
+        .join(Decision, Approval.decision_id == Decision.id)
+        .join(Dispute, Approval.dispute_id == Dispute.id)
+        .where(
+            Approval.dispute_id.in_(dispute_ids),
+            Approval.resolution == ApprovalResolution.PENDING.value,
+            Approval.expires_at > now,
+            Decision.dispute_id == Dispute.id,
+            Decision.dispute_fingerprint == Dispute.state_fingerprint,
+        )
+    )
+    return set(rows)
+
+
+def failed_analysis_dispute_ids(session: Session, dispute_ids: list[str]) -> set[str]:
+    """Project the latest relevant run state using the same event kinds as case detail."""
+    if not dispute_ids:
+        return set()
+    relevant = [TimelineEventKind.RUN_STARTED.value, TimelineEventKind.NO_ACTION.value,
+                TimelineEventKind.RUN_FAILED.value, TimelineEventKind.GATE_DECIDED.value]
+    latest_sequence = (
+        select(LedgerEvent.dispute_id, func.max(LedgerEvent.sequence_number).label("sequence"))
+        .where(LedgerEvent.dispute_id.in_(dispute_ids), LedgerEvent.event_kind.in_(relevant))
+        .group_by(LedgerEvent.dispute_id)
+        .subquery()
+    )
+    events = session.execute(
+        select(LedgerEvent.dispute_id, LedgerEvent.event_kind, LedgerEvent.payload).join(
+            latest_sequence,
+            (LedgerEvent.dispute_id == latest_sequence.c.dispute_id)
+            & (LedgerEvent.sequence_number == latest_sequence.c.sequence),
+        )
+    )
+    return {
+        dispute_id for dispute_id, kind, payload in events
+        if kind == TimelineEventKind.RUN_FAILED.value
+        or (kind == TimelineEventKind.NO_ACTION.value and (payload or {}).get("reason") in
+            {"tracking_requires_review", "signing_policy_changed"})
+    }
+
+
+
+def approval_execution_attention(
+    session: Session, dispute_ids: list[str],
+) -> dict[str, Literal["NOT_RECORDED", "FAILED"]]:
+    """Project the latest saved approval's own execution, never a different action."""
+    if not dispute_ids:
+        return {}
+    approvals = session.scalars(select(Approval).where(Approval.dispute_id.in_(dispute_ids))
+                                .order_by(Approval.dispute_id, Approval.created_at.desc(), Approval.id.desc()))
+    latest: dict[str, Approval] = {}
+    for approval in approvals:
+        latest.setdefault(approval.dispute_id, approval)
+    saved = {key: value for key, value in latest.items()
+             if value.resolution in (ApprovalResolution.APPROVE.value, ApprovalResolution.EDIT.value)}
+    if not saved:
+        return {}
+    approval_ids = {str(approval.id) for approval in saved.values()}
+    resolved_events = session.scalars(select(LedgerEvent).where(
+        LedgerEvent.dispute_id.in_(saved), LedgerEvent.event_kind == TimelineEventKind.APPROVAL_RESOLVED.value,
+    ).order_by(LedgerEvent.sequence_number.desc()))
+    resolved_decisions: dict[str, str] = {}
+    seen_approvals: set[str] = set()
+    for event in resolved_events:
+        payload = event.payload or {}
+        approval_id, decision_id = payload.get("approval_id"), payload.get("decision_id")
+        if isinstance(approval_id, str) and approval_id in approval_ids and approval_id not in seen_approvals:
+            seen_approvals.add(approval_id)
+            if isinstance(decision_id, str):
+                resolved_decisions[approval_id] = decision_id
+    targets = {dispute_id: uuid.UUID(resolved_decisions[str(approval.id)])
+               if str(approval.id) in resolved_decisions else approval.decision_id
+               for dispute_id, approval in saved.items()}
+    target_ids = set(targets.values())
+    executions = {row.decision_id: row.status for row in session.scalars(
+        select(Execution).where(Execution.decision_id.in_(target_ids)))}
+    jobs = session.scalars(select(Job).where(
+        Job.kind == JobKind.EXECUTE_DECISION.value,
+        Job.payload['decision_id'].as_string().in_([str(target) for target in target_ids]),
+    ).order_by(Job.created_at.desc()))
+    latest_jobs: dict[str, str] = {}
+    for job in jobs:
+        decision_id = (job.payload or {}).get('decision_id')
+        if isinstance(decision_id, str):
+            latest_jobs.setdefault(decision_id, job.status)
+    result: dict[str, Literal["NOT_RECORDED", "FAILED"]] = {}
+    for dispute_id, target in targets.items():
+        execution = executions.get(target)
+        if execution == ExecutionStatus.FAILED.value:
+            result[dispute_id] = "FAILED"
+        elif execution is None and latest_jobs.get(str(target)) not in (
+            JobStatus.PENDING.value, JobStatus.RUNNING.value,
+        ):
+            result[dispute_id] = "NOT_RECORDED"
+    return result
+
+
+
+def session_scope_predicate(scope: Literal["all", "mine"], session_id: str | None) -> ColumnElement[bool]:
+    """Narrow to a demo session only; a missing session never broadens results."""
+    if scope == "all":
+        return true()
+    return Dispute.demo_session_id == session_id if session_id else false()
 
 
 class DisputesResponse(BaseModel):
@@ -191,6 +324,10 @@ def _decode_cursor(cursor_str: str) -> int:
 async def list_disputes(
     request: Request,
     db_session: Annotated[Session, Depends(get_db_session)],
+    scope: Literal["all", "mine"] = "all",
+    view: Literal["all", "attention", "waiting", "closed"] = "all",
+    demo_session: Annotated[str | None, Header(alias="X-Demo-Session")] = None,
+    search: Annotated[str | None, Query(max_length=200)] = None,
     status_filter: Annotated[DisputeStatus | None, Query(alias="status", description="Filter by status")] = None,
     reason_filter: Annotated[DisputeReason | None, Query(alias="reason", description="Filter by reason")] = None,
     due_before: Annotated[
@@ -221,8 +358,14 @@ async def list_disputes(
                 detail=f"Invalid datetime format for due-before: {due_before}",
             ) from exc
 
-    query = select(Dispute)
+    query = select(Dispute).where(session_scope_predicate(scope, demo_session))
 
+    if view == "waiting":
+        query = query.where(Dispute.status == DisputeStatus.WAITING_FOR_BUYER_RESPONSE.value)
+    elif view == "closed":
+        query = query.where(Dispute.status == DisputeStatus.RESOLVED.value)
+    elif view == "attention":
+        query = query.where(Dispute.status != DisputeStatus.RESOLVED.value)
     if status_filter is not None:
         query = query.where(Dispute.status == status_filter.value)
     if reason_filter is not None:
@@ -251,6 +394,27 @@ async def list_disputes(
 
     # Fetch total count matching filters
     all_matching = list(db_session.scalars(query).all())
+    search_term = search.strip().casefold() if search else ""
+    if search_term:
+        matches: list[Dispute] = []
+        for candidate in all_matching:
+            if search_term in candidate.id.casefold():
+                matches.append(candidate)
+                continue
+            candidate_scope = order_scope(request.app.state.settings, candidate.demo_session_id)
+            match = resolve_disputed_order(
+                (candidate.snapshot or {}).get("disputed_transactions"),
+                partial(find_order_by_paypal_transaction_id, db_session, scope=candidate_scope),
+            )
+            if match.order and search_term in match.order.order_code.casefold():
+                matches.append(candidate)
+        all_matching = matches
+    if view == "attention":
+        all_ids = [dispute.id for dispute in all_matching]
+        attention_ids = (current_approval_dispute_ids(db_session, all_ids, datetime.now(UTC))
+                         | failed_analysis_dispute_ids(db_session, all_ids)
+                         | set(approval_execution_attention(db_session, all_ids)))
+        all_matching = [dispute for dispute in all_matching if dispute.id in attention_ids]
     total_count = len(all_matching)
 
     paged_disputes = all_matching[offset : offset + limit]
@@ -271,16 +435,19 @@ async def list_disputes(
             if dec.dispute_id not in latest_decisions:
                 latest_decisions[dec.dispute_id] = dec
 
+    current_approvals = current_approval_dispute_ids(db_session, dispute_ids, datetime.now(UTC))
+    failed_analysis = failed_analysis_dispute_ids(db_session, dispute_ids)
+    approval_attention = approval_execution_attention(db_session, dispute_ids)
     items: list[DisputeListItem] = []
     for d in paged_disputes:
-        scope = order_scope(request.app.state.settings, d.demo_session_id)
+        order_scope_value = order_scope(request.app.state.settings, d.demo_session_id)
         latest_dec = latest_decisions.get(d.id)
         latest_verdict = Verdict(latest_dec.verdict) if latest_dec else None
         latest_rule_id = latest_dec.rule_id if latest_dec else None
 
         resolution = resolve_disputed_order(
             (d.snapshot or {}).get("disputed_transactions"),
-            partial(find_order_by_paypal_transaction_id, db_session, scope=scope),
+            partial(find_order_by_paypal_transaction_id, db_session, scope=order_scope_value),
         )
 
         items.append(
@@ -295,6 +462,9 @@ async def list_disputes(
                 updated_at=d.updated_at,
                 latest_verdict=latest_verdict,
                 latest_rule_id=latest_rule_id,
+                current_approval_available=d.id in current_approvals,
+                analysis_needs_review=d.id in failed_analysis,
+                approval_execution_attention=approval_attention.get(d.id),
                 order_code=resolution.order.order_code if resolution.order else None,
                 order_resolution=resolution.status,
             )

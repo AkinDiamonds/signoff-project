@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { PageHeader, Button, colors, radius, spacing, toast } from '@signoff/ui';
+import { PageHeader, Button, colors, spacing, toast } from '@signoff/ui';
 import { PhoneNotifications } from './PhoneNotifications';
 import type { components } from '@signoff/api-client/generated';
 import { apiClient } from '../../app/api';
@@ -15,22 +15,22 @@ const labels: Record<ReadinessItem['state'], string> = {
   verified: 'Verified', failed: 'Check failed', stale: 'Out of date',
 };
 const cardStyle: React.CSSProperties = {
-  background: '#fff', borderRadius: radius.card, border: `1px solid ${colors.border}`, padding: 20, minWidth: 0,
+  background: 'var(--signoff-surface, #fff)', borderBottom: `1px solid ${colors.border}`, padding: '16px 0', minWidth: 0,
 };
 
 const Connection: React.FC<{ title: string; item: ReadinessItem }> = ({ title, item }) => (
-  <section style={cardStyle} aria-label={title}>
-    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+  <section aria-label={title}><details style={cardStyle}>
+    <summary style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', minHeight: 48 }}>
       <h3 style={{ margin: 0, fontSize: 16 }}>{title}</h3>
       <span style={{ fontSize: 12, fontWeight: 650, padding: '5px 9px', borderRadius: 99,
         background: item.state === 'verified' ? '#ecfdf5' : item.state === 'failed' ? '#fff1f2' : '#f1f5f4',
         color: item.state === 'verified' ? '#065f46' : item.state === 'failed' ? '#9f1239' : '#42524a' }}>
         {labels[item.state]}
       </span>
-    </div>
-    <p style={{ lineHeight: 1.6, fontSize: 14, color: '#52605a' }}>{item.detail}</p>
-    {item.checked_at && <p style={{ fontSize: 12, color: '#66736c', marginBottom: 0 }}>Last observed {new Date(item.checked_at).toLocaleString()}</p>}
-  </section>
+    </summary>
+    <p style={{ lineHeight: 1.6, fontSize: 14, color: 'var(--signoff-muted, #686861)' }}>{item.detail}</p>
+    {item.checked_at && <p style={{ fontSize: 12, color: 'var(--signoff-muted, #686861)', marginBottom: 0 }}>Last observed {new Date(item.checked_at).toLocaleString()}</p>}
+  </details></section>
 );
 
 export const SettingsPage: React.FC = () => {
@@ -69,13 +69,12 @@ export const SettingsPage: React.FC = () => {
       <section style={cardStyle}>
         <h2 style={{ marginTop: 0, fontSize: 18 }}>Your account</h2>
         <p>{session.data?.email ?? 'Local development session'}</p>
-        {session.data?.authenticated && <Button disabled={signingOut} onClick={() => { void logout(); }}>{signingOut ? 'Signing out…' : 'Sign out'}</Button>}
       </section>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <h2 style={{ fontSize: 18, margin: 0 }}>Connections</h2>
         <Button onClick={() => { void check(); }} disabled={checking}>{checking ? 'Checking…' : 'Check connections'}</Button>
       </div>
-      <p style={{ margin: 0, color: '#52605a', lineHeight: 1.6 }}>Check PayPal authentication and store access. Webhook and worker statuses reflect observed activity.</p>
+      <p style={{ margin: 0, color: 'var(--signoff-muted, #686861)', lineHeight: 1.6 }}>Check PayPal authentication and store access. Webhook and worker statuses reflect observed activity.</p>
       {message && <p role="status" style={{ margin: 0 }}>{message}</p>}
       {error && <p role="alert" style={{ color: '#9f1239', margin: 0 }}>{error}</p>}
       {integrations.isPending && <p role="status">Loading connection status…</p>}
@@ -84,8 +83,8 @@ export const SettingsPage: React.FC = () => {
         <section style={{ ...cardStyle, overflowWrap: 'anywhere' }}>
           <h3 style={{ marginTop: 0, fontSize: 16 }}>{data.paypal_environment === 'sandbox' ? 'PayPal sandbox' : 'Local PayPal stub'}</h3>
           <dl style={{ margin: 0, display: 'grid', gap: 8 }}>
-            <dt style={{ color: '#66736c', fontSize: 13 }}>Merchant ID</dt><dd style={{ margin: 0 }}>{data.merchant_id ?? 'Not configured'}</dd>
-            <dt style={{ color: '#66736c', fontSize: 13 }}>Webhook address</dt><dd style={{ margin: 0, fontSize: 13 }}>{data.webhook_url}</dd>
+            <dt style={{ color: 'var(--signoff-muted, #686861)', fontSize: 13 }}>Merchant ID</dt><dd style={{ margin: 0 }}>{data.merchant_id ?? 'Not configured'}</dd>
+            <dt style={{ color: 'var(--signoff-muted, #686861)', fontSize: 13 }}>Webhook address</dt><dd style={{ margin: 0, fontSize: 13 }}>{data.webhook_url}</dd>
           </dl>
         </section>
         <div style={{ display: 'grid', gap: spacing[3], gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))' }}>
@@ -98,14 +97,15 @@ export const SettingsPage: React.FC = () => {
       </>}
       <section style={cardStyle}>
         <h2 style={{ marginTop: 0, fontSize: 18 }}>Signing preferences</h2>
-        <p style={{ color: '#52605a', lineHeight: 1.6 }}>Control the actions and amounts Signoff can handle automatically.</p>
+        <p style={{ color: 'var(--signoff-muted, #686861)', lineHeight: 1.6 }}>Control the actions and amounts Signoff can handle automatically.</p>
         <Link to="/app/policy" style={{ color: '#115e59', fontWeight: 600 }}>Manage signing limits →</Link>
       </section>
       <section style={cardStyle}>
         <h2 style={{ marginTop: 0, fontSize: 18 }}>Appearance</h2>
         <Link to="/app/settings/appearance" style={{ color: "var(--signoff-action-primary)", fontWeight: 600 }}>Choose display and accent color</Link>
       </section>
-      <PhoneNotifications />
+      <details style={cardStyle}><summary style={{ cursor: 'pointer', minHeight: 48, fontWeight: 600 }}>Phone notifications</summary><PhoneNotifications /></details>
+      {session.data?.authenticated && <Button disabled={signingOut} onClick={() => { void logout(); }}>{signingOut ? 'Signing out…' : 'Sign out'}</Button>}
     </div>
   );
 };

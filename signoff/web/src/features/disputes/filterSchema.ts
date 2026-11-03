@@ -7,6 +7,7 @@ export interface DisputeFilters {
   status: StatusFilter;
   reason: ReasonFilter;
   scope: 'mine' | 'all';
+  view: 'all' | 'attention' | 'waiting' | 'closed';
   cursor: string | null;
   limit: number;
   q: string;
@@ -15,7 +16,8 @@ export interface DisputeFilters {
 export const DEFAULT_DISPUTE_FILTERS: DisputeFilters = {
   status: 'ALL',
   reason: 'ALL',
-  scope: 'mine',
+  scope: 'all',
+  view: 'all',
   cursor: null,
   limit: 10,
   q: '',
@@ -64,6 +66,9 @@ export function parseDisputeFilters(searchParams: URLSearchParams): DisputeFilte
   const scope: 'mine' | 'all' =
     rawScope !== null && isScope(rawScope) ? rawScope : DEFAULT_DISPUTE_FILTERS.scope;
 
+  const rawView = searchParams.get('view');
+  const view: DisputeFilters['view'] = rawView === 'attention' || rawView === 'waiting' || rawView === 'closed' ? rawView : 'all';
+
   const rawCursor = searchParams.get('cursor');
   const cursor = rawCursor && rawCursor.trim() ? rawCursor.trim() : null;
 
@@ -76,7 +81,7 @@ export function parseDisputeFilters(searchParams: URLSearchParams): DisputeFilte
   const rawQ = searchParams.get('q');
   const q = rawQ ? rawQ.trim() : '';
 
-  return { status, reason, scope, cursor, limit, q };
+  return { status, reason, scope, view, cursor, limit, q };
 }
 
 export function filtersToSearchParams(filters: DisputeFilters): URLSearchParams {
@@ -89,6 +94,9 @@ export function filtersToSearchParams(filters: DisputeFilters): URLSearchParams 
   }
   if (filters.scope !== DEFAULT_DISPUTE_FILTERS.scope) {
     params.set('scope', filters.scope);
+  }
+  if (filters.view !== 'all') {
+    params.set('view', filters.view);
   }
   if (filters.cursor) {
     params.set('cursor', filters.cursor);

@@ -18,7 +18,7 @@ export const Card: React.FC<CardProps> = ({ children, title, className, testId }
         border: `1px solid ${colors.border}`,
         borderRadius: '8px',
         padding: spacing[2],
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+        boxShadow: 'var(--signoff-card-shadow, 0 1px 3px rgba(0, 0, 0, 0.05))',
       }}
     >
       {title && (

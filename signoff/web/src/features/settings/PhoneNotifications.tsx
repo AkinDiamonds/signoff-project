@@ -155,7 +155,7 @@ export const PhoneNotifications: React.FC = () => {
           : 'The browser could not complete the local display test. Check Android’s Chrome site notification channel.');
     } finally { clearTimeout(timer); setBusy(false); }
   };
-  return <section aria-label="Phone notifications" style={{ background: '#fff', border: '1px solid #dce5df', borderRadius: 12, padding: 20 }}>
+  return <section aria-label="Phone notifications" style={{ background: 'var(--signoff-surface, #fff)', border: '1px solid #dce5df', borderRadius: 12, padding: 20 }}>
     <h2 style={{ marginTop: 0 }}>Phone notifications</h2>
     <p>Receive a generic review reminder when this site is in the background. Opening it never approves an action.</p>
     <p>On Android, use Chrome over HTTPS. On iPhone or iPad, use iOS/iPadOS 16.4 or later, add this site to your Home Screen, then enable notifications from that app.</p>

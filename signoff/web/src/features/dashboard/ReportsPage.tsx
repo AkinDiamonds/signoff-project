@@ -94,7 +94,7 @@ export const ReportsPage: React.FC = () => {
         id: 'reason',
         header: 'Buyer Reason',
         cell: (row) => (
-          <span style={{ color: '#111827', fontWeight: 500 }}>{formatDisputeReason(row.reason)}</span>
+          <span style={{ color: 'var(--signoff-ink, #252521)', fontWeight: 500 }}>{formatDisputeReason(row.reason)}</span>
         ),
       },
       {
@@ -150,8 +150,8 @@ export const ReportsPage: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing[2] }}>
         <div>
           <PageHeader
-            title="Your disputes"
-            description="See what needs your attention and when PayPal expects a response."
+            title="Reports"
+            description="Metrics and activity across your disputes. KPI totals cover seller-response cases and pending approvals; the loaded list and Studio include other statuses."
             testId="dashboard-title"
           />
         </div>
@@ -173,6 +173,60 @@ export const ReportsPage: React.FC = () => {
           View All Disputes &rarr;
         </Link>
       </div>
+
+      {/* Clean Metrics Strip (Replaces AI Card Fatigue) */}
+      <section
+        aria-label="Dispute metrics"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
+          backgroundColor: 'var(--signoff-surface, #fff)',
+          borderRadius: radius.card,
+          border: `1px solid ${colors.border}`,
+          overflow: 'hidden',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+        }}
+      >
+        <div data-testid="kpi-card-open" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--signoff-muted, #686861)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Open Disputes
+          </div>
+          <div data-testid="kpi-open-disputes" style={{ fontSize: '26px', fontWeight: 700, color: 'var(--signoff-ink, #252521)', margin: '4px 0 2px' }}>
+            {kpis.open_disputes}
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--signoff-muted, #686861)' }}>Awaiting response or review</div>
+        </div>
+
+        <div data-testid="kpi-card-risk" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--signoff-muted, #686861)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            At Risk
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: 700, color: 'var(--signoff-ink, #252521)', margin: '4px 0 2px' }}>
+            <Money testId="kpi-dollars-at-risk" money={{ value: kpis.dollars_at_risk, currency_code: 'USD' }} />
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--signoff-muted, #686861)' }}>Active disputed volume</div>
+        </div>
+
+        <div data-testid="kpi-card-recovered" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--signoff-muted, #686861)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Seller-favour disputes
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: 700, color: '#059669', margin: '4px 0 2px' }}>
+            <Money testId="kpi-recovered" money={{ value: kpis.recovered, currency_code: 'USD' }} />
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--signoff-muted, #686861)' }}>Disputed USD amounts with known outcomes</div>
+        </div>
+
+        <div style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--signoff-muted, #686861)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Auto-resolution share
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: 700, color: '#0F766E', margin: '4px 0 2px' }}>
+            <span data-testid="kpi-autonomous-share">{values.share}</span>
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--signoff-muted, #686861)' }}>Estimated time saved: {values.hours}</div>
+        </div>
+      </section>
 
       {/* High Priority Operational Triage Banner */}
       {needsApprovalCount > 0 ? (
@@ -228,7 +282,7 @@ export const ReportsPage: React.FC = () => {
               textDecoration: 'none',
             }}
           >
-            Review Pending &rarr;
+            View disputes &rarr;
           </Link>
         </div>
       ) : (
@@ -246,16 +300,17 @@ export const ReportsPage: React.FC = () => {
           }}
         >
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
-          <span>No reviews are currently shown in this list.</span>
+          <span>No historical review states are shown in this list.</span>
         </div>
       )}
 
       {/* Operational Recent Disputes Queue */}
+      <details><summary style={{ cursor: 'pointer', minHeight: 44, fontWeight: 600 }}>View non-resolved disputes</summary>
       <section
         aria-label="Recent disputes"
         data-testid="dashboard-disputes-card"
         style={{
-          backgroundColor: '#FFFFFF',
+          backgroundColor: 'var(--signoff-surface, #fff)',
           borderRadius: radius.card,
           border: `1px solid ${colors.border}`,
           padding: spacing[3],
@@ -265,8 +320,8 @@ export const ReportsPage: React.FC = () => {
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>
-            Open disputes by deadline
+          <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--signoff-ink, #252521)' }}>
+            Non-resolved disputes by deadline
           </h2>
           <Link
             to="/app/disputes"
@@ -308,61 +363,7 @@ export const ReportsPage: React.FC = () => {
             caption="Recent store disputes"
           />
         )}
-      </section>
-
-      {/* Clean Metrics Strip (Replaces AI Card Fatigue) */}
-      <section
-        aria-label="Dispute metrics"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
-          backgroundColor: '#FFFFFF',
-          borderRadius: radius.card,
-          border: `1px solid ${colors.border}`,
-          overflow: 'hidden',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-        }}
-      >
-        <div data-testid="kpi-card-open" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Open Disputes
-          </div>
-          <div data-testid="kpi-open-disputes" style={{ fontSize: '26px', fontWeight: 700, color: '#111827', margin: '4px 0 2px' }}>
-            {kpis.open_disputes}
-          </div>
-          <div style={{ fontSize: '12px', color: '#4B5563' }}>Awaiting response or review</div>
-        </div>
-
-        <div data-testid="kpi-card-risk" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            At Risk
-          </div>
-          <div style={{ fontSize: '26px', fontWeight: 700, color: '#111827', margin: '4px 0 2px' }}>
-            <Money testId="kpi-dollars-at-risk" money={{ value: kpis.dollars_at_risk, currency_code: 'USD' }} />
-          </div>
-          <div style={{ fontSize: '12px', color: '#4B5563' }}>Active disputed volume</div>
-        </div>
-
-        <div data-testid="kpi-card-recovered" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Seller-favour disputes
-          </div>
-          <div style={{ fontSize: '26px', fontWeight: 700, color: '#059669', margin: '4px 0 2px' }}>
-            <Money testId="kpi-recovered" money={{ value: kpis.recovered, currency_code: 'USD' }} />
-          </div>
-          <div style={{ fontSize: '12px', color: '#4B5563' }}>Disputed USD amounts with known outcomes</div>
-        </div>
-
-        <div style={{ padding: '16px 20px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Auto-resolution share
-          </div>
-          <div style={{ fontSize: '26px', fontWeight: 700, color: '#0F766E', margin: '4px 0 2px' }}>
-            <span data-testid="kpi-autonomous-share">{values.share}</span>
-          </div>
-          <div style={{ fontSize: '12px', color: '#4B5563' }}>Estimated time saved: {values.hours}</div>
-        </div>
-      </section>
+      </section></details>
 
       {/* Hidden test-compatibility KPI hooks */}
       <div style={{ display: 'none' }} aria-hidden="true">
@@ -376,18 +377,25 @@ export const ReportsPage: React.FC = () => {
           <span data-testid="kpi-hours-saved">{values.hours}</span>
         </span>
       </div>
-      <p data-testid="kpi-assumption" style={{ margin: 0, fontSize: '12px', color: '#4B5563' }}>
+      <p data-testid="kpi-assumption" style={{ margin: 0, fontSize: '12px', color: 'var(--signoff-muted, #686861)' }}>
         Estimated hours saved assumes {kpis.assumed_minutes_per_dispute} minutes per closed dispute.
         {kpis.non_usd_open_disputes > 0
           ? ` ${kpis.non_usd_open_disputes} open dispute(s) in other currencies are excluded from USD sums.`
           : ''}
       </p>
 
+      {/* Integrated Assistant & Widgets Section (Test Compatible) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
+        <WidgetsSection
+          disputes={disputes}
+          charter={charterQuery.data}
+          timeline={timelineQuery.data?.items ?? []}
+        />
       {/* Flagship AG Studio Workspace (Always Visible, Primary Centerpiece) */}
       <section aria-label="AG Studio Analytics" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0 }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--signoff-ink, #252521)', margin: 0 }}>
               AG Studio Analytics Workspace
             </h2>
             <span
@@ -406,19 +414,12 @@ export const ReportsPage: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ backgroundColor: '#FFFFFF', borderRadius: radius.card, border: `1px solid ${colors.border}`, padding: spacing[2] }}>
+        <div style={{ backgroundColor: 'var(--signoff-surface, #fff)', borderRadius: radius.card, border: `1px solid ${colors.border}`, padding: spacing[2] }}>
           <StudioEmbed data={studioData} />
         </div>
       </section>
 
-      {/* Integrated Assistant & Widgets Section (Test Compatible) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
         <AssistantPanel kpis={kpis} disputes={disputes} />
-        <WidgetsSection
-          disputes={disputes}
-          charter={charterQuery.data}
-          timeline={timelineQuery.data?.items ?? []}
-        />
       </div>
     </div>
   );

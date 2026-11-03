@@ -22,6 +22,21 @@ describe('SignoffApiClient', () => {
     expect(res.error).toBeNull();
   });
 
+  it('sends the demo session as a header when narrowing dispute scope', async () => {
+    const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ items: [], next_cursor: null }), {
+      status: 200, headers: { 'Content-Type': 'application/json' },
+    }));
+    const client = createApiClient({ baseUrl: 'http://localhost:8000', fetch: fetcher });
+    await client.getDisputes({ scope: 'mine' }, 'fictional-session');
+    const call = fetcher.mock.calls[0];
+    expect(call).toBeDefined();
+    if (!call) throw new Error('Expected a request');
+    const [url, options] = call;
+    expect(String(url)).toContain('scope=mine');
+    expect(String(url)).not.toContain('fictional-session');
+    expect(new Headers(options.headers).get('X-Demo-Session')).toBe('fictional-session');
+  });
+
   it('handles 204 No Content responses without failing', async () => {
     const mockFetch = vi.fn().mockResolvedValue(
       new Response(null, {

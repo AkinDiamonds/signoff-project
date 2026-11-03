@@ -24,9 +24,9 @@ export const routes: RouteObject[] = [
     element: <MarketingLayout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'guide', element: <GuidePage /> },
     ],
   },
+  { element: <Layout />, children: [{ path: 'guide', element: <GuidePage /> }] },
   // Authenticated merchant console layout (pinned fixed sidebar, independent scroll)
   {
     path: 'app',
