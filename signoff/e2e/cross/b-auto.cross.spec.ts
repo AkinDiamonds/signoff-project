@@ -27,6 +27,9 @@ test('B: in-transit dispute requires review by default @smoke @full', async ({ p
   await session.applyTo(page);
   await page.goto('/app');
   await expect(page.getByTestId('dashboard-title')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Open dispute summary' })).toContainText(String(after.open_disputes));
+  await page.goto('/app/reports');
+  await page.getByText('View non-resolved disputes').click();
   await expect(page.getByTestId(`dashboard-dispute-row-${disputeId}`)).toBeVisible();
   await expect(page.getByTestId('kpi-open-disputes')).toHaveText(String(after.open_disputes));
   await expect(page.getByTestId('kpi-autonomous-share')).toBeVisible();
