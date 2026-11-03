@@ -28,22 +28,21 @@ test('B: in-transit dispute requires review by default @smoke @full', async ({ p
   await page.goto('/app');
   await expect(page.getByTestId('dashboard-title')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Open dispute summary' })).toContainText(String(after.open_disputes));
+  await expect(page.getByRole('region', { name: 'Needs attention' }).locator(`a[href="/app/disputes/${disputeId}"]`)).toBeVisible();
   await page.goto('/app/reports');
-  await page.getByText('View non-resolved disputes').click();
-  await expect(page.getByTestId(`dashboard-dispute-row-${disputeId}`)).toBeVisible();
   await expect(page.getByTestId('kpi-open-disputes')).toHaveText(String(after.open_disputes));
   await expect(page.getByTestId('kpi-autonomous-share')).toBeVisible();
   await expect(page.getByTestId('kpi-autonomous-share')).toHaveText(
     after.share_auto_resolved === null ? '—' : `${Math.round(after.share_auto_resolved * 100)}%`
   );
   await page.goto(`/app/disputes/${disputeId}`);
-  await expect(page.getByText('Delivery evidence needs your review')).toBeVisible();
+  await expect(page.getByText('Delivery evidence needs your review', { exact: true })).toBeVisible();
   await expect(page.getByTestId('agent-in-progress-banner')).toHaveCount(0);
   await page.reload();
-  await expect(page.getByText('Delivery evidence needs your review')).toBeVisible();
-  await page.goto('/app/disputes');
+  await expect(page.getByText('Delivery evidence needs your review', { exact: true })).toBeVisible();
+  await page.goto(`/app/disputes?q=${encodeURIComponent(disputeId)}`);
   await expect(page.getByTestId(`dispute-row-${disputeId}`)).toBeVisible();
   await page.goBack();
   await expect(page.getByTestId('dispute-detail-id')).toContainText(disputeId);
-  await expect(page.getByText('Delivery evidence needs your review')).toBeVisible();
+  await expect(page.getByText('Delivery evidence needs your review', { exact: true })).toBeVisible();
 });
