@@ -184,8 +184,18 @@ def get_timeline_events(
             "is_truncated": was_truncated,
         }
 
-        # Merge specific documented fields according to event kind
+        # Correlate execution events without changing the append-only ledger.
         kind = row.event_kind
+        if kind in {
+            TimelineEventKind.EXECUTION_INTENDED.value,
+            TimelineEventKind.EXECUTION_SENT.value,
+            TimelineEventKind.EXECUTION_CONFIRMED.value,
+            TimelineEventKind.EXECUTION_FAILED.value,
+        }:
+            execution_id = sanitized_payload.get("execution_id")
+            event_dict["execution_id"] = execution_id if isinstance(execution_id, str) else None
+
+        # Merge specific documented fields according to event kind
         if kind == TimelineEventKind.WEBHOOK_RECEIVED.value:
             event_dict["payload"] = sanitized_payload
         elif kind == TimelineEventKind.DISPUTE_SYNCED.value:
@@ -219,7 +229,8 @@ def get_timeline_events(
         elif kind == TimelineEventKind.EXECUTION_CONFIRMED.value:
             event_dict["external_id"] = str(sanitized_payload.get("external_id", ""))
         elif kind == TimelineEventKind.EXECUTION_FAILED.value:
-            err_msg, err_trunc = sanitize_untrusted_text(str(sanitized_payload.get("error_message", "")))
+            error = sanitized_payload.get("error_message") or sanitized_payload.get("error") or ""
+            err_msg, err_trunc = sanitize_untrusted_text(str(error))
             event_dict["error_message"] = err_msg
             if err_trunc:
                 event_dict["is_truncated"] = True

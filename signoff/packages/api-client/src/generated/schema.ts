@@ -1413,6 +1413,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Current Approval Available */
+            current_approval_available?: boolean | null;
             /** Id */
             id: string;
             /** Latest Rule Id */
@@ -1664,6 +1666,8 @@ export interface components {
             created_at: string;
             /** Dispute Id */
             dispute_id: string;
+            /** Execution Id */
+            execution_id?: string | null;
             /** External Id */
             external_id: string;
             /** Id */
@@ -1690,6 +1694,8 @@ export interface components {
             dispute_id: string;
             /** Error Message */
             error_message: string;
+            /** Execution Id */
+            execution_id?: string | null;
             /** Id */
             id: string;
             /**
@@ -1714,6 +1720,8 @@ export interface components {
             created_at: string;
             /** Dispute Id */
             dispute_id: string;
+            /** Execution Id */
+            execution_id?: string | null;
             /** Id */
             id: string;
             /**
@@ -1736,6 +1744,8 @@ export interface components {
             created_at: string;
             /** Dispute Id */
             dispute_id: string;
+            /** Execution Id */
+            execution_id?: string | null;
             /** Id */
             id: string;
             /**

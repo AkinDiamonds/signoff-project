@@ -1130,6 +1130,17 @@
             "title": "Created At",
             "type": "string"
           },
+          "current_approval_available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Approval Available"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -1779,6 +1790,17 @@
             "title": "Dispute Id",
             "type": "string"
           },
+          "execution_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Id"
+          },
           "external_id": {
             "title": "External Id",
             "type": "string"
@@ -1827,6 +1849,17 @@
             "title": "Error Message",
             "type": "string"
           },
+          "execution_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Id"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -1871,6 +1904,17 @@
             "title": "Dispute Id",
             "type": "string"
           },
+          "execution_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Id"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -1910,6 +1954,17 @@
           "dispute_id": {
             "title": "Dispute Id",
             "type": "string"
+          },
+          "execution_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Id"
           },
           "id": {
             "title": "Id",

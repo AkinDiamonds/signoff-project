@@ -53,8 +53,28 @@ class DisputeListItem(BaseModel):
     updated_at: datetime
     latest_verdict: Verdict | None = None
     latest_rule_id: str | None = None
+    current_approval_available: bool | None = None
     order_code: str | None = None
     order_resolution: ResolutionStatus = "not_found"
+
+
+def current_approval_dispute_ids(session: Session, dispute_ids: list[str], now: datetime) -> set[str]:
+    """Return only pending, unexpired approvals bound to the current dispute state."""
+    if not dispute_ids:
+        return set()
+    rows = session.scalars(
+        select(Approval.dispute_id)
+        .join(Decision, Approval.decision_id == Decision.id)
+        .join(Dispute, Approval.dispute_id == Dispute.id)
+        .where(
+            Approval.dispute_id.in_(dispute_ids),
+            Approval.resolution == ApprovalResolution.PENDING.value,
+            Approval.expires_at > now,
+            Decision.dispute_id == Dispute.id,
+            Decision.dispute_fingerprint == Dispute.state_fingerprint,
+        )
+    )
+    return set(rows)
 
 
 class DisputesResponse(BaseModel):
@@ -271,6 +291,7 @@ async def list_disputes(
             if dec.dispute_id not in latest_decisions:
                 latest_decisions[dec.dispute_id] = dec
 
+    current_approvals = current_approval_dispute_ids(db_session, dispute_ids, datetime.now(UTC))
     items: list[DisputeListItem] = []
     for d in paged_disputes:
         scope = order_scope(request.app.state.settings, d.demo_session_id)
@@ -295,6 +316,7 @@ async def list_disputes(
                 updated_at=d.updated_at,
                 latest_verdict=latest_verdict,
                 latest_rule_id=latest_rule_id,
+                current_approval_available=d.id in current_approvals,
                 order_code=resolution.order.order_code if resolution.order else None,
                 order_resolution=resolution.status,
             )
