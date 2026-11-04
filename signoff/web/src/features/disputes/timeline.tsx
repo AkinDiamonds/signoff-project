@@ -1,7 +1,7 @@
 import React from 'react';
 import { VERDICTS } from '@signoff/api-client';
 import type { Verdict } from '@signoff/api-client';
-import { VerdictChip, colors, getRuleExplanation, radius, spacing, typography } from '@signoff/ui';
+import { VerdictChip, colors, concept, formatEventTime, getRuleExplanation, radius, spacing, typography } from '@signoff/ui';
 import type { ApiTimelineEvent } from './types';
 
 function isVerdict(value: string): value is Verdict {
@@ -77,12 +77,12 @@ export function renderTimelineEventContent(event: KnownTimelineEvent): {
       };
     case 'PLAN_PROPOSED':
       return {
-        title: 'Action plan proposed',
+        title: 'Actions proposed',
         details: `Proposed action: ${event.action_type}. ${event.reasoning_source === 'cached' ? 'Cached reasoning.' : event.reasoning_source === 'provider' ? 'Provider response.' : 'Reasoning source unavailable.'}`,
       };
     case 'GATE_DECIDED':
       return {
-        title: 'Gate decided',
+        title: event.verdict === 'NEEDS_APPROVAL' ? 'Review required' : 'Gate decided',
         badge: (
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             {isVerdict(event.verdict) ? (
@@ -110,12 +110,12 @@ export function renderTimelineEventContent(event: KnownTimelineEvent): {
       };
     case 'APPROVAL_REQUESTED':
       return {
-        title: 'Human approval requested',
+        title: 'Review requested',
         details: 'Approval card created; waiting for merchant review.',
       };
     case 'APPROVAL_RESOLVED':
       return {
-        title: 'Approval resolved',
+        title: 'Approval recorded',
         details: `Merchant resolution: ${event.resolution}.`,
       };
     case 'EXECUTION_INTENDED':
@@ -187,13 +187,40 @@ export interface DecisionTimelineProps {
   reverse?: boolean;
 }
 
+const GREEN = '#2E9E5B';
+const AMBER = '#E0A100';
+const RED = '#C2362B';
+const GRAY = '#B9B9B3';
+
+function dotColor(event: ApiTimelineEvent): string {
+  switch (event.kind) {
+    case 'APPROVAL_RESOLVED': case 'EVIDENCE_BUILT': case 'EXECUTION_CONFIRMED': return GREEN;
+    case 'APPROVAL_REQUESTED': case 'NO_ACTION': return AMBER;
+    case 'GATE_DECIDED': return 'verdict' in event && event.verdict === 'NEEDS_APPROVAL' ? AMBER : GRAY;
+    case 'EXECUTION_FAILED': case 'RUN_FAILED': case 'INJECTION_FLAGGED': return RED;
+    default: return GRAY;
+  }
+}
+
+/** Drops an event that repeats the previous one (same kind, minute and payload). */
+function withoutAdjacentDuplicates(events: ApiTimelineEvent[]): ApiTimelineEvent[] {
+  const signature = (event: ApiTimelineEvent) => {
+    const payload = Object.fromEntries(Object.entries(event).filter(([key]) => !['id', 'sequence_number', 'created_at'].includes(key)));
+    const minute = 'created_at' in event && typeof event.created_at === 'string' ? event.created_at.slice(0, 16) : '';
+    return JSON.stringify([minute, payload]);
+  };
+  return events.filter((event, index) => {
+    const previous = events[index - 1];
+    return !previous || signature(event) !== signature(previous);
+  });
+}
+
 export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events, reverse = false }) => {
-  // Sort strictly by sequence_number ascending
-  const sorted = [...events].sort((a, b) => {
+  const sorted = withoutAdjacentDuplicates([...events].sort((a, b) => {
     const seqA = 'sequence_number' in a && typeof a.sequence_number === 'number' ? a.sequence_number : 0;
     const seqB = 'sequence_number' in b && typeof b.sequence_number === 'number' ? b.sequence_number : 0;
     return reverse ? seqB - seqA : seqA - seqB;
-  });
+  }));
 
   const actionsByAttempt = new Map<string, string>();
   for (const event of sorted) {
@@ -211,99 +238,46 @@ export const DecisionTimeline: React.FC<DecisionTimelineProps> = ({ events, reve
     );
   }
 
+  const rows = sorted.map((item, idx) => {
+    let content: { title: string; badge?: React.ReactNode; details?: React.ReactNode } = isKnownTimelineEvent(item)
+      ? renderTimelineEventContent(item)
+      : { title: `Event: ${('kind' in item ? item.kind : 'UNKNOWN')}`, details: 'Event data recorded in dispute audit log.' };
+    const attemptId = 'execution_id' in item && typeof item.execution_id === 'string' ? item.execution_id : null;
+    const action = attemptId ? actionsByAttempt.get(attemptId) : undefined;
+    if (action && item.kind !== 'EXECUTION_INTENDED') {
+      content = { ...content, details: <><strong>{action[0]?.toUpperCase()}{action.slice(1)}.</strong> {content.details}</> };
+    }
+    const seqNum = 'sequence_number' in item ? item.sequence_number : idx + 1;
+    return { item, content, attemptId, seqNum };
+  });
+
   return (
-    <ol
-      data-testid="decision-timeline"
-      style={{
-        listStyle: 'none',
-        margin: 0,
-        padding: `${spacing[1]} 0 ${spacing[1]} ${spacing[2]}`,
-        borderLeft: `2px solid ${colors.border}`,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: spacing[2],
-      }}
-    >
-      {sorted.map((item, idx) => {
-        let content: { title: string; badge?: React.ReactNode; details?: React.ReactNode };
-
-        // If known event kind, render through exhaustive switch
-        if (isKnownTimelineEvent(item)) {
-          content = renderTimelineEventContent(item);
-        } else {
-          // Edge case: unknown timeline event kind renders generically
-          content = {
-            title: `Event: ${('kind' in item ? item.kind : 'UNKNOWN')}`,
-            details: 'Event data recorded in dispute audit log.',
-          };
-        }
-
-        const attemptId = 'execution_id' in item && typeof item.execution_id === 'string' ? item.execution_id : null;
-        const action = attemptId ? actionsByAttempt.get(attemptId) : undefined;
-        if (action && item.kind !== 'EXECUTION_INTENDED') {
-          content = { ...content, details: <><strong>{action[0]?.toUpperCase()}{action.slice(1)}.</strong> {content.details}</> };
-        }
-
-        const createdAt = 'created_at' in item ? item.created_at : '';
-        const seqNum = 'sequence_number' in item ? item.sequence_number : idx + 1;
-
-        return (
-          <li
-            key={item.id ?? idx}
-            data-testid={`timeline-event-${seqNum}`}
-            data-event-kind={'kind' in item ? item.kind : 'UNKNOWN'}
-            style={{
-              position: 'relative',
-              paddingLeft: spacing[2],
-            }}
-          >
-            {/* Timeline bullet */}
-            <span
-              aria-hidden="true"
-              style={{
-                position: 'absolute',
-                left: '-23px',
-                top: '4px',
-                width: '12px',
-                height: '12px',
-                borderRadius: '50%',
-                backgroundColor: colors.brandPrimary,
-                border: `2px solid ${colors.surface}`,
-                boxShadow: `0 0 0 2px ${colors.brandPrimary}`,
-              }}
-            />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: spacing[1],
-                  flexWrap: 'wrap',
-                }}
-              >
-                <strong style={{ fontSize: typography.fontSizeBody, color: colors.ink }}>{content.title}</strong>
-                {content.badge}
-                {createdAt && (
-                  <time
-                    dateTime={createdAt}
-                    style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, marginLeft: 'auto' }}
-                  >
-                    {new Date(createdAt).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
-                  </time>
-                )}
+    <>
+      <ol
+        data-testid="decision-timeline"
+        style={{ listStyle: 'none', margin: 0, padding: '4px 0 4px 24px', borderLeft: `2px solid ${concept.border}`, marginLeft: 6, display: 'flex', flexDirection: 'column', gap: 24 }}
+      >
+        {rows.map(({ item, content, seqNum }, idx) => {
+          const createdAt = 'created_at' in item ? item.created_at : '';
+          return (
+            <li key={item.id ?? idx} data-testid={`timeline-event-${seqNum}`} data-event-kind={'kind' in item ? item.kind : 'UNKNOWN'} style={{ position: 'relative' }}>
+              <span aria-hidden="true" style={{ position: 'absolute', left: -32, top: 5, width: 14, height: 14, borderRadius: '50%', background: dotColor(item), border: `2px solid ${concept.surface}` }} />
+              <div style={{ display: 'grid', gap: 2 }}>
+                <strong style={{ fontSize: 18, color: concept.ink }}>{content.title}</strong>
+                {content.details && <div style={{ fontSize: 15, color: concept.muted }}>{content.details}</div>}
+                {createdAt && <time dateTime={createdAt} style={{ fontSize: 14, color: concept.muted }}>{formatEventTime(createdAt)}</time>}
               </div>
-              {content.details && (
-                <div style={{ fontSize: typography.fontSizeSmall, color: colors.ink }}>{content.details}</div>
-              )}
-              <details style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
-                <summary>Audit reference</summary>
-                <span>Event {item.id} · Sequence {seqNum}{attemptId && <> · Attempt {attemptId}</>}</span>
-              </details>
-            </div>
-          </li>
-        );
-      })}
-    </ol>
+            </li>
+          );
+        })}
+      </ol>
+      <details data-testid="timeline-technical-details" style={{ borderTop: `1px solid ${concept.border}`, paddingTop: 16 }}>
+        <summary style={{ cursor: 'pointer', minHeight: 44, color: concept.primary, fontWeight: 650, fontSize: 16 }}>Technical details →</summary>
+        <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: concept.muted, display: 'grid', gap: 6, overflowWrap: 'anywhere' }}>
+          {rows.map(({ item, attemptId, seqNum }) => <li key={`ref-${item.id ?? seqNum}`}>Event {item.id} · Sequence {seqNum}{attemptId && <> · Attempt {attemptId}</>}</li>)}
+        </ul>
+      </details>
+    </>
   );
 };
 

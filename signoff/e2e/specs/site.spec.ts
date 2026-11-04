@@ -36,11 +36,9 @@ test.describe('Product site and judge guide', () => {
     await expect(page.getByTestId('guide-step-4')).toBeVisible();
     await expect(page.getByTestId('guide-step-5')).toBeVisible();
 
-    // Credentials
-    await expect(page.getByTestId('guide-credentials-card')).toBeVisible();
-    await expect(page.getByTestId('guide-buyer-email')).toHaveText('alex.morgan@example.test');
-
-    // Comparison table
+    // Comparison table sits behind "Real vs simulated"
+    await expect(page.getByTestId('real-simulated-table')).toBeHidden();
+    await page.getByText('Real vs simulated').click();
     await expect(page.getByTestId('real-simulated-table')).toBeVisible();
     await expect(page.getByText('PayPal Disputes API')).toBeVisible();
     await expect(page.getByText('Policy Gate Engine')).toBeVisible();
@@ -54,21 +52,23 @@ test.describe('Product site and judge guide', () => {
   test('all internal navigation links resolve without 404', async ({ page }) => {
     await page.goto('/guide');
 
-    // Click Disputes link in step 4
+    // Step 1 is open by default
+    await page.getByTestId('guide-step-1-link').click();
+    await expect(page).toHaveURL(/\/app\/pool$/);
+    await expect(page.getByTestId('not-found-page')).toHaveCount(0);
+
+    // Click Disputes link in step 4 (open the step first)
+    await page.goto('/guide');
+    await page.getByTestId('guide-step-4').getByText('Inspect blocked injection').click();
     await page.getByTestId('guide-step-4-disputes-link').click();
     await expect(page).toHaveURL(/\/app\/disputes$/);
     await expect(page.getByTestId('not-found-page')).toHaveCount(0);
 
     // Go back to guide
     await page.goto('/guide');
+    await page.getByTestId('guide-step-4').getByText('Inspect blocked injection').click();
     await page.getByTestId('guide-step-4-demo-link').click();
     await expect(page).toHaveURL(/\/app\/demo$/);
-    await expect(page.getByTestId('not-found-page')).toHaveCount(0);
-
-    // View switcher quick links
-    await page.goto('/guide');
-    await page.getByTestId('view-link-merchant-charter').click();
-    await expect(page).toHaveURL(/\/app\/charter$/);
     await expect(page.getByTestId('not-found-page')).toHaveCount(0);
   });
 

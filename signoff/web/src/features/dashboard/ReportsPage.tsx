@@ -1,26 +1,36 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import {
+  ConceptCard,
+  ConceptDisclosure,
+  ConceptIcon,
+  ConceptPageTitle,
+  ConceptPill,
+  ConceptSectionHeading,
+  ConceptSegmented,
+  ConceptStatTile,
   DataTable,
   Deadline,
   EmptyState,
   ErrorState,
   Money,
-  PageHeader,
   StatusBadge,
   Skeleton,
   colors,
+  concept,
   formatDisputeReason,
+  formatMoneyCompact,
   radius,
   spacing,
 } from '@signoff/ui';
 import type { ColumnDef } from '@signoff/ui';
 import { ApiQueryError, useDisputeTimeline } from '../../app/queries';
 import { useCharter } from '../charter';
-import { WidgetsSection } from '../widgets';
+import { getDemoSession } from '../demo/api';
+import { WidgetsSection, classifyDeadline } from '../widgets';
 import { AssistantPanel } from './AssistantPanel';
 import { StudioEmbed } from './StudioEmbed';
-import { useDashboardDisputes, useKpis } from './api';
+import { useDashboardDisputes, useKpis, type KpiScope } from './api';
 import { toStudioData, type DisputeItem, type Kpis, type StudioData } from './types';
 
 const EMPTY_STUDIO_DATA: StudioData = {
@@ -29,6 +39,8 @@ const EMPTY_STUDIO_DATA: StudioData = {
     { id: 'kpis', data: [] },
   ],
 };
+
+const SR_ONLY: React.CSSProperties = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' };
 
 function kpiValue(kpis: Kpis) {
   const share =
@@ -46,30 +58,62 @@ function errorText(error: unknown): string {
   return error instanceof ApiQueryError ? error.message : 'The dashboard data could not be loaded.';
 }
 
+function lastUpdated(updatedAt: number): string {
+  if (updatedAt <= 0) return '';
+  const minutes = Math.floor((Date.now() - updatedAt) / 60_000);
+  return minutes < 1 ? 'Last updated just now' : `Last updated ${minutes} min ago`;
+}
+
+function fitted(text: string): React.ReactNode {
+  return text.length > 7 ? <span style={{ fontSize: 24 }}>{text}</span> : text;
+}
+
+function openOnDesktop(): boolean {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 900px)').matches;
+}
+
+const SCOPE_OPTIONS = [
+  { value: 'mine', label: 'My session' },
+  { value: 'all', label: 'All time' },
+];
+
 export const ReportsPage: React.FC = () => {
-  const kpisQuery = useKpis();
-  const disputesQuery = useDashboardDisputes();
+  const demoSession = getDemoSession();
+  const [scope, setScope] = useState<KpiScope>(demoSession ? 'mine' : 'all');
+  const [analyticsOpen] = useState(openOnDesktop);
+  const kpisQuery = useKpis(scope, demoSession);
+  const disputesQuery = useDashboardDisputes(scope, demoSession);
   const charterQuery = useCharter();
-  const disputes = disputesQuery.data ?? [];
+  const disputes = useMemo(() => disputesQuery.data ?? [], [disputesQuery.data]);
   const firstDisputeId = disputes[0]?.id ?? '';
   const timelineQuery = useDisputeTimeline(firstDisputeId);
+  const scopeNote = `Scope: ${scope === 'mine' ? 'My session' : 'All time'}`;
 
   const studioData = useMemo(
-    () =>
-      kpisQuery.data ? toStudioData(kpisQuery.data, disputes) : EMPTY_STUDIO_DATA,
+    () => (kpisQuery.data ? toStudioData(kpisQuery.data, disputes) : EMPTY_STUDIO_DATA),
     [kpisQuery.data, disputes]
   );
 
-  const needsApprovalCount = useMemo(() => {
-    return disputes.filter(
-      (d) => d.latest_verdict === 'NEEDS_APPROVAL' || d.status === 'UNDER_REVIEW'
-    ).length;
-  }, [disputes]);
+  const needsApprovalCount = useMemo(
+    () => disputes.filter((d) => d.latest_verdict === 'NEEDS_APPROVAL' || d.status === 'UNDER_REVIEW').length,
+    [disputes]
+  );
 
   const recentDisputes = useMemo(() => [...disputes]
     .filter(dispute => dispute.status !== 'RESOLVED')
     .sort((a, b) => (a.seller_response_due_date ?? '9999').localeCompare(b.seller_response_due_date ?? '9999'))
     .slice(0, 5), [disputes]);
+
+  const radar = useMemo(() => {
+    const now = new Date();
+    const counts = { OVERDUE: 0, DUE_SOON: 0, SCHEDULED: 0 };
+    for (const item of recentDisputes) {
+      const urgency = classifyDeadline(item.seller_response_due_date ?? null, now);
+      if (urgency !== 'NONE') counts[urgency] += 1;
+    }
+    const next = recentDisputes.find(item => classifyDeadline(item.seller_response_due_date ?? null, now) !== 'NONE');
+    return { counts, next, nextUrgency: next ? classifyDeadline(next.seller_response_due_date ?? null, now) : 'NONE' };
+  }, [recentDisputes]);
 
   const columns = useMemo<ColumnDef<DisputeItem>[]>(
     () => [
@@ -77,15 +121,7 @@ export const ReportsPage: React.FC = () => {
         id: 'id',
         header: 'Dispute',
         cell: (row) => (
-          <Link
-            to={`/app/disputes/${row.id}`}
-            style={{
-              fontFamily: 'monospace',
-              fontWeight: 600,
-              color: '#0F766E',
-              textDecoration: 'none',
-            }}
-          >
+          <Link to={`/app/disputes/${row.id}`} style={{ fontFamily: 'monospace', fontWeight: 600, color: concept.primary, textDecoration: 'none' }}>
             {row.id}
           </Link>
         ),
@@ -93,334 +129,168 @@ export const ReportsPage: React.FC = () => {
       {
         id: 'reason',
         header: 'Buyer Reason',
-        cell: (row) => (
-          <span style={{ color: 'var(--signoff-ink, #252521)', fontWeight: 500 }}>{formatDisputeReason(row.reason)}</span>
-        ),
+        cell: (row) => <span style={{ color: 'var(--signoff-ink, #252521)', fontWeight: 500 }}>{formatDisputeReason(row.reason)}</span>,
       },
-      {
-        id: 'amount',
-        header: 'Amount',
-        numeric: true,
-        cell: (row) => <Money money={row.amount} />,
-      },
-      {
-        id: 'verdict',
-        header: 'PayPal status',
-        cell: (row) => (
-          <StatusBadge status={row.status} />
-        ),
-      },
-      {
-        id: 'due',
-        header: 'Due Date',
-        cell: (row) => (
-          <Deadline dueAt={row.seller_response_due_date ?? null} />
-        ),
-      },
+      { id: 'amount', header: 'Amount', numeric: true, cell: (row) => <Money money={row.amount} /> },
+      { id: 'verdict', header: 'PayPal status', cell: (row) => <StatusBadge status={row.status} /> },
+      { id: 'due', header: 'Due Date', cell: (row) => <Deadline dueAt={row.seller_response_due_date ?? null} /> },
     ],
     []
   );
 
-  if (kpisQuery.isPending) {
-    return (
-      <div data-testid="dashboard-loading" style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
-        <Skeleton height="36px" width="30%" />
-        <Skeleton height="80px" />
-        <Skeleton height="400px" />
-      </div>
-    );
-  }
-
-  if (kpisQuery.isError || kpisQuery.data === undefined) {
-    return (
-      <ErrorState
-        testId="dashboard-error"
-        message={errorText(kpisQuery.error)}
-        onRetry={() => void kpisQuery.refetch()}
-      />
-    );
-  }
-
   const kpis = kpisQuery.data;
-  const values = kpiValue(kpis);
+  const values = kpis ? kpiValue(kpis) : null;
+  const atRisk = kpis ? { value: kpis.dollars_at_risk, currency_code: 'USD' } : null;
+  const recovered = kpis ? { value: kpis.recovered, currency_code: 'USD' } : null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[4], maxWidth: '1400px' }}>
-      {/* Page Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing[2] }}>
-        <div>
-          <PageHeader
-            title="Reports"
-            description="Metrics and activity across your disputes. KPI totals cover seller-response cases and pending approvals; the loaded list and Studio include other statuses."
-            testId="dashboard-title"
-          />
-        </div>
-        <Link
-          to="/app/disputes"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            backgroundColor: '#0F766E',
-            color: '#FFFFFF',
-            padding: '8px 16px',
-            borderRadius: radius.control,
-            fontSize: '14px',
-            fontWeight: 600,
-            textDecoration: 'none',
-          }}
-        >
-          View All Disputes &rarr;
-        </Link>
-      </div>
+    <div style={{ display: 'grid', gap: 28, maxWidth: 900, minWidth: 0 }}>
+      <ConceptPageTitle title="Reports" testId="dashboard-title" />
+      <ConceptSegmented ariaLabel="Report scope" idPrefix="reports-scope" options={SCOPE_OPTIONS} value={scope} onChange={(value) => setScope(value === 'all' ? 'all' : 'mine')} />
 
-      {/* Clean Metrics Strip (Replaces AI Card Fatigue) */}
-      <section
-        aria-label="Dispute metrics"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
-          backgroundColor: 'var(--signoff-surface, #fff)',
-          borderRadius: radius.card,
-          border: `1px solid ${colors.border}`,
-          overflow: 'hidden',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-        }}
-      >
-        <div data-testid="kpi-card-open" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--signoff-muted, #686861)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Open Disputes
-          </div>
-          <div data-testid="kpi-open-disputes" style={{ fontSize: '26px', fontWeight: 700, color: 'var(--signoff-ink, #252521)', margin: '4px 0 2px' }}>
-            {kpis.open_disputes}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--signoff-muted, #686861)' }}>Awaiting response or review</div>
-        </div>
-
-        <div data-testid="kpi-card-risk" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--signoff-muted, #686861)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            At Risk
-          </div>
-          <div style={{ fontSize: '26px', fontWeight: 700, color: 'var(--signoff-ink, #252521)', margin: '4px 0 2px' }}>
-            <Money testId="kpi-dollars-at-risk" money={{ value: kpis.dollars_at_risk, currency_code: 'USD' }} />
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--signoff-muted, #686861)' }}>Active disputed volume</div>
-        </div>
-
-        <div data-testid="kpi-card-recovered" style={{ padding: '16px 20px', borderRight: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--signoff-muted, #686861)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Seller-favour disputes
-          </div>
-          <div style={{ fontSize: '26px', fontWeight: 700, color: '#059669', margin: '4px 0 2px' }}>
-            <Money testId="kpi-recovered" money={{ value: kpis.recovered, currency_code: 'USD' }} />
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--signoff-muted, #686861)' }}>Disputed USD amounts with known outcomes</div>
-        </div>
-
-        <div style={{ padding: '16px 20px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--signoff-muted, #686861)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Auto-resolution share
-          </div>
-          <div style={{ fontSize: '26px', fontWeight: 700, color: '#0F766E', margin: '4px 0 2px' }}>
-            <span data-testid="kpi-autonomous-share">{values.share}</span>
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--signoff-muted, #686861)' }}>Estimated time saved: {values.hours}</div>
-        </div>
-      </section>
-
-      {/* High Priority Operational Triage Banner */}
-      {needsApprovalCount > 0 ? (
-        <div
-          data-testid="kpi-card-approval"
-          style={{
-            padding: '16px 20px',
-            backgroundColor: '#FFFBEB',
-            border: '1px solid #FCD34D',
-            borderRadius: radius.card,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '12px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                backgroundColor: '#FEF3C7',
-                color: '#92400E',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: '16px',
-              }}
-            >
-              !
-            </div>
-            <div>
-              <div style={{ fontSize: '15px', fontWeight: 600, color: '#92400E' }}>
-                <span data-testid="kpi-needs-approval">{needsApprovalCount}</span> listed dispute(s) have a review state
-              </div>
-              <div style={{ fontSize: '13px', color: '#B45309' }}>
-                This reflects the latest recorded verdict or PayPal status, and does not count current approval cards.
-              </div>
-            </div>
-          </div>
-          <Link
-            to="/app/disputes"
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#92400E',
-              color: '#FFFFFF',
-              borderRadius: radius.control,
-              fontSize: '13px',
-              fontWeight: 600,
-              textDecoration: 'none',
-            }}
-          >
-            View disputes &rarr;
-          </Link>
-        </div>
-      ) : (
-        <div
-          style={{
-            padding: '12px 18px',
-            backgroundColor: '#F0FDF4',
-            border: '1px solid #BBF7D0',
-            borderRadius: radius.card,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            fontSize: '13px',
-            color: '#166534',
-          }}
-        >
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
-          <span>No historical review states are shown in this list.</span>
+      {kpisQuery.isPending && (
+        <div data-testid="dashboard-loading" style={{ display: 'grid', gap: spacing[2] }}>
+          <Skeleton height="120px" />
+          <Skeleton height="120px" />
         </div>
       )}
 
-      {/* Operational Recent Disputes Queue */}
-      <details><summary style={{ cursor: 'pointer', minHeight: 44, fontWeight: 600 }}>View non-resolved disputes</summary>
-      <section
-        aria-label="Recent disputes"
-        data-testid="dashboard-disputes-card"
-        style={{
-          backgroundColor: 'var(--signoff-surface, #fff)',
-          borderRadius: radius.card,
-          border: `1px solid ${colors.border}`,
-          padding: spacing[3],
-          display: 'flex',
-          flexDirection: 'column',
-          gap: spacing[2],
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--signoff-ink, #252521)' }}>
-            Non-resolved disputes by deadline
-          </h2>
-          <Link
-            to="/app/disputes"
-            style={{
-              fontSize: '13px',
-              color: '#0F766E',
-              textDecoration: 'none',
-              fontWeight: 600,
-            }}
-          >
-            All Disputes &rarr;
-          </Link>
-        </div>
+      {kpisQuery.isError && (
+        <ErrorState testId="dashboard-error" message={errorText(kpisQuery.error)} onRetry={() => void kpisQuery.refetch()} />
+      )}
 
-        {disputesQuery.isPending && <Skeleton height="140px" />}
-
-        {disputesQuery.isError && (
-          <ErrorState
-            testId="dashboard-disputes-error"
-            message={errorText(disputesQuery.error)}
-            onRetry={() => void disputesQuery.refetch()}
-          />
-        )}
-
-        {disputesQuery.data && recentDisputes.length === 0 && (
-          <EmptyState
-            title="No open disputes shown"
-            description="New disputes will appear here when they are available."
-          />
-        )}
-
-        {recentDisputes.length > 0 && (
-          <DataTable
-            columns={columns}
-            data={recentDisputes}
-            keyExtractor={(d) => d.id}
-            rowTestId={(d) => `dashboard-dispute-row-${d.id}`}
-            tableTestId="dashboard-disputes-table"
-            caption="Recent store disputes"
-          />
-        )}
-      </section></details>
-
-      {/* Hidden test-compatibility KPI hooks */}
-      <div style={{ display: 'none' }} aria-hidden="true">
-        <span data-testid="kpi-card-conceded">
-          <Money testId="kpi-conceded" money={{ value: kpis.conceded, currency_code: 'USD' }} />
-        </span>
-        <span data-testid="kpi-card-share">
-          <span data-testid="kpi-share-auto">{values.share}</span>
-        </span>
-        <span data-testid="kpi-card-hours">
-          <span data-testid="kpi-hours-saved">{values.hours}</span>
-        </span>
-      </div>
-      <p data-testid="kpi-assumption" style={{ margin: 0, fontSize: '12px', color: 'var(--signoff-muted, #686861)' }}>
-        Estimated hours saved assumes {kpis.assumed_minutes_per_dispute} minutes per closed dispute.
-        {kpis.non_usd_open_disputes > 0
-          ? ` ${kpis.non_usd_open_disputes} open dispute(s) in other currencies are excluded from USD sums.`
-          : ''}
-      </p>
-
-      {/* Integrated Assistant & Widgets Section (Test Compatible) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
-        <WidgetsSection
-          disputes={disputes}
-          charter={charterQuery.data}
-          timeline={timelineQuery.data?.items ?? []}
-        />
-      {/* Flagship AG Studio Workspace (Always Visible, Primary Centerpiece) */}
-      <section aria-label="AG Studio Analytics" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--signoff-ink, #252521)', margin: 0 }}>
-              AG Studio Analytics Workspace
-            </h2>
-            <span
-              style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                padding: '2px 8px',
-                borderRadius: '9999px',
-                backgroundColor: '#EFF6FF',
-                color: '#2563EB',
-                border: '1px solid #BFDBFE',
-              }}
-            >
-              Interactive BI
-            </span>
+      {kpis && values && atRisk && recovered && (
+        <section aria-label="Dispute metrics" style={{ display: 'grid', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <ConceptStatTile testId="kpi-card-open" valueTestId="kpi-open-disputes" value={kpis.open_disputes} label="Open disputes" note={scopeNote} />
+            <div data-testid="kpi-card-risk" style={{ display: 'contents' }}>
+              <ConceptStatTile
+                value={<><span aria-hidden="true">{fitted(formatMoneyCompact(atRisk, { space: false }))}</span><span data-testid="kpi-dollars-at-risk" style={SR_ONLY}><Money money={atRisk} /></span></>}
+                label="Open disputed value"
+                note={scopeNote}
+              />
+            </div>
+            <ConceptStatTile testId="kpi-card-share" valueTestId="kpi-autonomous-share" value={values.share} label="Auto-resolution share" note={scopeNote} />
+            <div data-testid="kpi-card-recovered" style={{ display: 'contents' }}>
+              <ConceptStatTile
+                value={<><span aria-hidden="true">{fitted(formatMoneyCompact(recovered, { space: false }))}</span><span data-testid="kpi-recovered" style={SR_ONLY}><Money money={recovered} /></span></>}
+                label="Known seller-favour value"
+                note={scopeNote}
+              />
+            </div>
           </div>
-        </div>
+          {kpisQuery.dataUpdatedAt > 0 && <p style={{ margin: 0, fontSize: 13, color: concept.muted }}>{lastUpdated(kpisQuery.dataUpdatedAt)}</p>}
+          {scope === 'mine' && !demoSession && <p style={{ margin: 0, fontSize: 13, color: concept.muted }}>No sandbox session yet. Run a demo scenario to see your own totals, or switch to All time.</p>}
+        </section>
+      )}
 
-        <div style={{ backgroundColor: 'var(--signoff-surface, #fff)', borderRadius: radius.card, border: `1px solid ${colors.border}`, padding: spacing[2] }}>
-          <StudioEmbed data={studioData} />
-        </div>
+      <section aria-labelledby="radar-title" style={{ display: 'grid', gap: 14 }}>
+        <ConceptSectionHeading id="radar-title">Deadline radar</ConceptSectionHeading>
+        {disputesQuery.isPending && <Skeleton height="96px" />}
+        {disputesQuery.isError && (
+          <ErrorState testId="dashboard-disputes-error" message={errorText(disputesQuery.error)} onRetry={() => void disputesQuery.refetch()} />
+        )}
+        {disputesQuery.data && (
+          <>
+            <div data-testid="reports-radar-summary" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <ConceptPill tone="red">{radar.counts.OVERDUE} Overdue</ConceptPill>
+              <ConceptPill tone="amber">{radar.counts.DUE_SOON} Due in 48h</ConceptPill>
+              <ConceptPill tone="green">{radar.counts.SCHEDULED} Scheduled</ConceptPill>
+            </div>
+            {radar.next && radar.next.seller_response_due_date ? (
+              <ConceptCard as={Link} to={`/app/disputes/${radar.next.id}`} testId="reports-next-deadline" style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none' }}>
+                <ConceptIcon name="calendar" />
+                <span style={{ flex: 1, minWidth: 0, display: 'grid', gap: 2 }}>
+                  <time dateTime={radar.next.seller_response_due_date} style={{ fontSize: 17, fontWeight: 650 }}>
+                    {new Date(radar.next.seller_response_due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Lagos' })}
+                  </time>
+                  <span style={{ fontSize: 14, color: concept.muted }}>{radar.next.order_code ?? radar.next.id} · <Money money={radar.next.amount} /></span>
+                </span>
+                <ConceptPill tone={radar.nextUrgency === 'OVERDUE' ? 'red' : radar.nextUrgency === 'DUE_SOON' ? 'amber' : 'green'}>
+                  {radar.nextUrgency === 'OVERDUE' ? 'Overdue' : radar.nextUrgency === 'DUE_SOON' ? 'Due soon' : 'Scheduled'}
+                </ConceptPill>
+                <ConceptIcon name="chevron-right" color={concept.muted} />
+              </ConceptCard>
+            ) : (
+              <p style={{ margin: 0, color: concept.muted }}>No upcoming deadlines.</p>
+            )}
+          </>
+        )}
       </section>
 
-        <AssistantPanel kpis={kpis} disputes={disputes} />
-      </div>
+      {kpis && <AssistantPanel kpis={kpis} disputes={disputes} />}
+
+      {kpis && values && (
+        <ConceptCard padding={0}>
+          <ConceptDisclosure title="More analytics" subtitle="Review states, dispute queue, authority and Studio" defaultOpen={analyticsOpen} testId="reports-more-analytics">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[4] }}>
+              {needsApprovalCount > 0 ? (
+                <div
+                  data-testid="kpi-card-approval"
+                  style={{ padding: '16px 20px', backgroundColor: concept.warningBg, borderRadius: radius.card, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}
+                >
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600 }}>
+                      <span data-testid="kpi-needs-approval">{needsApprovalCount}</span> listed dispute(s) have a review state
+                    </div>
+                    <div style={{ fontSize: 13, color: concept.muted }}>
+                      This reflects the latest recorded verdict or PayPal status, and does not count current approval cards.
+                    </div>
+                  </div>
+                  <Link to="/app/disputes" style={{ fontSize: 14, fontWeight: 650, color: concept.primary }}>View disputes →</Link>
+                </div>
+              ) : (
+                <p style={{ margin: 0, fontSize: 13, color: concept.muted }}>No historical review states are shown in this list.</p>
+              )}
+
+              <details>
+                <summary style={{ cursor: 'pointer', minHeight: 44, fontWeight: 600 }}>View non-resolved disputes</summary>
+                <section
+                  aria-label="Recent disputes"
+                  data-testid="dashboard-disputes-card"
+                  style={{ border: `1px solid ${colors.border}`, borderRadius: radius.card, padding: spacing[3], display: 'flex', flexDirection: 'column', gap: spacing[2] }}
+                >
+                  <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Non-resolved disputes by deadline</h2>
+                  {disputesQuery.data && recentDisputes.length === 0 && (
+                    <EmptyState title="No open disputes shown" description="New disputes will appear here when they are available." />
+                  )}
+                  {recentDisputes.length > 0 && (
+                    <DataTable
+                      columns={columns}
+                      data={recentDisputes}
+                      keyExtractor={(d) => d.id}
+                      rowTestId={(d) => `dashboard-dispute-row-${d.id}`}
+                      tableTestId="dashboard-disputes-table"
+                      caption="Recent store disputes"
+                    />
+                  )}
+                </section>
+              </details>
+
+              <div style={{ display: 'none' }} aria-hidden="true">
+                <span data-testid="kpi-card-conceded"><Money testId="kpi-conceded" money={{ value: kpis.conceded, currency_code: 'USD' }} /></span>
+                <span data-testid="kpi-share-auto">{values.share}</span>
+                <span data-testid="kpi-card-hours"><span data-testid="kpi-hours-saved">{values.hours}</span></span>
+              </div>
+              <p data-testid="kpi-assumption" style={{ margin: 0, fontSize: 13, color: concept.muted }}>
+                Estimated hours saved assumes {kpis.assumed_minutes_per_dispute} minutes per closed dispute.
+                {kpis.non_usd_open_disputes > 0
+                  ? ` ${kpis.non_usd_open_disputes} open dispute(s) in other currencies are excluded from USD sums.`
+                  : ''}
+              </p>
+
+              <WidgetsSection disputes={disputes} charter={charterQuery.data} timeline={timelineQuery.data?.items ?? []} />
+
+              <section aria-label="AG Studio Analytics" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>AG Studio Analytics Workspace</h2>
+                <div style={{ borderRadius: radius.card, border: `1px solid ${colors.border}`, padding: spacing[2] }}>
+                  <StudioEmbed data={studioData} />
+                </div>
+              </section>
+            </div>
+          </ConceptDisclosure>
+        </ConceptCard>
+      )}
     </div>
   );
 };

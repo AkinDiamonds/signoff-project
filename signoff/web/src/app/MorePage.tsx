@@ -1,19 +1,25 @@
 import React from 'react';
 import { Link } from 'react-router';
-import { PageHeader, colors } from '@signoff/ui';
+import { ConceptCard, ConceptListGroup, ConceptListRow, ConceptPageTitle, ConceptSectionLabel, ConceptIcon, type ConceptIconName } from '@signoff/ui';
 
-const groups = [
-  { title: 'Workspace', links: [['/app/reports', 'Reports', 'Metrics and activity'], ['/app/shipments', 'Shipments', 'Simulated shipping'], ['/app/policy', 'Signing limits', 'Review your permissions']] },
-  { title: 'Preferences & help', links: [['/app/settings', 'Settings', 'Account and connections'], ['/app/settings/appearance', 'Appearance', 'Display and accent'], ['/guide', 'Help', 'Learn how to use Signoff']] },
-  { title: 'Sandbox tools', links: [['/app/demo', 'Demo scenarios', 'Create a sandbox case'], ['/app/pool', 'Demo disputes', 'Available and finished runs']] },
+const groups: { title: string; links: [string, string, ConceptIconName][] }[] = [
+  { title: 'Workspace', links: [['/app/reports', 'Reports', 'chart'], ['/app/shipments', 'Shipments', 'truck'], ['/app/policy', 'Signing limits', 'sliders']] },
+  { title: 'Preferences', links: [['/app/settings', 'Settings', 'gear'], ['/guide', 'Help', 'help-circle']] },
+  { title: 'Sandbox tools', links: [['/app/demo', 'Demo scenarios', 'layers'], ['/app/pool', 'Demo disputes', 'file']] },
 ];
-export const MorePage: React.FC = () => <div style={{ maxWidth: 700, display: 'grid', gap: 32 }}>
-  <PageHeader title="More" description="Manage your workspace." />
-  {groups.map(group => <section key={group.title} aria-label={group.title}>
-    <h2 style={{ fontSize: 15, color: colors.inkMuted, margin: '0 0 8px' }}>{group.title}</h2>
+export const MorePage: React.FC = () => <div style={{ maxWidth: 700, display: 'grid', gap: 28 }}>
+  <ConceptPageTitle title="More" subtitle="Manage your workspace." testId="page-header" />
+  {groups.map(group => <section key={group.title} aria-label={group.title} style={{ display: 'grid', gap: 10 }}>
+    <ConceptSectionLabel>{group.title}</ConceptSectionLabel>
     <nav aria-label={group.title}>
-      {group.links.map(([to, label, description]) => <Link key={to} to={to ?? '/app'} style={{ minHeight: 64, padding: '12px 4px', borderBottom: `1px solid ${colors.border}`, color: colors.ink, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}><span><strong>{label}</strong><br /><span style={{ color: colors.inkMuted, fontSize: 14 }}>{description}</span></span><span aria-hidden="true">›</span></Link>)}
+      <ConceptListGroup>
+        {group.links.map(([to, label, icon]) => <ConceptListRow key={to} as={Link} to={to} icon={icon} title={label} />)}
+      </ConceptListGroup>
     </nav>
   </section>)}
-  <a href={import.meta.env.PUBLIC_SHOP_URL || 'http://localhost:5174'} target="_blank" rel="noreferrer" style={{ minHeight: 48, color: colors.interactive }}>Buyer shop ↗ <span style={{ color: colors.inkMuted }}>· opens separately</span></a>
+  <ConceptCard padding={0}>
+    <a href={import.meta.env.PUBLIC_SHOP_URL || 'http://localhost:5174'} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 64, padding: '16px 18px', color: 'inherit', textDecoration: 'none', fontSize: 17, fontWeight: 650 }}>
+      <ConceptIcon name="store" /><span style={{ flex: 1 }}>Buyer shop</span><ConceptIcon name="external-link" color="var(--signoff-muted, #6b6b66)" />
+    </a>
+  </ConceptCard>
 </div>;

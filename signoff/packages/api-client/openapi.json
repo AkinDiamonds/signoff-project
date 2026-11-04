@@ -7416,6 +7416,39 @@
       "get": {
         "description": "Returns metrics for open disputes, dollars at risk, recovered, conceded, auto-resolution share, and estimated hours saved with explicit assumption values.",
         "operationId": "get_kpis_api_kpis_get",
+        "parameters": [
+          {
+            "description": "'mine' limits totals to the X-Demo-Session",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "mine"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Demo-Session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-Session"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {

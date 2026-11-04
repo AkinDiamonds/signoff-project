@@ -9,6 +9,7 @@ test.describe('Charter and demo panel (Step 27)', () => {
     await page.getByTestId('charter-save-button').click();
 
     await expect(page.getByTestId('charter-save-success')).toContainText('v2');
+    await page.getByTestId('charter-version-history').locator('summary').click();
     await expect(page.getByTestId('charter-history-item-2')).toBeVisible();
   });
 

@@ -7,19 +7,26 @@ import type { AssistantRequest, AssistantResponse, DisputeItem, Kpis } from './t
 type KpiResponse = components['schemas']['KpiResponse'];
 type LlmResponse = paths['/api/llm']['post']['responses']['200']['content']['application/json'];
 
-export function useKpis() {
+export type KpiScope = 'mine' | 'all';
+
+export function useKpis(scope: KpiScope = 'all', demoSession: string | null = null) {
   return useQuery({
-    queryKey: ['kpis'],
-    queryFn: async (): Promise<KpiResponse> => unwrap(apiClient.request<KpiResponse>('/api/kpis')),
+    queryKey: ['kpis', scope, scope === 'mine' ? demoSession : null],
+    queryFn: async (): Promise<KpiResponse> => unwrap(apiClient.request<KpiResponse>('/api/kpis', {
+      params: { query: { scope } },
+      ...(scope === 'mine' && demoSession ? { headers: { 'X-Demo-Session': demoSession } } : {}),
+    })),
     refetchInterval: 15000,
   });
 }
 
-export function useDashboardDisputes() {
+export function useDashboardDisputes(scope: KpiScope = 'all', demoSession: string | null = null) {
   return useQuery({
-    queryKey: ['disputes', 'dashboard'],
+    queryKey: scope === 'mine' ? ['disputes', 'dashboard', 'mine', demoSession] : ['disputes', 'dashboard'],
     queryFn: async (): Promise<DisputeItem[]> => {
-      const response = await unwrap(apiClient.getDisputes({ limit: 50 }));
+      const response = scope === 'mine'
+        ? await unwrap(apiClient.getDisputes({ limit: 50, scope }, demoSession))
+        : await unwrap(apiClient.getDisputes({ limit: 50 }));
       return response.items;
     },
     refetchInterval: 15000,

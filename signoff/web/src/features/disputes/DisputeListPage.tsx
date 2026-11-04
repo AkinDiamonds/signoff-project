@@ -3,15 +3,23 @@ import { Link, useLocation, useSearchParams } from 'react-router';
 import {
   Button,
   Card,
+  ConceptCard,
+  ConceptIcon,
+  ConceptPageTitle,
+  ConceptPill,
+  ConceptSearchField,
+  ConceptSegmented,
   EmptyState,
   ErrorState,
   Money,
-  PageHeader,
   Skeleton,
   StatusBadge,
+  buttonStyle,
   colors,
+  concept,
+  disputePill,
   formatDisputeReason,
-  describeDeadline,
+  formatDueShort,
   radius,
   spacing,
   typography,
@@ -34,16 +42,6 @@ export const DisputeStatusBadge: React.FC<{ status: string; testId?: string }> =
   status,
   testId,
 }) => <StatusBadge status={status} testId={testId} />;
-
-function formatDueInfo(dueAt: string | null | undefined): { relative: string; absolute: string } {
-  if (!dueAt) return { relative: 'No deadline', absolute: '—' };
-  const date = new Date(dueAt);
-  if (Number.isNaN(date.getTime())) return { relative: 'Unknown deadline', absolute: '—' };
-  return {
-    relative: describeDeadline(dueAt, new Date()),
-    absolute: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-  };
-}
 
 export const DisputeListPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -118,7 +116,9 @@ export const DisputeListPage: React.FC = () => {
   const [, setLastUpdated] = useState<Date | null>(null);
   useEffect(() => {
     if (query.data) {
-      setDisplayedItems(query.data.items);
+      const incoming = query.data.items;
+      const append = filters.cursor !== null && !desktop;
+      setDisplayedItems(current => append ? [...current.filter(item => !incoming.some(next => next.id === item.id)), ...incoming] : incoming);
       setNextCursor(query.data.next_cursor ?? null);
       setLastUpdated(new Date());
     }
@@ -144,62 +144,35 @@ export const DisputeListPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
-      <PageHeader
+      <ConceptPageTitle
         title="Disputes"
-        description="Review your cases and their current status."
+        badge={query.isSuccess ? <span aria-label={`${displayedItems.length} disputes`}><ConceptPill tone="gray">{displayedItems.length}</ConceptPill></span> : undefined}
       />
 
-      {/* Filter Row above the table */}
-      <Card testId="disputes-filter-card">
+      <div data-testid="disputes-filter-card">
         <form
           onSubmit={(e) => e.preventDefault()}
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: spacing[2],
-            alignItems: 'flex-end',
-          }}
+          style={{ display: 'flex', gap: 12, alignItems: 'center' }}
         >
-          {/* Search box: matches dispute id or order code */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: '1 1 200px' }}>
-            <label
-              htmlFor="filter-search"
-              style={{
-                fontSize: typography.fontSizeSmall,
-                fontWeight: typography.fontWeightSemibold,
-                color: colors.inkMuted,
-              }}
-            >
-              Search disputes
-            </label>
-            <input
-              id="filter-search"
-              data-testid="filter-search"
-              type="text"
-              maxLength={200}
-              placeholder="Search by case or order"
-              value={searchInput}
-              onChange={(event) => {
-                const value = event.target.value;
-                setSearchInput(value);
-                if (searchTimer.current) clearTimeout(searchTimer.current);
-                searchTimer.current = setTimeout(() => setSearchParams(current => {
-                  const next = parseDisputeFilters(current);
-                  return filtersToSearchParams({ ...next, q: value, cursor: null });
-                }), 300);
-              }}
-              style={{
-                padding: '6px 10px',
-                borderRadius: radius.control,
-                border: `1px solid ${colors.borderStrong}`,
-                fontSize: typography.fontSizeBody,
-                color: colors.ink,
-                outline: 'none',
-              }}
-            />
-          </div>
+          <ConceptSearchField
+            id="filter-search"
+            data-testid="filter-search"
+            aria-label="Search disputes"
+            maxLength={200}
+            placeholder="Search cases"
+            value={searchInput}
+            onChange={(event) => {
+              const value = event.target.value;
+              setSearchInput(value);
+              if (searchTimer.current) clearTimeout(searchTimer.current);
+              searchTimer.current = setTimeout(() => setSearchParams(current => {
+                const next = parseDisputeFilters(current);
+                return filtersToSearchParams({ ...next, q: value, cursor: null });
+              }), 300);
+            }}
+          />
 
-          <button ref={filterTrigger} type="button" onClick={() => { setDraft(filters); setFilterOpen(true); }} style={{ minHeight: 44, padding: '8px 16px', border: `1px solid ${colors.borderStrong}`, background: colors.surface, color: colors.ink, borderRadius: 6 }}>Filter</button>
+          <button ref={filterTrigger} type="button" onClick={() => { setDraft(filters); setFilterOpen(true); }} style={{ ...buttonStyle('secondary', false, false), minHeight: 52 }}><ConceptIcon name="filter" size={20} />Filter{(filters.status !== 'ALL' || filters.reason !== 'ALL' || filters.scope !== 'all') && <span aria-label="Filters active" style={{ width: 8, height: 8, borderRadius: 4, background: concept.primary }} />}</button>
           {filterOpen && <div role="dialog" aria-modal="true" aria-labelledby="filter-title" ref={filterDialog} style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,.45)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
             <div style={{ background: colors.surface, color: colors.ink, width: 'min(100%, 560px)', maxHeight: '85dvh', overflowY: 'auto', padding: '24px 20px calc(24px + env(safe-area-inset-bottom))', borderRadius: '12px 12px 0 0', display: 'grid', gap: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h2 id="filter-title" style={{ margin: 0 }}>Filters</h2><button type="button" onClick={() => setFilterOpen(false)} aria-label="Close filters">Close</button></div>
@@ -288,26 +261,32 @@ export const DisputeListPage: React.FC = () => {
             {!demoSession && draft.scope === 'mine' && <p>No active demo session is available on this device.</p>}
           </fieldset>
 
+          <label style={{ display: 'flex', alignItems: 'center', minHeight: 44, gap: 8 }}><input type="checkbox" data-testid="filter-closed" checked={draft.view === 'closed'} onChange={event => setDraft(current => ({ ...current, view: event.target.checked ? 'closed' : 'all' }))} />Show closed cases only</label>
+
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Button variant="secondary" testId="reset-filters-button" onClick={() => setDraft(current => ({ ...current, status: 'ALL', reason: 'ALL', scope: 'all' }))}>Clear filters</Button>
-                <Button onClick={() => { updateFilter({ status: draft.status, reason: draft.reason, scope: draft.scope }); setFilterOpen(false); }}>Apply filters</Button>
+                <Button onClick={() => { updateFilter({ status: draft.status, reason: draft.reason, scope: draft.scope, view: draft.view }); setFilterOpen(false); }}>Apply filters</Button>
               </div>
             </div>
           </div>}
         </form>
-      </Card>
+      </div>
 
-      {(filters.status !== 'ALL' || filters.reason !== 'ALL' || filters.scope !== 'all') && <div aria-label="Applied filters" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      {desktop && (filters.status !== 'ALL' || filters.reason !== 'ALL' || filters.scope !== 'all') && <div aria-label="Applied filters" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {filters.status !== 'ALL' && <button type="button" onClick={() => updateFilter({ status: 'ALL' })}>Status: {filters.status.replaceAll('_', ' ')} ×</button>}
         {filters.reason !== 'ALL' && <button type="button" onClick={() => updateFilter({ reason: 'ALL' })}>Reason: {formatDisputeReason(filters.reason)} ×</button>}
         {filters.scope === 'mine' && <button type="button" onClick={() => updateFilter({ scope: 'all' })}>My demo session ×</button>}
         <button type="button" onClick={() => updateFilter({ status: 'ALL', reason: 'ALL', scope: 'all', q: '' })}>Clear all</button>
       </div>}
 
-      <nav aria-label="Dispute views" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
-        {([['all', 'All'], ['attention', 'Needs attention'], ['waiting', 'Waiting'], ['closed', 'Closed']] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={filters.view === value} onClick={() => updateFilter({ view: value, status: 'ALL' })} style={{ whiteSpace: 'nowrap', minHeight: 44, border: 0, borderRadius: 6, padding: '8px 12px', background: filters.view === value ? colors.primaryAction : colors.surfaceSubtle, color: filters.view === value ? '#fff' : colors.ink }}>{label}</button>)}
-      </nav>
+      <ConceptSegmented
+        ariaLabel="Dispute views"
+        idPrefix="dispute-view"
+        value={filters.view}
+        onChange={value => { if (value === 'all' || value === 'attention' || value === 'waiting' || value === 'closed') updateFilter({ view: value, status: 'ALL' }); }}
+        options={[{ value: 'all', label: 'All' }, { value: 'attention', label: 'Attention' }, { value: 'waiting', label: 'Waiting' }, ...(desktop || filters.view === 'closed' ? [{ value: 'closed', label: 'Closed' }] : [])]}
+      />
 
       {/* Main Content Area */}
       {query.isPending && (
@@ -374,19 +353,30 @@ export const DisputeListPage: React.FC = () => {
 
       {query.isSuccess && filteredItems.length > 0 && (
         <>
-          {desktop ? <Suspense fallback={<Skeleton height="180px" />}><DisputesGrid rows={filteredItems} returnTo={`/app/disputes${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} /></Suspense> : <div data-testid="disputes-table" aria-label="Disputes" style={{ borderTop: `1px solid ${colors.border}` }}>
-            {filteredItems.map(item => <Link key={item.id} data-testid={`dispute-row-${item.id}`}
-              to={`/app/disputes/${item.id}`}
-              state={{ from: `/app/disputes${searchParams.toString() ? `?${searchParams.toString()}` : ''}`, scrollY: window.scrollY }}
-              style={{ display: 'grid', gap: 8, padding: '18px 0', borderBottom: `1px solid ${colors.border}`, color: colors.ink, textDecoration: 'none', minWidth: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}><strong>{item.order_code ? `Order ${item.order_code}` : item.id}</strong><strong><Money money={item.amount} /></strong></div>
-              <span>{formatDisputeReason(item.reason)}</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}><span>PayPal: <StatusBadge status={item.status} /></span><span>Review: <StatusBadge status={item.latest_verdict ?? 'UNKNOWN'} /></span></div>
-              <span style={{ color: colors.inkMuted, fontSize: 14 }}>{formatDueInfo(item.seller_response_due_date).relative}</span>
-            </Link>)}
+          {desktop ? <Suspense fallback={<Skeleton height="180px" />}><DisputesGrid rows={filteredItems} returnTo={`/app/disputes${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} /></Suspense> : <div data-testid="disputes-table" aria-label="Disputes" style={{ display: 'grid', gap: 14 }}>
+            {filteredItems.map(item => {
+              const pill = disputePill(item);
+              const due = formatDueShort(item.seller_response_due_date);
+              return <ConceptCard key={item.id} as={Link} testId={`dispute-row-${item.id}`}
+                to={`/app/disputes/${item.id}`}
+                state={{ from: `/app/disputes${searchParams.toString() ? `?${searchParams.toString()}` : ''}`, scrollY: window.scrollY }}
+                aria-label={`${item.order_code ?? item.id}, ${formatDisputeReason(item.reason)}, ${pill.label}, ${due}`}
+                style={{ display: 'grid', gap: 10, textDecoration: 'none', minWidth: 0 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <strong style={{ flex: 1, minWidth: 0, fontSize: 18, overflowWrap: 'anywhere' }}>{item.order_code ?? item.id}</strong>
+                  <strong style={{ whiteSpace: 'nowrap' }}><Money money={item.amount} /></strong>
+                  <ConceptIcon name="chevron-right" color={concept.muted} />
+                </span>
+                <span>{formatDisputeReason(item.reason)}</span>
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                  <ConceptPill tone={pill.tone}>{pill.label}</ConceptPill>
+                  <span style={{ color: concept.muted, fontSize: 14 }}>{due}</span>
+                </span>
+              </ConceptCard>;
+            })}
           </div>}
 
-          <div
+          {desktop ? <div
             data-testid="disputes-pagination"
             style={{
               display: 'flex',
@@ -418,7 +408,9 @@ export const DisputeListPage: React.FC = () => {
             >
               Next page
             </Button>
-          </div>
+          </div> : nextCursor && <div data-testid="disputes-pagination" style={{ display: 'grid' }}>
+            <button type="button" data-testid="pagination-next-button" onClick={() => updateFilter({ cursor: nextCursor })} style={buttonStyle('secondary', true, false)}>Load more</button>
+          </div>}
         </>
       )}
     </div>

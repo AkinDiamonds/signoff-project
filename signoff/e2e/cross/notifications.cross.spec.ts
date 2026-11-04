@@ -23,15 +23,15 @@ test('inbox persists new dispute and review notifications @full', async ({ page,
   expect(hasKind(timeline, 'EXECUTION_INTENDED')).toBe(false);
 
   await page.goto('/app/notifications');
-  await expect(page.getByRole('heading', { name: 'Notifications' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Updates' })).toBeVisible();
   const review = page.getByRole('listitem').filter({ hasText: 'A dispute needs your review.' }).first();
   await expect(review).toBeVisible();
-  await expect(review.getByRole('link', { name: 'View dispute' })).toHaveAttribute('href', `/app/disputes/${disputeId}`);
+  await expect(review.getByRole('link', { name: /View dispute/ })).toHaveAttribute('href', `/app/disputes/${disputeId}`);
   await review.getByRole('button', { name: 'Mark read' }).click();
   await expect(review.getByRole('button', { name: 'Mark unread' })).toBeVisible();
   await page.reload();
   await expect(review.getByRole('button', { name: 'Mark unread' })).toBeVisible();
-  await review.getByRole('link', { name: 'View dispute' }).click();
+  await review.getByRole('link', { name: /View dispute/ }).click();
   await expect(page.getByTestId('dispute-detail-id')).toContainText(disputeId);
   await expect(page.getByText('Delivery evidence needs your review')).toBeVisible();
   await page.goBack();

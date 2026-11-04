@@ -3,12 +3,16 @@ import { useBlocker } from 'react-router';
 import type { ActionType, DisputeReason } from '@signoff/api-client';
 import {
   Button,
-  Card,
+  ConceptButton,
+  ConceptCard,
+  ConceptDisclosure,
+  ConceptPageTitle,
+  ConceptSectionHeading,
   EmptyState,
   ErrorState,
-  PageHeader,
   Skeleton,
   colors,
+  concept,
   radius,
   spacing,
   typography,
@@ -31,7 +35,8 @@ interface SettingRowProps {
   id: string;
   label: string;
   legacyAriaLabel: string;
-  helper: string;
+  helper?: string;
+  hiddenHelper?: string;
   value: string;
   currency?: string;
   error?: string;
@@ -43,82 +48,42 @@ const SettingRow: React.FC<SettingRowProps> = ({
   label,
   legacyAriaLabel,
   helper,
+  hiddenHelper,
   value,
   currency = 'USD',
   error,
   onChange,
-}) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingBottom: spacing[2], borderBottom: `1px solid ${colors.border}` }}>
-    <label
-      htmlFor={id}
-      style={{
-        fontSize: typography.fontSizeBody,
-        fontWeight: typography.fontWeightSemibold,
-        color: colors.ink,
-      }}
-    >
-      {label}
-    </label>
-    <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
-      {helper}
+}) => {
+  const describedBy = [hiddenHelper ? `${id}-help` : null, error ? `${id}-error` : null].filter(Boolean).join(' ');
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 150px', gap: 16, alignItems: 'center', padding: '16px 0', borderTop: `1px solid ${concept.border}` }}>
+      <div style={{ display: 'grid', gap: 2, minWidth: 0 }}>
+        <label htmlFor={id} style={{ fontSize: 17, fontWeight: 600, color: concept.ink }}>{label}</label>
+        {helper && <span style={{ fontSize: 14, color: concept.muted }}>{helper}</span>}
+        {hiddenHelper && <span id={`${id}-help`} style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>{hiddenHelper}</span>}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'center', whiteSpace: 'nowrap', border: `1px solid ${error ? concept.dangerText : colors.borderStrong}`, borderRadius: 10, overflow: 'hidden', background: concept.surface }}>
+        <span style={{ flex: 'none', width: 42, textAlign: 'center', padding: '12px 0', fontSize: 14, fontWeight: 500, color: concept.muted, borderRight: `1px solid ${concept.border}`, userSelect: 'none' }}>{currency}</span>
+        <input
+          id={id}
+          data-testid={id}
+          aria-label={legacyAriaLabel}
+          inputMode="decimal"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy || undefined}
+          style={{ width: '100%', minWidth: 0, padding: '8px 10px', border: 'none', outline: 'none', background: 'transparent', fontSize: 16, fontFamily: typography.fontFamily, color: concept.ink, textAlign: 'right' }}
+        />
+      </div>
+      {error && (
+        <span id={`${id}-error`} role="alert" data-testid={`${id}-error`} style={{ gridColumn: '1 / -1', color: concept.dangerText, fontSize: 14 }}>
+          {error}
+        </span>
+      )}
     </div>
-    <div
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        marginTop: '6px',
-        maxWidth: '240px',
-        backgroundColor: colors.surface,
-        border: `1px solid ${error ? colors.badgeCriticalText : colors.borderStrong}`,
-        borderRadius: radius.control,
-        overflow: 'hidden',
-      }}
-    >
-      <span
-        style={{
-          padding: '8px 10px',
-          backgroundColor: 'var(--signoff-surface, #fff)',
-          color: colors.inkMuted,
-          fontSize: typography.fontSizeSmall,
-          fontWeight: typography.fontWeightMedium,
-          borderRight: `1px solid ${colors.border}`,
-          userSelect: 'none',
-        }}
-      >
-        {currency}
-      </span>
-      <input
-        id={id}
-        data-testid={id}
-        aria-label={legacyAriaLabel}
-        inputMode="decimal"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${id}-error` : undefined}
-        style={{
-          flex: 1,
-          padding: '8px 12px',
-          border: 'none',
-          outline: 'none',
-          fontSize: typography.fontSizeBody,
-          fontFamily: typography.fontFamily,
-          color: colors.ink,
-        }}
-      />
-    </div>
-    {error && (
-      <span
-        id={`${id}-error`}
-        role="alert"
-        data-testid={`${id}-error`}
-        style={{ color: colors.badgeCriticalText, fontSize: typography.fontSizeSmall, marginTop: '2px' }}
-      >
-        {error}
-      </span>
-    )}
-  </div>
-);
+  );
+};
 
 const HUMAN_REASON_LABELS: Record<string, string> = {
   MERCHANDISE_OR_SERVICE_NOT_RECEIVED: 'Item Not Received',
@@ -169,8 +134,8 @@ const CheckboxGroup = <T extends string>({
             color: colors.ink,
             padding: '6px 10px',
             borderRadius: radius.control,
-            backgroundColor: selected.includes(option) ? '#F0FDFA' : '#FFFFFF',
-            border: `1px solid ${selected.includes(option) ? '#99F6E4' : colors.border}`,
+            backgroundColor: selected.includes(option) ? concept.primarySoft : concept.surface,
+            border: `1px solid ${selected.includes(option) ? concept.primary : colors.border}`,
             cursor: 'pointer',
           }}
         >
@@ -285,6 +250,10 @@ export const CharterPage: React.FC = () => {
         setErrors(built.errors);
         const first = Object.keys(built.errors)[0];
         const ids: Record<string, string> = { autoOfferMax: 'charter-auto-offer', autoAcceptMax: 'charter-auto-accept', autoActMaxDisputeAmount: 'charter-auto-act', repeatDisputerThreshold: 'charter-repeat-threshold' };
+        if (first === 'repeatDisputerThreshold') {
+          const exceptions = document.querySelector('[data-testid="charter-review-exceptions"]');
+          if (exceptions instanceof HTMLDetailsElement) exceptions.open = true;
+        }
         if (first && ids[first]) document.getElementById(ids[first])?.focus();
         return;
       }
@@ -345,9 +314,9 @@ export const CharterPage: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
       <style>{`.charter-save-bar { position: sticky; bottom: 0; } @media (max-width: 899px) { .charter-save-bar { bottom: calc(65px + env(safe-area-inset-bottom)); } }`}</style>
-      <PageHeader
+      <ConceptPageTitle
         title="Signing limits"
-        description="What the agent may do without asking you."
+        subtitle="What Signoff may do without asking."
         testId="charter-title"
       />
 
@@ -409,128 +378,105 @@ export const CharterPage: React.FC = () => {
       )}
 
       {/* Settings Form */}
-      <Card title="Signing limits" testId="charter-form">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
-          <p style={{ margin: 0 }}>Set the amounts Signoff may handle without asking you. Other rules and PayPal's current options still apply.</p>
-          <h2 style={{ fontSize: 18, margin: '16px 0 0' }}>Financial limits</h2>
-          {/* Row 1: Refund without asking, up to */}
+      <ConceptCard testId="charter-form" style={{ display: 'grid', gap: 0 }}>
+        <ConceptSectionHeading>Financial limits</ConceptSectionHeading>
+        <div style={{ marginTop: 8 }}>
           <SettingRow
             id="charter-auto-offer"
-            label="Offer a refund without asking, up to"
+            label="Offer a refund, up to"
             legacyAriaLabel="Auto-offer maximum (USD)"
-            helper="Signoff may offer up to this amount without asking when the other rules allow it. An offer is not a completed refund."
+            helper="An offer is not a completed refund."
             value={values.autoOfferMax}
             {...(errors.autoOfferMax ? { error: errors.autoOfferMax } : {})}
             onChange={(value) => patch({ autoOfferMax: value })}
           />
-
-          {/* Row 2: Accept a claim without asking, up to */}
           <SettingRow
             id="charter-auto-accept"
-            label="Accept a claim without asking, up to"
+            label="Accept a claim, up to"
             legacyAriaLabel="Auto-accept maximum (USD)"
-            helper="Signoff may accept a buyer's claim up to this amount when the other rules allow it. Accepting concedes the claim."
+            helper="Accepting concedes the claim."
             value={values.autoAcceptMax}
             {...(errors.autoAcceptMax ? { error: errors.autoAcceptMax } : {})}
             onChange={(value) => patch({ autoAcceptMax: value })}
           />
-
-          {/* Row 3: Handle disputes up to */}
           <SettingRow
             id="charter-auto-act"
-            label="Handle disputes up to"
+            label="Handle disputes, up to"
             legacyAriaLabel="Maximum autonomous dispute size (USD)"
-            helper="Disputes exceeding this total transaction amount are always escalated to human review."
+            hiddenHelper="Disputes above this total transaction amount are always escalated to human review."
             value={values.autoActMaxDisputeAmount}
             {...(errors.autoActMaxDisputeAmount ? { error: errors.autoActMaxDisputeAmount } : {})}
             onChange={(value) => patch({ autoActMaxDisputeAmount: value })}
           />
+        </div>
+        {savedVersion !== null && (
+          <span role="status" data-testid="charter-save-success" style={{ color: concept.primary, fontSize: 14, marginTop: 8 }}>
+            Charter v{savedVersion} saved.{savedAt && <> <time dateTime={savedAt}>{new Date(savedAt).toLocaleString()}</time></>}
+          </span>
+        )}
+        {saveError && (
+          <p role="alert" data-testid="charter-save-error" style={{ color: concept.dangerText, margin: '8px 0 0', fontSize: 14 }}>
+            {saveError}
+          </p>
+        )}
+      </ConceptCard>
 
-          {/* Row 4: Repeat disputer threshold */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingBottom: spacing[2], borderBottom: `1px solid ${colors.border}` }}>
-            <label
-              htmlFor="charter-repeat-threshold"
-              style={{ fontSize: typography.fontSizeBody, fontWeight: typography.fontWeightSemibold, color: colors.ink }}
-            >
-              Repeat disputer threshold
-            </label>
-            <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
-              Disputes from buyers with this many prior claims in the lookback window require human approval.
-            </div>
-            <input
-              id="charter-repeat-threshold"
-              data-testid="charter-repeat-threshold"
-              aria-label="Repeat-disputer threshold"
-              inputMode="numeric"
-              value={values.repeatDisputerThreshold}
-              onChange={(event) => patch({ repeatDisputerThreshold: event.target.value })}
-              aria-invalid={errors.repeatDisputerThreshold ? true : undefined}
-              aria-describedby={errors.repeatDisputerThreshold ? 'charter-repeat-threshold-error' : undefined}
-              style={{
-                maxWidth: '120px',
-                marginTop: '6px',
-                padding: '8px 12px',
-                border: `1px solid ${errors.repeatDisputerThreshold ? colors.badgeCriticalText : colors.borderStrong}`,
-                borderRadius: radius.control,
-                fontSize: typography.fontSizeBody,
-                color: colors.ink,
-              }}
-            />
-            {errors.repeatDisputerThreshold && (
-              <span
-                id="charter-repeat-threshold-error"
-                role="alert"
-                data-testid="charter-repeat-threshold-error"
-                style={{ color: colors.badgeCriticalText, fontSize: typography.fontSizeSmall }}
-              >
-                {errors.repeatDisputerThreshold}
+      <ConceptCard padding={0}>
+        <ConceptDisclosure testId="charter-review-exceptions" title="Review exceptions" subtitle={`Repeat buyer threshold: ${values.repeatDisputerThreshold}`}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label htmlFor="charter-repeat-threshold" style={{ fontSize: 17, fontWeight: 600, color: concept.ink }}>
+                Repeat disputer threshold
+              </label>
+              <span style={{ fontSize: 14, color: concept.muted }}>
+                Disputes from buyers with this many prior claims in the lookback window require human approval.
               </span>
-            )}
-          </div>
-
-          <h2 style={{ fontSize: 18, margin: '16px 0 0' }}>Automatic actions</h2>
-          {/* Automated features toggles */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2], marginTop: spacing[1] }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: typography.fontSizeBody }}>
               <input
-                type="checkbox"
-                checked={values.autoProvideEvidence}
-                onChange={(event) => patch({ autoProvideEvidence: event.target.checked })}
-                data-testid="charter-auto-provide-evidence"
+                id="charter-repeat-threshold"
+                data-testid="charter-repeat-threshold"
+                aria-label="Repeat-disputer threshold"
+                inputMode="numeric"
+                value={values.repeatDisputerThreshold}
+                onChange={(event) => patch({ repeatDisputerThreshold: event.target.value })}
+                aria-invalid={errors.repeatDisputerThreshold ? true : undefined}
+                aria-describedby={errors.repeatDisputerThreshold ? 'charter-repeat-threshold-error' : undefined}
+                style={{ maxWidth: 120, marginTop: 6, padding: '8px 12px', border: `1px solid ${errors.repeatDisputerThreshold ? concept.dangerText : colors.borderStrong}`, borderRadius: 10, fontSize: 16, color: concept.ink }}
               />
-              Provide evidence automatically
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: typography.fontSizeBody }}>
-              <input
-                type="checkbox"
-                checked={values.autoSendMessage}
-                onChange={(event) => patch({ autoSendMessage: event.target.checked })}
-                data-testid="charter-auto-send-message"
-              />
-              Send messages automatically
-            </label>
-          </div>
+              {errors.repeatDisputerThreshold && (
+                <span id="charter-repeat-threshold-error" role="alert" data-testid="charter-repeat-threshold-error" style={{ color: concept.dangerText, fontSize: 14 }}>
+                  {errors.repeatDisputerThreshold}
+                </span>
+              )}
+            </div>
 
-          <label style={{ display: 'grid', gap: 6, maxWidth: 560 }}>
-            When delivery evidence is missing
-            <select data-testid="charter-missing-delivery-policy" value={values.missingDeliveryPolicy}
-              onChange={event => patch({ missingDeliveryPolicy: event.target.value === 'GATED_SETTLEMENT'
-                ? 'GATED_SETTLEMENT' : 'HUMAN_REVIEW' })}>
-              <option value="HUMAN_REVIEW">Require human review</option>
-              <option value="GATED_SETTLEMENT">Allow settlement within signing limits</option>
-            </select>
-            <span style={{ fontSize: 13, color: 'var(--signoff-muted, #686861)' }}>
-              Settlement actions remain subject to PayPal rules and your signing limits. Invalid tracking or an unknown order still requires review.
-            </span>
-          </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2] }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 16 }}>
+                <input type="checkbox" checked={values.autoProvideEvidence} onChange={(event) => patch({ autoProvideEvidence: event.target.checked })} data-testid="charter-auto-provide-evidence" />
+                Provide evidence automatically
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 16 }}>
+                <input type="checkbox" checked={values.autoSendMessage} onChange={(event) => patch({ autoSendMessage: event.target.checked })} data-testid="charter-auto-send-message" />
+                Send messages automatically
+              </label>
+            </div>
 
-          {/* Exclusion rules */}
-          {(values.neverAutoReasons.length > 0 || values.neverAutoActions.length > 0) && <div aria-label="Selected review exceptions" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {values.neverAutoReasons.map(reason => <button key={reason} type="button" onClick={() => patch({ neverAutoReasons: toggleList(values.neverAutoReasons, reason) })} aria-label={`Remove reason ${HUMAN_REASON_LABELS[reason] || reason.replaceAll('_', ' ')}`} style={{ minHeight: 44, border: `1px solid ${colors.borderStrong}`, borderRadius: 6, background: colors.surfaceSubtle, color: colors.ink, padding: '8px 12px' }}>{HUMAN_REASON_LABELS[reason] || reason.replaceAll('_', ' ')} ×</button>)}
-            {values.neverAutoActions.map(action => <button key={action} type="button" onClick={() => patch({ neverAutoActions: toggleList(values.neverAutoActions, action) })} aria-label={`Remove action ${action.replaceAll('_', ' ')}`} style={{ minHeight: 44, border: `1px solid ${colors.borderStrong}`, borderRadius: 6, background: colors.surfaceSubtle, color: colors.ink, padding: '8px 12px' }}>{action.replaceAll('_', ' ')} ×</button>)}
-          </div>}
-          <details><summary style={{ cursor: 'pointer', fontWeight: 600 }}>Review exceptions</summary>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2], marginTop: spacing[1] }}>
+            <label style={{ display: 'grid', gap: 6, maxWidth: 560 }}>
+              When delivery evidence is missing
+              <select data-testid="charter-missing-delivery-policy" value={values.missingDeliveryPolicy}
+                onChange={event => patch({ missingDeliveryPolicy: event.target.value === 'GATED_SETTLEMENT'
+                  ? 'GATED_SETTLEMENT' : 'HUMAN_REVIEW' })}>
+                <option value="HUMAN_REVIEW">Require human review</option>
+                <option value="GATED_SETTLEMENT">Allow settlement within signing limits</option>
+              </select>
+              <span style={{ fontSize: 13, color: concept.muted }}>
+                Settlement actions remain subject to PayPal rules and your signing limits. Invalid tracking or an unknown order still requires review.
+              </span>
+            </label>
+
+            {(values.neverAutoReasons.length > 0 || values.neverAutoActions.length > 0) && <div aria-label="Selected review exceptions" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {values.neverAutoReasons.map(reason => <button key={reason} type="button" onClick={() => patch({ neverAutoReasons: toggleList(values.neverAutoReasons, reason) })} aria-label={`Remove reason ${HUMAN_REASON_LABELS[reason] || reason.replaceAll('_', ' ')}`} style={{ minHeight: 44, border: `1px solid ${colors.borderStrong}`, borderRadius: 10, background: concept.subtle, color: concept.ink, padding: '8px 12px' }}>{HUMAN_REASON_LABELS[reason] || reason.replaceAll('_', ' ')} ×</button>)}
+              {values.neverAutoActions.map(action => <button key={action} type="button" onClick={() => patch({ neverAutoActions: toggleList(values.neverAutoActions, action) })} aria-label={`Remove action ${action.replaceAll('_', ' ')}`} style={{ minHeight: 44, border: `1px solid ${colors.borderStrong}`, borderRadius: 10, background: concept.subtle, color: concept.ink, padding: '8px 12px' }}>{action.replaceAll('_', ' ')} ×</button>)}
+            </div>}
             <CheckboxGroup<DisputeReason>
               legend="Never automate these reasons"
               options={DISPUTE_REASONS}
@@ -546,64 +492,41 @@ export const CharterPage: React.FC = () => {
               testId="charter-never-actions"
             />
           </div>
+        </ConceptDisclosure>
+      </ConceptCard>
 
-          </details>
-          {/* In-form save notification / errors */}
-          {savedVersion !== null && (
-            <span role="status" data-testid="charter-save-success" style={{ color: colors.badgeSuccessText, fontSize: typography.fontSizeSmall }}>
-              Charter v{savedVersion} saved.{savedAt && <> <time dateTime={savedAt}>{new Date(savedAt).toLocaleString()}</time></>}
-            </span>
+      <ConceptCard padding={0}>
+        <ConceptDisclosure testId="charter-version-history" icon="clock" title="Version history">
+          {historyQuery.isPending && <Skeleton height="80px" />}
+          {historyQuery.isError && <p role="alert" style={{ fontSize: 14, color: concept.muted }}>Version history is unavailable.</p>}
+          {historyQuery.data?.length === 0 && (
+            <EmptyState title="No versions yet" description="Saving the charter creates the first version." />
           )}
-          {saveError && (
-            <p role="alert" data-testid="charter-save-error" style={{ color: colors.badgeCriticalText, margin: 0, fontSize: typography.fontSizeSmall }}>
-              {saveError}
-            </p>
+          {historyQuery.data && historyQuery.data.length > 0 && (
+            <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
+              {historyQuery.data.map((version) => {
+                const dateStr = new Date(version.created_at).toLocaleDateString('en-US', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+                return (
+                  <li key={version.version} data-testid={`charter-history-item-${version.version}`} style={{ padding: spacing[1], borderBottom: `1px solid ${concept.border}`, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1] }}>
+                      <strong style={{ color: concept.ink }}>Version {version.version}</strong>
+                      <span style={{ color: concept.muted, fontSize: 14 }}>&bull; {dateStr}</span>
+                    </div>
+                    <div style={{ fontSize: 14, color: concept.muted }}>
+                      Refund limit USD {version.auto_offer_max.value} &bull; Claim limit USD {version.auto_accept_max.value} &bull; Dispute size USD {version.auto_act_max_dispute_amount.value}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
           )}
-        </div>
-      </Card>
-
-      {/* Version history list */}
-      <Card title="Version history" testId="charter-version-history">
-        {historyQuery.isPending && <Skeleton height="80px" />}
-        {historyQuery.isError && <p role="alert" style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>Version history is unavailable.</p>}
-        {historyQuery.data?.length === 0 && (
-          <EmptyState title="No versions yet" description="Saving the charter creates the first version." />
-        )}
-        {historyQuery.data && historyQuery.data.length > 0 && (
-          <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
-            {historyQuery.data.map((version) => {
-              const dateStr = new Date(version.created_at).toLocaleDateString('en-US', {
-                day: 'numeric',
-                month: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-              });
-              return (
-                <li
-                  key={version.version}
-                  data-testid={`charter-history-item-${version.version}`}
-                  style={{
-                    padding: spacing[1],
-                    borderBottom: `1px solid ${colors.border}`,
-                    fontSize: typography.fontSizeBody,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '2px',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1] }}>
-                    <strong style={{ color: colors.ink }}>Version {version.version}</strong>
-                    <span style={{ color: colors.inkMuted, fontSize: typography.fontSizeSmall }}>&bull; {dateStr}</span>
-                  </div>
-                  <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted }}>
-                    Refund limit USD {version.auto_offer_max.value} &bull; Claim limit USD {version.auto_accept_max.value} &bull; Dispute size USD {version.auto_act_max_dispute_amount.value}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        )}
-      </Card>
+        </ConceptDisclosure>
+      </ConceptCard>
 
       {blocker.state === 'blocked' && <div ref={leaveDialog} role="dialog" aria-modal="true" aria-labelledby="charter-leave-title" style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,.45)', display: 'grid', placeItems: 'center', padding: 20 }}>
         <div style={{ background: colors.surface, color: colors.ink, borderRadius: 8, padding: 24, width: 'min(100%, 440px)', display: 'grid', gap: 16 }}>
@@ -617,53 +540,20 @@ export const CharterPage: React.FC = () => {
       <div
         data-testid="charter-sticky-save-bar"
         className="charter-save-bar"
-        style={{
-          backgroundColor: colors.surface,
-          borderTop: `1px solid ${colors.border}`,
-          padding: `${spacing[2]} ${spacing[4]}`,
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          gap: spacing[2],
-          boxShadow: '0 -2px 8px rgba(0,0,0,0.06)',
-          zIndex: 19,
-        }}
+        style={{ backgroundColor: concept.surface, borderTop: `1px solid ${concept.border}`, padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12, zIndex: 19 }}
       >
-        <button
-          type="button"
-          onClick={handleDiscard}
-          disabled={!isDirty || pending}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: 'transparent',
-            border: `1px solid ${colors.borderStrong}`,
-            borderRadius: radius.control,
-            fontSize: typography.fontSizeBody,
-            color: isDirty ? colors.ink : colors.inkMuted,
-            cursor: isDirty ? 'pointer' : 'default',
-          }}
-        >
-          Discard
-        </button>
-        <button
-          type="button"
-          data-testid="charter-save-button"
+        {isDirty && !pending && (
+          <ConceptButton variant="secondary" onClick={handleDiscard}>Discard</ConceptButton>
+        )}
+        <ConceptButton
+          testId="charter-save-button"
           onClick={() => void handleSave()}
           disabled={!isDirty || pending}
-          style={{
-            padding: '8px 20px',
-            backgroundColor: colors.primaryAction,
-            border: 'none',
-            borderRadius: radius.control,
-            fontSize: typography.fontSizeBody,
-            fontWeight: typography.fontWeightSemibold,
-            color: '#FFFFFF',
-            cursor: !isDirty || pending ? 'not-allowed' : 'pointer',
-            opacity: !isDirty || pending ? 0.6 : 1,
-          }}
+          fullWidth
+          style={{ flex: 1 }}
         >
-          {pending ? 'Saving...' : 'Save'}
-        </button>
+          {pending ? 'Saving...' : 'Save changes'}
+        </ConceptButton>
       </div>
     </div>
   );

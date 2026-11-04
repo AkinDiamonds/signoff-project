@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { PageHeader, Button, colors, spacing, toast } from '@signoff/ui';
+import { Button, ConceptButton, ConceptDisclosure, ConceptListGroup, ConceptListRow, ConceptPageTitle, colors, spacing, toast } from '@signoff/ui';
 import { PhoneNotifications } from './PhoneNotifications';
+import { useAppearance } from './appearance';
 import type { components } from '@signoff/api-client/generated';
 import { apiClient } from '../../app/api';
 import { unwrap } from '../../app/queries';
@@ -37,6 +38,7 @@ export const SettingsPage: React.FC = () => {
   const session = useOwnerSession();
   const client = useQueryClient();
   const navigate = useNavigate();
+  const appearance = useAppearance();
   const [checking, setChecking] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -63,49 +65,46 @@ export const SettingsPage: React.FC = () => {
     finally { setSigningOut(false); }
   };
   const data = integrations.data;
+  const unverified = data ? [data.paypal, data.store, data.webhook, data.worker, data.llm].filter(item => item.state !== 'verified').length : null;
+  const connectionsSubtitle = unverified === null ? 'Loading status…' : unverified === 0 ? 'All checks verified' : `${unverified} check${unverified === 1 ? '' : 's'} not verified`;
+  const displayLabel = appearance.display === 'device' ? 'Device' : appearance.display === 'dark' ? 'Dark' : 'Light';
+  const accentLabel = appearance.accent.charAt(0).toUpperCase() + appearance.accent.slice(1);
   return (
-    <div style={{ display: 'grid', gap: spacing[4], maxWidth: 960, minWidth: 0 }}>
-      <PageHeader title="Settings" description="Your account, connections, and signing preferences." />
-      <section style={cardStyle}>
-        <h2 style={{ marginTop: 0, fontSize: 18 }}>Your account</h2>
-        <p>{session.data?.email ?? 'Local development session'}</p>
-      </section>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <h2 style={{ fontSize: 18, margin: 0 }}>Connections</h2>
-        <Button onClick={() => { void check(); }} disabled={checking}>{checking ? 'Checking…' : 'Check connections'}</Button>
-      </div>
-      <p style={{ margin: 0, color: 'var(--signoff-muted, #686861)', lineHeight: 1.6 }}>Check PayPal authentication and store access. Webhook and worker statuses reflect observed activity.</p>
-      {message && <p role="status" style={{ margin: 0 }}>{message}</p>}
-      {error && <p role="alert" style={{ color: '#9f1239', margin: 0 }}>{error}</p>}
-      {integrations.isPending && <p role="status">Loading connection status…</p>}
-      {integrations.isError && <div role="alert"><p>Couldn’t refresh connection status.</p><Button onClick={() => { void integrations.refetch(); }}>Try again</Button></div>}
-      {data && <>
-        <section style={{ ...cardStyle, overflowWrap: 'anywhere' }}>
-          <h3 style={{ marginTop: 0, fontSize: 16 }}>{data.paypal_environment === 'sandbox' ? 'PayPal sandbox' : 'Local PayPal stub'}</h3>
-          <dl style={{ margin: 0, display: 'grid', gap: 8 }}>
-            <dt style={{ color: 'var(--signoff-muted, #686861)', fontSize: 13 }}>Merchant ID</dt><dd style={{ margin: 0 }}>{data.merchant_id ?? 'Not configured'}</dd>
-            <dt style={{ color: 'var(--signoff-muted, #686861)', fontSize: 13 }}>Webhook address</dt><dd style={{ margin: 0, fontSize: 13 }}>{data.webhook_url}</dd>
-          </dl>
-        </section>
-        <div style={{ display: 'grid', gap: spacing[3], gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))' }}>
-          <Connection title="PayPal access" item={data.paypal} />
-          <Connection title="Store evidence" item={data.store} />
-          <Connection title="PayPal webhooks" item={data.webhook} />
-          <Connection title="Background worker" item={data.worker} />
-          <Connection title="AI provider" item={data.llm} />
-        </div>
-      </>}
-      <section style={cardStyle}>
-        <h2 style={{ marginTop: 0, fontSize: 18 }}>Signing preferences</h2>
-        <p style={{ color: 'var(--signoff-muted, #686861)', lineHeight: 1.6 }}>Control the actions and amounts Signoff can handle automatically.</p>
-        <Link to="/app/policy" style={{ color: '#115e59', fontWeight: 600 }}>Manage signing limits →</Link>
-      </section>
-      <section style={cardStyle}>
-        <h2 style={{ marginTop: 0, fontSize: 18 }}>Appearance</h2>
-        <Link to="/app/settings/appearance" style={{ color: "var(--signoff-action-primary)", fontWeight: 600 }}>Choose display and accent color</Link>
-      </section>
-      <details style={cardStyle}><summary style={{ cursor: 'pointer', minHeight: 48, fontWeight: 600 }}>Phone notifications</summary><PhoneNotifications /></details>
-      {session.data?.authenticated && <Button disabled={signingOut} onClick={() => { void logout(); }}>{signingOut ? 'Signing out…' : 'Sign out'}</Button>}
+    <div style={{ display: 'grid', gap: spacing[3], maxWidth: 700, minWidth: 0 }}>
+      <ConceptPageTitle title="Settings" subtitle="Your workspace preferences." testId="page-header" />
+      <ConceptListGroup>
+        <ConceptDisclosure icon="user" title="Account" subtitle={session.data?.email ?? 'Local development session'}>
+          <p style={{ margin: 0, color: colors.inkMuted }}>You are signed in with this email.</p>
+        </ConceptDisclosure>
+        <ConceptDisclosure icon="link" title="Connections" subtitle={connectionsSubtitle} testId="settings-connections">
+          <div style={{ display: 'grid', gap: spacing[2] }}>
+            <p style={{ margin: 0, color: colors.inkMuted, lineHeight: 1.6 }}>Check PayPal authentication and store access. Webhook and worker statuses reflect observed activity.</p>
+            <ConceptButton variant="secondary" fullWidth disabled={checking} onClick={() => { void check(); }}>{checking ? 'Checking…' : 'Check connections'}</ConceptButton>
+            {message && <p role="status" style={{ margin: 0 }}>{message}</p>}
+            {error && <p role="alert" style={{ color: '#9f1239', margin: 0 }}>{error}</p>}
+            {integrations.isPending && <p role="status" style={{ margin: 0 }}>Loading connection status…</p>}
+            {integrations.isError && <div role="alert"><p>Couldn’t refresh connection status.</p><Button onClick={() => { void integrations.refetch(); }}>Try again</Button></div>}
+            {data && <>
+              <section style={{ ...cardStyle, overflowWrap: 'anywhere' }}>
+                <h3 style={{ marginTop: 0, fontSize: 16 }}>{data.paypal_environment === 'sandbox' ? 'PayPal sandbox' : 'Local PayPal stub'}</h3>
+                <dl style={{ margin: 0, display: 'grid', gap: 8 }}>
+                  <dt style={{ color: 'var(--signoff-muted, #686861)', fontSize: 13 }}>Merchant ID</dt><dd style={{ margin: 0 }}>{data.merchant_id ?? 'Not configured'}</dd>
+                  <dt style={{ color: 'var(--signoff-muted, #686861)', fontSize: 13 }}>Webhook address</dt><dd style={{ margin: 0, fontSize: 13 }}>{data.webhook_url}</dd>
+                </dl>
+              </section>
+              <Connection title="PayPal access" item={data.paypal} />
+              <Connection title="Store evidence" item={data.store} />
+              <Connection title="PayPal webhooks" item={data.webhook} />
+              <Connection title="Background worker" item={data.worker} />
+              <Connection title="AI provider" item={data.llm} />
+            </>}
+          </div>
+        </ConceptDisclosure>
+        <ConceptListRow as={Link} to="/app/policy" icon="shield" title="Signing limits" subtitle="Review authority and exclusions" />
+        <ConceptListRow as={Link} to="/app/settings/appearance" icon="monitor" title="Appearance" subtitle={`${displayLabel} · ${accentLabel}`} />
+        <ConceptDisclosure icon="phone" title="Phone notifications" subtitle="Alerts on this device" testId="settings-phone-notifications"><PhoneNotifications /></ConceptDisclosure>
+      </ConceptListGroup>
+      {session.data?.authenticated && <div style={{ textAlign: 'center' }}><ConceptButton variant="text" disabled={signingOut} onClick={() => { void logout(); }}>{signingOut ? 'Signing out…' : 'Sign out'}</ConceptButton></div>}
     </div>
   );
 };

@@ -53,6 +53,9 @@ describe('Demo panel (Step 27)', () => {
       );
     }
     expect(SCENARIO_BUTTONS).toHaveLength(5);
+    expect(screen.getByText('Sandbox only')).toBeTruthy();
+    expect(screen.getByText('Reset my session')).toBeTruthy();
+    await waitFor(() => expect(screen.getByTestId('demo-panel-title').textContent).toMatch(/\d+ transactions available/));
   });
 
   it('creates a scenario, waits for the dispute and links to it', async () => {
@@ -209,6 +212,8 @@ describe('Judge pool page (Step 06)', () => {
     const verdict = screen.getByTestId('finished-verdict-PP-MOCK-POOL-3');
     expect(verdict.textContent).toContain('NEEDS_APPROVAL');
     expect(verdict.textContent).toContain('G3-04');
+    expect(screen.getByText(/^Available \(/)).toBeTruthy();
+    expect(screen.getByText('Choose a case to evaluate.')).toBeTruthy();
   });
 
   it('Start over clears the judge session without mutating the ledger', async () => {

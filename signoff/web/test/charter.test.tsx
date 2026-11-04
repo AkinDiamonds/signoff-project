@@ -51,6 +51,8 @@ describe('Charter page (Step 27)', () => {
     expect(screen.getByLabelText('Maximum autonomous dispute size (USD)')).toHaveProperty('value', '100.00');
     expect(screen.getByLabelText('Repeat-disputer threshold')).toHaveProperty('value', '2');
     expect(screen.getByTestId('charter-version-history')).toBeTruthy();
+    expect(screen.getByText('Repeat buyer threshold: 2')).toBeTruthy();
+    expect(screen.getByTestId<HTMLButtonElement>('charter-save-button').textContent).toBe('Save changes');
   });
 
   it('does not create a version when the form is unchanged or reverted', async () => {

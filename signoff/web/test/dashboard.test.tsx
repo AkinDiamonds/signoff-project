@@ -60,7 +60,7 @@ describe('Dashboard and read-only assistant (Step 28)', () => {
     }));
     renderAt('/app');
     const attention = await screen.findByRole('region', { name: 'Needs attention' });
-    await waitFor(() => expect(attention.textContent).toContain('1 case in the loaded disputes needs review'));
+    await waitFor(() => expect(attention.querySelectorAll('a').length).toBe(1));
     expect(attention.querySelectorAll('a')).toHaveLength(1);
     expect(attention.textContent).toContain('Current approval available');
   });
@@ -176,8 +176,8 @@ it('shows the work queue on Home and links to reports through More', async () =>
   resetMockState();
   vi.stubGlobal('fetch', mockFetch);
   await act(async () => { renderAt('/app'); });
-  expect(await screen.findByRole('heading', { name: 'Review history' })).toBeTruthy();
-  expect(screen.getByRole('heading', { name: 'Deadlines' })).toBeTruthy();
-  expect((await screen.findByRole('link', { name: 'Inspect case' })).getAttribute('href')).toContain('/app/disputes/');
+  expect(await screen.findByRole('heading', { name: 'Upcoming deadline' })).toBeTruthy();
+  expect(await screen.findByTestId('kpi-open-disputes')).toBeTruthy();
+  expect(screen.queryByRole('heading', { name: 'Review history' })).toBeNull();
   vi.unstubAllGlobals();
 });

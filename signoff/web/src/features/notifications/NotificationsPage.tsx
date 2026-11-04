@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { components } from '@signoff/api-client/generated';
-import { Button, PageHeader } from '@signoff/ui';
+import { Button, ConceptIcon, ConceptPageTitle, ConceptPill, ConceptSegmented, concept, formatRelativeDay, type ConceptIconName } from '@signoff/ui';
 import { apiClient } from '../../app/api';
 import { unwrap } from '../../app/queries';
 
@@ -25,9 +25,18 @@ export function useNotifications(offset = 0, unreadOnly = false, enabled = true)
   });
 }
 
+const KIND_TILES: Record<string, { icon: ConceptIconName; bg: string }> = {
+  new_dispute: { icon: 'bell', bg: '#F1F1EE' },
+  approval_requested: { icon: 'clock', bg: '#FEE8B5' },
+  action_confirmed: { icon: 'check', bg: '#DCF6E6' },
+  action_failed: { icon: 'alert-triangle', bg: '#FBE3E1' },
+  review_needed: { icon: 'message', bg: '#E3F1FD' },
+};
+
 export const NotificationsPage: React.FC = () => {
   const [offset, setOffset] = useState(0);
   const [view, setView] = useState<'all' | 'unread'>('all');
+  const [loaded, setLoaded] = useState<Item[]>([]);
   const query = useNotifications(offset, view === 'unread');
   const client = useQueryClient();
   const change = useMutation({
@@ -36,42 +45,51 @@ export const NotificationsPage: React.FC = () => {
     })),
     onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
   });
+  // Later pages are appended; refetches of an already loaded page replace its rows.
+  const pageItems = query.data?.items;
+  const items = useMemo(() => {
+    const seen = new Set<string>();
+    return [...loaded.filter(item => !pageItems?.some(next => next.id === item.id)), ...(pageItems ?? [])].filter(item => !seen.has(item.id) && seen.add(item.id));
+  }, [loaded, pageItems]);
+  const switchView = (next: 'all' | 'unread') => { setOffset(0); setLoaded([]); setView(next); };
+  const loadMore = (nextOffset: number) => { setLoaded(items); setOffset(nextOffset); };
   return <div style={{ display: 'grid', gap: 20, maxWidth: 900, width: '100%' }}>
-    <PageHeader title="Updates" description="Updates about your disputes and actions." />
+    <ConceptPageTitle title="Updates" badge={query.data ? <ConceptPill tone="gray">{query.data.unread_count} unread</ConceptPill> : undefined} />
     {query.isPending && <p role="status">Loading notifications…</p>}
     {query.isError && <div role="alert"><p>Couldn’t load notifications.</p>
       <Button onClick={() => { void query.refetch(); }}>Try again</Button></div>}
     {change.isError && <p role="alert">Couldn’t update this notification. Please try again.</p>}
     {query.data && <>
-      <div aria-label="Update views" style={{ display: 'flex', gap: 8 }}>
-        <button type="button" aria-pressed={view === 'all'} onClick={() => { setOffset(0); setView('all'); }} style={{ minHeight: 44, padding: '8px 16px' }}>All</button>
-        <button type="button" aria-pressed={view === 'unread'} onClick={() => { setOffset(0); setView('unread'); }} style={{ minHeight: 44, padding: '8px 16px' }}>Unread · <span>{query.data.unread_count} unread</span></button>
-      </div>
-      {query.data.items.length === 0 && <p>{view === 'unread' ? 'No unread updates here.' : 'No updates here yet.'}</p>}
+      <ConceptSegmented ariaLabel="Update views" idPrefix="update-view" value={view} onChange={value => switchView(value === 'unread' ? 'unread' : 'all')} options={[{ value: 'all', label: 'All' }, { value: 'unread', label: 'Unread' }]} />
+      {items.length === 0 && <p>{view === 'unread' ? 'No unread updates here.' : 'No updates here yet.'}</p>}
       {(['Today', 'Yesterday', 'Earlier'] as const).map(group => {
-        const items = query.data.items.filter(item => dayGroup(item.created_at) === group);
-        if (items.length === 0) return null;
-        return <section key={group} aria-label={group}><h2 style={{ fontSize: 16 }}>{group}</h2><ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 12 }}>
-        {items.map(item => <li key={item.id} style={{ borderBottom: '1px solid #e7e7e2',
-          padding: '16px 0', display: 'grid', gap: 10, overflowWrap: 'anywhere' }}>
-          <div><strong>{item.message}</strong>{!item.read_at && <span> · Unread</span>}</div>
-          <time dateTime={item.created_at}>{new Date(item.created_at).toLocaleString()}</time>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-            <Link to={`/app/disputes/${encodeURIComponent(item.dispute_id)}`}>View dispute</Link>
-            <details><summary aria-label={`More options for ${item.dispute_id}`} style={{ cursor: 'pointer', minHeight: 44 }}>More options</summary>
-              <button type="button" style={{ minHeight: 44, background: 'transparent', border: 0, textDecoration: 'underline', color: 'inherit', cursor: 'pointer' }} disabled={change.isPending} onClick={() => change.mutate(item)}>
-                {item.read_at ? 'Mark unread' : 'Mark read'}
-              </button>
-            </details>
-          </div>
-        </li>)}
-      </ul></section>;
+        const groupItems = items.filter(item => dayGroup(item.created_at) === group);
+        if (groupItems.length === 0) return null;
+        return <section key={group} aria-label={group}>
+          <h2 style={{ margin: '0 0 4px', padding: '10px 14px', borderRadius: 10, background: concept.subtle, fontSize: 14, fontWeight: 700, color: concept.muted }}>{group}</h2>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {groupItems.map(item => {
+              const tile = KIND_TILES[item.kind] ?? { icon: 'bell' as const, bg: '#F1F1EE' };
+              const unread = !item.read_at;
+              return <li key={item.id} data-testid={`notification-${item.id}`} style={{ display: 'grid', gridTemplateColumns: '40px minmax(0,1fr) auto', gap: 12, alignItems: 'center', padding: '16px 0', borderBottom: `1px solid ${concept.border}`, overflowWrap: 'anywhere' }}>
+                <span style={{ width: 40, height: 40, borderRadius: 10, background: tile.bg, display: 'grid', placeItems: 'center', color: '#1B1B19' }}><ConceptIcon name={tile.icon} size={20} /></span>
+                <Link to={`/app/disputes/${encodeURIComponent(item.dispute_id)}`} aria-label={`View dispute ${item.dispute_id}: ${item.message}${unread ? ' (unread)' : ''}`} style={{ display: 'grid', gap: 2, color: concept.ink, textDecoration: 'none', minWidth: 0 }}>
+                  <strong style={{ fontSize: 17, fontWeight: unread ? 700 : 600 }}>{item.message}</strong>
+                  <span style={{ fontSize: 14, color: concept.muted }}>{item.dispute_id}</span>
+                </Link>
+                <span style={{ display: 'grid', justifyItems: 'end', gap: 6 }}>
+                  <time dateTime={item.created_at} title={new Date(item.created_at).toLocaleString()} style={{ fontSize: 13, color: concept.muted, whiteSpace: 'nowrap' }}>{formatRelativeDay(item.created_at)}</time>
+                  {unread && <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 4, background: concept.primary }} />}
+                  <button type="button" aria-label={item.read_at ? 'Mark unread' : 'Mark read'} title={item.read_at ? 'Mark unread' : 'Mark read'} disabled={change.isPending} onClick={() => change.mutate(item)} style={{ minHeight: 44, minWidth: 44, display: 'grid', placeItems: 'center', background: 'transparent', border: 0, color: concept.muted, cursor: 'pointer' }}>
+                    <ConceptIcon name="more" size={18} />
+                  </button>
+                </span>
+              </li>;
+            })}
+          </ul>
+        </section>;
       })}
-      <div style={{ display: 'flex', gap: 10 }}>
-        <Button variant="secondary" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - 25))}>Previous</Button>
-        <Button variant="secondary" disabled={query.data.next_offset == null}
-          onClick={() => { if (query.data.next_offset != null) setOffset(query.data.next_offset); }}>Next</Button>
-      </div>
+      {query.data.next_offset != null && <Button variant="secondary" style={{ width: '100%', minHeight: 48 }} onClick={() => { if (query.data.next_offset != null) loadMore(query.data.next_offset); }}>Load more</Button>}
     </>}
   </div>;
 };

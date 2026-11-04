@@ -163,3 +163,18 @@ def test_search_matches_order_reference_before_pagination() -> None:
                                          search='order-b', status_filter=None, reason_filter=None, due_before=None,
                                          limit=1, cursor=None, sort_by='due_date', sort_direction='asc'))
         assert page.total_count == 1 and page.items[0].id == 'b' and page.next_cursor is None
+
+
+def test_kpis_scope_mine_counts_only_the_demo_session() -> None:
+    engine = create_engine('sqlite:///:memory:')
+    Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        for name, owner in [('a', 'sess-1'), ('b', 'sess-1'), ('c', 'sess-2'), ('d', None)]:
+            session.add(Dispute(id=name, state_fingerprint='f', status='WAITING_FOR_SELLER_RESPONSE',
+                                reason='MERCHANDISE_OR_SERVICE_NOT_RECEIVED', amount=Decimal('10'),
+                                currency='USD', snapshot={}, demo_session_id=owner))
+        session.flush()
+        assert asyncio.run(get_kpis(session)).open_disputes == 4
+        mine = asyncio.run(get_kpis(session, scope='mine', demo_session='sess-1'))
+        assert (mine.open_disputes, mine.dollars_at_risk) == (2, '20.00')
+        assert asyncio.run(get_kpis(session, scope='mine', demo_session=None)).open_disputes == 0

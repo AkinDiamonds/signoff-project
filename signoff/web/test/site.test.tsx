@@ -34,21 +34,19 @@ describe('Site Feature Components', () => {
       renderWithProviders(<ViewSwitcher initialView="merchant" onViewChange={onViewChange} />);
 
       expect(screen.getByTestId('view-switcher')).toBeTruthy();
-      expect(screen.getByTestId('view-switcher-merchant-tab').getAttribute('aria-selected')).toBe('true');
-      expect(screen.getByTestId('view-switcher-buyer-tab').getAttribute('aria-selected')).toBe('false');
-
-      // Merchant links present
-      expect(screen.getByTestId('view-link-merchant-dashboard')).toBeTruthy();
-      expect(screen.getByTestId('view-link-merchant-disputes')).toBeTruthy();
-      expect(screen.getByTestId('view-link-merchant-charter')).toBeTruthy();
-      expect(screen.getByTestId('view-link-merchant-demo')).toBeTruthy();
+      expect(screen.getByRole('tab', { name: 'Merchant' }).getAttribute('aria-selected')).toBe('true');
+      expect(screen.getByRole('tab', { name: 'Buyer' }).getAttribute('aria-selected')).toBe('false');
 
       // Click Buyer View
-      fireEvent.click(screen.getByTestId('view-switcher-buyer-tab'));
+      fireEvent.click(screen.getByRole('tab', { name: 'Buyer' }));
       expect(onViewChange).toHaveBeenCalledWith('buyer');
-      expect(screen.getByTestId('view-switcher-buyer-tab').getAttribute('aria-selected')).toBe('true');
+      expect(screen.getByRole('tab', { name: 'Buyer' }).getAttribute('aria-selected')).toBe('true');
+    });
 
-      // Buyer links present
+    it('keeps the buyer shop links inside the Help buyer view', () => {
+      renderWithProviders(<GuidePage />);
+      expect(screen.queryByTestId('view-link-buyer-shop')).toBeNull();
+      fireEvent.click(screen.getByRole('tab', { name: 'Buyer' }));
       expect(screen.getByTestId('view-link-buyer-shop')).toBeTruthy();
       expect(screen.getByTestId('view-link-buyer-cart')).toBeTruthy();
       expect(screen.getByTestId('view-link-buyer-portal')).toBeTruthy();
@@ -115,7 +113,12 @@ describe('Site Feature Components', () => {
       expect(screen.getByTestId('guide-link-license').getAttribute('href')).toContain('/blob/main/LICENSE');
       expect(screen.getByText('Video walkthrough not available yet')).toBeTruthy();
 
-      // 5 Numbered Steps
+      // 5 Numbered Steps; only step 1 is open
+      expect(screen.getByText('Test Signoff, step by step.')).toBeTruthy();
+      expect(screen.getByTestId('guide-step-1')).toHaveProperty('open', true);
+      expect(screen.getByTestId('guide-step-2')).toHaveProperty('open', false);
+      expect(screen.getByText('Choose an available sandbox case.')).toBeTruthy();
+      expect(screen.getByTestId('guide-step-1-link').textContent).toBe('Open demo disputes →');
       expect(screen.getByTestId('guide-step-1')).toBeTruthy();
       expect(screen.getByTestId('guide-step-1-link')).toBeTruthy();
       expect(screen.getByTestId('guide-step-2')).toBeTruthy();

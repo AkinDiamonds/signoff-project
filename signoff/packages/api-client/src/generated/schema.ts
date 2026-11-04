@@ -5263,8 +5263,13 @@ export interface operations {
     };
     get_kpis_api_kpis_get: {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                /** @description 'mine' limits totals to the X-Demo-Session */
+                scope?: "all" | "mine";
+            };
+            header?: {
+                "X-Demo-Session"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };

@@ -36,7 +36,7 @@ describe('Notifications', () => {
     const view = mount();
     await screen.findByText('An action needs your approval.');
     expect(screen.getByText('1 unread')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'View dispute' }).getAttribute('href')).toBe('/app/disputes/PP-TEST');
+    expect(screen.getByRole('link', { name: /PP-TEST/ }).getAttribute('href')).toBe('/app/disputes/PP-TEST');
     fireEvent.click(screen.getByRole('button', { name: 'Mark read' }));
     await waitFor(() => expect(screen.getByText('0 unread')).toBeTruthy());
     expect(screen.getByRole('button', { name: 'Mark unread' })).toBeTruthy();
@@ -48,7 +48,7 @@ describe('Notifications', () => {
     await waitFor(() => expect(screen.getByText('1 unread')).toBeTruthy());
     expect(writes).toBe(2);
   });
-  it('requests unread results from the first page when switching views', async () => {
+  it('appends later pages and de-duplicates repeated items', async () => {
     const urls: string[] = [];
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
@@ -56,7 +56,7 @@ describe('Notifications', () => {
       return json({ items: [], unread_count: 2, next_offset: url.includes('offset=0') ? 25 : null });
     }));
     mount();
-    fireEvent.click(await screen.findByRole('button', { name: 'Next' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Load more' }));
     await waitFor(() => expect(urls.some(url => url.includes('offset=25'))).toBe(true));
     fireEvent.click(await screen.findByRole('button', { name: /Unread/ }));
     await waitFor(() => expect(urls.some(url => url.includes('offset=0') && url.includes('unread_only=true'))).toBe(true));
@@ -69,4 +69,21 @@ describe('Notifications', () => {
     expect(screen.getByText('Couldn’t load notifications.')).toBeTruthy();
     expect(screen.queryByText('No notifications here yet.')).toBeNull();
   });
+});
+
+it('shows a repeated notification once and appends the next page', async () => {
+  const item = (id: string) => ({ id, dispute_id: 'PP-TEST', kind: 'approval_requested', message: `Message ${id}`, created_at: new Date().toISOString(), read_at: null });
+  vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    return url.includes('offset=25')
+      ? json({ items: [item('b'), item('c')], unread_count: 3, next_offset: null })
+      : json({ items: [item('a'), item('a'), item('b')], unread_count: 3, next_offset: 25 });
+  }));
+  mount();
+  await screen.findByText('Message a');
+  expect(screen.getAllByText('Message a')).toHaveLength(1);
+  fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
+  await screen.findByText('Message c');
+  expect(screen.getAllByText('Message b')).toHaveLength(1);
+  expect(screen.getByText('Message a')).toBeTruthy();
 });

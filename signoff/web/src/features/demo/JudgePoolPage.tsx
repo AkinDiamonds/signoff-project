@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import {
-  Button,
-  EmptyState,
+  ConceptButton,
+  ConceptEmptyState,
+  ConceptPageTitle,
+  ConceptSectionHeading,
   ErrorState,
   Money,
-  PageHeader,
   Skeleton,
   colors,
+  concept,
   formatDisputeReason,
   radius,
   spacing,
@@ -91,19 +93,7 @@ export const JudgePoolPage: React.FC = () => {
         gap: spacing[3],
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing[2] }}>
-        <PageHeader
-          title="Demo disputes"
-          description="Choose a sandbox case to evaluate."
-        />
-        <div><p style={{ margin: '0 0 8px', color: colors.inkMuted }}>Start over clears this browser’s demo session; the ledger is preserved.</p><Button
-          variant="secondary"
-          onClick={handleStartOver}
-          testId="pool-start-over-button"
-        >
-          Start over
-        </Button></div>
-      </div>
+      <ConceptPageTitle title="Demo disputes" subtitle="Choose a case to evaluate." />
 
       {startOverNotice && (
         <div
@@ -139,16 +129,17 @@ export const JudgePoolPage: React.FC = () => {
 
       {/* Available Pooled Section: 2-column card grid */}
       <section aria-labelledby="available-disputes-heading" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
-        <h2 id="available-disputes-heading" style={{ fontSize: typography.fontSizeBody, fontWeight: typography.fontWeightSemibold, color: colors.ink, margin: 0 }}>
-          Available for Evaluation ({pooledDisputes.length})
-        </h2>
+        <ConceptSectionHeading id="available-disputes-heading">
+          Available ({pooledDisputes.length})
+        </ConceptSectionHeading>
 
         {pooledDisputes.length === 0 ? (
-          <EmptyState
+          <ConceptEmptyState
             testId="pool-empty-state"
-            title="No demo disputes right now"
-            description={finishedDisputes.length === 0 ? "No demo disputes are available. Run a scenario to create one." : `${finishedDisputes.length} finished ${finishedDisputes.length === 1 ? 'run is' : 'runs are'} available below.`}
-            action={<Link to="/app/demo">Browse scenarios</Link>}
+            icon="folder"
+            title="No demo disputes available"
+            body="Choose a scenario to create a sandbox case."
+            action={<ConceptButton as={Link} to="/app/demo" fullWidth>Browse scenarios</ConceptButton>}
           />
         ) : (
           <div
@@ -196,25 +187,14 @@ export const JudgePoolPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <button
-                      type="button"
+                    <ConceptButton
                       onClick={() => void handleClaim(item.dispute_id)}
                       disabled={claimingId !== null || isClaiming}
-                      data-testid={`claim-dispute-btn-${item.dispute_id}`}
-                      style={{
-                        padding: '8px 16px',
-                        backgroundColor: colors.primaryAction,
-                        color: '#FFFFFF',
-                        borderRadius: radius.control,
-                        border: 'none',
-                        fontSize: typography.fontSizeBody,
-                        fontWeight: typography.fontWeightMedium,
-                        cursor: claimingId !== null || isClaiming ? 'not-allowed' : 'pointer',
-                        opacity: claimingId !== null || isClaiming ? 0.6 : 1,
-                      }}
+                      testId={`claim-dispute-btn-${item.dispute_id}`}
+                      fullWidth
                     >
                       {isClaiming ? 'Claiming...' : 'Open this dispute'}
-                    </button>
+                    </ConceptButton>
                   </div>
                 </div>
               );
@@ -225,13 +205,13 @@ export const JudgePoolPage: React.FC = () => {
 
       {/* Finished Runs Section: 2-column card grid */}
       <section aria-labelledby="finished-runs-heading" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2], marginTop: spacing[2] }}>
-        <h2 id="finished-runs-heading" style={{ fontSize: typography.fontSizeBody, fontWeight: typography.fontWeightSemibold, color: colors.ink, margin: 0 }}>
+        <ConceptSectionHeading id="finished-runs-heading">
           Finished runs ({finishedDisputes.length})
-        </h2>
+        </ConceptSectionHeading>
 
         {finishedDisputes.length === 0 ? (
-          <div style={{ fontSize: typography.fontSizeSmall, color: colors.inkMuted, fontStyle: 'italic', padding: '12px 0' }}>
-            No finished evaluation runs recorded yet.
+          <div style={{ background: concept.subtle, borderRadius: 10, padding: 16, textAlign: 'center', color: concept.muted }}>
+            No finished runs yet.
           </div>
         ) : (
           <div
@@ -301,6 +281,13 @@ export const JudgePoolPage: React.FC = () => {
           </div>
         )}
       </section>
+
+      <div style={{ display: 'grid', justifyItems: 'center', gap: 4 }}>
+        <ConceptButton variant="text" onClick={handleStartOver} testId="pool-start-over-button" style={{ fontWeight: 750 }}>
+          Start over
+        </ConceptButton>
+        <span style={{ fontSize: 13, color: concept.muted }}>Session only · ledger preserved</span>
+      </div>
     </div>
   );
 };

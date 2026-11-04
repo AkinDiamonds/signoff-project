@@ -34,7 +34,10 @@ describe('Merchant simulated shipments', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response([shipment])));
     mount();
     await screen.findByText('SIGSHIPTEST');
-    expect(screen.getByText(/Simulated · Label created/)).toBeTruthy();
+    expect(screen.getByText('Simulated UPS')).toBeTruthy();
+    expect(screen.getByText('Sandbox shipments')).toBeTruthy();
+    expect(screen.getByText(/Events are simulated, not carrier-confirmed/)).toBeTruthy();
+    expect(screen.getByRole('list', { name: 'Simulated shipment history' })).toBeTruthy();
     expect(screen.getByText(/Next automatic milestone/)).toBeTruthy();
     expect(screen.getByText(/Nothing is sent to a real carrier/)).toBeTruthy();
   });
@@ -69,7 +72,7 @@ describe('Merchant simulated shipments', () => {
     expect(screen.getByRole('button', { name: 'Simulate exception' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Withhold tracking' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Advance simulated shipment' })).not.toBeDisabled();
-    expect(screen.getByText(/A PayPal dispute exists/)).toBeTruthy();
+    expect(screen.getByText(/Scenario locked: dispute exists/)).toBeTruthy();
   });
 
   it('shows paused missing tracking as human review rather than successful shipping', async () => {

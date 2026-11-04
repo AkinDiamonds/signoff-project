@@ -15,14 +15,14 @@ Per plan/04-frontend-spec.md and Step 21:
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from agent.app.api.disputes import current_approval_dispute_ids
+from agent.app.api.disputes import current_approval_dispute_ids, session_scope_predicate
 from agent.app.db.models import Dispute
 from agent.app.db.session import get_db_session
 from agent.app.domain.enums import DisputeStatus
@@ -84,8 +84,10 @@ class KpiResponse(BaseModel):
 )
 async def get_kpis(
     db_session: Annotated[Session, Depends(get_db_session)],
+    scope: Annotated[Literal["all", "mine"], Query(description="'mine' limits totals to the X-Demo-Session")] = "all",
+    demo_session: Annotated[str | None, Header(alias="X-Demo-Session")] = None,
 ) -> KpiResponse:
-    disputes = list(db_session.scalars(select(Dispute)).all())
+    disputes = list(db_session.scalars(select(Dispute).where(session_scope_predicate(scope, demo_session))).all())
     current_approvals = current_approval_dispute_ids(db_session, [item.id for item in disputes], datetime.now(UTC))
 
     open_disputes_count = 0

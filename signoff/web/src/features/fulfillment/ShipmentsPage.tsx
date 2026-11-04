@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { components } from '@signoff/api-client/generated';
-import { Button, Money, PageHeader, colors, toast } from '@signoff/ui';
+import { Button, ConceptCard, ConceptDisclosure, ConceptIcon, ConceptInfoBanner, ConceptPageTitle, ConceptPill, Money, concept, formatEventTime, toast } from '@signoff/ui';
+import type { PillTone } from '@signoff/ui';
 import { apiClient } from '../../app/api';
 import { unwrap } from '../../app/queries';
 
@@ -12,6 +13,8 @@ const labels: Record<string, string> = {
   DELIVERED: 'Delivered', EXCEPTION: 'Exception', RETURNED: 'Returned',
 };
 const stageLabel = (stage: string) => labels[stage] ?? stage.replaceAll('_', ' ');
+const stageTone = (stage: string): PillTone => stage === 'DELIVERED' ? 'green' : stage === 'EXCEPTION' ? 'red' : stage === 'RETURNED' ? 'gray' : 'blue';
+const detailsCss = '.concept-disclosure > summary::-webkit-details-marker, .shipment-card > summary::-webkit-details-marker { display:none } .shipment-card > summary { list-style:none } .shipment-card[open] > summary .chev { transform:rotate(180deg) }';
 
 export const ShipmentsPage: React.FC = () => {
   const client = useQueryClient();
@@ -45,70 +48,90 @@ export const ShipmentsPage: React.FC = () => {
     }
   };
   return (
-    <div style={{ display: 'grid', gap: 20, maxWidth: 1000, minWidth: 0 }}>
-      <PageHeader title="Shipments" description="Simulated shipping for your sandbox shop orders." />
-      <section style={{ padding: 18, borderRadius: 12, background: '#ecfdf5', color: '#14532d', lineHeight: 1.6 }}>
-        Events advance automatically about once a minute. Use the controls below to move ahead or choose a sandbox scenario.
-        Nothing is sent to a real carrier. Existing dispute decisions keep their original evidence; shipment changes do not submit a response.
-      </section>
-      {message && <p role="status" style={{ color: '#065f46' }}>{message}</p>}
-      {error && <p role="alert" style={{ color: '#9f1239' }}>{error}</p>}
+    <div style={{ display: 'grid', gap: 20, maxWidth: 700, minWidth: 0 }}>
+      <style>{detailsCss}</style>
+      <ConceptPageTitle title="Shipments" />
+      <ConceptInfoBanner icon="info" title="Sandbox shipments">Events are simulated, not carrier-confirmed.</ConceptInfoBanner>
+      {message && <p role="status" style={{ color: '#065f46', margin: 0 }}>{message}</p>}
+      {error && <p role="alert" style={{ color: concept.dangerText, margin: 0 }}>{error}</p>}
       {shipments.isPending && <p role="status">Loading simulated shipments…</p>}
       {shipments.isError && <div role="alert">
         <p>Couldn’t load shipments. Check your connection and try again.</p>
         <Button onClick={() => { void shipments.refetch(); }}>Try again</Button>
       </div>}
-      {shipments.data?.length === 0 && <section style={{ padding: 24, background: 'var(--signoff-surface, #fff)', borderRadius: 12 }}>
+      {shipments.data?.length === 0 && <ConceptCard padding={24}>
         <h2 style={{ marginTop: 0 }}>No simulated shipments yet</h2>
-        <p>New verified sandbox payments start a shipment automatically. Existing orders keep their recorded history.</p>
-      </section>}
+        <p style={{ marginBottom: 0 }}>New verified sandbox payments start a shipment automatically. Existing orders keep their recorded history.</p>
+      </ConceptCard>}
       {shipments.data?.map(shipment => {
         const pending = busy !== null;
         const terminal = shipment.stage === 'DELIVERED' || shipment.stage === 'RETURNED';
-        return <section key={shipment.shipment_id} aria-label={`Order ${shipment.order_code}`}
-          style={{ padding: 'clamp(16px, 4vw, 24px)', border: '1px solid #dce5df', background: 'var(--signoff-surface, #fff)', borderRadius: 12, minWidth: 0 }}>
-          <details>
-            <summary style={{ cursor: 'pointer', minHeight: 48 }}>
-              <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                <strong style={{ fontSize: 18, overflowWrap: 'anywhere' }}>{shipment.order_code}</strong><Money money={shipment.amount} />
+        const events = [...shipment.events].sort((a, b) => a.event_time.localeCompare(b.event_time));
+        return <ConceptCard key={shipment.shipment_id} as="section" padding={0} aria-label={`Order ${shipment.order_code}`} style={{ minWidth: 0 }}>
+          <details className="shipment-card">
+            <summary style={{ cursor: 'pointer', minHeight: 64, padding: 18, display: 'grid', gap: 10 }}>
+              <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                <strong style={{ fontSize: 18, overflowWrap: 'anywhere' }}>{shipment.order_code}</strong>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Money money={shipment.amount} />
+                  <span className="chev" style={{ display: 'flex' }}><ConceptIcon name="chevron-down" color={concept.muted} /></span>
+                </span>
               </span>
-              <span style={{ color: colors.inkMuted }}>Simulated · {stageLabel(shipment.stage)}</span>
+              <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <ConceptPill tone={stageTone(shipment.stage)}>{stageLabel(shipment.stage)}</ConceptPill>
+                <ConceptPill tone="gray">Simulated {shipment.carrier}</ConceptPill>
+              </span>
             </summary>
-          <p style={{ fontSize: 13, overflowWrap: 'anywhere', color: 'var(--signoff-muted, #686861)' }}>
-            Simulated {shipment.carrier} tracking: {shipment.tracking_number}
-          </p>
-          {shipment.mode === 'missing_tracking' && <p role="status">Tracking is withheld for this scenario. The agent requires human review.</p>}
-          {shipment.mode === 'exception' && <p role="status">Simulated shipping exception. Automatic progress is paused for human review.</p>}
-          {shipment.next_event_at && <p style={{ fontSize: 13, color: 'var(--signoff-muted, #686861)' }}>
-            Next automatic milestone: <time dateTime={shipment.next_event_at}>{new Date(shipment.next_event_at).toLocaleString()}</time>
-          </p>}
-          <details style={{ marginTop: 12 }}><summary style={{ minHeight: 44, cursor: 'pointer' }}>Simulated shipment controls</summary><div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Button disabled={pending || terminal || shipment.mode !== 'normal'} onClick={() => { void change(shipment, 'advance'); }}>
-              {busy === shipment.order_code ? 'Updating…' : 'Advance simulated shipment'}
-            </Button>
-            {shipment.mode === 'normal' ? <>
-              <Button variant="secondary" disabled={pending || terminal || !shipment.can_configure_scenario}
-                onClick={() => { void change(shipment, 'exception'); }}>Simulate exception</Button>
-              <Button variant="secondary" disabled={pending || shipment.stage !== 'PRE_TRANSIT' || !shipment.can_configure_scenario}
-                onClick={() => { void change(shipment, 'missing_tracking'); }}>Withhold tracking</Button>
-            </> : <Button variant="secondary" disabled={pending || !shipment.can_configure_scenario}
-              onClick={() => { void change(shipment, 'resume'); }}>Resume simulated shipping</Button>}
-          </div>
-          {!shipment.can_configure_scenario && <p style={{ fontSize: 13, color: 'var(--signoff-muted, #686861)' }}>
-            A PayPal dispute exists. Scenario settings are locked; normal shipment milestones can still advance.
-          </p>}
+            <div style={{ padding: '0 18px 18px', display: 'grid', gap: 14 }}>
+              <ol aria-label="Simulated shipment history" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid' }}>
+                {events.map((event, index) => <li key={`${event.event_time}-${index}`} style={{ display: 'grid', gridTemplateColumns: '12px 1fr', columnGap: 14, paddingBottom: index === events.length - 1 ? 0 : 18, position: 'relative' }}>
+                  <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: '50%', background: concept.primary, marginTop: 7, zIndex: 1 }} />
+                  {index < events.length - 1 && <span aria-hidden="true" style={{ position: 'absolute', left: 4, top: 17, bottom: 0, width: 2, background: concept.border }} />}
+                  <span style={{ display: 'grid' }}>
+                    <strong style={{ fontSize: 16 }}>{stageLabel(event.status)}</strong>
+                    <time dateTime={event.event_time} style={{ fontSize: 14, color: concept.muted }}>{formatEventTime(event.event_time)}</time>
+                  </span>
+                </li>)}
+              </ol>
+              {shipment.mode === 'missing_tracking' && <p role="status" style={{ margin: 0 }}>Tracking is withheld for this scenario. The agent requires human review.</p>}
+              {shipment.mode === 'exception' && <p role="status" style={{ margin: 0 }}>Simulated shipping exception. Automatic progress is paused for human review.</p>}
+              {shipment.next_event_at && <p style={{ margin: 0, fontSize: 13, color: concept.muted }}>
+                Next automatic milestone: <time dateTime={shipment.next_event_at}>{new Date(shipment.next_event_at).toLocaleString()}</time>
+              </p>}
+              <p style={{ margin: 0, fontSize: 13, overflowWrap: 'anywhere', color: concept.muted }}>
+                Simulated {shipment.carrier} tracking: {shipment.tracking_number}
+              </p>
+              {!shipment.can_configure_scenario && <p style={{ margin: 0, paddingTop: 14, borderTop: `1px solid ${concept.border}`, display: 'flex', gap: 8, alignItems: 'center', color: concept.muted, fontSize: 14 }}>
+                <ConceptIcon name="lock" size={18} />
+                <span>Scenario locked: dispute exists<span style={{ display: 'block', fontSize: 13 }}>A PayPal dispute exists. Scenario settings are locked; normal shipment milestones can still advance.</span></span>
+              </p>}
+              <details>
+                <summary style={{ minHeight: 44, cursor: 'pointer', fontWeight: 650, color: concept.primary, display: 'flex', alignItems: 'center' }}>Simulated shipment controls</summary>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', paddingTop: 8 }}>
+                  <Button disabled={pending || terminal || shipment.mode !== 'normal'} onClick={() => { void change(shipment, 'advance'); }}>
+                    {busy === shipment.order_code ? 'Updating…' : 'Advance simulated shipment'}
+                  </Button>
+                  {shipment.mode === 'normal' ? <>
+                    <Button variant="secondary" disabled={pending || terminal || !shipment.can_configure_scenario}
+                      onClick={() => { void change(shipment, 'exception'); }}>Simulate exception</Button>
+                    <Button variant="secondary" disabled={pending || shipment.stage !== 'PRE_TRANSIT' || !shipment.can_configure_scenario}
+                      onClick={() => { void change(shipment, 'missing_tracking'); }}>Withhold tracking</Button>
+                  </> : <Button variant="secondary" disabled={pending || !shipment.can_configure_scenario}
+                    onClick={() => { void change(shipment, 'resume'); }}>Resume simulated shipping</Button>}
+                </div>
+              </details>
+            </div>
           </details>
-          <details style={{ marginTop: 18 }}>
-            <summary style={{ cursor: 'pointer', minHeight: 32 }}>Simulated shipment history</summary>
-            <ol style={{ paddingLeft: 20, lineHeight: 1.6 }}>
-              {shipment.events.map((event, index) => <li key={`${event.event_time}-${index}`}>
-                {stageLabel(event.status)} · {new Date(event.event_time).toLocaleString()} · {event.source}
-              </li>)}
-            </ol>
-          </details>
-          </details>
-        </section>;
+        </ConceptCard>;
       })}
+      <ConceptCard padding={0}>
+        <ConceptDisclosure icon="info" title="How simulation works">
+          <p style={{ margin: 0, lineHeight: 1.6 }}>
+            Events advance automatically about once a minute. Use the controls on each shipment to move ahead or choose a sandbox scenario.
+            Nothing is sent to a real carrier. Existing dispute decisions keep their original evidence; shipment changes do not submit a response.
+          </p>
+        </ConceptDisclosure>
+      </ConceptCard>
     </div>
   );
 };

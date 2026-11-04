@@ -15,3 +15,7 @@ export * from './components/DataTable';
 export * from './mappings';
 export * from './theme';
 export * from './components/Toast';
+export * from './components/concept/conceptTokens';
+export * from './components/concept/format';
+export * from './components/concept/ConceptIcon';
+export * from './components/concept/primitives';

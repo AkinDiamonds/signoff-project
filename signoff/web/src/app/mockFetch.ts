@@ -23,6 +23,26 @@ const STATIC_FIXTURES: Record<string, unknown> = {
   '/api/status': statusFixture,
   '/api/kpis': kpisFixture,
   '/api/disputes': disputesFixture,
+  '/api/notifications': {
+    unread_count: 2,
+    next_offset: null,
+    items: [
+      { id: '00000000-0000-4000-8000-0000000000a1', dispute_id: 'PP-D-1001', kind: 'action_confirmed', message: 'Approval recorded', created_at: new Date().toISOString(), read_at: null },
+      { id: '00000000-0000-4000-8000-0000000000a2', dispute_id: 'PP-D-1002', kind: 'action_failed', message: 'Evidence action failed', created_at: new Date(Date.now() - 3_600_000).toISOString(), read_at: null },
+      { id: '00000000-0000-4000-8000-0000000000a3', dispute_id: 'PP-D-1001', kind: 'review_needed', message: 'Message confirmation recorded', created_at: new Date(Date.now() - 86_400_000).toISOString(), read_at: new Date().toISOString() },
+    ],
+  },
+  '/api/fulfillment/orders': [
+    {
+      order_code: 'ORD0000001', order_status: 'PAID', shipment_id: '00000000-0000-4000-8000-000000000001',
+      amount: { value: '42.00', currency_code: 'USD' }, source: 'simulated', carrier: 'UPS', tracking_number: 'SIM-1',
+      stage: 'DELIVERED', mode: 'normal', version: 2, next_event_at: null, can_configure_scenario: false,
+      events: [
+        { carrier: 'UPS', tracking_number: 'SIM-1', status: 'IN_TRANSIT', event_time: '2026-11-01T08:10:00Z', source: 'simulated' },
+        { carrier: 'UPS', tracking_number: 'SIM-1', status: 'DELIVERED', event_time: '2026-11-03T08:10:00Z', source: 'simulated' },
+      ],
+    },
+  ],
 };
 
 const MOCK_ORIGIN = 'http://mock.invalid';

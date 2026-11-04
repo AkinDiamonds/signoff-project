@@ -98,97 +98,7 @@ describe('Disputes UI feature (Step 25)', () => {
     expect(link.getAttribute('href')).toBe('/app/demo');
   });
 
-  it('renders dispute detail page with summary, evidence panel, and untrusted message', async () => {
-    await act(async () => {
-      renderAt('/app/disputes/PP-D-1001');
-    });
-
-    await waitFor(() => {
-      expect(screen.getByTestId('dispute-detail-id').textContent).toContain('PP-D-1001');
-    });
-
-    expect(screen.getByTestId('dispute-summary-card')).toBeTruthy();
-    expect(screen.getByTestId('dispute-evidence-panel')).toBeTruthy();
-    expect(screen.getByTestId('evidence-strength-badge').textContent?.toLowerCase()).toBe('high');
-
-    // Untrusted text label
-    expect(screen.getByTestId('untrusted-text-label')).toBeTruthy();
-
-    // Script markup is rendered as plain text
-    const messageEl = screen.getByTestId('buyer-message-content');
-    expect(messageEl.textContent).toContain('<script>alert("xss")</script>');
-    // Ensure no script element was injected with the message payload
-    const injectedScripts = Array.from(document.querySelectorAll('script')).filter((script) =>
-      (script.textContent ?? '').includes('alert("xss")')
-    );
-    expect(injectedScripts).toHaveLength(0);
-  });
-
-  it('shows the saved run evidence and labels simulated tracking', async () => {
-    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
-      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-      if (url.includes('/api/disputes/PP-D-1001/evidence')) {
-        return new Response(JSON.stringify([{
-          run_id: 'run-example', captured_at: '2026-10-31T20:00:00Z', content_hash: 'abc',
-          evidence: { version: 1, order_code: 'SIG-EXAMPLE', payment_reference: 'CAPTURE-EXAMPLE',
-            order_created_at: '2026-10-31T19:00:00Z', amount: '24.00', currency: 'USD', items: ['Item'],
-            milestones: [{ carrier: 'UPS', tracking_number: 'SIM123', status: 'IN_TRANSIT',
-              event_time: '2026-10-31T19:30:00Z', source: 'simulated' }],
-            buildable: true, evidence_type: 'PROOF_OF_FULFILLMENT', notes: 'Recorded order notes',
-            explanation: 'Tracking present', score: 40, strength: 'MEDIUM',
-            components: [{ name: 'Tracking', points: 40, detail: 'Tracking recorded' }] },
-        }]), { status: 200, headers: { 'Content-Type': 'application/json' } });
-      }
-      return mockFetch(input, options);
-    }));
-    await act(async () => { renderAt('/app/disputes/PP-D-1001'); });
-    await waitFor(() => expect(screen.getByText(/run-example/)).toBeTruthy());
-    expect(screen.getByText(/IN_TRANSIT.*simulated.*SIM123/)).toBeTruthy();
-    expect(screen.getByText(/Tracking: 40.*Tracking recorded/)).toBeTruthy();
-    expect(screen.getByText(/Submission preview: PROOF_OF_FULFILLMENT/)).toBeTruthy();
-  });
-
-  it('distinguishes an unavailable store review from a model run or a missing order', async () => {
-    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
-      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-      if (url.includes('/api/disputes/PP-D-1001/evidence')) {
-        return new Response(JSON.stringify([{
-          run_id: 'review-example', capture_kind: 'pre_model_review', review_reason: 'store_unavailable',
-          captured_at: '2026-10-31T20:00:00Z', content_hash: 'abc',
-          evidence: { version: 1, order_code: null, payment_reference: null, order_created_at: null,
-            amount: null, currency: null, items: [], milestones: [], buildable: false,
-            evidence_type: null, notes: null, explanation: 'The store was unavailable; order evidence could not be checked.',
-            score: null, strength: null, components: [] },
-        }]), { status: 200, headers: { 'Content-Type': 'application/json' } });
-      }
-      return mockFetch(input, options);
-    }));
-    await act(async () => { renderAt('/app/disputes/PP-D-1001'); });
-    await waitFor(() => expect(screen.getByText(/Review before model run.*review-example/)).toBeTruthy());
-    expect(screen.getByText(/store was unavailable/)).toBeTruthy();
-    expect(screen.getByText(/Review stopped before a model plan was created/)).toBeTruthy();
-    expect(screen.queryByText(/Order: Not found/)).toBeNull();
-  });
-
-  it('refreshes evidence without claiming an agent run or PayPal action', async () => {
-    const requests: string[] = [];
-    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
-      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-      if (url.includes('/api/disputes/PP-D-1001/evidence/refresh')) {
-        requests.push(options?.method ?? 'GET');
-        return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
-      }
-      if (url.includes('/api/disputes/PP-D-1001/evidence')) {
-        return new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } });
-      }
-      return mockFetch(input, options);
-    }));
-    await act(async () => { renderAt('/app/disputes/PP-D-1001'); });
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Refresh evidence' })).toBeTruthy());
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh evidence' }));
-    await waitFor(() => expect(screen.getByText(/No model plan or PayPal action was started/)).toBeTruthy());
-    expect(requests).toEqual(['POST']);
-  });
+  // Detail-page tab, evidence and activity coverage lives in dispute-detail.test.tsx.
 
   it('does not claim active analysis or invent an approval link while waiting for approval', async () => {
     await act(async () => {
@@ -416,6 +326,11 @@ describe('Disputes UI feature (Step 25)', () => {
   });
 
   it('preserves pagination cursor in URL and query', async () => {
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      urls.push(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
+      return mockFetch(input, options);
+    }));
     await act(async () => {
       renderAt('/app/disputes?cursor=cur-page-2&limit=10');
     });
@@ -424,7 +339,7 @@ describe('Disputes UI feature (Step 25)', () => {
       expect(screen.getByTestId('disputes-table')).toBeTruthy();
     });
 
-    expect(screen.getByTestId('pagination-prev-button')).not.toBeDisabled();
+    expect(urls.some(url => url.includes('cursor=cur-page-2'))).toBe(true);
   });
 });
 
