@@ -66,7 +66,7 @@ export const Layout: React.FC = () => {
     <header className="signoff-header" data-testid="shell-topbar"><NavLink to="/app"><img src="/icon.svg" alt="" />Signoff</NavLink><span className="signoff-store">Sandbox demo</span></header>
     <aside className="signoff-side" data-testid="shell-sidebar"><nav aria-label="Main">{links}</nav></aside>
     <main id="main-content" tabIndex={-1} className="signoff-main">
-      {showStore && <div style={{ marginBottom: 24 }}><StoreSwitcherRow /></div>}
+      {showStore && <div style={{ marginBottom: 24 }}><StoreSwitcherRow href="https://signoff-shop.onrender.com/" /></div>}
       <ErrorBoundary><Outlet /></ErrorBoundary>
     </main>
     <nav className="signoff-bottom" aria-label="Main navigation">{links}</nav>

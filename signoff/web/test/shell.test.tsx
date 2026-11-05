@@ -93,6 +93,16 @@ describe('web shell', () => {
     expect(screen.getByRole('navigation', { name: 'Main' })).toBeTruthy();
   });
 
+  it('links the shop row on Home to the hosted buyer shop', async () => {
+    vi.stubGlobal('fetch', mockFetch);
+    await act(async () => {
+      renderAt('/app');
+    });
+    const shop = await screen.findByRole('link', { name: 'Signoff Shop' });
+    expect(shop.getAttribute('href')).toBe('https://signoff-shop.onrender.com/');
+    expect(shop.getAttribute('target')).toBe('_blank');
+  });
+
   it('mock fetch serves fixtures and rejects unknown writes', async () => {
     const ok = await mockFetch('http://mock.invalid/api/kpis');
     expect(ok.status).toBe(200);

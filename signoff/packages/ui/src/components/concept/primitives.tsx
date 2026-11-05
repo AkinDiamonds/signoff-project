@@ -114,12 +114,12 @@ export const ConceptEmptyState: React.FC<{ icon: ConceptIconName; title: string;
   </ConceptCard>
 );
 
-export const StoreSwitcherRow: React.FC<{ name?: string }> = ({ name = 'Signoff Shop' }) => (
-  <div data-testid="store-switcher" style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 56, padding: '0 16px', border: `1px solid ${concept.border}`, borderRadius: 12, background: concept.surface, color: concept.ink }}>
+export const StoreSwitcherRow: React.FC<{ name?: string; href: string }> = ({ name = 'Signoff Shop', href }) => (
+  <a href={href} target="_blank" rel="noreferrer" data-testid="store-switcher" style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 56, padding: '0 16px', border: `1px solid ${concept.border}`, borderRadius: 12, background: concept.surface, color: concept.ink, textDecoration: 'none' }}>
     <ConceptIcon name="store" />
     <span style={{ flex: 1, fontSize: 18, fontWeight: 600 }}>{name}</span>
-    <ConceptIcon name="chevron-down" color={concept.muted} />
-  </div>
+    <ConceptIcon name="external-link" color={concept.muted} />
+  </a>
 );
 
 export const ConceptDisclosure: React.FC<{ icon?: ConceptIconName; title: React.ReactNode; subtitle?: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean; testId?: string | undefined }> = ({ icon, title, subtitle, children, defaultOpen, testId }) => (
