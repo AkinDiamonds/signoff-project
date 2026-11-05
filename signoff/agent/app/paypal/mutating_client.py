@@ -323,10 +323,10 @@ class PayPalMutatingClient:
 
         multipart_files: list[tuple[str, Any]] = []
         if files:
-            for item in files:
+            for index, item in enumerate(files, start=1):
                 fname, b_data, mime = item
                 val_fname, val_content, val_mime = validate_evidence_file(fname, b_data, mime)
-                multipart_files.append(("file", (val_fname, val_content, val_mime)))
+                multipart_files.append((f"file{index}", (val_fname, val_content, val_mime)))
 
         evidence_input: dict[str, Any] = {}
         if evidence_type:
@@ -334,19 +334,19 @@ class PayPalMutatingClient:
         if validated_notes:
             evidence_input["notes"] = validated_notes
         if tracking_info:
-            evidence_input["evidence_info"] = {"tracking_info": tracking_info}
+            evidence_input["evidence_info"] = {"tracking_info": [
+                {"carrier_name": item.get("carrier_name", item.get("carrier")),
+                 "tracking_number": item.get("tracking_number")}
+                for item in tracking_info
+            ]}
 
-        data_fields = {"input": json.dumps(evidence_input)}
         endpoint = f"/v1/customer/disputes/{clean_dispute_id}/provide-evidence"
-
-        files_payload = (
-            multipart_files
-            if multipart_files
-            else [("input", (None, json.dumps(evidence_input), "application/json"))]
-        )
+        files_payload = [
+            ("input", (None, json.dumps({"evidences": [evidence_input]}), "application/json")),
+            *multipart_files,
+        ]
         return await self._execute_post(
             endpoint,
-            data=data_fields,
             files=files_payload,
         )
 

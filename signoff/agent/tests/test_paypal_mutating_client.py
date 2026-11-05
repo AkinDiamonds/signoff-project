@@ -11,8 +11,11 @@ Validates Step 13 requirements:
 - 5xx and timeout error handling: raises without blind retry.
 """
 
+import json
 import time
 from decimal import Decimal
+from email import policy
+from email.parser import BytesParser
 
 import httpx
 import pytest
@@ -195,6 +198,16 @@ async def test_provide_evidence_multipart_success():
     async def mock_handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == "/v1/customer/disputes/PP-D-123/provide-evidence"
         assert "multipart/form-data" in request.headers["content-type"]
+        envelope = BytesParser(policy=policy.default).parsebytes(
+            f"Content-Type: {request.headers['content-type']}\r\nMIME-Version: 1.0\r\n\r\n".encode() + request.content
+        )
+        parts = list(envelope.iter_parts())
+        assert [part.get_param("name", header="content-disposition") for part in parts] == ["input", "file1"]
+        assert parts[0].get_content_type() == "application/json"
+        assert json.loads(parts[0].get_payload(decode=True)) == {"evidences": [{
+            "evidence_type": "PROOF_OF_FULFILLMENT", "notes": "Order fulfilled via carrier"
+        }]}
+        assert parts[1].get_filename() == "receipt.pdf"
         return httpx.Response(
             200,
             json={"links": [{"rel": "detail", "href": "https://api-m.sandbox.paypal.com/v1/customer/disputes/PP-D-123"}]},
@@ -218,6 +231,28 @@ async def test_provide_evidence_multipart_success():
 
 
 @pytest.mark.asyncio
+async def test_provide_evidence_notes_without_file_has_one_json_part():
+    async def mock_handler(request: httpx.Request) -> httpx.Response:
+        envelope = BytesParser(policy=policy.default).parsebytes(
+            f"Content-Type: {request.headers['content-type']}\r\nMIME-Version: 1.0\r\n\r\n".encode() + request.content
+        )
+        parts = list(envelope.iter_parts())
+        assert len(parts) == 1
+        assert parts[0].get_param("name", header="content-disposition") == "input"
+        assert parts[0].get_content_type() == "application/json"
+        assert json.loads(parts[0].get_payload(decode=True)) == {
+            "evidences": [{"evidence_type": "PROOF_OF_FULFILLMENT", "notes": "Order information."}]
+        }
+        return httpx.Response(200, json={"links": []})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(mock_handler)) as client:
+        mutating_client = PayPalMutatingClient(auth=make_test_auth(client), http_client=client)
+        await mutating_client.provide_evidence(
+            "PP-D-123", evidence_type="PROOF_OF_FULFILLMENT", notes="Order information."
+        )
+
+
+@pytest.mark.asyncio
 async def test_execute_action_forwards_tracking_info():
     captured: dict[str, bytes] = {}
 
@@ -237,7 +272,9 @@ async def test_execute_action_forwards_tracking_info():
         )
         await mutating_client.execute_action("PP-D-123", action)
 
-    assert b"tracking_info" in captured["content"]
+    assert b'"evidences"' in captured["content"]
+    assert b'"carrier_name": "UPS"' in captured["content"]
+    assert captured["content"].count(b'name="input"') == 1
     assert b"1Z999AA10123456784" in captured["content"]
     assert b"UPS" in captured["content"]
 

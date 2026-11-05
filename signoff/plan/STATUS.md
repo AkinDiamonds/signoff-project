@@ -1,5 +1,7 @@
 # STATUS
 
+2026-11-05 evidence request correction: PayPal rejected the $105 case with INVALID_EVIDENCE_FILE; its action had notes and no files or tracking. The local request now sends one JSON `input` multipart part containing an `evidences` array, maps tracking `carrier` to PayPal's `carrier_name`, and numbers file parts. Wire-format tests cover notes-only, tracking and file cases against PayPal's documented shape. No historical case was replayed; a fresh sandbox submission and action-specific PayPal evidence remain unverified. Reference: https://developer.paypal.com/api/disputes/.
+
 2026-11-05: The $105 case PP-R-IAT-10196558 recorded G7-01 ALLOW for PROVIDE_EVIDENCE and SEND_MESSAGE under charter v3 ($100 dispute-size limit, both auto flags enabled). Evidence failed at PayPal with INVALID_EVIDENCE_FILE; the message returned HTTP 200. Owner confirmed the ceiling applies to all actions. Local G3-05 enforcement and Signing limits copy implement that decision; deployment and hosted verification remain outstanding. The hosted demo pool is empty; no hosted approval was replayed.
 
 2026-11-05 verification: `make check` passed (692 backend tests, 235 frontend tests, lint, types and import contracts). Both local mobile approval browser tests passed against the PayPal stub: the unchanged offer remained absent before approval and reached the stub afterward; the edited $20 offer also reached it. This is not hosted PayPal proof.
