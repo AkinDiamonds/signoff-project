@@ -19,7 +19,7 @@ import {
 } from '@signoff/ui';
 import { useDispute, useDisputeTimeline, useEvidenceSnapshots, unwrap } from '../../app/queries';
 import { apiClient } from '../../app/api';
-import { ActivitySummary, DecisionTimeline, ExecutionAttempts } from './timeline';
+import { DecisionTimeline, ExecutionAttempts } from './timeline';
 import { CaseOverviewTab } from './CaseOverviewTab';
 import { CaseEvidenceTab } from './CaseEvidenceTab';
 import type { ApiTimelineEvent, DisputeDetail } from './types';
@@ -71,7 +71,6 @@ export const DisputeDetailPage: React.FC = () => {
   const latestTimestampRef = useRef<number>(0);
 
   const [isMessageExpanded, setIsMessageExpanded] = useState<boolean>(false);
-  const [activityDetailsOpen, setActivityDetailsOpen] = useState(false);
   const [refreshingEvidence, setRefreshingEvidence] = useState(false);
   const [evidenceRefreshMessage, setEvidenceRefreshMessage] = useState<string | null>(null);
   const refreshingEvidenceRef = useRef(false);
@@ -335,17 +334,8 @@ export const DisputeDetailPage: React.FC = () => {
               />
             )}
             {timelineQuery.isSuccess && <>
-              <ActivitySummary events={timelineQuery.data.items ?? []} status={displayedDispute.status}
-                orderCode={displayedDispute.order_code} amount={<Money money={displayedDispute.amount} />}
-                reason={plainReason}
-                onShowRule={() => setActivityDetailsOpen(true)}
-                simulated={Boolean(evidenceQuery.data?.[0]?.evidence.milestones.some(m => m.source === 'simulated')) || rawEvidence?.source === 'simulated'} />
-              <details open={activityDetailsOpen} onToggle={event => setActivityDetailsOpen(event.currentTarget.open)}>
-                <summary style={{ cursor: 'pointer', minHeight: 44, color: concept.primary, fontWeight: 650 }}>Technical details</summary>
-                <div id="activity-rule-history"><DecisionTimeline events={timelineQuery.data.items ?? []} reverse={true} /></div>
-                <ExecutionAttempts events={timelineQuery.data.items ?? []} />
-                <details><summary>Raw event data</summary><pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{JSON.stringify(timelineQuery.data.items, null, 2)}</pre></details>
-              </details>
+              <DecisionTimeline events={timelineQuery.data.items ?? []} reverse={true} />
+              <ExecutionAttempts events={timelineQuery.data.items ?? []} />
             </>}
           </section>
         )}
