@@ -1,5 +1,13 @@
 # STATUS
 
+2026-11-05: The $105 case PP-R-IAT-10196558 recorded G7-01 ALLOW for PROVIDE_EVIDENCE and SEND_MESSAGE under charter v3 ($100 dispute-size limit, both auto flags enabled). Evidence failed at PayPal with INVALID_EVIDENCE_FILE; the message returned HTTP 200. Owner confirmed the ceiling applies to all actions. Local G3-05 enforcement and Signing limits copy implement that decision; deployment and hosted verification remain outstanding. The hosted demo pool is empty; no hosted approval was replayed.
+
+2026-11-05 verification: `make check` passed (692 backend tests, 235 frontend tests, lint, types and import contracts). Both local mobile approval browser tests passed against the PayPal stub: the unchanged offer remained absent before approval and reached the stub afterward; the edited $20 offer also reached it. This is not hosted PayPal proof.
+
+## Blockers — 2026-11-05
+
+- Fresh hosted approval and recording remain unverified. The $105 evidence upload remains failed and is not included in the main recording.
+
 2026-11-03 checkpoint: mobile merchant redesign and server-backed scope/views/search, current attention, unread pagination, and execution-attempt projection are on `codex/signoff-notion-mobile`. Full frontend tests passed (221); the isolated PostgreSQL suite passed 688 before the final focused search/attempt tests. Browser screenshots and a11y sweeps are recorded in `signoff/docs/ui/redesign-progress.md`. Physical-device and manual accessibility acceptance remain open; do not treat this as release-ready.
 
 2026-11-03 continuation: mobile merchant shell, route changes, filter and save safeguards, truthful metric labels and read-only execution-attempt projection implemented on `codex/signoff-notion-mobile`. Frontend checks and focused backend tests pass; the complete backend suite and several route acceptance items remain open. See `signoff/docs/ui/redesign-progress.md` for route status and browser evidence.

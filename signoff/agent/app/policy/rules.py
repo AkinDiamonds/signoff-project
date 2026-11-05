@@ -68,6 +68,7 @@ RULE_REGISTRY: dict[str, RuleDefinition] = {
     "G3-02": RuleDefinition("G3-02", 3, Verdict.NEEDS_APPROVAL, "Accept amount > auto_accept_max"),
     "G3-03": RuleDefinition("G3-03", 3, Verdict.DENY, "Currency mismatch or non-positive amount"),
     "G3-04": RuleDefinition("G3-04", 3, Verdict.DENY, "Offer exceeds disputed amount"),
+    "G3-05": RuleDefinition("G3-05", 3, Verdict.NEEDS_APPROVAL, "Dispute exceeds autonomous action limit"),
     # Step 4: Reason
     "G4-01": RuleDefinition("G4-01", 4, Verdict.NEEDS_APPROVAL, "Reason in never_auto_reasons"),
     "G4-02": RuleDefinition("G4-02", 4, Verdict.NEEDS_APPROVAL, "Action in never_auto_actions"),
@@ -290,6 +291,24 @@ def _limit_value(limit: Any) -> Decimal | None:
     if parts is None:
         return None
     return parts[0]
+
+
+def check_g3_05(action: Any, dispute: Dispute, charter: Any) -> RuleResult | None:
+    """Apply the dispute-size ceiling to actions other than offers and accepts.
+
+    Those two actions already have equivalent checks under G3-01 and G3-02.
+    """
+    amount = _money_parts(getattr(dispute, "dispute_amount", None))
+    limit = _money_parts(getattr(charter, "auto_act_max_dispute_amount", None))
+    if (getattr(action, "action_type", None) in MONEY_ACTIONS and amount is not None
+            and limit is not None and amount[1] == limit[1]):
+        return None
+    if amount is None or limit is None or amount[1] != limit[1] or amount[0] > limit[0]:
+        return RuleResult(
+            rule_id="G3-05", step=3, verdict=Verdict.NEEDS_APPROVAL,
+            reason="Dispute exceeds the autonomous action limit or cannot be compared; merchant approval required",
+        )
+    return None
 
 
 def check_g3_01(action: Any, dispute: Dispute, charter: Any) -> RuleResult | None:

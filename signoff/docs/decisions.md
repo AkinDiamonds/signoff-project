@@ -17,6 +17,8 @@ Append-only. Format: **ID · Date · Status** — Context — Decision — Conse
 
 **ADR-007 · 2026-10-06 · Accepted** — Charter semantics. Separate limits for money conceded (`auto_offer_max`, `auto_accept_max`) and maximum dispute size handled autonomously (`auto_act_max_dispute_amount`). Redundant `approval_required_above` dropped. Standing flags (`auto_provide_evidence`, `auto_send_message`), restricted lists (`never_auto_reasons`, `never_auto_actions`), and `repeat_disputer_threshold` complete the versioned model. Changes are append-only with optimistic concurrency control (`base_version`).
 
+**ADR-007 clarification · 2026-11-05 · Accepted** — The owner confirmed that the maximum autonomous dispute size applies to every proposed action, including messages and evidence. At the limit an action remains eligible for automatic handling; above it merchant approval is required. Other gate rules still apply.
+
 **ADR-008 · 2026-10-07 · Accepted** — LLM provider: Proceed with Glimmer via an OpenAI-compatible interface per ADR-016. Thin client interface isolates provider details so fallback to standard OpenAI/Anthropic is seamless if needed.
 
 **ADR-009 · 2026-10-06 · Proposed** — PayPal Agent Toolkit usage. Its dispute tools are list/get/accept-claim; accept concedes. Use the toolkit only for read tools (if Python auth works, spike S12) and credit it in "Tools used"; all mutating calls use our own client. Never hand `accept_dispute_claim` to an LLM.

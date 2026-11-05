@@ -15,7 +15,9 @@ const BUYER_EMAIL = 'casey.nguyen@example.test';
 test('C: unchanged approval reaches the stub provider once @full', async ({ page, request, session }) => {
   const { disputeId } = await createScenario(request, 'C', session.id);
   await stub.emit(request, disputeId, ['CUSTOMER.DISPUTE.CREATED']);
-  await waitForTimeline(request, disputeId, (events) => hasKind(events, 'APPROVAL_REQUESTED'));
+  const pending = await waitForTimeline(request, disputeId, (events) => hasKind(events, 'APPROVAL_REQUESTED'));
+  expect(pending.filter(item => item.kind === 'EXECUTION_INTENDED')).toHaveLength(0);
+  expect((await stub.state(request)).disputes[disputeId]?.offer?.amount).toBeFalsy();
   await session.applyTo(page);
   const link = await approvalUrl(request, disputeId);
   await page.goto(link);
@@ -25,10 +27,12 @@ test('C: unchanged approval reaches the stub provider once @full', async ({ page
   expect(items.filter(item => item.kind === 'EXECUTION_INTENDED')).toHaveLength(1);
   expect((await stub.state(request)).disputes[disputeId]?.offer).toBeTruthy();
   await page.goto(`/app/disputes/${disputeId}`);
-  await expect(page.getByTestId('decision-timeline')).toContainText('Approval resolved');
+  await page.getByRole('tab', { name: 'Activity' }).tap();
+  await expect(page.getByTestId('decision-timeline')).toContainText('Approval recorded');
   await expect(page.getByTestId('decision-timeline')).toContainText('Confirmation recorded');
   await page.reload();
-  await expect(page.getByTestId('decision-timeline')).toContainText('Approval resolved');
+  await page.getByRole('tab', { name: 'Activity' }).tap();
+  await expect(page.getByTestId('decision-timeline')).toContainText('Approval recorded');
   await expect(page.getByTestId('decision-timeline')).toContainText('Confirmation recorded');
 });
 
@@ -39,7 +43,7 @@ test('C: merchant approves an edited offer on a phone @full', async ({ browser, 
 
   await session.applyTo(page);
   await page.goto(`/app/disputes/${disputeId}`);
-  await expect(page.getByTestId('detail-verdict-chip')).toContainText('Needs Approval');
+  await expect(page.getByTestId('detail-verdict-chip')).toContainText('Needs review');
 
   const link = await approvalUrl(request, disputeId);
   await page.goto(link);

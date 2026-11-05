@@ -42,6 +42,7 @@ from agent.app.policy.rules import (
     check_g3_02,
     check_g3_03,
     check_g3_04,
+    check_g3_05,
     check_g4_01,
     check_g4_02,
     check_g5_01,
@@ -112,6 +113,25 @@ def _gate_input(
 
 def _charter(**overrides) -> CharterData:
     return DEFAULT_CHARTER_DATA.model_copy(update=overrides)
+
+
+@pytest.mark.parametrize("action", [ProvideEvidence(), SendMessage(message="A message")])
+def test_dispute_size_limit_applies_to_nonfinancial_actions(dispute, now, action):
+    at_limit = dispute.model_copy(update={"dispute_amount": _usd("100.00")})
+    above = dispute.model_copy(update={"dispute_amount": _usd("105.00")})
+    assert "G3-05" not in (evaluate_gate(_gate_input(action, at_limit, now)).rule_id,
+                            *evaluate_gate(_gate_input(action, at_limit, now)).also_triggered)
+    decision = evaluate_gate(_gate_input(action, above, now))
+    assert "G3-05" in (decision.rule_id, *decision.also_triggered)
+    assert decision.verdict != Verdict.ALLOW
+
+
+def test_dispute_size_limit_fails_closed_on_unusable_limit(dispute):
+    charter = _charter(auto_act_max_dispute_amount=None)
+    for action in (ProvideEvidence(), MakeOffer(amount=_usd("10.00"), offer_type="REFUND")):
+        result = check_g3_05(action, dispute, charter)
+        assert result is not None
+        assert result.verdict == Verdict.NEEDS_APPROVAL
 
 
 # ===========================================================================

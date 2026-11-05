@@ -41,6 +41,7 @@ from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.paypal.models import Dispute as PayPalDisputeModel
 from agent.app.paypal.mutating_client import PayPalMutatingClient
 from agent.app.paypal.read_client import PayPalReadClient
+from agent.app.policy.charter import DEFAULT_CHARTER_DATA
 from agent.app.policy.gate import GateDecision, evaluate_gate
 
 
@@ -129,7 +130,7 @@ def make_gate_allow_decision(action: Any, dispute: PayPalDisputeModel) -> GateDe
         GateInput(
             action=action,
             dispute=dispute,
-            charter=None,
+            charter=DEFAULT_CHARTER_DATA,
             now=datetime(2026, 10, 6, 12, 1, tzinfo=UTC),
         )
     )

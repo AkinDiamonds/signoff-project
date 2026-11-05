@@ -30,6 +30,7 @@ from agent.app.policy.rules import (
     check_g3_02,
     check_g3_03,
     check_g3_04,
+    check_g3_05,
     check_g4_01,
     check_g4_02,
     check_g5_01,
@@ -220,6 +221,7 @@ def evaluate_gate(gate_input: GateInput) -> GateDecision:
     for approval_amount_check in (
         check_g3_01(action, dispute, charter),
         check_g3_02(action, dispute, charter),
+        check_g3_05(action, dispute, charter),
     ):
         if approval_amount_check is not None:
             triggered.append(approval_amount_check)

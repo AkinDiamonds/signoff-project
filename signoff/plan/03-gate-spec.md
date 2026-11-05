@@ -22,6 +22,7 @@ GateDecision    = { verdict: ALLOW|NEEDS_APPROVAL|DENY, rule_id, reason, action_
 | | G3-02 | NEEDS_APPROVAL | Accept amount > `auto_accept_max` |
 | | G3-03 | DENY | Currency mismatch or non-positive amount |
 | | G3-04 | DENY | Offer exceeds disputed amount |
+| | G3-05 | NEEDS_APPROVAL | Dispute size exceeds `auto_act_max_dispute_amount` for other actions, or its amount and limit cannot be compared |
 | 4 Reason | G4-01 | NEEDS_APPROVAL | Reason in `never_auto_reasons` |
 | | G4-02 | NEEDS_APPROVAL | Action in `never_auto_actions` (approval may allow it; auto never does) |
 | 5 History | G5-01 | NEEDS_APPROVAL | Buyer disputes in window ≥ `repeat_disputer_threshold` |

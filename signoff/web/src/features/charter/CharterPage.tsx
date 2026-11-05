@@ -54,12 +54,12 @@ const SettingRow: React.FC<SettingRowProps> = ({
   error,
   onChange,
 }) => {
-  const describedBy = [hiddenHelper ? `${id}-help` : null, error ? `${id}-error` : null].filter(Boolean).join(' ');
+  const describedBy = [helper || hiddenHelper ? `${id}-help` : null, error ? `${id}-error` : null].filter(Boolean).join(' ');
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 150px', gap: 16, alignItems: 'center', padding: '16px 0', borderTop: `1px solid ${concept.border}` }}>
       <div style={{ display: 'grid', gap: 2, minWidth: 0 }}>
         <label htmlFor={id} style={{ fontSize: 17, fontWeight: 600, color: concept.ink }}>{label}</label>
-        {helper && <span style={{ fontSize: 14, color: concept.muted }}>{helper}</span>}
+        {helper && <span id={`${id}-help`} style={{ fontSize: 14, color: concept.muted }}>{helper}</span>}
         {hiddenHelper && <span id={`${id}-help`} style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>{hiddenHelper}</span>}
       </div>
       <div style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'center', whiteSpace: 'nowrap', border: `1px solid ${error ? concept.dangerText : colors.borderStrong}`, borderRadius: 10, overflow: 'hidden', background: concept.surface }}>
@@ -403,7 +403,7 @@ export const CharterPage: React.FC = () => {
             id="charter-auto-act"
             label="Handle disputes, up to"
             legacyAriaLabel="Maximum autonomous dispute size (USD)"
-            hiddenHelper="Disputes above this total transaction amount are always escalated to human review."
+            helper="All proposed actions on disputes above this amount require your review, including messages and evidence."
             value={values.autoActMaxDisputeAmount}
             {...(errors.autoActMaxDisputeAmount ? { error: errors.autoActMaxDisputeAmount } : {})}
             onChange={(value) => patch({ autoActMaxDisputeAmount: value })}
