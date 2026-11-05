@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router';
 import { VERDICTS } from '@signoff/api-client';
 import type { Verdict } from '@signoff/api-client';
-import { VerdictChip, colors, concept, formatEventTime, getRuleExplanation, radius, spacing, typography } from '@signoff/ui';
+import { ConceptCard, VerdictChip, colors, concept, formatEventTime, getRuleExplanation, radius, spacing, typography } from '@signoff/ui';
 import type { ApiTimelineEvent } from './types';
 
 function isVerdict(value: string): value is Verdict {
@@ -188,6 +188,13 @@ export interface DecisionTimelineProps {
   reverse?: boolean;
 }
 
+const ActivityCard: React.FC<{ children: React.ReactNode; failed?: boolean }> = ({ children, failed = false }) => (
+  <ConceptCard as="li" style={{ display: 'grid', gap: 6, minWidth: 0, overflowWrap: 'anywhere',
+    ...(failed ? { borderLeft: `3px solid ${RED}`, background: colors.badgeCriticalBg } : {}) }}>
+    {children}
+  </ConceptCard>
+);
+
 /** Seller-facing outcomes are grouped by execution ID; missing evidence stays uncertain. */
 export const ActivitySummary: React.FC<{
   events: ApiTimelineEvent[];
@@ -230,24 +237,24 @@ export const ActivitySummary: React.FC<{
   const gates = sorted.filter(event => event.kind === 'GATE_DECIDED');
   const evidence = sorted.some(event => event.kind === 'EVIDENCE_BUILT');
   const received = sorted.some(event => event.kind === 'DISPUTE_SYNCED' || event.kind === 'WEBHOOK_RECEIVED');
-  return <ol data-testid="activity-summary" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 20 }}>
-    <li><strong>{statusText}</strong><div>{status === 'WAITING_FOR_BUYER_RESPONSE' ? 'The case is awaiting a buyer response.' : status === 'WAITING_FOR_SELLER_RESPONSE' ? 'Review the case and any action needed in PayPal.' : `Current status: ${status.replaceAll('_', ' ').toLowerCase()}.`}</div></li>
+  return <ol data-testid="activity-summary" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 14 }}>
+    <ActivityCard><strong>{statusText}</strong><div>{status === 'WAITING_FOR_BUYER_RESPONSE' ? 'The case is awaiting a buyer response.' : status === 'WAITING_FOR_SELLER_RESPONSE' ? 'Review the case and any action needed in PayPal.' : `Current status: ${status.replaceAll('_', ' ').toLowerCase()}.`}</div></ActivityCard>
     {latestAttempts.map((attempt, index) => {
       const label = attempt.action === 'SEND_MESSAGE' ? 'Reply' : attempt.action === 'PROVIDE_EVIDENCE' ? 'Evidence upload' : 'Action';
       const rejected = attempt.result === 'failed' && /HTTP 4\d\d/.test(attempt.error);
       const title = attempt.result === 'failed' ? (rejected ? `PayPal rejected the ${label.toLowerCase()}` : `${label} failed`)
         : attempt.accepted ? `PayPal accepted the ${label.toLowerCase()}`
           : attempt.result === 'pending' ? `${label} is being prepared` : `${label} sent to PayPal · awaiting confirmation`;
-      return <li key={`${attempt.sequence}-${index}`} style={attempt.result === 'failed' ? { borderLeft: `3px solid ${RED}`, padding: '8px 12px', background: colors.badgeCriticalBg } : undefined}><strong>{title}</strong>
+      return <ActivityCard key={`${attempt.sequence}-${index}`} failed={attempt.result === 'failed'}><strong>{title}</strong>
         {attempt.result === 'failed' && <div>{attempt.action === 'PROVIDE_EVIDENCE' ? 'Evidence was not added to the case by this submission. ' : 'The action was not completed. '}<a href="https://www.sandbox.paypal.com/disputes/" target="_blank" rel="noreferrer">Open the case in PayPal to review your options</a>.</div>}
         {!attempt.accepted && attempt.result === 'confirmed' && <div>Signoff recorded a confirmation, but the PayPal outcome has not been independently verified.</div>}
-      </li>;
+      </ActivityCard>;
     })}
-    {hasUnmatched && <li><strong>Some action outcomes need review</strong><div>Older records cannot be matched to an action. See Technical details.</div></li>}
-    {gates.map(event => 'verdict' in event && event.verdict !== 'ALLOW' ? <li key={event.id}><strong>{event.verdict === 'NEEDS_APPROVAL' ? 'Your review is required' : 'Signoff did not allow an action'}</strong> <Link to="/app/policy">View signing limits</Link></li> : null)}
-    {gates.some(event => 'verdict' in event && event.verdict === 'ALLOW') && <li><strong>{gates.some(event => 'rule_id' in event && event.rule_id === 'G7-01') ? 'Signoff allowed an action without approval' : 'Signoff allowed an action'}</strong> {onShowRule ? <a href="#activity-rule-history" onClick={onShowRule}>See the recorded rule</a> : <Link to="/app/policy">View signing limits</Link>}</li>}
-    {evidence && <li><strong>Signoff gathered evidence</strong><div>{orderCode ? `Order ${orderCode} · ` : ''}{amount}{simulated ? ' · Simulated delivery record' : ''}</div></li>}
-    {received && <li><strong>New dispute received from PayPal</strong><div>{reason}</div></li>}
+    {hasUnmatched && <ActivityCard><strong>Some action outcomes need review</strong><div>Older records cannot be matched to an action. See Technical details.</div></ActivityCard>}
+    {gates.map(event => 'verdict' in event && event.verdict !== 'ALLOW' ? <ActivityCard key={event.id}><strong>{event.verdict === 'NEEDS_APPROVAL' ? 'Your review is required' : 'Signoff did not allow an action'}</strong> <Link to="/app/policy">View signing limits</Link></ActivityCard> : null)}
+    {gates.some(event => 'verdict' in event && event.verdict === 'ALLOW') && <ActivityCard><strong>{gates.some(event => 'rule_id' in event && event.rule_id === 'G7-01') ? 'Signoff allowed an action without approval' : 'Signoff allowed an action'}</strong> {onShowRule ? <a href="#activity-rule-history" onClick={onShowRule}>See the recorded rule</a> : <Link to="/app/policy">View signing limits</Link>}</ActivityCard>}
+    {evidence && <ActivityCard><strong>Signoff gathered evidence</strong><div>{orderCode ? `Order ${orderCode} · ` : ''}{amount}{simulated ? ' · Simulated delivery record' : ''}</div></ActivityCard>}
+    {received && <ActivityCard><strong>New dispute received from PayPal</strong><div>{reason}</div></ActivityCard>}
   </ol>;
 };
 
