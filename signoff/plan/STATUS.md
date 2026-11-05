@@ -1,7 +1,5 @@
 # STATUS
 
-2026-11-05: At the owner's request, restored the Activity UI and its tests to their appearance before commit 554b0cf. The buyer-reply grounding change from that commit remains in place.
-
 2026-11-05 Activity and buyer reply: the local Activity default groups execution attempts, presents recorded PayPal acceptance only when a successful HTTP response is recorded, highlights failures with a PayPal recovery link, and keeps technical event details collapsed. New buyer messages use a conservative prepared response; simulated shipment data is explicitly labeled and model-generated delivery assertions are not passed through. Historical messages remain unchanged. `make check`: 694 backend and 237 frontend tests passed, plus lint/types/import contracts. Local mobile browser approval and Activity checks pass against the stub; the hosted case and real PayPal submission were not re-run.
 
 2026-11-05 evidence request correction: PayPal rejected the $105 case with INVALID_EVIDENCE_FILE; its action had notes and no files or tracking. The local request now sends one JSON `input` multipart part containing an `evidences` array, maps tracking `carrier` to PayPal's `carrier_name`, and numbers file parts. Wire-format tests cover notes-only, tracking and file cases against PayPal's documented shape. No historical case was replayed; a fresh sandbox submission and action-specific PayPal evidence remain unverified. Reference: https://developer.paypal.com/api/disputes/.

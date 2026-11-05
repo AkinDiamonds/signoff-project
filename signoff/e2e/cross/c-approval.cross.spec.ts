@@ -28,10 +28,14 @@ test('C: unchanged approval reaches the stub provider once @full', async ({ page
   expect((await stub.state(request)).disputes[disputeId]?.offer).toBeTruthy();
   await page.goto(`/app/disputes/${disputeId}`);
   await page.getByRole('tab', { name: 'Activity' }).tap();
+  await expect(page.getByTestId('activity-summary')).toBeVisible();
+  await expect(page.getByTestId('decision-timeline')).not.toBeVisible();
+  await page.getByText('Technical details', { exact: true }).first().click();
   await expect(page.getByTestId('decision-timeline')).toContainText('Approval recorded');
   await expect(page.getByTestId('decision-timeline')).toContainText('Confirmation recorded');
   await page.reload();
   await page.getByRole('tab', { name: 'Activity' }).tap();
+  await page.getByText('Technical details', { exact: true }).first().click();
   await expect(page.getByTestId('decision-timeline')).toContainText('Approval recorded');
   await expect(page.getByTestId('decision-timeline')).toContainText('Confirmation recorded');
 });

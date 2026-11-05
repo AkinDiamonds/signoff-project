@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router';
 import { VERDICTS } from '@signoff/api-client';
 import type { Verdict } from '@signoff/api-client';
 import { VerdictChip, colors, concept, formatEventTime, getRuleExplanation, radius, spacing, typography } from '@signoff/ui';
@@ -186,6 +187,69 @@ export interface DecisionTimelineProps {
   events: ApiTimelineEvent[];
   reverse?: boolean;
 }
+
+/** Seller-facing outcomes are grouped by execution ID; missing evidence stays uncertain. */
+export const ActivitySummary: React.FC<{
+  events: ApiTimelineEvent[];
+  status: string;
+  orderCode: string | null | undefined;
+  amount: React.ReactNode;
+  simulated: boolean;
+  reason: string;
+  onShowRule?: () => void;
+}> = ({ events, status, orderCode, amount, simulated, reason, onShowRule }) => {
+  const sorted = [...events].sort((a, b) => a.sequence_number - b.sequence_number);
+  const attempts = new Map<string, { action: string; result: string; accepted: boolean; sequence: number; error: string }>();
+  for (const event of sorted) {
+    const id = 'execution_id' in event && typeof event.execution_id === 'string' ? event.execution_id : null;
+    if (!id) continue;
+    if (event.kind === 'EXECUTION_INTENDED' && 'action_type' in event) {
+      attempts.set(id, { action: event.action_type, result: 'pending', accepted: false, sequence: event.sequence_number, error: '' });
+      continue;
+    }
+    const attempt = attempts.get(id);
+    if (!attempt) continue;
+    if (event.kind === 'EXECUTION_SENT') {
+      const payload = 'payload' in event ? event.payload : undefined;
+      const code = payload && typeof payload.http_status === 'number' ? payload.http_status : null;
+      attempt.accepted = code !== null && code >= 200 && code < 300;
+      attempt.result = 'sent';
+    } else if (event.kind === 'EXECUTION_CONFIRMED') attempt.result = 'confirmed';
+    else if (event.kind === 'EXECUTION_FAILED') {
+      attempt.result = 'failed';
+      attempt.error = 'error_message' in event ? event.error_message : '';
+    } else continue;
+    attempt.sequence = event.sequence_number;
+  }
+  const statusText = status === 'WAITING_FOR_BUYER_RESPONSE' ? 'PayPal is waiting for the buyer'
+    : status === 'WAITING_FOR_SELLER_RESPONSE' ? 'PayPal is waiting for your response'
+      : status === 'RESOLVED' ? 'PayPal marked this case resolved' : 'PayPal case status';
+  const latestAttempts = [...attempts.values()].sort((a, b) => b.sequence - a.sequence);
+  const hasUnmatched = sorted.some(event => ['EXECUTION_INTENDED', 'EXECUTION_SENT', 'EXECUTION_CONFIRMED', 'EXECUTION_FAILED'].includes(event.kind)
+    && (!('execution_id' in event) || !event.execution_id || !attempts.has(event.execution_id)));
+  const gates = sorted.filter(event => event.kind === 'GATE_DECIDED');
+  const evidence = sorted.some(event => event.kind === 'EVIDENCE_BUILT');
+  const received = sorted.some(event => event.kind === 'DISPUTE_SYNCED' || event.kind === 'WEBHOOK_RECEIVED');
+  return <ol data-testid="activity-summary" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 20 }}>
+    <li><strong>{statusText}</strong><div>{status === 'WAITING_FOR_BUYER_RESPONSE' ? 'The case is awaiting a buyer response.' : status === 'WAITING_FOR_SELLER_RESPONSE' ? 'Review the case and any action needed in PayPal.' : `Current status: ${status.replaceAll('_', ' ').toLowerCase()}.`}</div></li>
+    {latestAttempts.map((attempt, index) => {
+      const label = attempt.action === 'SEND_MESSAGE' ? 'Reply' : attempt.action === 'PROVIDE_EVIDENCE' ? 'Evidence upload' : 'Action';
+      const rejected = attempt.result === 'failed' && /HTTP 4\d\d/.test(attempt.error);
+      const title = attempt.result === 'failed' ? (rejected ? `PayPal rejected the ${label.toLowerCase()}` : `${label} failed`)
+        : attempt.accepted ? `PayPal accepted the ${label.toLowerCase()}`
+          : attempt.result === 'pending' ? `${label} is being prepared` : `${label} sent to PayPal · awaiting confirmation`;
+      return <li key={`${attempt.sequence}-${index}`} style={attempt.result === 'failed' ? { borderLeft: `3px solid ${RED}`, padding: '8px 12px', background: colors.badgeCriticalBg } : undefined}><strong>{title}</strong>
+        {attempt.result === 'failed' && <div>{attempt.action === 'PROVIDE_EVIDENCE' ? 'Evidence was not added to the case by this submission. ' : 'The action was not completed. '}<a href="https://www.sandbox.paypal.com/disputes/" target="_blank" rel="noreferrer">Open the case in PayPal to review your options</a>.</div>}
+        {!attempt.accepted && attempt.result === 'confirmed' && <div>Signoff recorded a confirmation, but the PayPal outcome has not been independently verified.</div>}
+      </li>;
+    })}
+    {hasUnmatched && <li><strong>Some action outcomes need review</strong><div>Older records cannot be matched to an action. See Technical details.</div></li>}
+    {gates.map(event => 'verdict' in event && event.verdict !== 'ALLOW' ? <li key={event.id}><strong>{event.verdict === 'NEEDS_APPROVAL' ? 'Your review is required' : 'Signoff did not allow an action'}</strong> <Link to="/app/policy">View signing limits</Link></li> : null)}
+    {gates.some(event => 'verdict' in event && event.verdict === 'ALLOW') && <li><strong>{gates.some(event => 'rule_id' in event && event.rule_id === 'G7-01') ? 'Signoff allowed an action without approval' : 'Signoff allowed an action'}</strong> {onShowRule ? <a href="#activity-rule-history" onClick={onShowRule}>See the recorded rule</a> : <Link to="/app/policy">View signing limits</Link>}</li>}
+    {evidence && <li><strong>Signoff gathered evidence</strong><div>{orderCode ? `Order ${orderCode} · ` : ''}{amount}{simulated ? ' · Simulated delivery record' : ''}</div></li>}
+    {received && <li><strong>New dispute received from PayPal</strong><div>{reason}</div></li>}
+  </ol>;
+};
 
 const GREEN = '#2E9E5B';
 const AMBER = '#E0A100';

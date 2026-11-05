@@ -3,11 +3,11 @@ import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createMemoryRouter, RouterProvider } from 'react-router';
+import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router';
 import { ThemeProvider } from '@signoff/ui';
 import { routes } from '../src/app/routes';
 import { mockFetch } from '../src/app/mockFetch';
-import { DecisionTimeline, ExecutionAttempts } from '../src/features/disputes/timeline';
+import { ActivitySummary, DecisionTimeline, ExecutionAttempts } from '../src/features/disputes/timeline';
 import type { ApiTimelineEvent } from '../src/features/disputes/types';
 
 function renderAt(path: string) {
@@ -23,6 +23,35 @@ function renderAt(path: string) {
 }
 
 describe('Disputes UI feature (Step 25)', () => {
+  it('summarizes separate evidence failure and accepted reply without raw technical errors', () => {
+    const base = { dispute_id: 'case', created_at: '2026-11-05T08:00:00Z', is_truncated: false };
+    const events: ApiTimelineEvent[] = [
+      { ...base, id: 'i1', sequence_number: 1, kind: 'EXECUTION_INTENDED', action_type: 'PROVIDE_EVIDENCE', execution_id: 'a' },
+      { ...base, id: 'f1', sequence_number: 2, kind: 'EXECUTION_FAILED', error_message: 'HTTP 400: INVALID_EVIDENCE_FILE', execution_id: 'a' },
+      { ...base, id: 'i2', sequence_number: 3, kind: 'EXECUTION_INTENDED', action_type: 'SEND_MESSAGE', execution_id: 'b' },
+      { ...base, id: 's2', sequence_number: 4, kind: 'EXECUTION_SENT', payload: { http_status: 200 }, execution_id: 'b' },
+      { ...base, id: 'c2', sequence_number: 5, kind: 'EXECUTION_CONFIRMED', external_id: '', execution_id: 'b' },
+      { ...base, id: 'e1', sequence_number: 6, kind: 'EVIDENCE_BUILT', evidence_strength: 'HIGH' },
+    ];
+    render(<MemoryRouter><ActivitySummary events={events} status="WAITING_FOR_BUYER_RESPONSE" orderCode="SIGG4XGPZU" amount="$105.00" simulated reason="Item not received" /></MemoryRouter>);
+    expect(screen.getByText('PayPal is waiting for the buyer')).toBeTruthy();
+    expect(screen.getByText('PayPal accepted the reply')).toBeTruthy();
+    expect(screen.getByText('PayPal rejected the evidence upload')).toBeTruthy();
+    expect(screen.getByText(/Evidence was not added/)).toBeTruthy();
+    expect(screen.getByText(/Simulated delivery record/)).toBeTruthy();
+    expect(screen.queryByText(/INVALID_EVIDENCE_FILE/)).toBeNull();
+  });
+
+  it('does not infer reply acceptance from confirmation alone', () => {
+    const base = { dispute_id: 'case', created_at: '2026-11-05T08:00:00Z', is_truncated: false };
+    const events: ApiTimelineEvent[] = [
+      { ...base, id: 'i', sequence_number: 1, kind: 'EXECUTION_INTENDED', action_type: 'SEND_MESSAGE', execution_id: 'b' },
+      { ...base, id: 'c', sequence_number: 2, kind: 'EXECUTION_CONFIRMED', external_id: '', execution_id: 'b' },
+    ];
+    render(<MemoryRouter><ActivitySummary events={events} status="WAITING_FOR_BUYER_RESPONSE" orderCode={null} amount="$105.00" simulated={false} reason="Item not received" /></MemoryRouter>);
+    expect(screen.getByText('Reply sent to PayPal · awaiting confirmation')).toBeTruthy();
+    expect(screen.queryByText('PayPal accepted the reply')).toBeNull();
+  });
   beforeEach(() => {
     vi.stubGlobal('fetch', mockFetch);
   });
