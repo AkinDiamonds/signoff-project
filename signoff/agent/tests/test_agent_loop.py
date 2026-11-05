@@ -32,6 +32,7 @@ from agent.app.agent.budget import DailyBudget
 from agent.app.agent.cache import ScenarioCache
 from agent.app.agent.llm import FakeProvider, LLMService, ProviderResponse
 from agent.app.agent.loop import (
+    grounded_buyer_reply,
     is_action_applicable_to_reason,
     normalize_and_order_actions,
     run_agent_loop,
@@ -73,6 +74,13 @@ from agent.app.paypal.models import (
 from agent.app.store.base import StoreAmbiguous, StoreUnavailable
 from agent.app.store.local_adapter import LocalStoreAdapter
 from agent.app.store_mock.seed import seed_scenarios
+
+
+def test_buyer_reply_never_invents_delivery_and_labels_simulation():
+    assert "simulated" in grounded_buyer_reply("Simulated shipment records are included.").lower()
+    assert "carrier" in grounded_buyer_reply("Simulated shipment records are included.").lower()
+    assert "delivered" not in grounded_buyer_reply(None).lower()
+    assert "delivered" not in grounded_buyer_reply("Order record available.").lower()
 
 
 @pytest.mark.asyncio
@@ -420,7 +428,7 @@ async def test_loop_deduplicates_and_orders_actions(db_session: Session):
     response_json = json.dumps(
         {
             "actions": [
-                {"action_type": "SEND_MESSAGE", "message": "First message"},
+                {"action_type": "SEND_MESSAGE", "message": "UPS marked your parcel delivered."},
                 {"action_type": "PROVIDE_EVIDENCE", "notes": "Fulfillment info"},
                 {"action_type": "PROVIDE_EVIDENCE", "notes": "Fulfillment info"},  # duplicate
             ]
@@ -445,6 +453,8 @@ async def test_loop_deduplicates_and_orders_actions(db_session: Session):
 
     action_types = [d.action_type for d in decisions]
     assert action_types == [ActionType.PROVIDE_EVIDENCE.value, ActionType.SEND_MESSAGE.value]
+    assert "marked your parcel delivered" not in decisions[1].action_payload["message"]
+    assert "reviewing your case" in decisions[1].action_payload["message"]
 
 
 # ==============================================================================

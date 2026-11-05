@@ -35,7 +35,7 @@ from agent.app.agent.tools import READ_TOOL_NAMES, get_dispute_tool
 from agent.app.approvals import create_approval
 from agent.app.db.models import AgentRun, Decision, EvidenceSnapshot, Execution, ReviewEvidenceSnapshot
 from agent.app.db.models import Dispute as DBDispute
-from agent.app.domain.actions import BaseProposedAction, compute_action_hash
+from agent.app.domain.actions import BaseProposedAction, SendMessage, compute_action_hash
 from agent.app.domain.enums import ActionType, ExecutionStatus, JobKind, TimelineEventKind, Verdict
 from agent.app.ledger.service import record_decision, record_ledger_event
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
@@ -56,6 +56,14 @@ from agent.app.store.scope import order_scope
 logger = logging.getLogger(__name__)
 
 MAX_ACTIONS_PER_PLAN = 2
+
+
+def grounded_buyer_reply(evidence_notes: str | None) -> str:
+    """Use only statements supported by the evidence, not model-invented delivery claims."""
+    if evidence_notes and "Simulated shipment records are included" in evidence_notes:
+        return ("Thank you for contacting us. Our demo store's shipment tracking is simulated "
+                "and is not carrier-confirmed. We are reviewing your case.")
+    return "Thank you for contacting us. We are reviewing your case and will follow up."
 
 
 def _record_review_evidence(
@@ -510,6 +518,9 @@ async def run_agent_loop(
                 logger.warning("Evidence proposal rejected because verified evidence is unavailable")
                 continue
             domain_action = verified_evidence
+
+        if domain_action.action_type == ActionType.SEND_MESSAGE:
+            domain_action = SendMessage(message=grounded_buyer_reply(evidence.notes if evidence else None))
 
         if missing_mode == 'settlement_only' and domain_action.action_type not in (
             ActionType.MAKE_OFFER, ActionType.ACCEPT_CLAIM
