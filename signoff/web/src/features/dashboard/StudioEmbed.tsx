@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { Button, Card, Skeleton, colors } from '@signoff/ui';
 import type { StudioData } from './types';
@@ -37,10 +37,15 @@ class StudioErrorBoundary extends React.Component<
 
 export interface StudioEmbedProps {
   data: StudioData;
+  assistant?: boolean;
 }
 
-export const StudioEmbed: React.FC<StudioEmbedProps> = ({ data }) => {
-  const [loaded, setLoaded] = useState(false);
+export const StudioEmbed: React.FC<StudioEmbedProps> = ({ data, assistant = false }) => {
+  const [loaded, setLoaded] = useState(assistant);
+  const region = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (assistant) region.current?.scrollIntoView?.({ block: 'start', inline: 'nearest' });
+  }, [assistant]);
 
   if (!loaded) {
     return (
@@ -62,11 +67,11 @@ export const StudioEmbed: React.FC<StudioEmbedProps> = ({ data }) => {
   }
 
   return (
-    <section aria-label="AG Studio dashboard" data-testid="studio-region">
+    <section ref={region} aria-label="AG Studio dashboard" data-testid="studio-region">
       <p>Interactive workspace uses a wider layout. Scroll within this region to inspect all widgets.</p>
       <div role="region" aria-label="Scrollable analytics workspace" tabIndex={0} style={{ overflowX: 'auto', maxWidth: '100%' }}>
         <div style={{ minWidth: 700 }}><StudioErrorBoundary>
-          <Suspense fallback={<Skeleton height="500px" />}><LazyStudio data={data} /></Suspense>
+          <Suspense fallback={<Skeleton height="500px" />}><LazyStudio data={data} assistant={assistant} /></Suspense>
         </StudioErrorBoundary></div>
       </div>
     </section>

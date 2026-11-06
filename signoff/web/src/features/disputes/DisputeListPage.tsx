@@ -53,6 +53,8 @@ export const DisputeListPage: React.FC = () => {
     return () => media?.removeEventListener?.('change', update);
   }, []);
   const location = useLocation();
+  const [mobileGrid, setMobileGrid] = useState(() => localStorage.getItem('signoff-disputes-layout') === 'grid');
+  const chooseLayout = (value: string) => { setMobileGrid(value === 'grid'); localStorage.setItem('signoff-disputes-layout', value); };
 
   // Parse filters from URL, falling back to defaults on invalid input
   const filters = useMemo(() => parseDisputeFilters(searchParams), [searchParams]);
@@ -288,6 +290,17 @@ export const DisputeListPage: React.FC = () => {
         options={[{ value: 'all', label: 'All' }, { value: 'attention', label: 'Attention' }, { value: 'waiting', label: 'Waiting' }, ...(desktop || filters.view === 'closed' ? [{ value: 'closed', label: 'Closed' }] : [])]}
       />
 
+      {!desktop && query.isSuccess && filteredItems.length > 0 && (
+        <ConceptSegmented
+          ariaLabel="Dispute layout"
+          idPrefix="dispute-layout"
+          testId="dispute-layout-toggle"
+          value={mobileGrid ? 'grid' : 'cards'}
+          onChange={chooseLayout}
+          options={[{ value: 'cards', label: 'Cards' }, { value: 'grid', label: 'Grid' }]}
+        />
+      )}
+
       {/* Main Content Area */}
       {query.isPending && (
         <Card testId="disputes-loading-card">
@@ -353,7 +366,7 @@ export const DisputeListPage: React.FC = () => {
 
       {query.isSuccess && filteredItems.length > 0 && (
         <>
-          {desktop ? <Suspense fallback={<Skeleton height="180px" />}><DisputesGrid rows={filteredItems} returnTo={`/app/disputes${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} /></Suspense> : <div data-testid="disputes-table" aria-label="Disputes" style={{ display: 'grid', gap: 14 }}>
+          {desktop || mobileGrid ? <Suspense fallback={<Skeleton height="180px" />}><DisputesGrid compact={!desktop} rows={filteredItems} returnTo={`/app/disputes${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} /></Suspense> : <div data-testid="disputes-table" aria-label="Disputes" style={{ display: 'grid', gap: 14 }}>
             {filteredItems.map(item => {
               const pill = disputePill(item);
               const due = formatDueShort(item.seller_response_due_date);

@@ -101,8 +101,8 @@ const STUDIO_AI_DEFAULTS: AgAiHarnessDefaults = {
   promptStarters: STUDIO_PROMPT_STARTERS,
 };
 
-export const StudioCanvas: React.FC<{ data: StudioData }> = ({ data }) => {
-  const [mode, setMode] = useState<'view' | 'edit'>('view');
+export const StudioCanvas: React.FC<{ data: StudioData; assistant?: boolean }> = ({ data, assistant = false }) => {
+  const [mode, setMode] = useState<'view' | 'edit'>(assistant ? 'edit' : 'view');
 
   useEffect(() => {
     if (data?.sources) {

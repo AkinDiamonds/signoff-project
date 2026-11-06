@@ -94,6 +94,7 @@ Run the cross-app suite with `make e2e-stack && make e2e`.
 
 ## Tools used and how
 
+- **Where to see AG Grid:** (1) **Disputes** on desktop, an AG Grid Enterprise grid with side bar, status-bar totals, grouping, CSV export and saved layout; on a phone use the **Cards / Grid** toggle. (2) **More → AI assistant (AG Studio)** opens Studio's native AI panel directly.
 - **AG Studio 3.0.0** (`ag-studio`, `ag-studio-react`): merchant dashboard workspace over live KPI and dispute data. No licence key; the expected watermark/console warning is documented in Known limits (ADR-015).
 - **FastAPI + SQLAlchemy + Alembic**: agent API, PostgreSQL models and forward-only migrations.
 - **PayPal REST APIs (sandbox)**: disputes, evidence, offers and webhooks; all mutating calls go through the executor.

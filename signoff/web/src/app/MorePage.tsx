@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { ConceptCard, ConceptListGroup, ConceptListRow, ConceptPageTitle, ConceptSectionLabel, ConceptIcon, type ConceptIconName } from '@signoff/ui';
 
 const groups: { title: string; links: [string, string, ConceptIconName][] }[] = [
-  { title: 'Workspace', links: [['/app/reports', 'Reports', 'chart'], ['/app/shipments', 'Shipments', 'truck'], ['/app/policy', 'Signing limits', 'sliders']] },
+  { title: 'Workspace', links: [['/app/reports', 'Reports', 'chart'], ['/app/reports?studio=ai', 'AI assistant (AG Studio)', 'chart'],['/app/shipments', 'Shipments', 'truck'], ['/app/policy', 'Signing limits', 'sliders']] },
   { title: 'Preferences', links: [['/app/settings', 'Settings', 'gear'], ['/guide', 'Help', 'help-circle']] },
   { title: 'Sandbox tools', links: [['/app/demo', 'Demo scenarios', 'layers'], ['/app/pool', 'Demo disputes', 'file']] },
 ];

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import {
   ConceptCard,
   ConceptDisclosure,
@@ -80,7 +80,8 @@ const SCOPE_OPTIONS = [
 export const ReportsPage: React.FC = () => {
   const demoSession = getDemoSession();
   const [scope, setScope] = useState<KpiScope>(demoSession ? 'mine' : 'all');
-  const [analyticsOpen] = useState(openOnDesktop);
+  const assistant = useSearchParams()[0].get('studio') === 'ai';
+  const [analyticsOpen] = useState(() => assistant || openOnDesktop());
   const kpisQuery = useKpis(scope, demoSession);
   const disputesQuery = useDashboardDisputes(scope, demoSession);
   const charterQuery = useCharter();
@@ -144,7 +145,7 @@ export const ReportsPage: React.FC = () => {
   const recovered = kpis ? { value: kpis.recovered, currency_code: 'USD' } : null;
 
   return (
-    <div style={{ display: 'grid', gap: 28, maxWidth: 900, minWidth: 0 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 28, maxWidth: 900, minWidth: 0 }}>
       <ConceptPageTitle title="Reports" testId="dashboard-title" />
       <ConceptSegmented ariaLabel="Report scope" idPrefix="reports-scope" options={SCOPE_OPTIONS} value={scope} onChange={(value) => setScope(value === 'all' ? 'all' : 'mine')} />
 
@@ -284,7 +285,7 @@ export const ReportsPage: React.FC = () => {
               <section aria-label="AG Studio Analytics" style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
                 <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>AG Studio Analytics Workspace</h2>
                 <div style={{ borderRadius: radius.card, border: `1px solid ${colors.border}`, padding: spacing[2] }}>
-                  <StudioEmbed data={studioData} />
+                  <StudioEmbed data={studioData} assistant={assistant} />
                 </div>
               </section>
             </div>

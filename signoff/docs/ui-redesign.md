@@ -50,4 +50,4 @@ The installed icon is the authoritative identity: white check on `#14532d`. Its 
 
 ## Dependency decision: desktop dispute grid
 
-Use the MIT-licensed AG Grid Community and React packages, pinned at 36.2.0, for the desktop dispute workspace. These packages are already present in the lockfile as AG Studio dependencies; declaring them directly makes the workspace's dependency explicit. The mobile view retains the labelled list, and case actions remain links to the existing full detail route. No enterprise-only functionality is required.
+Use the MIT-licensed AG Grid Community and React packages, pinned at 36.2.0, for the desktop dispute workspace. These packages are already present in the lockfile as AG Studio dependencies; declaring them directly makes the workspace's dependency explicit. The mobile view retains the labelled list, and case actions remain links to the existing full detail route. The dispute grid now also uses AG Grid Enterprise features (ADR-016).
