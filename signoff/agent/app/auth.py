@@ -18,13 +18,15 @@ from agent.app.errors import AppError
 from agent.app.settings import AppEnv, Settings
 
 SESSION_HOURS = 8
+MIN_PASSWORD_LENGTH = 6
+MAX_FAILED_LOGINS = 50
 router = APIRouter(prefix="/api/auth", tags=["Owner access"])
 
 
 def hash_password(password: str) -> str:
     """Create an scrypt credential for secure server configuration, never a public signup."""
-    if not 12 <= len(password) <= 1024:
-        raise ValueError("Use a password between 12 and 1024 characters")
+    if not MIN_PASSWORD_LENGTH <= len(password) <= 1024:
+        raise ValueError(f"Use a password between {MIN_PASSWORD_LENGTH} and 1024 characters")
     salt = secrets.token_bytes(16)
     digest = hashlib.scrypt(password.encode(), salt=salt, n=16384, r=8, p=5, dklen=32)
     return f"scrypt$16384$8$5${salt.hex()}${digest.hex()}"
@@ -191,7 +193,7 @@ def login(
         )
         or 0
     )
-    if failures >= 5:
+    if failures >= MAX_FAILED_LOGINS:
         raise AppError("RATE_LIMITED", "Too many sign-in attempts. Try again in 15 minutes.", status_code=429)
     password_ok = verify_password(payload.password.get_secret_value(), settings.merchant_password_hash)
     email_ok = hmac.compare_digest(

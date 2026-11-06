@@ -25,6 +25,7 @@ from agent.app.notifications.service import record_notification
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.paypal.read_client import PayPalReadClient
 from agent.app.settings import AppEnv, Settings
+from agent.app.sync.fresh_start import is_before_cutoff
 from agent.app.sync.state import (
     is_dispute_resolved,
     map_dispute_state_to_db_status,
@@ -162,6 +163,10 @@ async def sync_dispute(
             is_unavailable=True,
             error=str(err),
         )
+
+    # Disputes from before a fresh start are not imported again (webhook or reconcile).
+    if session.get(Dispute, clean_id) is None and is_before_cutoff(session, dispute_model.create_time):
+        return SyncResult(dispute_id=clean_id, fingerprint=None, status=None, fingerprint_changed=False)
 
     # 2. Compute deterministic state fingerprint
     new_fingerprint = compute_dispute_fingerprint(dispute_model)

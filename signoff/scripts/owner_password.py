@@ -6,7 +6,7 @@ from agent.app.auth import hash_password
 
 
 def main() -> None:
-    password = getpass("Owner password (12+ characters): ")
+    password = getpass("Owner password (6+ characters): ")
     confirmation = getpass("Confirm password: ")
     if password != confirmation:
         raise SystemExit("Passwords do not match; no credential generated")

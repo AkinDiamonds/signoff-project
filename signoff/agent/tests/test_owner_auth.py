@@ -231,7 +231,7 @@ def test_expired_session_is_rejected(owner_app):
 
 def test_login_rate_limit_persists_across_clients(owner_app):
     app, _, _ = owner_app
-    for _ in range(5):
+    for _ in range(50):
         response = TestClient(app).post("/api/auth/login", json={"email": "wrong@example.test", "password": "wrong"})
         assert response.status_code == 401
     assert (

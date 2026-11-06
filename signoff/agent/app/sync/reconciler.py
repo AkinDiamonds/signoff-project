@@ -20,6 +20,7 @@ from agent.app.db.models import Dispute, Job, LedgerEvent
 from agent.app.domain.enums import JobKind, JobStatus, TimelineEventKind
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.paypal.read_client import PayPalReadClient
+from agent.app.sync.fresh_start import is_before_cutoff
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,8 @@ async def reconcile_disputes(
     capped_summaries = all_summaries[:max_items]
 
     for summary in capped_summaries:
+        if is_before_cutoff(session, summary.create_time):
+            continue
         checked_count += 1
         dispute_id = summary.dispute_id
         summary_fp = str(compute_dispute_fingerprint(summary))
