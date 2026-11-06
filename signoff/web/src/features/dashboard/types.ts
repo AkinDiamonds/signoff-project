@@ -141,17 +141,20 @@ export function questionToView(question: string): GridView | null {
   return null;
 }
 
+// The agent rejects any single message over 4,000 characters.
+const MAX_ASSISTANT_MESSAGE_CHARS = 4_000;
+
 export function buildAssistantRequest(question: string, kpis: Kpis, items: readonly DisputeItem[]): AssistantRequest {
-  const context = {
-    kpis: toStudioKpiRows(kpis),
-    disputes: toStudioDisputeRows(items).slice(0, 20),
-  };
-  return {
-    messages: [
-      {
-        role: 'user',
-        content: `Dashboard data (JSON):\n${JSON.stringify(context)}\n\nQuestion: ${question}`,
-      },
-    ],
-  };
+  const kpiRows = toStudioKpiRows(kpis).map(({ metric, value }) => ({ metric, value }));
+  const disputes = toStudioDisputeRows(items)
+    .slice(0, 20)
+    .map(({ id, status, reason, amount_display, verdict, due_at }) => ({ id, status, reason, amount_display, verdict, due_at }));
+  const build = (rows: typeof disputes) =>
+    `Dashboard data (JSON):\n${JSON.stringify({ kpis: kpiRows, disputes: rows })}\n\nQuestion: ${question}`;
+
+  let content = build(disputes);
+  for (let count = disputes.length - 1; content.length > MAX_ASSISTANT_MESSAGE_CHARS && count >= 0; count -= 1) {
+    content = build(disputes.slice(0, count));
+  }
+  return { messages: [{ role: 'user', content }] };
 }
