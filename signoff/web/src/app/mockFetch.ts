@@ -470,7 +470,9 @@ export const mockFetch: typeof fetch = async (input, init) => {
       }
       const questionIndex = question.lastIndexOf('Question:');
       const asked = (questionIndex >= 0 ? question.slice(questionIndex + 'Question:'.length) : question).toLowerCase();
-      const answer = asked.includes('due') || asked.includes('deadline')
+      const answer = asked.includes('approval')
+        ? '**No cases** are waiting for your approval right now.\n- PP-D-1001: USD 42.00, overdue\n- PP-D-1002: USD 107.50, no deadline\nBoth are still open with PayPal. The grid below shows the approval queue.'
+        : asked.includes('due') || asked.includes('deadline')
         ? 'PP-D-1001 is due within the next week. PP-D-1002 has no seller response deadline.'
         : asked.includes('auto') || asked.includes('share')
         ? '75% of closed disputes were auto-resolved without human intervention.'

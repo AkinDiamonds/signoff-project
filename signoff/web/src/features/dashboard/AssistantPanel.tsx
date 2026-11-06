@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { ConceptButton, ConceptPill, ConceptSearchField, concept } from '@signoff/ui';
 import { ApiQueryError } from '../../app/queries';
 import { askAssistant } from './api';
+import { AnswerView } from './AnswerView';
 import {
   SAMPLE_QUESTIONS,
   buildAssistantRequest,
@@ -13,9 +14,11 @@ import {
 export interface AssistantPanelProps {
   kpis: Kpis;
   disputes: readonly DisputeItem[];
+  samples?: readonly string[];
+  onAsked?: (question: string) => void;
 }
 
-export const AssistantPanel: React.FC<AssistantPanelProps> = ({ kpis, disputes }) => {
+export const AssistantPanel: React.FC<AssistantPanelProps> = ({ kpis, disputes, samples = SAMPLE_QUESTIONS, onAsked }) => {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState<AssistantResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +37,7 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ kpis, disputes }
     try {
       setAnswer(await askAssistant(buildAssistantRequest(trimmed, kpis, disputes)));
       setQuestion('');
+      onAsked?.(trimmed);
     } catch (caught) {
       setError(
         caught instanceof ApiQueryError
@@ -76,7 +80,7 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ kpis, disputes }
       </form>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }} aria-label="Sample questions" role="group">
-        {SAMPLE_QUESTIONS.map((sample, index) => (
+        {samples.map((sample, index) => (
           <ConceptButton
             key={sample}
             variant="secondary"
@@ -96,9 +100,7 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ kpis, disputes }
         </p>
       )}
       {answer && (
-        <div data-testid="assistant-answer" style={{ background: concept.subtle, borderRadius: 12, padding: 16, whiteSpace: 'pre-wrap' }}>
-          {answer.answer}
-        </div>
+        <AnswerView answer={answer.answer} knownIds={disputes.map((item) => item.id)} />
       )}
     </section>
   );

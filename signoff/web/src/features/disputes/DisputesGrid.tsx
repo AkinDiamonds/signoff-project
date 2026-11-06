@@ -123,6 +123,10 @@ export const DisputesGrid: React.FC<{ rows: DisputeListItem[]; returnTo: string;
       },
       comparator: (a: number | null, b: number | null) => (a ?? Infinity) - (b ?? Infinity),
     },
+    { colId: 'id', headerName: 'Dispute ID', hide: true, valueGetter: p => p.data?.id },
+    { colId: 'verdict', headerName: 'Review decision', hide: true, valueGetter: p => p.data?.latest_verdict ?? '' },
+    { colId: 'created', headerName: 'Created', hide: true, valueGetter: p => p.data?.created_at },
+    { colId: 'updated', headerName: 'Updated', hide: true, valueGetter: p => p.data?.updated_at },
   ], [compact, open]);
 
   const onGridReady = (event: GridReadyEvent<DisputeListItem>) => { api.current = event.api; };
@@ -146,10 +150,12 @@ export const DisputesGrid: React.FC<{ rows: DisputeListItem[]; returnTo: string;
   const height = Math.min(Math.max(rows.length * ROW_HEIGHT + OVERHEAD, 340), 700);
   return (
     <div aria-label="Disputes grid" data-testid="disputes-grid" style={{ display: 'grid', gap: 10, minWidth: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-        <Button variant="secondary" testId="grid-export" onClick={() => api.current?.exportDataAsCsv({ fileName: 'signoff-disputes.csv' })}>Export CSV</Button>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
+        <span data-testid="built-with-ag-grid" style={{ marginRight: 'auto', fontSize: 12, fontWeight: 650, color: concept.muted, border: `1px solid ${concept.border}`, borderRadius: 999, padding: '3px 10px' }}>Built with AG Grid</span>
+        <Button variant="secondary" testId="grid-export" onClick={() => api.current?.exportDataAsCsv({ fileName: 'signoff-disputes.csv', allColumns: true })}>Export CSV</Button>
         <Button variant="secondary" testId="grid-reset" onClick={reset}>Reset layout</Button>
       </div>
+      <p data-testid="grid-match-label" aria-live="polite" style={{ margin: 0, fontSize: 14, color: concept.muted }}>Showing {rows.length} matching {rows.length === 1 ? 'case' : 'cases'}</p>
       <div style={compact ? undefined : { height }}>
         <AgGridReact<DisputeListItem>
           key={layoutVersion}

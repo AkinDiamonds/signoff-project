@@ -36,6 +36,9 @@ import {
   VALID_STATUSES,
 } from './filterSchema';
 import type { DisputeListItem } from './types';
+import { AssistantPanel } from '../dashboard/AssistantPanel';
+import { useDashboardDisputes, useKpis } from '../dashboard/api';
+import { DISPUTES_PAGE_QUESTIONS, questionToView } from '../dashboard/types';
 const DisputesGrid = lazy(() => import('./DisputesGrid').then(module => ({ default: module.DisputesGrid })));
 
 export const DisputeStatusBadge: React.FC<{ status: string; testId?: string }> = ({
@@ -143,6 +146,7 @@ export const DisputeListPage: React.FC = () => {
   };
 
   const filteredItems = displayedItems;
+  const assistantData = { kpis: useKpis('all', null), disputes: useDashboardDisputes('all', null) };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
@@ -281,6 +285,17 @@ export const DisputeListPage: React.FC = () => {
         {filters.scope === 'mine' && <button type="button" onClick={() => updateFilter({ scope: 'all' })}>My demo session ×</button>}
         <button type="button" onClick={() => updateFilter({ status: 'ALL', reason: 'ALL', scope: 'all', q: '' })}>Clear all</button>
       </div>}
+
+      {assistantData.kpis.data && (
+        <ConceptCard padding={18}>
+          <AssistantPanel
+            kpis={assistantData.kpis.data}
+            disputes={assistantData.disputes.data ?? displayedItems}
+            samples={DISPUTES_PAGE_QUESTIONS}
+            onAsked={question => { const view = questionToView(question); if (view) updateFilter({ view, status: 'ALL' }); }}
+          />
+        </ConceptCard>
+      )}
 
       <ConceptSegmented
         ariaLabel="Dispute views"

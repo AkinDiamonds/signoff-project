@@ -53,4 +53,20 @@ test.describe('AG Grid disputes workspace', () => {
     await expect(region).toContainText('open disputes');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   });
+
+  test('assistant chip formats the answer, filters the grid, and CSV export matches the view', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'merchant-desktop');
+    await page.goto('/app/disputes');
+    await page.getByTestId('assistant-sample-0').click();
+    await expect(page.getByTestId('assistant-answer').locator('strong').first()).toBeVisible();
+    await expect(page).toHaveURL(/view=attention/);
+    await page.getByRole('button', { name: 'All', exact: true }).click();
+    await expect(page.getByTestId('grid-match-label')).toContainText('Showing 2 matching cases');
+    await expect(page.getByTestId('built-with-ag-grid')).toBeVisible();
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByTestId('grid-export').click()]);
+    const text = await (await import('node:fs/promises')).readFile(await download.path(), 'utf8');
+    expect(text).toContain('Dispute ID');
+    expect(text).toContain('PP-D-1001');
+    expect(text).toContain('PP-D-1002');
+  });
 });

@@ -123,6 +123,24 @@ export const SAMPLE_QUESTIONS: readonly string[] = [
   'Explain what happened on PP-D-1001.',
 ];
 
+export const DISPUTES_PAGE_QUESTIONS: readonly string[] = [
+  'Which disputes are waiting for my approval?',
+  'Which disputes are due soon?',
+  'Which disputes are waiting for the buyer?',
+  'Explain what happened on PP-D-1001.',
+];
+
+export type GridView = 'attention' | 'waiting' | 'closed';
+
+// Only these phrases move the grid; free-text model output never sets a filter.
+export function questionToView(question: string): GridView | null {
+  const q = question.toLowerCase();
+  if (/waiting for (the )?buyer/.test(q)) return 'waiting';
+  if (/approval|need(s)? (my )?attention/.test(q)) return 'attention';
+  if (/closed|resolved/.test(q)) return 'closed';
+  return null;
+}
+
 export function buildAssistantRequest(question: string, kpis: Kpis, items: readonly DisputeItem[]): AssistantRequest {
   const context = {
     kpis: toStudioKpiRows(kpis),
