@@ -14,13 +14,17 @@ test('A: evidence submitted and execution confirmed @smoke @full', async ({ page
 
   await page.goto(`/app/disputes/${disputeId}`);
   await expect(page.getByTestId('dispute-detail-id')).toContainText(disputeId);
-  await expect(page.getByTestId('decision-timeline')).toBeVisible();
-  await expect(page.getByTestId('evidence-strength-badge')).toBeVisible();
   await expect(page.getByTestId('detail-verdict-chip')).toContainText('Allow');
+  await page.getByRole('tab', { name: 'Evidence' }).click();
+  await expect(page.getByTestId('evidence-strength-badge')).toBeVisible();
+  await page.getByRole('tab', { name: 'Activity' }).click();
+  await page.getByText('Technical details', { exact: true }).first().click();
+  await expect(page.getByTestId('decision-timeline')).toBeVisible();
   await expect(page.getByTestId('decision-timeline')).toContainText('Confirmation recorded');
   await expect(page.getByTestId('decision-timeline')).toContainText('require independent verification');
   await page.reload();
-  await expect(page.getByTestId('detail-verdict-chip')).toContainText('Allow');
+  await page.getByRole('tab', { name: 'Activity' }).click();
+  await page.getByText('Technical details', { exact: true }).first().click();
   await expect(page.getByTestId('decision-timeline')).toContainText('Confirmation recorded');
 
   const state = await stub.state(request);

@@ -14,9 +14,9 @@ test('B: in-transit dispute requires review by default @smoke @full', async ({ p
   const { disputeId } = await createScenario(request, 'B', session.id);
   await stub.emit(request, disputeId, ['CUSTOMER.DISPUTE.CREATED']);
   const items = await waitForTimeline(request, disputeId, (events) =>
-    events.some(event => event.kind === 'NO_ACTION' && 'reason' in event && event.reason === 'tracking_requires_review'));
+    hasKind(events, 'APPROVAL_REQUESTED'));
 
-  expect(hasKind(items, 'APPROVAL_REQUESTED')).toBe(false);
+  expect(hasKind(items, 'APPROVAL_REQUESTED')).toBe(true);
   expect(hasKind(items, 'EXECUTION_INTENDED')).toBe(false);
   expect(hasKind(items, 'EXECUTION_CONFIRMED')).toBe(false);
 
@@ -30,19 +30,25 @@ test('B: in-transit dispute requires review by default @smoke @full', async ({ p
   await expect(page.getByRole('region', { name: 'Open dispute summary' })).toContainText(String(after.open_disputes));
   await expect(page.getByRole('region', { name: 'Needs attention' }).locator(`a[href="/app/disputes/${disputeId}"]`)).toBeVisible();
   await page.goto('/app/reports');
-  await expect(page.getByTestId('kpi-open-disputes')).toHaveText(String(after.open_disputes));
+  const reportKpis: Kpis = await (await request.get(`${AGENT_URL}/api/kpis?scope=mine`, {
+    headers: { 'X-Demo-Session': session.id },
+  })).json();
+  await expect(page.getByTestId('kpi-open-disputes')).toHaveText(String(reportKpis.open_disputes));
   await expect(page.getByTestId('kpi-autonomous-share')).toBeVisible();
   await expect(page.getByTestId('kpi-autonomous-share')).toHaveText(
-    after.share_auto_resolved === null ? '—' : `${Math.round(after.share_auto_resolved * 100)}%`
+    reportKpis.share_auto_resolved === null ? '—' : `${Math.round(reportKpis.share_auto_resolved * 100)}%`
   );
   await page.goto(`/app/disputes/${disputeId}`);
-  await expect(page.getByText('Delivery evidence needs your review', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('open-approval-card-button')).toBeVisible();
   await expect(page.getByTestId('agent-in-progress-banner')).toHaveCount(0);
   await page.reload();
-  await expect(page.getByText('Delivery evidence needs your review', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('open-approval-card-button')).toBeVisible();
   await page.goto(`/app/disputes?q=${encodeURIComponent(disputeId)}`);
   await expect(page.locator(`a[href="/app/disputes/${disputeId}"]`)).toBeVisible();
   await page.goBack();
   await expect(page.getByTestId('dispute-detail-id')).toContainText(disputeId);
-  await expect(page.getByText('Delivery evidence needs your review', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('open-approval-card-button')).toBeVisible();
+  await page.getByTestId('open-approval-card-button').click();
+  await expect(page.getByTestId('approval-approve-button')).toBeVisible();
+  await expect(page.getByTestId('proposed-action-type')).toContainText('ACCEPT CLAIM');
 });

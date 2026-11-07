@@ -7424,6 +7424,7 @@
             "required": false,
             "schema": {
               "default": "all",
+              "description": "'mine' limits totals to the X-Demo-Session",
               "enum": [
                 "all",
                 "mine"

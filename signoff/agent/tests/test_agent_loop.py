@@ -755,6 +755,42 @@ async def test_missing_delivery_without_settlement_proposal_remains_in_review(db
 # ==============================================================================
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize('case', ['permitted', 'not_permitted', 'resolved', 'expired', 'small'])
+async def test_missing_delivery_refund_card_requires_waivable_gate(db_session, case):
+    from agent.app.db.models import Approval
+    from agent.app.paypal.models import AcceptClaimOption
+
+    class MissingTracking(LocalStoreAdapter):
+        def find_order(self, transaction_id):
+            order = super().find_order(transaction_id)
+            return replace(order, shipments=()) if order else None
+
+    dispute = make_dispute(
+        amount_str='20.00' if case == 'small' else '300.00',
+        status=DisputeStatus.RESOLVED if case == 'resolved' else DisputeStatus.WAITING_FOR_SELLER_RESPONSE,
+        due_date=datetime.now(UTC) - timedelta(days=1) if case == 'expired' else None,
+        allowed_options=AllowedResponseOptions() if case == 'not_permitted' else AllowedResponseOptions(
+            accept_claim=AcceptClaimOption(accept_claim_types=['REFUND'])),
+        links=[] if case == 'not_permitted' else [Link(href='https://example.com/accept',
+                                                     rel='accept_claim', method='POST')],
+    )
+    result = await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute,
+                                  store_adapter=MissingTracking(db_session))
+    assert result.human_needed
+    approvals = list(db_session.scalars(select(Approval)))
+    assert len(approvals) == (1 if case == 'permitted' else 0)
+    if case == 'permitted':
+        decision = db_session.get(Decision, approvals[0].decision_id)
+        assert decision.action_type == 'ACCEPT_CLAIM'
+        assert decision.verdict == 'NEEDS_APPROVAL'
+        assert decision.action_payload['amount']['value'] == '300.00'
+        await run_agent_loop(db_session, dispute.dispute_id, dispute=dispute,
+                             store_adapter=MissingTracking(db_session))
+        assert len(list(db_session.scalars(select(Approval)))) == 1
+    assert db_session.scalar(select(Job).where(Job.kind == JobKind.EXECUTE_DECISION.value)) is None
+
+
 def test_sanitize_buyer_text_long_and_non_english():
     # Very long English text
     long_text = "Where is my item? " * 100
