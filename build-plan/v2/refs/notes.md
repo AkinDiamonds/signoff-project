@@ -1,12 +1,7 @@
 # Measured Reference Values (Shopify Admin Polaris)
 
 Reconciled from reference screenshots in `build-plan/v2/refs/`:
-- `01-home.png` / `home(shopify).png` -> Copied by `/app` (Dashboard)
-- `02-orders-list.png` / `orders-list(shopify).png` -> Copied by `/app/disputes` (Disputes List)
-- `03-order-detail.png` / `order-details(shopify).png` -> Copied by `/app/disputes/:id` (Dispute Detail)
-- `04-settings-form.png` / `settings(shopify).png` -> Copied by `/app/charter` (Charter Settings)
-- `05-empty-state.png` / `empty_state(shopify).png` -> Copied by empty state components across lists
-- `06-confirm-sheet.png` / `confirmation-sheet(shopify).png` -> Copied by `/approve/:token` (Approval Page)
+Historical third-party reference screenshots were removed from the current tree because redistribution permission was not established.
 
 ## Measured Token Table
 

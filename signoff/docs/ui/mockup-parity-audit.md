@@ -3,7 +3,7 @@
 **Audit date:** 2026-11-04
 **Deployed URL:** https://signoff-web.onrender.com
 **Viewport used:** 390 × 844 CSS px, DPR 3, mobile UA, Chrome (Playwright `channel: 'chrome'`)
-**Mockups:** `signoff/docs/ui/mockups/*.png` (six boards, 15 merchant screens)
+**Mockups:** Six historical concept boards covering 15 merchant screens; the image files have been removed from the current tree.
 **Baseline screenshots:** `scratch/ui-audit/shots/` (`01-home.png` … `15-demo-scenarios.png`, `detail-clip-*.png`)
 
 ---

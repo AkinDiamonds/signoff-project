@@ -1,5 +1,7 @@
 # Build plan
 
+> **Historical archive:** These plans document earlier development and may contain outdated instructions, assumptions, and status reports. For the current demo and judge instructions, see the [project README](../README.md).
+
 Step-by-step implementation plan from the repo and license to the point where both sides (buyer storefront and merchant dashboard) can be tested end to end, **right before deployment**. Deployment is a separate plan, seeded by step 36.
 
 ## What gets built

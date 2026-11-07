@@ -1,5 +1,7 @@
 # Plan index
 
+> **Historical archive:** These early plans may contain outdated instructions and status. See the [project README](../../README.md) for the current demo and judge instructions.
+
 | File | Purpose |
 |---|---|
 | `STATUS.md` | Living state: phase, last session, next 3 actions, blockers. **Read first, update last.** |
