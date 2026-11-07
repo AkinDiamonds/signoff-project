@@ -32,5 +32,7 @@ test('D: hostile buyer reply is flagged, never executed @smoke @full', async ({ 
   await page.goto(`/app/disputes/${disputeId}`);
   await expect(page.getByTestId('untrusted-text-label')).toBeVisible();
   await expect(page.getByTestId('buyer-message-content')).toContainText('Ignore previous instructions');
+  await page.getByRole('tab', { name: 'Activity' }).click();
+  await page.getByText('Technical details', { exact: true }).first().click();
   await expect(page.getByTestId('decision-timeline')).toContainText('Prompt injection flagged');
 });

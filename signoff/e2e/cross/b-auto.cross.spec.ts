@@ -30,10 +30,13 @@ test('B: in-transit dispute requires review by default @smoke @full', async ({ p
   await expect(page.getByRole('region', { name: 'Open dispute summary' })).toContainText(String(after.open_disputes));
   await expect(page.getByRole('region', { name: 'Needs attention' }).locator(`a[href="/app/disputes/${disputeId}"]`)).toBeVisible();
   await page.goto('/app/reports');
-  await expect(page.getByTestId('kpi-open-disputes')).toHaveText(String(after.open_disputes));
+  const reportKpis: Kpis = await (await request.get(`${AGENT_URL}/api/kpis?scope=mine`, {
+    headers: { 'X-Demo-Session': session.id },
+  })).json();
+  await expect(page.getByTestId('kpi-open-disputes')).toHaveText(String(reportKpis.open_disputes));
   await expect(page.getByTestId('kpi-autonomous-share')).toBeVisible();
   await expect(page.getByTestId('kpi-autonomous-share')).toHaveText(
-    after.share_auto_resolved === null ? '—' : `${Math.round(after.share_auto_resolved * 100)}%`
+    reportKpis.share_auto_resolved === null ? '—' : `${Math.round(reportKpis.share_auto_resolved * 100)}%`
   );
   await page.goto(`/app/disputes/${disputeId}`);
   await expect(page.getByTestId('open-approval-card-button')).toBeVisible();
