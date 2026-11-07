@@ -35,12 +35,13 @@ from agent.app.agent.tools import READ_TOOL_NAMES, get_dispute_tool
 from agent.app.approvals import create_approval
 from agent.app.db.models import AgentRun, Decision, EvidenceSnapshot, Execution, ReviewEvidenceSnapshot
 from agent.app.db.models import Dispute as DBDispute
-from agent.app.domain.actions import BaseProposedAction, SendMessage, compute_action_hash
+from agent.app.domain.actions import AcceptClaim, BaseProposedAction, SendMessage, compute_action_hash
 from agent.app.domain.enums import ActionType, ExecutionStatus, JobKind, TimelineEventKind, Verdict
 from agent.app.ledger.service import record_decision, record_ledger_event
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
 from agent.app.paypal.models import Dispute, parse_dispute
 from agent.app.paypal.read_client import PayPalReadClient
+from agent.app.policy.approval import is_waivable
 from agent.app.policy.charter import get_or_seed_charter, to_charter_response
 from agent.app.policy.gate import GateDecision, GateInput, HistoryFlags, evaluate_gate
 from agent.app.policy.missing_evidence import evaluate_missing_delivery
@@ -288,6 +289,45 @@ async def run_agent_loop(
         _record_review_evidence(session, dispute_id, "tracking_requires_review",
                                 "Delivery evidence is missing or unsafe; human review required.",
                                 now_dt, order_context)
+        # Prepare a full-refund card only when the existing gate requires
+        # merchant approval and all triggered rules can actually be waived.
+        # This review path never queues execution, even for an ALLOW verdict.
+        if reason_val == 'MERCHANDISE_OR_SERVICE_NOT_RECEIVED':
+            refund_action = AcceptClaim(amount=paypal_dispute.dispute_amount)
+            prior_hashes = tuple(session.scalars(
+                select(Decision.action_hash).join(Execution, Execution.decision_id == Decision.id)
+                .where(Decision.dispute_id == dispute_id,
+                       Execution.status == ExecutionStatus.CONFIRMED.value)
+            ))
+            review_decision = evaluate_gate(GateInput(
+                action=refund_action, dispute=paypal_dispute, charter=charter_entity, now=now_dt,
+                history_flags=HistoryFlags(buyer_dispute_count_in_window=buyer_history.prior_disputes),
+                prior_executions=prior_hashes,
+            ))
+            if review_decision.verdict == Verdict.NEEDS_APPROVAL and is_waivable(review_decision):
+                existing = session.scalar(select(Decision).where(
+                    Decision.dispute_id == dispute_id,
+                    Decision.dispute_fingerprint == review_decision.dispute_fingerprint,
+                    Decision.action_hash == review_decision.action_hash,
+                    Decision.charter_version == review_decision.charter_version,
+                ))
+                if existing is None:
+                    recorded = record_decision(
+                        session=session, dispute_id=dispute_id, action_type=refund_action.action_type,
+                        action_payload=refund_action.model_dump(mode='json'), verdict=review_decision.verdict,
+                        rule_id=review_decision.rule_id, reason=review_decision.reason,
+                        action_hash=review_decision.action_hash,
+                        dispute_fingerprint=review_decision.dispute_fingerprint,
+                        charter_version=review_decision.charter_version,
+                        also_triggered=review_decision.also_triggered, emit_ledger_event=True,
+                    )
+                    create_approval(session=session, decision=recorded, dispute=paypal_dispute, now=now_dt)
+                session.commit()
+                return AgentLoopResult(
+                    status='completed', run_id=effective_run_id, dispute_id=dispute_id,
+                    fingerprint=current_fingerprint, human_needed=True, actions_count=1,
+                    decisions=(review_decision,),
+                )
         record_ledger_event(
             session, dispute_id, TimelineEventKind.NO_ACTION,
             {"reason": "tracking_requires_review",
