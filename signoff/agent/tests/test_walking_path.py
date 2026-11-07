@@ -118,10 +118,10 @@ async def test_scenario_b_end_to_end_walking_path(db_session: Session):
     assert result.success
     assert result.scenario_id == "B"
     assert result.dispute_id == "PP-SCENARIO-B"
-    assert result.verdict == "HUMAN_REVIEW"
-    assert result.rule_id == "tracking_requires_review"
+    assert result.verdict == "NEEDS_APPROVAL"
+    assert result.rule_id == "G3-02"
     assert result.execution_status == "NOT_STARTED"
-    assert TimelineEventKind.NO_ACTION.value in result.timeline_event_kinds
+    assert TimelineEventKind.APPROVAL_REQUESTED.value in result.timeline_event_kinds
     assert TimelineEventKind.EXECUTION_INTENDED.value not in result.timeline_event_kinds
     assert TimelineEventKind.EXECUTION_CONFIRMED.value not in result.timeline_event_kinds
 

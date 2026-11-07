@@ -286,19 +286,22 @@ async def run_scenario(
         llm_service=service,
     )
     db_session.commit()
-    if scenario_id == "B" and loop_result.human_needed and loop_result.error == "tracking_requires_review":
+    if scenario_id == "B" and loop_result.human_needed:
         timeline, _ = get_timeline_events(db_session, config["dispute_id"], limit=100)
         event_kinds = [event["kind"] for event in timeline]
-        assert TimelineEventKind.NO_ACTION.value in event_kinds
+        assert TimelineEventKind.APPROVAL_REQUESTED.value in event_kinds
         assert TimelineEventKind.EXECUTION_INTENDED.value not in event_kinds
         existing_decisions = db_session.execute(select(Decision).where(Decision.dispute_id == config["dispute_id"]))
-        assert not existing_decisions.scalars().all()
+        review_decisions = existing_decisions.scalars().all()
+        assert len(review_decisions) == 1
+        assert review_decisions[0].verdict == Verdict.NEEDS_APPROVAL.value
+        assert review_decisions[0].action_type == "ACCEPT_CLAIM"
         await stub_http.aclose()
         if owns_session:
             db_session.close()
         return ScenarioRunResult(
-            scenario_id=scenario_id, dispute_id=config["dispute_id"], verdict="HUMAN_REVIEW",
-            rule_id="tracking_requires_review", execution_status="NOT_STARTED",
+            scenario_id=scenario_id, dispute_id=config["dispute_id"], verdict=review_decisions[0].verdict,
+            rule_id=review_decisions[0].rule_id, execution_status="NOT_STARTED",
             timeline_event_kinds=event_kinds, success=True,
         )
     assert loop_result.status == "completed", f"Agent loop failed with status: {loop_result.status}"
