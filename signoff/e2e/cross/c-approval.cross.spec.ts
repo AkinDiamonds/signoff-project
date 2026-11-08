@@ -1,8 +1,11 @@
 import { expect, test } from './fixtures';
+import type { components } from '@signoff/api-client/generated';
 import {
   AGENT_URL,
   approvalUrl,
+  createBuyerDispute,
   createScenario,
+  createShopOrder,
   hasKind,
   waitForTimeline,
 } from './helpers/agent';
@@ -11,6 +14,51 @@ import { stub } from './helpers/stub';
 const SHOP_URL = process.env.SHOP_URL ?? 'http://localhost:5174';
 const WEB_URL = process.env.WEB_URL ?? 'http://localhost:5173';
 const BUYER_EMAIL = 'casey.nguyen@example.test';
+
+for (const policy of ['HUMAN_REVIEW', 'GATED_SETTLEMENT']) {
+  test(`withheld $300 tracking opens a refund approval under ${policy} @full`, async ({ page, request, session }) => {
+    const original: components['schemas']['CharterResponse'] = await (await request.get(`${AGENT_URL}/api/charter`)).json();
+    const changed = await request.put(`${AGENT_URL}/api/charter`, {
+      data: { ...original, version: undefined, created_at: undefined, base_version: original.version, missing_delivery_policy: policy },
+    });
+    expect(changed.status(), await changed.text()).toBe(200);
+    try {
+      const orderCode = await createShopOrder(request, session.id, [{ sku: 'GIFT-SET-01', quantity: 5 }]);
+      const scope = `?demo_session_id=${encodeURIComponent(session.id)}`;
+      const shipments: components['schemas']['ShipmentView'][] = await (await request.get(`${AGENT_URL}/api/fulfillment/orders${scope}`)).json();
+      const shipment = shipments.find(item => item.order_code === orderCode);
+      if (!shipment) throw new Error('Expected the newly paid simulated shipment');
+      const withheld = await request.post(`${AGENT_URL}/api/fulfillment/orders/${orderCode}/actions${scope}`, {
+        data: { action: 'missing_tracking', base_version: shipment.version, request_id: crypto.randomUUID() },
+      });
+      expect(withheld.status(), await withheld.text()).toBe(200);
+      const disputeId = await createBuyerDispute(request, orderCode, 'My order has not arrived.', '300.00');
+      await stub.emit(request, disputeId);
+      const pending = await waitForTimeline(request, disputeId, events => hasKind(events, 'APPROVAL_REQUESTED'));
+      expect(pending.filter(item => item.kind === 'APPROVAL_REQUESTED')).toHaveLength(1);
+      expect(pending.filter(item => item.kind === 'EXECUTION_INTENDED')).toHaveLength(0);
+      expect((await stub.state(request)).disputes[disputeId]?.status).toBe('WAITING_FOR_SELLER_RESPONSE');
+      await session.applyTo(page);
+      await page.goto(`/app/disputes/${disputeId}`);
+      await expect(page.getByTestId('open-approval-card-button')).toBeVisible();
+      await page.reload();
+      await page.getByTestId('open-approval-card-button').tap();
+      await expect(page.getByTestId('proposed-action-type')).toContainText('ACCEPT CLAIM');
+      await expect(page.getByTestId('approval-dispute-amount')).toContainText('300');
+      await page.getByTestId('approval-approve-button').tap();
+      await expect(page.getByTestId('outcome-approved')).toBeVisible();
+      const sent = await waitForTimeline(request, disputeId, events => hasKind(events, 'EXECUTION_CONFIRMED'));
+      expect(sent.filter(item => item.kind === 'EXECUTION_INTENDED')).toHaveLength(1);
+      expect((await stub.state(request)).disputes[disputeId]?.status).toBe('RESOLVED');
+    } finally {
+      const latest: components['schemas']['CharterResponse'] = await (await request.get(`${AGENT_URL}/api/charter`)).json();
+      const restored = await request.put(`${AGENT_URL}/api/charter`, {
+        data: { ...original, version: undefined, created_at: undefined, base_version: latest.version },
+      });
+      expect(restored.status(), await restored.text()).toBe(200);
+    }
+  });
+}
 
 test('C: unchanged approval reaches the stub provider once @full', async ({ page, request, session }) => {
   const { disputeId } = await createScenario(request, 'C', session.id);

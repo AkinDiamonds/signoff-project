@@ -35,7 +35,7 @@ from agent.app.agent.tools import READ_TOOL_NAMES, get_dispute_tool
 from agent.app.approvals import create_approval
 from agent.app.db.models import AgentRun, Decision, EvidenceSnapshot, Execution, ReviewEvidenceSnapshot
 from agent.app.db.models import Dispute as DBDispute
-from agent.app.domain.actions import AcceptClaim, BaseProposedAction, SendMessage, compute_action_hash
+from agent.app.domain.actions import AcceptClaim, BaseProposedAction, MakeOffer, SendMessage, compute_action_hash
 from agent.app.domain.enums import ActionType, ExecutionStatus, JobKind, TimelineEventKind, Verdict
 from agent.app.ledger.service import record_decision, record_ledger_event
 from agent.app.paypal.fingerprint import compute_dispute_fingerprint
@@ -285,31 +285,47 @@ async def run_agent_loop(
         missing_mode = evaluate_missing_delivery(order_context, charter_entity.missing_delivery_policy, now_dt)
     elif order_context is not None and order_context.tracking_unavailable_reason:
         missing_mode = 'review'
-    if missing_mode == 'review':
-        _record_review_evidence(session, dispute_id, "tracking_requires_review",
-                                "Delivery evidence is missing or unsafe; human review required.",
-                                now_dt, order_context)
-        # Prepare a full-refund card only when the existing gate requires
-        # merchant approval and all triggered rules can actually be waived.
-        # This review path never queues execution, even for an ALLOW verdict.
+    if missing_mode != 'normal':
+        if missing_mode == 'review':
+            _record_review_evidence(session, dispute_id, "tracking_requires_review",
+                                    "Delivery evidence is missing or unsafe; human review required.",
+                                    now_dt, order_context)
+        # Both missing-delivery policies need a concrete card for an over-limit
+        # refund, independently of whether the model proposes a settlement.
+        # PayPal may permit a refund offer without permitting accept-claim.
+        # This preparation never queues execution, even for an ALLOW verdict.
         if reason_val == 'MERCHANDISE_OR_SERVICE_NOT_RECEIVED':
-            refund_action = AcceptClaim(amount=paypal_dispute.dispute_amount)
-            prior_hashes = tuple(session.scalars(
-                select(Decision.action_hash).join(Execution, Execution.decision_id == Decision.id)
+            prior_decisions = tuple(session.scalars(
+                select(Decision).join(Execution, Execution.decision_id == Decision.id)
                 .where(Decision.dispute_id == dispute_id,
                        Execution.status == ExecutionStatus.CONFIRMED.value)
             ))
-            review_decision = evaluate_gate(GateInput(
-                action=refund_action, dispute=paypal_dispute, charter=charter_entity, now=now_dt,
-                history_flags=HistoryFlags(buyer_dispute_count_in_window=buyer_history.prior_disputes),
-                prior_executions=prior_hashes,
-            ))
-            if review_decision.verdict == Verdict.NEEDS_APPROVAL and is_waivable(review_decision):
+            refund_candidates: tuple[BaseProposedAction, ...] = (
+                AcceptClaim(amount=paypal_dispute.dispute_amount),
+                MakeOffer(amount=paypal_dispute.dispute_amount),
+            )
+            injection = screen_dispute_and_context(paypal_dispute, order_context) if screener_enabled else None
+            for refund_action in refund_candidates:
+                review_decision = evaluate_gate(GateInput(
+                    action=refund_action, dispute=paypal_dispute, charter=charter_entity, now=now_dt,
+                    history_flags=HistoryFlags(buyer_dispute_count_in_window=buyer_history.prior_disputes,
+                                               injection_flag=bool(injection and injection.is_flagged)),
+                    prior_executions=prior_decisions,
+                ))
+                if review_decision.verdict != Verdict.NEEDS_APPROVAL or not is_waivable(review_decision):
+                    if review_decision.rule_id in ('G1-01', 'G1-02'):
+                        continue
+                    break
+                if missing_mode == 'settlement_only':
+                    _record_review_evidence(session, dispute_id, "tracking_requires_review",
+                                            "Delivery evidence is missing; refund requires your approval.",
+                                            now_dt, order_context)
                 existing = session.scalar(select(Decision).where(
                     Decision.dispute_id == dispute_id,
                     Decision.dispute_fingerprint == review_decision.dispute_fingerprint,
                     Decision.action_hash == review_decision.action_hash,
                     Decision.charter_version == review_decision.charter_version,
+                    Decision.verdict == Verdict.NEEDS_APPROVAL.value,
                 ))
                 if existing is None:
                     recorded = record_decision(
@@ -328,6 +344,7 @@ async def run_agent_loop(
                     fingerprint=current_fingerprint, human_needed=True, actions_count=1,
                     decisions=(review_decision,),
                 )
+    if missing_mode == 'review':
         record_ledger_event(
             session, dispute_id, TimelineEventKind.NO_ACTION,
             {"reason": "tracking_requires_review",
