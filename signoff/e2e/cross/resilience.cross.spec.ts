@@ -55,7 +55,11 @@ test('resilience: LLM failure records RUN_FAILED and executes nothing @full', as
 
   await session.applyTo(page);
   await page.goto(`/app/disputes/${disputeId}`);
+  await expect(page.getByText('Analysis needs your review')).toBeVisible();
+  await page.getByRole('tab', { name: 'Activity' }).click();
+  await page.getByText('Technical details', { exact: true }).first().click();
   await expect(page.getByTestId('decision-timeline')).toContainText('Run failed');
+  await page.getByRole('tab', { name: 'Overview' }).click();
   await expect(page.getByText('Analysis needs your review')).toBeVisible();
   await page.reload();
   await expect(page.getByText('Analysis needs your review')).toBeVisible();
