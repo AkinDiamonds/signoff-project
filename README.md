@@ -52,7 +52,11 @@ Open http://localhost:5173/app/demo. The local demo uses a PayPal stub and a fak
 
 ## Built with
 
-PayPal REST APIs, an OpenAI-compatible LLM provider, FastAPI, PostgreSQL, React, AG Studio, and Render.
+- **PayPal developer platform:** Sandbox Orders for checkout, Disputes APIs for case handling, and verified webhooks for dispute updates.
+- **AI:** An OpenAI-compatible model proposes dispute plans; the merchant's signing limits govern allowed actions. A read-only assistant answers questions about dispute data.
+- **AG Grid and AG Studio:** The dispute table supports filtering and CSV export, and AG Studio provides the read-only assistant.
+- **Render:** Hosts the demo application and its services.
+- **Other tools:** FastAPI, PostgreSQL, React, TypeScript, and Docker.
 
 ## License
 
