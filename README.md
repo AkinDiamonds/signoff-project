@@ -54,10 +54,6 @@ Open http://localhost:5173/app/demo. The local demo uses a PayPal stub and a fak
 
 PayPal REST APIs, an OpenAI-compatible LLM provider, FastAPI, PostgreSQL, React, AG Studio, and Render.
 
-## Historical planning documents
-
-The [build plans](build-plan/) and [early project plans](signoff/plan/) are retained as an archive of the development process. Their dates, instructions, and status reports may be outdated; use this README for the current demo and judge instructions.
-
 ## License
 
 MIT. See [LICENSE](LICENSE).
