@@ -39,6 +39,7 @@ export const CheckoutPage: React.FC = () => {
 
   const [email, setEmail] = useState('alex.morgan@example.test');
   const [sdkLoading, setSdkLoading] = useState(true);
+  const [sdkReady, setSdkReady] = useState(false);
   const [sdkFailed, setSdkFailed] = useState(false);
   const [capturing, setCapturing] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -58,6 +59,7 @@ export const CheckoutPage: React.FC = () => {
     if (items.length === 0) return;
 
     if (window.paypal) {
+      setSdkReady(true);
       setSdkLoading(false);
       return;
     }
@@ -67,29 +69,33 @@ export const CheckoutPage: React.FC = () => {
     const existing = document.getElementById(scriptId);
     let script = existing instanceof HTMLScriptElement ? existing : null;
 
+    const handleLoad = () => {
+      if (active) {
+        setSdkReady(Boolean(window.paypal));
+        setSdkLoading(false);
+        setSdkFailed(!window.paypal);
+      }
+    };
+    const handleError = () => {
+      if (active) {
+        setSdkLoading(false);
+        setSdkFailed(true);
+      }
+    };
+
     if (!script) {
       script = document.createElement('script');
       script.id = scriptId;
       script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&components=buttons`;
       script.async = true;
 
-      script.onload = () => {
-        if (active) {
-          setSdkLoading(false);
-          setSdkFailed(false);
-        }
-      };
-
-      script.onerror = () => {
-        if (active) {
-          setSdkLoading(false);
-          setSdkFailed(true);
-        }
-      };
-
+      script.addEventListener('load', handleLoad);
+      script.addEventListener('error', handleError);
       document.body.appendChild(script);
     } else {
-      setSdkLoading(false);
+      // A previous checkout mount may still be loading this script.
+      script.addEventListener('load', handleLoad);
+      script.addEventListener('error', handleError);
     }
 
     const timer = setTimeout(() => {
@@ -102,6 +108,8 @@ export const CheckoutPage: React.FC = () => {
     return () => {
       active = false;
       clearTimeout(timer);
+      script.removeEventListener('load', handleLoad);
+      script.removeEventListener('error', handleError);
     };
   }, [items.length, clientId]);
 
@@ -128,7 +136,7 @@ export const CheckoutPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!window.paypal || !paypalContainerRef.current || buttonsRenderedRef.current || items.length === 0) {
+    if (!sdkReady || !window.paypal || !paypalContainerRef.current || buttonsRenderedRef.current || items.length === 0) {
       return;
     }
 
@@ -177,7 +185,7 @@ export const CheckoutPage: React.FC = () => {
     } catch {
       setSdkFailed(true);
     }
-  }, [email, items]);
+  }, [sdkReady, email, items]);
 
   const handleSandboxFallbackPay = async () => {
     setError(null);
