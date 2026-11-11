@@ -2,8 +2,29 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
 test.describe('@smoke web shell', () => {
-  test('boots and shows the status panel', { tag: '@smoke' }, async ({ page }) => {
+  test('root redirects to the app, survives refresh, and replaces history', async ({ page }) => {
+    await page.goto('/landingpage');
+    await expect(page.getByTestId('landing-page')).toBeVisible();
+    // Follow the existing marketing logo link to root.
+    await page.getByRole('link', { name: 'S Signoff COMMERCE', exact: true }).click();
+    await expect(page).toHaveURL(/\/app$/);
+    await expect(page.getByTestId('shell-topbar')).toBeVisible();
+    await expect(page.getByTestId('landing-page')).toHaveCount(0);
+    await page.reload();
+    await expect(page).toHaveURL(/\/app$/);
+    await expect(page.getByTestId('shell-topbar')).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL(/\/landingpage$/);
+    await expect(page.getByTestId('landing-page')).toBeVisible();
+    await page.reload();
+    await expect(page.getByTestId('landing-page')).toBeVisible();
     await page.goto('/');
+    await expect(page).toHaveURL(/\/app$/);
+    await expect(page.getByTestId('shell-topbar')).toBeVisible();
+  });
+
+  test('boots and shows the status panel', { tag: '@smoke' }, async ({ page }) => {
+    await page.goto('/landingpage');
     await expect(page.getByRole('heading', { name: 'System status' })).toBeVisible();
     await expect(page.getByTestId('status-llm-mode')).toHaveText('CACHED');
   });
@@ -25,7 +46,7 @@ test.describe('@smoke web shell', () => {
   });
 
   test('shell has no serious accessibility violations', { tag: '@smoke' }, async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/landingpage');
     await expect(page.getByTestId('status-llm-mode')).toBeVisible();
     const results = await new AxeBuilder({ page }).analyze();
     const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');

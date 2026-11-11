@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Product site and judge guide', () => {
   test('landing renders hero, claims, and call to action reaches guide', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/landingpage');
 
     // Hero and headings
     await expect(page.getByRole('heading', { level: 1, name: /AI-Driven Dispute Defense/i })).toBeVisible();
@@ -74,7 +74,7 @@ test.describe('Product site and judge guide', () => {
 
   test('landing and guide have no serious accessibility violations', async ({ page }) => {
     // Check Landing
-    await page.goto('/');
+    await page.goto('/landingpage');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     const landingAxe = await new AxeBuilder({ page }).analyze();
     const landingSerious = landingAxe.violations.filter(

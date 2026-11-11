@@ -31,7 +31,7 @@ Included: status, dispute_state, life-cycle stage, reason, disputed amount, due 
 Host variables: `PUBLIC_SIGNOFF_URL`, `PUBLIC_SHOP_URL`, `PUBLIC_API_URL`. Other names come from `.env.example`; add new names there and in `docs/env-matrix.md` in the same commit.
 
 ## Frontend routes
-Signoff web: `/`, `/guide`, `/app`, `/app/disputes`, `/app/disputes/:id`, `/app/charter`, `/app/demo`, `/approve/:token`.
+Signoff web: `/` redirects to `/app`; `/landingpage` serves the public product landing page. Other routes: `/guide`, `/app`, `/app/disputes`, `/app/disputes/:id`, `/app/charter`, `/app/demo`, `/approve/:token`. Existing merchant authentication requirements apply.
 Shop: `/`, `/product/:sku`, `/cart`, `/checkout`, `/confirmation/:code`, `/orders`, `/orders/:code`, `/orders/:code/dispute`.
 
 ## Demo session

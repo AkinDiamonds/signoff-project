@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
+import { transferableAbortController } from 'node:util';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -9,22 +10,58 @@ import { routes } from '../src/app/routes';
 import { mockFetch } from '../src/app/mockFetch';
 import { statusFixture } from '../../fixtures/ui';
 
-function renderAt(path: string) {
+function renderAt(path: string, initialEntries = [path]) {
+  vi.stubGlobal('AbortController', function () { return transferableAbortController(); });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const router = createMemoryRouter(routes, { initialEntries: [path] });
-  return render(
+  const router = createMemoryRouter(routes, { initialEntries });
+  render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <RouterProvider router={router} />
       </ThemeProvider>
     </QueryClientProvider>
   );
+  return router;
 }
 
 describe('web shell', () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+  });
+
+  it('redirects root to the merchant app and replaces the history entry', async () => {
+    vi.stubGlobal('fetch', mockFetch);
+    const router = renderAt('/', ['/landingpage', '/']);
+    await screen.findByTestId('shell-topbar');
+    expect(router.state.location.pathname).toBe('/app');
+    expect(router.state.historyAction).toBe('REPLACE');
+    expect(screen.queryByTestId('landing-page')).toBeNull();
+    await act(async () => { await router.navigate(-1); });
+    expect(router.state.location.pathname).toBe('/landingpage');
+    expect(await screen.findByTestId('landing-page')).toBeTruthy();
+  });
+
+  it('keeps the landing page public at /landingpage', async () => {
+    vi.stubGlobal('fetch', mockFetch);
+    const router = renderAt('/landingpage');
+    expect(await screen.findByTestId('landing-page')).toBeTruthy();
+    expect(router.state.location.pathname).toBe('/landingpage');
+    expect(screen.queryByTestId('shell-topbar')).toBeNull();
+    expect(screen.getByTestId('nav-open-dashboard')).toHaveAttribute('href', '/app');
+  });
+
+  it('keeps the existing sign-in guard when entering through root', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      required: true, configured: true, authenticated: false,
+      email: null, csrf_token: null, expires_at: null,
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } })));
+    const router = renderAt('/');
+    await screen.findByRole('heading', { name: /Sign in to Signoff/ });
+    expect(router.state.location.pathname).toBe('/login');
+    expect(router.state.location.state).toEqual({ returnTo: '/app' });
+    expect(screen.queryByTestId('shell-topbar')).toBeNull();
+    expect(screen.queryByTestId('landing-page')).toBeNull();
   });
 
   it('shows a skeleton while status loads, then the status values', async () => {
@@ -38,7 +75,7 @@ describe('web shell', () => {
       )
     );
     await act(async () => {
-      renderAt('/');
+      renderAt('/landingpage');
     });
     expect(screen.getByRole('status', { name: 'Loading system status' })).toBeTruthy();
     await waitFor(() => {
@@ -66,7 +103,7 @@ describe('web shell', () => {
       )
     );
     await act(async () => {
-      renderAt('/');
+      renderAt('/landingpage');
     });
     await waitFor(() => {
       expect(screen.getByTestId('status-error')).toBeTruthy();

@@ -1,4 +1,4 @@
-import type { RouteObject } from 'react-router';
+import { Navigate, type RouteObject } from 'react-router';
 import { Layout } from './Layout';
 import { MorePage } from './MorePage';
 import { ReportsPage } from '../features/dashboard/ReportsPage';
@@ -18,12 +18,13 @@ import { ShipmentsPage } from '../features/fulfillment/ShipmentsPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
 
 export const routes: RouteObject[] = [
+  { index: true, element: <Navigate to="/app" replace /> },
   { path: 'login', element: <LoginPage /> },
   // Standalone public marketing layout (no sidebar, no demo banners)
   {
     element: <MarketingLayout />,
     children: [
-      { index: true, element: <HomePage /> },
+      { path: 'landingpage', element: <HomePage /> },
     ],
   },
   { element: <Layout />, children: [{ path: 'guide', element: <GuidePage /> }] },

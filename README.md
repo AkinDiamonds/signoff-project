@@ -8,7 +8,10 @@ This is a **PayPal sandbox demo**. The shop and shipment tracking are simulated;
 
 - **Shop:** https://signoff-shop.onrender.com
 - **Signoff merchant app:** https://signoff.simeonakin.me
+- **Product landing page:** https://signoff.simeonakin.me/landingpage
 - **PayPal Resolution Center:** https://www.sandbox.paypal.com/disputes/
+
+The Signoff root URL redirects to `/app`. Visitors who need to sign in go through the existing login screen.
 
 Judges: find the shared Signoff login and PayPal sandbox buyer credentials in the Devpost submission's testing instructions. Everyone uses the same test merchant account. Use the order details to identify your own order and dispute.
 

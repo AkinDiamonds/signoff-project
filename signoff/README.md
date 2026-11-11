@@ -59,12 +59,15 @@ Prerequisites: Docker Desktop with Compose v2, and free host ports `5173`, `5174
    | Service | URL |
    | --- | --- |
    | Merchant web | http://localhost:5173 |
+   | Product landing page | http://localhost:5173/landingpage |
    | Shop | http://localhost:5174 |
    | Frozen merchant web (kill switch) | http://localhost:5175 |
    | Agent API | http://localhost:8000 |
    | Frozen agent API | http://localhost:8001 |
    | PayPal stub | http://localhost:4010 |
    | PostgreSQL | localhost:5432 |
+
+   The merchant web root redirects to `/app`; the product landing page is at `/landingpage`. The same routes apply to the frozen merchant web. Existing sign-in requirements still apply.
 
 3. Try a scenario: open http://localhost:5173/app/demo, click **Run scenario A**, wait for the dispute, then open it. The worker reconciles every 5 seconds, so the timeline fills in without any manual webhook.
 
