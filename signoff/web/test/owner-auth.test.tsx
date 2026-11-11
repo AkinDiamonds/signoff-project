@@ -50,15 +50,15 @@ function mockSession({ reject = false, retain = true, configured = true } = {}) 
 afterEach(() => { cleanup(); clients.forEach(client => client.clear()); clients.length = 0; setCsrfToken(null); vi.unstubAllGlobals(); });
 
 async function submit() {
-  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'owner@example.test' } });
-  fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'fictional-password-123' } });
+  fireEvent.change(screen.getByLabelText('Your email address'), { target: { value: 'owner@example.test' } });
+  fireEvent.change(screen.getByLabelText('Your password'), { target: { value: 'fictional-password-123' } });
   fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 }
 
 describe('owner sign-in', () => {
   it('redirects an anonymous merchant visitor to login', async () => {
     mockSession(); const router = show('/app');
-    await screen.findByRole('heading', { name: /Sign in to Signoff/ });
+    await screen.findByRole('heading', { name: 'Seller sign-in' });
     expect(router.state.location.pathname).toBe('/login');
     expect(screen.queryByText(/forgot password|sign up/i)).toBeNull();
   });
